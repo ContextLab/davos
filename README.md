@@ -1,6 +1,6 @@
 # Introduction and usage
 
-`Davos` provides Python with a single command, `smuggle`, which is like a quick (and often dirty) wrapper for `import`.  Whereas you cannot `import` a library that hasn't been installed yet, you can easily `smuggle` a not-yet-installed library:
+The `davos` library provides Python with a single keyword-like object, `smuggle`, which is like a quick (and often dirty) wrapper for `import`.  Whereas you cannot `import` a library that hasn't been installed yet, you can easily `smuggle` a not-yet-installed library:
 
 ```python
 import davos
@@ -14,7 +14,7 @@ sns.barplot(data=titanic, x='class', y='survived', hue='sex', palette=sns.light_
 
 ## Other usage options
 
-Once you import the `davos` library, you can use `smuggle` as a stand in for anywhere you would have otherwise used `import`.  Any of the following will work:
+Once you import the `davos` library, you can use `smuggle` as a stand in keyword-like object anywhere you would have otherwise used `import`.  Any of the following will work:
 ```python
 smuggle pickle                             # built-in modules
 from matplotlib smuggle pyplot as plt      # "from" keyword, renaming sub-modules using "as"
@@ -23,12 +23,27 @@ smuggle os, sys                            # comma notation
 smuggle pandas as pd, numpy as np          # comma notation with renaming using "as"
 ```
 
+## Unsupported stuff
+
+The `smuggle` function cannot automatically resolve package names.  For example, if the `umap-learn` package ins't installed, `smuggle umap` will attempt to `pip install umap` (which is a different library) rather than `pip install umap-learn`.  If the `pip` name and `import` name don't match, you can manually pass a module's `pip` name to `smuggle` as follows:
+
+```python
+@pipname('scikit-learn')
+smuggle sklearn.decomposition.LatentDirichletAllocation as LDA
+```
+
 # Installation
 
-You can install `davos` with `pip` as follows:
+You can install the latest official version of `davos` with `pip` as follows:
 
 ```bash
 pip install davos
+```
+
+To install the cutting (bleeding) edge version directly from git, use:
+
+```bash
+pip install git+ssh:https://github.com/ContextLab/davos.git
 ```
 
 # Origin of the name

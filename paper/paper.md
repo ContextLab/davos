@@ -1,11 +1,32 @@
-# Introduction and usage
+---
+title: 'Expanding Python `import`s using a keyword-like wrapper'
+tags:
+ - Python
+ - package-management
+ - installer
+ - pip
+authors:
+ - name: Paxton C. Fitzpatrick
+   orcid: 0000-0003-0205-3088
+   affiliation: 1
+ - name: Jeremy R. Manning
+   orcid: 0000-0001-7613-4732
+   affiliation: 1
+affiliations:
+ - name: Department of Psychological and Brain Sciences, Dartmouth College
+   index: 1
+date: 9 March 2021
+bibliography: paper.bib
+---
+
+# Summary and overview
 
 The `davos` library provides Python with a single keyword-like object, `smuggle`, which is like a quick (and often dirty) wrapper for `import`.  Whereas you cannot `import` a library that hasn't been installed yet, you can easily `smuggle` a not-yet-installed library:
 
 ```python
-import davos
+import davos              # this adds the smuggle and pipname functions to the Python workspace
 
-smuggle seaborn as sns # installs seaborn if needed!
+smuggle seaborn as sns    # installs seaborn if needed!
 
 # now you can use seaborn as if you had imported it the "normal" way
 titanic = sns.utils.load_dataset('titanic')
@@ -23,7 +44,7 @@ smuggle os, sys                            # comma notation
 smuggle pandas as pd, numpy as np          # comma notation with renaming using "as"
 ```
 
-## Unsupported stuff
+## Unsupported operations
 
 The `smuggle` function cannot automatically resolve package names.  For example, if the `umap-learn` package isn't installed, `smuggle umap` will attempt to `pip install umap` (which is a different library) rather than `pip install umap-learn`.  If the `pip` name and `import` name don't match, you can manually pass a module's `pip` name to `smuggle` as follows:
 

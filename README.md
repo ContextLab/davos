@@ -25,7 +25,7 @@ smuggle pandas as pd, numpy as np          # comma notation with renaming using 
 
 ## Unsupported stuff
 
-The `smuggle` function cannot automatically resolve package names.  For example, if the `umap-learn` package ins't installed, `smuggle umap` will attempt to `pip install umap` (which is a different library) rather than `pip install umap-learn`.  If the `pip` name and `import` name don't match, you can manually pass a module's `pip` name to `smuggle` as follows:
+The `smuggle` function cannot automatically resolve package names.  For example, if the `umap-learn` package isn't installed, `smuggle umap` will attempt to `pip install umap` (which is a different library) rather than `pip install umap-learn`.  If the `pip` name and `import` name don't match, you can manually pass a module's `pip` name to `smuggle` as follows:
 
 ```python
 @pipname('scikit-learn')

@@ -1,3 +1,8 @@
+__all__ = ['smuggle']
+version_info = (0, 0, 1)
+__version__ = '.'.join(map(str, version_info))
+
+
 from davos import config
 
 
@@ -17,9 +22,6 @@ def determine_environment():
             # running in a new(-ish) IPython/Jupyter Notebook version
             return 'IPY_NEW'
 
-
-version_info = (0, 0, 1)
-__version__ = '.'.join(map(str, version_info))
 
 config.PARSER_ENVIRONMENT = determine_environment()
 

@@ -23,10 +23,11 @@ __version__ = '.'.join(map(str, version_info))
 
 config.PARSER_ENVIRONMENT = determine_environment()
 
-
 if config.PARSER_ENVIRONMENT == 'IPY_OLD':
     from davos.colab import smuggle_colab as smuggle
 elif config.PARSER_ENVIRONMENT == 'IPY_NEW':
     from davos.jupyter import smuggle_jupyter as smuggle
 else:
     from davos.python import smuggle_python as smuggle
+
+smuggle._register_smuggler()

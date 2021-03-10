@@ -52,10 +52,14 @@ def register_smuggler_colab():
     """
     colab_shell = config.IPYTHON_SHELL
     smuggle_transformer = StatelessInputTransformer.wrap(smuggle_parser_colab)
+    pipname_transformer = StatelessInputTransformer.wrap(pipname_parser_colab)
     # entire IPython.core.inputsplitter module was deprecated in
     # v7.0.0, but Colab runs v5.5.0, so we still have to register
     # our transformer in both places for it to work correctly
     # noinspection PyDeprecation
+    colab_shell.input_splitter.python_line_transforms.append(pipname_transformer())
+    colab_shell.input_transformer_manager.python_line_transforms.append(pipname_transformer())
+
     colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
     colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
     colab_shell.user_ns['smuggle'] = smuggle_colab
@@ -80,9 +84,13 @@ def smuggle_colab(pkg_name, as_=None):
                 stdout_ctx = redirect_stdout
             else:
                 stdout_ctx = nullcontext
-            toplevel_pkg = pkg_name.split('.')[0]
+            if config._CURR_INSTALL_NAME is None:
+                install_name = pkg_name.split('.')[0]    # toplevel_pkg
+            else:
+                install_name = config._CURR_INSTALL_NAME
+                config._CURR_INSTALL_NAME = None
             with stdout_ctx(stdout_stream):
-                exit_code = run_shell_command(f'pip install {toplevel_pkg}')
+                exit_code = run_shell_command(f'pip install {install_name}')
             stdout = stdout_stream.getvalue().strip()
             if exit_code != 0:
                 sys.stderr.write(stdout)
@@ -179,6 +187,16 @@ def smuggle_parser_colab(line):
         # restore original indent
         line = ' ' * indent_len + line
     return line
+
+
+def pipname_parser_colab(line):
+    stripped = line.strip()
+    if stripped.startswith('@pipname'):
+        indent_len = len(line) - len(line.lstrip(' '))
+        pipname = stripped.replace('@pipname(', '').strip().split()[0].strip('")\'')
+        config._CURR_INSTALL_NAME = pipname
+    else:
+        return line
 
 
 smuggle_colab._register_smuggler = register_smuggler_colab

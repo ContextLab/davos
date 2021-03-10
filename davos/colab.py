@@ -58,7 +58,7 @@ def register_smuggler_colab():
     # noinspection PyDeprecation
     colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
     colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
-    globals()['smuggle'] = smuggle_colab
+    colab_shell.user_ns['smuggle'] = smuggle_colab
 
 
 def smuggle_colab(pkg_name, as_=None):
@@ -97,14 +97,15 @@ def smuggle_colab(pkg_name, as_=None):
         # import_item takes care of adding package to sys.modules, along
         # with its parents if it's a subpackage, but *doesn't* add the
         # module name/alias to globals() like the normal import statement
+    colab_shell = config.IPYTHON_SHELL
     if as_ is None:
         if '.' in pkg_name:
             toplevel_pkg = pkg_name.split('.')[0]
-            globals()[toplevel_pkg] = sys.modules[toplevel_pkg]
+            colab_shell.user_ns[toplevel_pkg] = sys.modules[toplevel_pkg]
         else:
-            globals()[pkg_name] = imported_obj
+            colab_shell.user_ns[pkg_name] = imported_obj
     else:
-        globals()[as_] = imported_obj
+        colab_shell.user_ns[as_] = imported_obj
 
 
 def smuggle_parser_colab(line):

@@ -9,6 +9,9 @@ versions of IPython will also use this approach
 """
 
 
+__all__ = ['register_smuggler_colab', 'smuggle_colab']
+
+
 import sys
 from contextlib import redirect_stdout
 from io import StringIO
@@ -23,10 +26,7 @@ if config.IPYTHON_SHELL is not None:
     from IPython.utils.io import ask_yes_no
 
 
-__all__ = ['register_smuggler_colab', 'smuggle_colab']
-
-
-def run_shell_command(cmd_str: str) -> int:
+def run_shell_command(cmd_str):
     """
     simple helper that runs a string command in a bash shell
     and returns its exit code

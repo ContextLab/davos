@@ -88,21 +88,20 @@ def smuggle_colab(pkg_name, as_=None):
                    "install it?")
             install_pkg = ask_yes_no(msg, default='n', interrupt='n')
         if install_pkg:
-            stdout_stream = StringIO()
-            if config.SUPPRESS_STDOUT:
-                stdout_ctx = redirect_stdout
-            else:
-                stdout_ctx = nullcontext
             if config.CURR_INSTALL_NAME is None:
                 install_name = pkg_name.split('.')[0]    # toplevel_pkg
             else:
                 install_name = config.CURR_INSTALL_NAME
                 config.CURR_INSTALL_NAME = None
-            with stdout_ctx(stdout_stream):
+            if config.SUPPRESS_STDOUT:
+                stdout_stream = StringIO()
+            else:
+                stdout_stream = sys.stdout
+            with redirect_stdout(stdout_stream):
                 exit_code = run_shell_command(f'pip install {install_name}')
-            stdout = stdout_stream.getvalue().strip()
             if exit_code != 0:
-                sys.stderr.write(stdout)
+                if config.SUPPRESS_STDOUT:
+                    sys.stderr.write(stdout_stream.getvalue().strip())
                 err_msg = (f"installing package '{pkg_name}' returned a "
                            f"non-zero exit code: {exit_code}. See above output "
                            "for details")

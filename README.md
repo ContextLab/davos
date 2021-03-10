@@ -32,6 +32,11 @@ The `smuggle` function cannot automatically resolve package names.  For example,
 smuggle sklearn.decomposition.LatentDirichletAllocation as LDA
 ```
 
+Only [Google Colaboratory](colab.research.google.com/) environments are currently supported (as of version 0.0.1).  In future releases we plan to add support for other iPython environments, including Jupyter notebooks and Jupyter Labs.
+
+We do not plan to add support for standard Python at this time-- `davos` is intended to be a convenient hack for facilitating rapid development in notebook environments.  In its current form, `smuggle` should not be used as a "universal" replacement for `import` or `pip`.
+
+
 # Installation
 
 You can install the latest official version of `davos` with `pip` as follows:

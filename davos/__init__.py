@@ -1,9 +1,10 @@
-__all__ = ['smuggle']
-version_info = (0, 0, 1)
-__version__ = '.'.join(map(str, version_info))
-
+from pkg_resources import get_distribution
 
 from davos import config
+
+
+__all__ = ['smuggle']
+__version__ = get_distribution('davos').version
 
 
 def determine_environment():

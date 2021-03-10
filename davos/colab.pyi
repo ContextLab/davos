@@ -1,0 +1,13 @@
+from typing import Optional
+from davos.core import SmuggleFunc
+
+__all__: list[str]
+
+def run_shell_command(cmd_str: str) -> int: ...
+
+def register_smuggler_colab() -> None: ...
+
+smuggle_colab: SmuggleFunc
+def smuggle_colab(pkg_name: str, as_: Optional[str] = ...) -> None: ...
+
+def smuggle_parser_colab(line: str) -> str: ...

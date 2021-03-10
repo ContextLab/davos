@@ -64,7 +64,7 @@ pip install davos
 To install the cutting (bleeding) edge version directly from git, use:
 
 ```bash
-pip install git+ssh:https://github.com/ContextLab/davos.git
+pip install git+https://github.com/ContextLab/davos.git
 ```
 
 # Origin of the name

@@ -26,6 +26,15 @@ if config.IPYTHON_SHELL is not None:
     from IPython.utils.io import ask_yes_no
 
 
+def pipname_parser_colab(line):
+    stripped = line.strip()
+    if stripped.startswith('@pipname'):
+        pipname = stripped.replace('@pipname(', '').strip().split()[0].strip('")\'')
+        config.CURR_INSTALL_NAME = pipname
+    else:
+        return line
+
+
 def run_shell_command(cmd_str):
     """
     simple helper that runs a string command in a bash shell
@@ -34,6 +43,7 @@ def run_shell_command(cmd_str):
     return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
 
 
+# noinspection PyDeprecation
 def register_smuggler_colab():
     """
     adds the smuggle_inspector function to IPython's list of
@@ -56,7 +66,6 @@ def register_smuggler_colab():
     # entire IPython.core.inputsplitter module was deprecated in
     # v7.0.0, but Colab runs v5.5.0, so we still have to register
     # our transformer in both places for it to work correctly
-    # noinspection PyDeprecation
     colab_shell.input_splitter.python_line_transforms.append(pipname_transformer())
     colab_shell.input_transformer_manager.python_line_transforms.append(pipname_transformer())
 
@@ -84,11 +93,11 @@ def smuggle_colab(pkg_name, as_=None):
                 stdout_ctx = redirect_stdout
             else:
                 stdout_ctx = nullcontext
-            if config._CURR_INSTALL_NAME is None:
+            if config.CURR_INSTALL_NAME is None:
                 install_name = pkg_name.split('.')[0]    # toplevel_pkg
             else:
-                install_name = config._CURR_INSTALL_NAME
-                config._CURR_INSTALL_NAME = None
+                install_name = config.CURR_INSTALL_NAME
+                config.CURR_INSTALL_NAME = None
             with stdout_ctx(stdout_stream):
                 exit_code = run_shell_command(f'pip install {install_name}')
             stdout = stdout_stream.getvalue().strip()
@@ -187,16 +196,6 @@ def smuggle_parser_colab(line):
         # restore original indent
         line = ' ' * indent_len + line
     return line
-
-
-def pipname_parser_colab(line):
-    stripped = line.strip()
-    if stripped.startswith('@pipname'):
-        indent_len = len(line) - len(line.lstrip(' '))
-        pipname = stripped.replace('@pipname(', '').strip().split()[0].strip('")\'')
-        config._CURR_INSTALL_NAME = pipname
-    else:
-        return line
 
 
 smuggle_colab._register_smuggler = register_smuggler_colab

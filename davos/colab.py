@@ -9,7 +9,7 @@ versions of IPython will also use this approach
 """
 
 
-__all__ = ['register_parsers_colab', 'smuggle_colab']
+__all__ = ['register_smuggler_colab', 'smuggle_colab']
 
 
 import sys
@@ -17,7 +17,8 @@ from contextlib import redirect_stdout
 from io import StringIO
 
 from davos import config
-from davos.core import nullcontext
+from davos.core import Onion, prompt_input
+from davos.exceptions import InstallerError, OnionTypeError
 
 if config.IPYTHON_SHELL is not None:
     from IPython.core.inputtransformer import StatelessInputTransformer
@@ -26,13 +27,52 @@ if config.IPYTHON_SHELL is not None:
     from IPython.utils.io import ask_yes_no
 
 
-def pipname_parser_colab(line):
-    stripped = line.strip()
-    if stripped.startswith('@pipname'):
-        pipname = stripped.replace('@pipname(', '').strip().split()[0].strip('")\'')
-        config._CURR_INSTALL_NAME = pipname
+def smuggle_colab(name, as_=None, **onion_kwargs):
+    # ADD DOCSTRING
+    # NOTE: 'name' can be a package, subpackage, module or object
+    pkg_name = name.split('.')[0]
+    try:
+        onion = Onion(pkg_name, **onion_kwargs)
+    except TypeError as e:
+        # TODO: find better way to *replace* exception. still shows last
+        #  frame of old traceback
+        raise OnionTypeError(*e.args).with_traceback(e.__traceback__) from None
+    if onion.exists_locally():
+        try:
+            imported_obj = import_item(name)
+        except ModuleNotFoundError as e:
+            if config.CONFIRM_INSTALL:
+                msg = (f"package {name} is not installed.  Do you want to "
+                       "install it?")
+                install_pkg = prompt_input(msg, default='n')
+                if not install_pkg:
+                    raise e
+            else:
+                install_pkg = True
+        else:
+            install_pkg = False
     else:
-        return line
+        install_pkg = True
+    if install_pkg:
+        onion.install_package()
+        imported_obj = import_item(name)
+
+    colab_shell = config.IPYTHON_SHELL
+    if as_ is None:
+        if name == pkg_name:
+            colab_shell.user_ns[name] = sys.modules[name]
+        else:
+            colab_shell.user_ns[name] = imported_obj
+    else:
+        colab_shell.user_ns[as_] = imported_obj
+
+
+
+
+
+
+################################# OLD ##################################
+
 
 
 def run_shell_command(cmd_str):
@@ -43,8 +83,7 @@ def run_shell_command(cmd_str):
     return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
 
 
-# noinspection PyDeprecation
-def register_parsers_colab():
+def register_smuggler_colab():
     """
     adds the smuggle_inspector function to IPython's list of
     InputTransformers that get called on the contents of each code cell.
@@ -62,13 +101,10 @@ def register_parsers_colab():
     """
     colab_shell = config.IPYTHON_SHELL
     smuggle_transformer = StatelessInputTransformer.wrap(smuggle_parser_colab)
-    pipname_transformer = StatelessInputTransformer.wrap(pipname_parser_colab)
-    # entire IPython.core.inputsplitter module was deprecated in
-    # v7.0.0, but Colab runs v5.5.0, so we still have to register
-    # our transformer in both places for it to work correctly
-    colab_shell.input_splitter.python_line_transforms.append(pipname_transformer())
-    colab_shell.input_transformer_manager.python_line_transforms.append(pipname_transformer())
-
+    # entire IPython.core.inputsplitter module was deprecated in v7.0.0,
+    # but Colab runs v5.5.0, so we still have to register our
+    # transformer in both places for it to work correctly
+    # noinspection PyDeprecation
     colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
     colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
     colab_shell.user_ns['smuggle'] = smuggle_colab
@@ -104,7 +140,7 @@ def smuggle_colab(pkg_name, as_=None):
                 err_msg = (f"installing package '{pkg_name}' returned a "
                            f"non-zero exit code: {exit_code}. See above output "
                            "for details")
-                raise ChildProcessError(err_msg) from e
+                raise InstallerError(err_msg) from e
             else:
                 imported_obj = import_item(pkg_name)
         else:
@@ -128,6 +164,9 @@ def smuggle_colab(pkg_name, as_=None):
 
 
 def smuggle_parser_colab(line):
+    # TODO: parse comment string for install arguments, use
+    #  https://github.com/ContextLab/CDL-docker-stacks/blob/master/CI/conda_environment.py#L56-L65
+    #  for splitting version string
     stripped = line.strip()
     if (
             'smuggle ' in line and

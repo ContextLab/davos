@@ -2,7 +2,59 @@
 # once other 2 smugglers are written
 
 
+from davos import config
+from davos.exceptions import InstallerError, OnionValueError
 
+if config.IPYTHON_SHELL is not None:
+    from IPython.core.interactiveshell import system as _run_shell_cmd
+
+
+class Onion:
+    # ADD DOCSTRING
+    @staticmethod
+    def parse_onion_syntax(comment_text):
+        # TODO: parse comment string for install arguments, use
+        #  https://github.com/ContextLab/CDL-docker-stacks/blob/master/CI/conda_environment.py#L56-L65
+        #  for splitting version string
+        # NOTE: returns a dict of {param: value} for each, CLI args that
+        #  don't take a value should be ... so they don't
+        #  conflict with None values in constructor
+        ...
+
+
+    def __init__(self, import_name, installer='pip', install_name=None, version_str=None **installer_kwargs):
+        # ADD DOCSTRING
+        # NOTE: if install_name is None, all kwargs except installer must be None.
+        #  Elif install_name is not None, install_name must not be None,
+        #  but version et al. still can be
+        if install_name is None:
+            self.install_name = import_name
+        else:
+            self.install_name = install_name
+        if installer == 'pip' or installer == 'pypi':
+            self.install_package = self._pip_install_package
+        elif installer == 'conda':
+            self.install_package = self._conda_install_package
+        else:
+            raise InstallerError(
+                f"Unsupported installer: '{installer}'. Currently supported "
+                "installers are 'pip' and 'conda'"
+            )
+        self.installer = installer
+
+
+    def _pip_install_package(self):
+        # NOTE: self.install_name can be:
+        #   - package name (will already be toplevel name)
+        #   - path (str or pathlib.Path) to local package
+        #   - url for remote install, e.g. GitHub repo (**pip only**)
+        #     + if -e/--editable passed, clone and then install locally (if
+        #       no local clone path provided, default to CWD)
+        ...
+
+    def _conda_install_package(self): ...
+
+    def exists_locally(self) -> bool: ...
 
 
 def prompt_input(prompt, default=None, interrupt=None):
@@ -46,8 +98,12 @@ def prompt_input(prompt, default=None, interrupt=None):
             pass
 
 
-
-
+def run_shell_command(cmd_str):
+    """
+    simple helper that runs a string command in a bash shell
+    and returns its exit code
+    """
+    return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
 
 
 # class nullcontext:

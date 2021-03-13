@@ -9,7 +9,7 @@ versions of IPython will also use this approach
 """
 
 
-__all__ = ['register_smuggler_colab', 'smuggle_colab']
+__all__ = ['register_parsers_colab', 'smuggle_colab']
 
 
 import sys
@@ -30,7 +30,7 @@ def pipname_parser_colab(line):
     stripped = line.strip()
     if stripped.startswith('@pipname'):
         pipname = stripped.replace('@pipname(', '').strip().split()[0].strip('")\'')
-        config.CURR_INSTALL_NAME = pipname
+        config._CURR_INSTALL_NAME = pipname
     else:
         return line
 
@@ -44,7 +44,7 @@ def run_shell_command(cmd_str):
 
 
 # noinspection PyDeprecation
-def register_smuggler_colab():
+def register_parsers_colab():
     """
     adds the smuggle_inspector function to IPython's list of
     InputTransformers that get called on the contents of each code cell.
@@ -77,22 +77,21 @@ def register_smuggler_colab():
 def smuggle_colab(pkg_name, as_=None):
     # ADD DOCSTRING
     # NOTE: pkg_name can be a package, subpackage, module or importable object
-    # TODO: handle install for packages whose installable names are
-    #  different form their importable names
     try:
         imported_obj = import_item(pkg_name)
     except ModuleNotFoundError as e:
-        install_pkg = True
         if config.CONFIRM_INSTALL:
             msg = (f"package {pkg_name} is not installed.  Do you want to "
                    "install it?")
             install_pkg = ask_yes_no(msg, default='n', interrupt='n')
+        else:
+            install_pkg = True
         if install_pkg:
-            if config.CURR_INSTALL_NAME is None:
+            if config._CURR_INSTALL_NAME is None:
                 install_name = pkg_name.split('.')[0]    # toplevel_pkg
             else:
-                install_name = config.CURR_INSTALL_NAME
-                config.CURR_INSTALL_NAME = None
+                install_name = config._CURR_INSTALL_NAME
+                config._CURR_INSTALL_NAME = None
             if config.SUPPRESS_STDOUT:
                 stdout_stream = StringIO()
             else:
@@ -113,6 +112,10 @@ def smuggle_colab(pkg_name, as_=None):
         # import_item takes care of adding package to sys.modules, along
         # with its parents if it's a subpackage, but *doesn't* add the
         # module name/alias to globals() like the normal import statement
+    finally:
+        # reset value set by pipname after successful import without install needed
+        config._CURR_INSTALL_NAME = None
+
     colab_shell = config.IPYTHON_SHELL
     if as_ is None:
         if '.' in pkg_name:
@@ -197,4 +200,4 @@ def smuggle_parser_colab(line):
     return line
 
 
-smuggle_colab._register_smuggler = register_smuggler_colab
+smuggle_colab._register = register_parsers_colab

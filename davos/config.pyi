@@ -1,10 +1,12 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, TypeVar
 from ipykernel.zmqshell import ZMQInteractiveShell
 
-__all__: list
+__all__: list[str]
 
-IPYTHON_SHELL: Optional[ZMQInteractiveShell]
+_IPyShell = TypeVar('_IPyShell', bound=ZMQInteractiveShell)
+
+IPYTHON_SHELL: Optional[_IPyShell]
 PARSER_ENVIRONMENT: Optional[Literal['IPY_NEW', 'IPY_OLD', 'PY']]
-CURR_INSTALL_NAME: Optional[str]
+_CURR_INSTALL_NAME: Optional[str]
 CONFIRM_INSTALL: bool
 SUPPRESS_STDOUT: bool

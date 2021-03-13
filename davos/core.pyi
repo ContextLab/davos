@@ -26,5 +26,5 @@ class nullcontext:
     ) -> None: ...
 
 class SmuggleFunc(Callable[[str, Optional[str]], None]):
-    _register_smuggler: Callable[[], None]
+    _register: Callable[[], None]
 

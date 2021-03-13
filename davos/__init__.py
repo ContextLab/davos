@@ -33,4 +33,4 @@ elif config.PARSER_ENVIRONMENT == 'IPY_NEW':
 else:
     from davos.python import smuggle_python as smuggle
 
-smuggle._register_smuggler()
+smuggle._register()

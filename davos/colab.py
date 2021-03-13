@@ -13,18 +13,41 @@ __all__ = ['register_smuggler_colab', 'smuggle_colab']
 
 
 import sys
-from contextlib import redirect_stdout
-from io import StringIO
 
 from davos import config
 from davos.core import Onion, prompt_input
-from davos.exceptions import DavosParserError, InstallerError, OnionTypeError
+from davos.exceptions import DavosParserError, OnionTypeError
 
 if config.IPYTHON_SHELL is not None:
     from IPython.core.inputtransformer import StatelessInputTransformer
-    from IPython.core.interactiveshell import system as _run_shell_cmd
     from IPython.utils.importstring import import_item
-    from IPython.utils.io import ask_yes_no
+
+
+def register_smuggler_colab():
+    """
+    adds the smuggle_inspector function to IPython's list of
+    InputTransformers that get called on the contents of each code cell.
+
+    NOTE: there are multiple different groups of InputTransformers that
+        IPython runs on cell content at different pre-execution stages,
+        between the various steps of the IPython parser. We're adding
+        the smuggle_inspector as a "python_line_transform" which runs
+        after the last step of the IPython parser, but before the code
+        is passed off to the Python parser. At this point, the IPython
+        parser has reassembled both explicit (backslash-based) and
+        implicit (parentheses-based) line continuations, so long smuggle
+        statements broken into multiple lines by either method will be
+        passed to the smuggle_inspector as a single line
+    """
+    colab_shell = config.IPYTHON_SHELL
+    smuggle_transformer = StatelessInputTransformer.wrap(smuggle_parser_colab)
+    # entire IPython.core.inputsplitter module was deprecated in v7.0.0,
+    # but Colab runs v5.5.0, so we still have to register our
+    # transformer in both places for it to work correctly
+    # noinspection PyDeprecation
+    colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
+    colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
+    colab_shell.user_ns['smuggle'] = smuggle_colab
 
 
 def smuggle_colab(name, as_=None, **onion_kwargs):
@@ -240,47 +263,7 @@ def smuggle_parser_colab(line):
 
 
 
-
-
-
-
 ################################# OLD ##################################
-
-
-
-def run_shell_command(cmd_str):
-    """
-    simple helper that runs a string command in a bash shell
-    and returns its exit code
-    """
-    return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
-
-
-def register_smuggler_colab():
-    """
-    adds the smuggle_inspector function to IPython's list of
-    InputTransformers that get called on the contents of each code cell.
-
-    NOTE: there are multiple different groups of InputTransformers that
-        IPython runs on cell content at different pre-execution stages,
-        between the various steps of the IPython parser. We're adding
-        the smuggle_inspector as a "python_line_transform" which runs
-        after the last step of the IPython parser, but before the code
-        is passed off to the Python parser. At this point, the IPython
-        parser has reassembled both explicit (backslash-based) and
-        implicit (parentheses-based) line continuations, so long smuggle
-        statements broken into multiple lines by either method will be
-        passed to the smuggle_inspector as a single line
-    """
-    colab_shell = config.IPYTHON_SHELL
-    smuggle_transformer = StatelessInputTransformer.wrap(smuggle_parser_colab)
-    # entire IPython.core.inputsplitter module was deprecated in v7.0.0,
-    # but Colab runs v5.5.0, so we still have to register our
-    # transformer in both places for it to work correctly
-    # noinspection PyDeprecation
-    colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
-    colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
-    colab_shell.user_ns['smuggle'] = smuggle_colab
 
 
 # def smuggle_colab(pkg_name, as_=None):
@@ -336,80 +319,5 @@ def register_smuggler_colab():
 #         colab_shell.user_ns[as_] = imported_obj
 
 
-# def smuggle_parser_colab(line):
-#     # TODO: parse comment string for install arguments, use
-#     #  https://github.com/ContextLab/CDL-docker-stacks/blob/master/CI/conda_environment.py#L56-L65
-#     #  for splitting version string
-#     stripped = line.strip()
-#     if (
-#             'smuggle ' in line and
-#             # ignore commented-out lines
-#             not stripped.startswith('#') and
-#             # if smuggle is not the first word, it must be preceded by
-#             # a space. Handles edge cases, e.g.:
-#             #   `self.unrelated_attr_that_endswith_smuggle = 1`
-#             (stripped.startswith('smuggle ') or ' smuggle ' in stripped)
-#         ):
-#         # note: shouldn't need to replace \t with spaces here
-#         indent_len = len(line) - len(line.lstrip(' '))
-#         if ';' in stripped:
-#             # handles semicolon-separated smuggle calls, e.g.:
-#             #   `smuggle os.path; from pathlib smuggle Path; smuggle re`
-#             # by running function on each call individually & re-joining
-#             line = '; '.join(map(smuggle_parser_colab, stripped.split(';')))
-#         elif ',' in stripped:
-#             # handles comma-separated list of packages/modules/functions
-#             # to smuggle
-#             if stripped.startswith('from '):
-#                 # smuggling multiple names from same package, e.g.:
-#                 #   `from os.path smuggle dirname, join as opj, relpath`
-#                 # is transformed internally into multiple smuggle calls:
-#                 #   `smuggle os.path.dirname as dirname; smuggle os....`
-#                 from_cmd, names = stripped.split(' smuggle ')
-#                 names = names.strip('()\n\t ').split(',')
-#                 all_cmds = [f'{from_cmd} smuggle {name}' for name in names]
-#             else:
-#                 # smuggling multiple packages at once, e.g.:
-#                 #   `smuggle collections.abc as abc, json, os`
-#                 # is transformed into multiple smuggle calls, e.g.:
-#                 #   `smugle collections.abc as abc; smuggle json, sm...`
-#                 names = stripped.replace('smuggle ', '').split(',')
-#                 all_cmds = [f'smuggle {name}' for name in names]
-#             line = '; '.join(map(smuggle_parser_colab, all_cmds))
-#         elif stripped.startswith('from '):
-#             # handles smuggle calls in formats like, e.g.:
-#             #   `from os.path smuggle join as opj`
-#             # by transforming them into, e.g.:
-#             #   `smuggle os.path.join as opj
-#             # This grammar can sometimes fail with the builtin import
-#             # statement, e.g.:
-#             #   `import numpy.array as array` # -> ModuleNotFoundError
-#             # but IPython.utils.importstring.import_item always succeeds
-#             pkg_name, name = stripped.split(' smuggle ')
-#             pkg_name = pkg_name.replace('from ', '').strip()
-#             if ' as ' in name:
-#                 name, as_ = name.split(' as ')
-#             else:
-#                 as_ = name
-#             name = name.strip('()\n\t ')
-#             as_ = as_.strip()
-#             full_name = f'{pkg_name}.{name}'
-#             line = f"smuggle('{full_name}', as_='{as_}')"
-#         else:
-#             # standard smuggle call, e.g.:
-#             #   `smuggle pandas as pd`
-#             pkg_name = stripped.replace('smuggle ', '')
-#             if ' as ' in pkg_name:
-#                 pkg_name, as_ = pkg_name.split(' as ')
-#                 # add quotes here so None can be passed without them
-#                 as_ = f"'{as_.strip()}'"
-#             else:
-#                 as_ = None
-#             pkg_name = pkg_name.strip('()\n\t ')
-#             line = f"smuggle('{pkg_name}', as_={as_})"
-#         # restore original indent
-#         line = ' ' * indent_len + line
-#     return line
 
-
-smuggle_colab._register = register_parsers_colab
+smuggle_colab._register = register_smuggler_colab

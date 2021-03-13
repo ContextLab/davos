@@ -7,6 +7,6 @@ _IPyShell = TypeVar('_IPyShell', bound=ZMQInteractiveShell)
 
 IPYTHON_SHELL: Optional[_IPyShell]
 PARSER_ENVIRONMENT: Optional[Literal['IPY_NEW', 'IPY_OLD', 'PY']]
-_CURR_INSTALL_NAME: Optional[str]
+
 CONFIRM_INSTALL: bool
 SUPPRESS_STDOUT: bool

@@ -2,6 +2,9 @@
 # once other 2 smugglers are written
 
 
+import sys
+from io import StringIO
+
 from davos import config
 from davos.exceptions import InstallerError, OnionValueError
 
@@ -22,7 +25,8 @@ class Onion:
         ...
 
 
-    def __init__(self, import_name, installer='pip', install_name=None, version_str=None **installer_kwargs):
+    def __init__(self, import_name, installer='pip', install_name=None,
+                 version_spec=None, **installer_kwargs):
         # ADD DOCSTRING
         # NOTE: if install_name is None, all kwargs except installer must be None.
         #  Elif install_name is not None, install_name must not be None,
@@ -41,7 +45,8 @@ class Onion:
                 "installers are 'pip' and 'conda'"
             )
         self.installer = installer
-
+        self.version_spec = version_spec
+        self.installer_kwargs = installer_kwargs
 
     def _pip_install_package(self):
         # NOTE: self.install_name can be:
@@ -50,7 +55,8 @@ class Onion:
         #   - url for remote install, e.g. GitHub repo (**pip only**)
         #     + if -e/--editable passed, clone and then install locally (if
         #       no local clone path provided, default to CWD)
-        ...
+        if config.SUPPRESS_STDOUT:
+            stdout_stream = StringIO()
 
     def _conda_install_package(self): ...
 

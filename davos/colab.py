@@ -58,10 +58,10 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
     try:
         onion = Onion(pkg_name, **onion_kwargs)
     except TypeError as e:
-        # TODO: find better way to *replace* exception. still shows last
+        # TODO(?): find a way to *replace* exception. still shows last
         #  frame of old traceback
         raise OnionTypeError(*e.args).with_traceback(e.__traceback__) from None
-    if onion.exists_locally():
+    if onion.is_installed:
         try:
             imported_obj = import_item(name)
         except ModuleNotFoundError as e:
@@ -199,7 +199,7 @@ def smuggle_parser_colab(line):
                 raw_onion = raw_onion.partition('#')[0]
                 # {param: value} kwargs dict for smuggle_colab()
                 peeled_onion = Onion.parse_onion_syntax(raw_onion)
-                kwargs_fmt = ', '.join('='.join(kv) for kv in peeled_onion.items())
+                kwargs_fmt = ', '.join('='.join(map(str, kv)) for kv in peeled_onion.items())
                 # insert the kwargs before the closing parenthesis
                 line = f"{base_smuggle_call[-1]}, {kwargs_fmt})"
         elif ';' in stripped:
@@ -244,7 +244,7 @@ def smuggle_parser_colab(line):
             name = name.strip('()\n\t ')
             as_ = as_.strip()
             full_name = f'{pkg_name}.{name}'
-            line = f"smuggle('{full_name}', as_='{as_}')"
+            line = f'smuggle("{full_name}", as_="{as_}")'
         else:
             # standard smuggle call, e.g.:
             #   `smuggle pandas as pd`

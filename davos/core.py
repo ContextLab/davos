@@ -16,7 +16,7 @@ if config.IPYTHON_SHELL is not None:
 class Onion:
     # ADD DOCSTRING
     @staticmethod
-    def extract_arg_value(arg_name, args_str):
+    def _extract_arg_value(arg_name, args_str):
         # NOTE: does not handle args with multiple space-separated values
         if arg_name not in args_str:
             return None, args_str
@@ -36,17 +36,20 @@ class Onion:
         #  for splitting version string
         # TODO: handle scenario where it's an unrelated, non-onion
         #  comment
-        # TODO: if install_name is a VCS url, explicitly look for --egg
-        #  and --subdirectory in comment_text to make full URL for pip
+        # TODO: replace short arg versions with long versions to account
+        #  for combinations, e.g. `pip install -UIt <target> package`
         # NOTE: returns a dict of {param: value} for each, CLI args that
         #  don't take a value should be ... so they don't
         #  conflict with None values in constructor
+        # minimal fields that should always be in returned dict
         peeled_onion = {
             'installer': 'pip',
-            'install_name': None,
-            'version_spec': None,
-            'egg': None,
-            'subdirectory': None
+            'installer_args': ''
+            # 'install_name': None,
+            # 'version_spec': None,
+            # 'egg': None,
+            # 'subdirectory': None,
+            # 'build': None
         }
         comment_text = comment_text.strip()
         installer, sep, arg_str = comment_text.parition(':')
@@ -58,7 +61,6 @@ class Onion:
         if sep == '':
             # no colon, no install arguments other than installer name
             return peeled_onion
-
         version_spec, _, arg_str = arg_str.strip().partition(' ')
         # split on ',' to account for 'pkg>=1.0,<=2.0' syntax
         first_subspec = version_spec.split(',')[0]
@@ -66,6 +68,12 @@ class Onion:
             if spec_delim in first_subspec:
                 inst_name = version_spec[:version_spec.index(spec_delim)]
                 ver_spec = version_spec[version_spec.index(spec_delim):]
+                if installer == 'conda' and '=' in ver_spec[len(spec_delim):]:
+                    # if conda-installing specific build of package,
+                    # separate build version from package version and
+                    # handle independently
+                    ver_spec, build = ver_spec.rsplit('=', maxsplit=1)
+                    peeled_onion['build'] = build
                 break
         else:
             # either no version specified or installing from VCS, local
@@ -73,42 +81,56 @@ class Onion:
             ver_spec = None
             inst_name = version_spec
             if '+' in version_spec:
-                # installing from VCS (e.g., git+https://...) requires
-                # special handling of --egg & --subdirectory arguments
-                # that would normally be part of URL but can't due to
-                # Onion format
-                egg_name, arg_str = Onion.extract_arg_value('--egg', arg_str)
-                peeled_onion['egg'] = egg_name
-                subdir_path, arg_str = Onion.extract_arg_value('--subdirectory',
+                # pip-installing from VCS (e.g., git+https://...)
+                # requires special handling of --egg & --subdirectory
+                # arguments that would normally be part of URL but can't
+                # due to Onion format
+                egg_name, arg_str = Onion._extract_arg_value('--egg', arg_str)
+                subdir_path, arg_str = Onion._extract_arg_value('--subdirectory',
                                                                arg_str)
+                peeled_onion['egg'] = egg_name
                 peeled_onion['subdirectory'] = subdir_path
         peeled_onion['install_name'] = inst_name
         peeled_onion['version_spec'] = ver_spec
+        peeled_onion['installer_args'] = arg_str
         return peeled_onion
 
     def __init__(self, import_name, installer='pip', install_name=None,
-                 version_spec=None, egg=None, subdirectory=None,
-                 **installer_kwargs):
+                 version_spec=None, build=None, egg=None, subdirectory=None,
+                 installer_args=None):
         # ADD DOCSTRING
-        # NOTE: if install_name is None, all kwargs except installer must be None.
-        #  Elif install_name is not None, install_name must not be None,
-        #  but version et al. still can be
-        if install_name is None:
-            self.install_name = import_name
-        else:
-            self.install_name = install_name
+        # TODO: what happens if force-reinstall, ignore-installed, etc.
+        #  and module is already in sys.modules?
         if installer == 'pip' or installer == 'pypi':
             self.install_package = self._pip_install_package
-        elif installer == 'conda':
+        if installer == 'conda':
             self.install_package = self._conda_install_package
         else:
+            # here to handle user calling smuggle() *function* directly
             raise InstallerError(
                 f"Unsupported installer: '{installer}'. Currently supported "
                 "installers are 'pip' and 'conda'"
             )
         self.installer = installer
+        if install_name is None:
+            self.install_name = import_name
+        else:
+            self.install_name = install_name
         self.version_spec = version_spec
-        self.installer_kwargs = installer_kwargs
+        self.build = build
+        self.egg = egg
+        self.subdirectory = subdirectory
+        self.installer_args = installer_args
+        self._is_installed = None
+
+    @property
+    def is_installed(self):
+        # check whether package exists locally, is correct version,
+        # *if not VCS/local project/etc*, *NOT --force-reinstall, -I,
+        # --ignore-installed, etc.*
+        if self._is_installed is not None:
+            return self._is_installed
+
 
     def _pip_install_package(self):
         # NOTE: self.install_name can be:
@@ -121,6 +143,7 @@ class Onion:
         #  as it works in ipynb
         # TODO: add support for all kinds of non-index installs (see
         #  https://pip.pypa.io/en/stable/reference/pip_install/)
+
         cli_args = self._fmt_installer_args()
         cmd_str = f'pip install {cli_args} {self.install_name}'
         if config.SUPPRESS_STDOUT:
@@ -138,8 +161,6 @@ class Onion:
 
 
     def _conda_install_package(self): ...
-
-    def exists_locally(self) -> bool: ...
 
 
 def prompt_input(prompt, default=None, interrupt=None):

@@ -6,10 +6,10 @@ import sys
 from contextlib import redirect_stdout
 from io import StringIO
 
-from davos import config
+from davos import davos
 from davos.exceptions import InstallerError, OnionSyntaxError
 
-if config.IPYTHON_SHELL is not None:
+if davos.ipython_shell is not None:
     from IPython.core.interactiveshell import system as _run_shell_cmd
 
 
@@ -121,15 +121,13 @@ class Onion:
         self.egg = egg
         self.subdirectory = subdirectory
         self.installer_args = installer_args
-        self._is_installed = None
 
     @property
     def is_installed(self):
         # check whether package exists locally, is correct version,
         # *if not VCS/local project/etc*, *NOT --force-reinstall, -I,
         # --ignore-installed, etc.*
-        if self._is_installed is not None:
-            return self._is_installed
+        if not any(davos.local_packages): ...
 
 
     def _pip_install_package(self):
@@ -146,14 +144,14 @@ class Onion:
 
         cli_args = self._fmt_installer_args()
         cmd_str = f'pip install {cli_args} {self.install_name}'
-        if config.SUPPRESS_STDOUT:
+        if davos.suppress_stdout:
             stdout_stream = StringIO()
         else:
             stdout_stream = sys.stdout
         with redirect_stdout(stdout_stream):
             exit_code = run_shell_command(cmd_str)
         if exit_code != 0:
-            if config.SUPPRESS_STDOUT:
+            if davos.suppress_stdout:
                 sys.stderr.write(stdout_stream.getvalue().strip())
                 err_msg = (f"the command '{cmd_str}' returned a non-zero exit "
                            f"code: {exit_code}. See above output for details")

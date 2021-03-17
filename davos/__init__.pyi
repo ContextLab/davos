@@ -1,8 +1,8 @@
 from typing import Literal
+from davos._davos import Davos, SmuggleFunc
 
-
-__all__: list[str]
+__all__: list[Literal['davos', 'smuggle']]
 __version__: str
 
-
-def determine_environment() -> Literal['PY', 'IPY_NEW', 'IPY_OLD']: ...
+davos: Davos
+smuggle: SmuggleFunc

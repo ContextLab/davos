@@ -14,11 +14,11 @@ __all__ = ['register_smuggler_colab', 'smuggle_colab']
 
 import sys
 
-from davos import config
+from davos import davos
 from davos.core import Onion, prompt_input
 from davos.exceptions import DavosParserError, OnionTypeError
 
-if config.IPYTHON_SHELL is not None:
+if davos.ipython_shell is not None:
     from IPython.core.inputtransformer import StatelessInputTransformer
     from IPython.utils.importstring import import_item
 
@@ -39,7 +39,7 @@ def register_smuggler_colab():
         statements broken into multiple lines by either method will be
         passed to the smuggle_inspector as a single line
     """
-    colab_shell = config.IPYTHON_SHELL
+    colab_shell = davos.ipython_shell
     smuggle_transformer = StatelessInputTransformer.wrap(smuggle_parser_colab)
     # entire IPython.core.inputsplitter module was deprecated in v7.0.0,
     # but Colab runs v5.5.0, so we still have to register our
@@ -65,7 +65,7 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
         try:
             imported_obj = import_item(name)
         except ModuleNotFoundError as e:
-            if config.CONFIRM_INSTALL:
+            if davos.confirm_install:
                 msg = (f"package {name} is not installed.  Do you want to "
                        "install it?")
                 install_pkg = prompt_input(msg, default='n')
@@ -81,7 +81,7 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
         onion.install_package()
         imported_obj = import_item(name)
 
-    colab_shell = config.IPYTHON_SHELL
+    colab_shell = davos.ipython_shell
     if as_ is None:
         if name == pkg_name:
             colab_shell.user_ns[name] = sys.modules[name]
@@ -317,7 +317,6 @@ def smuggle_parser_colab(line):
 #             colab_shell.user_ns[pkg_name] = imported_obj
 #     else:
 #         colab_shell.user_ns[as_] = imported_obj
-
 
 
 smuggle_colab._register = register_smuggler_colab

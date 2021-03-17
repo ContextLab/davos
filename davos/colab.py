@@ -193,7 +193,7 @@ def smuggle_parser_colab(line):
                 #   ```
                 stripped, _, raw_onion = stripped.partition('#')
                 stripped = stripped.strip()
-                # currengly in form: `smuggle(pack.age, as_='as'|None)`
+                # currently in form: `smuggle(pack.age, as_=['<alias>'|None])`
                 base_smuggle_call = smuggle_parser_colab(stripped)
                 # drop any trailing non-onion comments
                 raw_onion = raw_onion.partition('#')[0]
@@ -212,7 +212,7 @@ def smuggle_parser_colab(line):
             # to smuggle
             if stripped.startswith('from '):
                 # smuggling multiple names from same package, e.g.:
-                #   `from os.path smuggle dirname, join as opj, relpath`
+                #   `from os.path smuggle dirname, join as opj, realpath`
                 # is transformed internally into multiple smuggle calls:
                 #   `smuggle os.path.dirname as dirname; smuggle os....`
                 from_cmd, names = stripped.split(' smuggle ')

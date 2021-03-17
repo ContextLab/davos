@@ -40,6 +40,9 @@ class OnionSyntaxError(OnionError, SyntaxError):
     # class analogous to SyntaxError, but for invalid Syntax in Onion
     # construct
     def __init__(self, msg, *args, filename=None, lineno=None, offset=None):
+        # TODO: format kwargs into tuple to init super() with correct
+        #  format to raise at specific location, see
+        #  https://stackoverflow.com/questions/33717804/python-raise-syntaxerror-with-lineno
         super().__init__(msg, *args)
         self.filename = filename
         self.lineno = lineno

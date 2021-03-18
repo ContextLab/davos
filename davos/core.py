@@ -108,7 +108,7 @@ class Onion:
         #  and module is already in sys.modules?
         if installer == 'pip' or installer == 'pypi':
             self.install_package = self._pip_install_package
-        if installer == 'conda':
+        elif installer == 'conda':
             self.install_package = self._conda_install_package
         else:
             # here to handle user calling smuggle() *function* directly

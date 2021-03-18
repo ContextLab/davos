@@ -8,9 +8,12 @@ IPython/Jupyter Notebook).
 __all__ = ['Onion', 'prompt_input']
 
 
+import sys
+from pathlib import Path
+from pkg_resources import (DistributionNotFound, find_distributions,
+                           get_distribution, RequirementParseError,
+                           VersionConflict)
 from subprocess import CalledProcessError
-
-from packaging.specifiers import Specifier
 
 from davos import davos
 from davos.exceptions import InstallerError, OnionSyntaxError
@@ -93,14 +96,21 @@ class Onion:
                                                                arg_str)
                 peeled_onion['egg'] = egg_name
                 peeled_onion['subdirectory'] = subdir_path
+        # --editable flag must go immediately before package, so parse
+        # it out so it can be placed manually later
+        if '--editable' in arg_str:
+            peeled_onion['editable'] = True
+            arg_str = arg_str.replace('--editable', '')
+        else:
+            peeled_onion['editable'] = False
         peeled_onion['install_name'] = inst_name
         peeled_onion['version_spec'] = ver_spec
         peeled_onion['installer_args'] = arg_str
         return peeled_onion
 
     def __init__(self, import_name, installer='pip', install_name=None,
-                 version_spec=None, build=None, egg=None, subdirectory=None,
-                 installer_args=''):
+                 version_spec=None, build=None, editable=False, egg=None,
+                 subdirectory=None, installer_args=''):
         # ADD DOCSTRING
         # TODO: what happens if force-reinstall, ignore-installed, etc.
         #  and module is already in sys.modules?
@@ -114,6 +124,7 @@ class Onion:
                 f"Unsupported installer: '{installer}'. Currently supported "
                 "installers are 'pip' and 'conda'"
             )
+        self.import_name = import_name
         self.installer = installer
         if install_name is None:
             self.install_name = import_name
@@ -121,54 +132,48 @@ class Onion:
             self.install_name = install_name
         self.version_spec = version_spec
         self.build = build
+        self.editable = editable
         self.egg = egg
         self.subdirectory = subdirectory
         self.installer_args = installer_args
 
     @property
     def is_installed(self):
-        # TODO: generalize this to use pip show or conda list
-        # TODO: currently, previously-installed VCS, local, etc.
-        #  packages will always be re-installed... how to better handle
-        #  this?
-        if self.install_name in davos.smuggled:
-            return True
-        elif ('--force-reinstall' in self.installer_args or
-              '--ignore-installed' in self.installer_args or
-              '--upgrade' in self.installer_args or
-              '+' in self.install_name):
+        # args that trigger install regardless of installed version
+        if (
+                '--force-reinstall' in self.installer_args or
+                '--ignore-installed' in self.installer_args or
+                '--upgrade' in self.installer_args
+        ):
             return False
+        elif self.install_name in davos.smuggled:
+            return True
+        elif '+' in self.install_name:
+            # unless same package, URL, & tag were already smuggled in
+            # this session, installing from VCS always triggers install
+            # because versions are too specific to compare reliably
+            # (e.g., could install from many different git commit hashes
+            # tagged with the same version)
+            return False
+        elif Path(self.install_name).expanduser().resolve().exists():
+            # installing from local file or directory
+            local_path = str(Path(self.install_name).expanduser().resolve())
+            return any(find_distributions(local_path, only=True))
         else:
-            show_command = f'pip show {self.install_name}'
+            dist_spec = self.install_name
+            if self.version_spec is not None:
+                dist_spec += self.version_spec
             try:
-                pip_show_output, exit_code = davos.run_shell_command(
-                    show_command, live_stdout=False
-                )
-            except CalledProcessError as e:
-                if e.returncode == 1:
-                    # package not installed
-                    return False
-                else:
-                    msg = ("An unexpected error occurred checking for an "
-                           "existing install of the package "
-                           f"'{self.install_name}'")
-                    raise InstallerError(msg, e) from e
-            if self.version_spec is None:
-                # command completed successfully so *some* version is
-                # installed, and no specific version to install specified
-                return True
+                get_distribution(dist_spec)
+            except (DistributionNotFound, VersionConflict, RequirementParseError):
+                # DistributionNotFound: package is not installed
+                # VersionConflict: package is installed, but installed
+                #   version doesn't fit requested version constraints
+                # RequirementParserError: version_spec is invalid or
+                # pkg_resources couldn't parse it
+                return False
             else:
-                try:
-                    version_line = next(l for l in pip_show_output.splitlines()
-                                        if l.startswith('version:'))
-                except StopIteration:
-                    # this should never happen, but default to
-                    # installing if version isn't listed in output
-                    return False
-                else:
-                    version = version_line.split(': ', maxsplit=1)[1]
-                    specifier = Specifier(self.version_spec)
-                    return specifier.contains(version)
+                return True
 
     def _pip_install_package(self):
         # TODO: would be more efficient to use nullcontext here as long
@@ -193,6 +198,8 @@ class Onion:
                        f"exit code: {e.returncode}. See above output "
                        f"for details")
             raise InstallerError(err_msg, e)
+        else:
+            return stdout, exit_code
 
     def _conda_install_package(self):
         raise NotImplementedError(

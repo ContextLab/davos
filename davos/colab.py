@@ -9,29 +9,36 @@ versions of IPython will also use this approach
 """
 
 
-__all__ = ['register_smuggler_colab', 'smuggle_colab']
+__all__ = [
+    'register_smuggler_colab',
+    'run_shell_command_colab',
+    'smuggle_colab'
+]
 
 
+import importlib
 import sys
-from contextlib import redirect_stdout
-from io import StringIO
+import warnings
+from pathlib import Path
+from subprocess import CalledProcessError
 
-from davos import config
-from davos.core import nullcontext
+from davos import davos
+from davos.core import Onion, prompt_input
+from davos.exceptions import DavosParserError, OnionTypeError, SmugglerError
 
-if config.IPYTHON_SHELL is not None:
+if davos.ipython_shell is not None:
+    from IPython.core.display import _display_mimetype
     from IPython.core.inputtransformer import StatelessInputTransformer
     from IPython.core.interactiveshell import system as _run_shell_cmd
     from IPython.utils.importstring import import_item
-    from IPython.utils.io import ask_yes_no
-
-
-def run_shell_command(cmd_str):
-    """
-    simple helper that runs a string command in a bash shell
-    and returns its exit code
-    """
-    return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
+    # additional check to make sure this is in Colab notebook rather
+    # than just very old IPython kernel
+    from ipykernel.zmqshell import ZMQInteractiveShell
+    if type(davos.ipython_shell) is not ZMQInteractiveShell:
+        # noinspection PyUnresolvedReferences
+        from google.colab._pip import (
+            _previously_imported_packages as get_updated_imported_pkgs
+        )
 
 
 def register_smuggler_colab():
@@ -50,86 +57,252 @@ def register_smuggler_colab():
         statements broken into multiple lines by either method will be
         passed to the smuggle_inspector as a single line
     """
-    colab_shell = config.IPYTHON_SHELL
+    colab_shell = davos.ipython_shell
     smuggle_transformer = StatelessInputTransformer.wrap(smuggle_parser_colab)
-    pipname_transformer = StatelessInputTransformer.wrap(pipname_parser_colab)
-    # entire IPython.core.inputsplitter module was deprecated in
-    # v7.0.0, but Colab runs v5.5.0, so we still have to register
-    # our transformer in both places for it to work correctly
+    # entire IPython.core.inputsplitter module was deprecated in v7.0.0,
+    # but Colab runs v5.5.0, so we still have to register our
+    # transformer in both places for it to work correctly
     # noinspection PyDeprecation
-    colab_shell.input_splitter.python_line_transforms.append(pipname_transformer())
-    colab_shell.input_transformer_manager.python_line_transforms.append(pipname_transformer())
-
     colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
     colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
     colab_shell.user_ns['smuggle'] = smuggle_colab
 
 
-def smuggle_colab(pkg_name, as_=None):
+def run_shell_command_colab(command):
+    # much simpler than plain Python equivalent b/c IPython has a
+    # built-in utility function for running shell commands that handles
+    # pretty much everything we need it to, and also formats outputs
+    # nicely in the notebook
+    retcode = _run_shell_cmd(command)
+    if retcode != 0:
+        raise CalledProcessError(returncode=retcode, cmd=command)
+    return retcode
+
+
+def smuggle_colab(name, as_=None, **onion_kwargs):
     # ADD DOCSTRING
-    # NOTE: pkg_name can be a package, subpackage, module or importable object
-    # TODO: handle install for packages whose installable names are
-    #  different form their importable names
-    try:
-        imported_obj = import_item(pkg_name)
-    except ModuleNotFoundError as e:
-        install_pkg = True
-        if config.CONFIRM_INSTALL:
-            msg = (f"package {pkg_name} is not installed.  Do you want to "
-                   "install it?")
-            install_pkg = ask_yes_no(msg, default='n', interrupt='n')
-        if install_pkg:
-            stdout_stream = StringIO()
-            if config.SUPPRESS_STDOUT:
-                stdout_ctx = redirect_stdout
-            else:
-                stdout_ctx = nullcontext
-            if config._CURR_INSTALL_NAME is None:
-                install_name = pkg_name.split('.')[0]    # toplevel_pkg
-            else:
-                install_name = config._CURR_INSTALL_NAME
-                config._CURR_INSTALL_NAME = None
-            with stdout_ctx(stdout_stream):
-                exit_code = run_shell_command(f'pip install {install_name}')
-            stdout = stdout_stream.getvalue().strip()
-            if exit_code != 0:
-                sys.stderr.write(stdout)
-                err_msg = (f"installing package '{pkg_name}' returned a "
-                           f"non-zero exit code: {exit_code}. See above output "
-                           "for details")
-                raise ChildProcessError(err_msg) from e
-            else:
-                imported_obj = import_item(pkg_name)
-        else:
-            raise e
-        # import_item takes care of adding package to sys.modules, along
-        # with its parents if it's a subpackage, but *doesn't* add the
-        # module name/alias to globals() like the normal import statement
-    colab_shell = config.IPYTHON_SHELL
-    if as_ is None:
-        if '.' in pkg_name:
-            toplevel_pkg = pkg_name.split('.')[0]
-            colab_shell.user_ns[toplevel_pkg] = sys.modules[toplevel_pkg]
-        else:
-            colab_shell.user_ns[pkg_name] = imported_obj
+    # NOTE: 'name' can be a package, subpackage, module or object
+    # TODO: move this name splitting logic somewhere else where it's cleaner
+    if not any(char in name for char in ('+', '/', ':')):
+        # dirty way of excluding names for VCS & local/remote files/modules
+        pkg_name = name.split('.')[0]
     else:
-        colab_shell.user_ns[as_] = imported_obj
+        pkg_name = name
+    try:
+        onion = Onion(pkg_name, **onion_kwargs)
+    except TypeError as e:
+        # TODO(?): find a way to *replace* exception. still shows last
+        #  frame of old traceback
+        raise OnionTypeError(*e.args).with_traceback(e.__traceback__) from None
+
+    if onion.is_installed:
+        try:
+            imported_obj = import_item(name)
+        except ModuleNotFoundError as e:
+            # TODO: check for --yes (conda, also pip?) and bypass if passed
+            if davos.confirm_install:
+                msg = (f"package {name} is not installed.  Do you want to "
+                       "install it?")
+                install_pkg = prompt_input(msg, default='n')
+                if not install_pkg:
+                    raise e
+            else:
+                install_pkg = True
+        else:
+            install_pkg = False
+    else:
+        install_pkg = True
+
+    if install_pkg:
+        installer_stdout, exit_code = onion.install_package()
+        # packages with C extensions (e.g., numpy, pandas) cannot be
+        # reloaded within an interpreter session. If the package was
+        # previously imported in the current (even if not by user), get
+        # versions before & after reload, and if there's no change, warn
+        # about needing to reset runtime for changes to take effect with
+        # "RESTART RUNTIME" button in output. Elif unable to determine
+        # version both before and after reload, issue lower-priority
+        # warning about uncertainty
+        prev_imported_pkgs = get_updated_imported_pkgs(installer_stdout)
+        # highest-level package should be dealt with last
+        try:
+            prev_imported_pkgs.remove(pkg_name)
+        except ValueError:
+            check_smuggled_pkg = False
+        else:
+            check_smuggled_pkg = True
+        for pkg_name in prev_imported_pkgs:
+            # imported_pkgs_updated computes intersection with
+            # set(sys.modules), so names are guaranteed to be there
+            importlib.reload(sys.modules[pkg_name])
+        if check_smuggled_pkg:
+            old_pkg = sys.modules[pkg_name]
+            try:
+                old_version = old_pkg.__version__
+            except AttributeError:
+                old_version = None
+            new_pkg = importlib.reload(old_pkg)
+            try:
+                new_version = new_pkg.__version__
+            except AttributeError:
+                new_version = None
+            if old_version == new_version:
+                if old_version is new_version is None:
+                    warnings.warn(
+                        "Failed to programmatically package version of "
+                        f"previously imported package '{pkg_name}' both before "
+                        "and after smuggling. If this module contains C "
+                        "extensions, you may need to restart the runtime to "
+                        "use the newly installed version"
+                    )
+                elif onion.version_spec is not None:
+                    # casting the widest net possible for this edge
+                    # case: if specific version not provided, old & new
+                    # package versions are likely to be the same (e.g.,
+                    # VCS/local/archive/forced/etc. install) and since
+                    # user can see the pip-install command's output,
+                    # probably better to be conservative about issuing
+                    # big, bright red warnings. Also adding
+                    # `davos.confirm_installed_versions()` for more
+                    # aggressive checking,
+                    _display_mimetype(
+                        "application/vnd.colab-display-data+json",
+                        (
+                            {'pip_warning': {'packages': pkg_name}},
+                        ),
+                        raw=True
+                    )
+        imported_obj = import_item(name)
+    # import_item takes care of adding package to sys.modules (& its
+    # parents if it's a subpackage), but doesn't add the module
+    # name/alias to globals() like the normal import statement
+    if as_ is None:
+        if name == pkg_name:
+            davos.ipython_shell.user_ns[name] = sys.modules[name]
+        else:
+            davos.ipython_shell.user_ns[name] = imported_obj
+    else:
+        davos.ipython_shell.user_ns[as_] = imported_obj
+    davos.smuggled[onion.install_name] = onion.version_spec
 
 
 def smuggle_parser_colab(line):
+    # ADD DOCSTRING
     stripped = line.strip()
     if (
             'smuggle ' in line and
             # ignore commented-out lines
             not stripped.startswith('#') and
             # if smuggle is not the first word, it must be preceded by
-            # a space. Handles edge cases, e.g.:
+            # a space. Helps handle weird edge cases, e.g.:
             #   `self.unrelated_attr_that_endswith_smuggle = 1`
             (stripped.startswith('smuggle ') or ' smuggle ' in stripped)
-        ):
-        # note: shouldn't need to replace \t with spaces here
+    ):
         indent_len = len(line) - len(line.lstrip(' '))
-        if ';' in stripped:
+        # need to handle lines with comments separately, before checking
+        # for characters (',', ';', etc.) in line so characters in
+        # comments don't cause false-positive
+        if '#' in stripped:
+            # have to deal with the possibility of:
+            #   ```
+            #   smuggle (b, # b onion comment
+            #            c, # c onion comment # non-onion comment
+            #            d) # d onion comment # non-onion comment # etc
+            #   ```
+            # and also:
+            #  ```
+            #   smuggle (    # could even be an arbitrary comment here...
+            #       b,       # b onion comment
+            #   # ... and even comments between lines...
+            #       c,       # c onion comment
+            #       d        # d onion comment # non-onion comment # etc
+            #   )            # ... or on an "empty" line
+            #   ```
+            # or even:
+            #   ```
+            #   smuggle (b,       # b onion comment
+            #            c,       # c onion comment
+            #            d)       # d onion comment # non-onion comment # etc
+            #   ```
+            # - only way this can happen is with parentheses & newlines,
+            #   so we can use that as a queue
+            # - on each line, all text before first # is real code
+            # - can only have one onion comment per module imported, so
+            # we can discount statements that don't start with 'smuggle'
+            if all(c in stripped for c in '()\n'):
+                if stripped.startswith('smuggle'):
+                    sub_lines = []
+                    for _line in stripped.splitlines():
+                        code, sep, comment = _line.partition('#')
+                        code = code.strip(', ')
+                        if code.endswith('(') or code == '' or code == ')':
+                            # - skip empty first lines, i.e. 'smuggle ('
+                            # - skip lines with no code, just comments
+                            # - skip empty last lines, i.e. ')'
+                            continue
+                        else:
+                            _line = f"smuggle {code.strip('() ')} {sep} {comment}"
+                            sub_lines.append(smuggle_parser_colab(_line))
+                elif stripped.startswith('from '):
+                    # can only have one onion comment per package, for
+                    # multiline, import from a single package, it can go
+                    # either on the first line (better) or the last line
+                    # (also allowed).
+                    # NOTE: if there is ANY comment on the first line,
+                    #  even if it is not an onion notation, the last
+                    #  line will not be looked at
+                    _lines = stripped.splitlines()
+                    code, _, comment = _lines[0].partition('#')
+                    pkg_name = code.split()[1]
+                    comment = comment.strip()
+                    if comment == '':
+                        comment = _lines[-1].partition('#')[2].strip()
+                    if comment == '':
+                        sep = ''
+                    else:
+                        sep = ' # '
+                    sub_lines = []
+                    _lines = stripped.split('smuggle (')[1].splitlines()
+                    for _line in _lines:
+                        _line = _line.split('#')[0].strip('), ')
+                        for name in _line.split(','):
+                            if name != '':
+                                _cmd = f'from {pkg_name} smuggle {name}'
+                                sub_lines.append(_cmd)
+                    # add onion comment to first statement so package
+                    # exists when the rest are run
+                    sub_lines[0] = f'{sub_lines[0]}{sep}{comment}'
+                    sub_lines = list(map(smuggle_parser_colab, sub_lines))
+                else:
+                    raise DavosParserError(
+                        "failed to parse multiline smuggle statement"
+                    )
+                line = '; '.join(sub_lines)
+            else:
+                # otherwise, there's only one onion comment
+                # TODO: a way to catch this, which is normally a SyntaxError:
+                #   ```
+                #   import a, \  # a onion comment
+                #          b, \  # b onion comment
+                #          c,    # c onion comment
+                #   ```
+                stripped, _, raw_onion = stripped.partition('#')
+                stripped = stripped.strip()
+                # currently in form: `smuggle(pack.age, as_=['<alias>'|None])`
+                base_smuggle_call = smuggle_parser_colab(stripped)
+                # drop any trailing non-onion comments
+                raw_onion = raw_onion.partition('#')[0]
+                # {param: value} kwargs dict for smuggle_colab()
+                peeled_onion = Onion.parse_onion_syntax(raw_onion)
+                kwargs_list = []
+                for k, v in peeled_onion.items():
+                    if isinstance(v, str):
+                        v = '"' + v + '"'
+                    kwargs_list.append(f'{k}={v}')
+                kwargs_fmt = ', '.join(kwargs_list)
+                # insert the kwargs before the closing parenthesis
+                line = f"{base_smuggle_call[:-1]}, {kwargs_fmt})"
+        elif ';' in stripped:
             # handles semicolon-separated smuggle calls, e.g.:
             #   `smuggle os.path; from pathlib smuggle Path; smuggle re`
             # by running function on each call individually & re-joining
@@ -139,7 +312,7 @@ def smuggle_parser_colab(line):
             # to smuggle
             if stripped.startswith('from '):
                 # smuggling multiple names from same package, e.g.:
-                #   `from os.path smuggle dirname, join as opj, relpath`
+                #   `from os.path smuggle dirname, join as opj, realpath`
                 # is transformed internally into multiple smuggle calls:
                 #   `smuggle os.path.dirname as dirname; smuggle os....`
                 from_cmd, names = stripped.split(' smuggle ')
@@ -171,7 +344,7 @@ def smuggle_parser_colab(line):
             name = name.strip('()\n\t ')
             as_ = as_.strip()
             full_name = f'{pkg_name}.{name}'
-            line = f"smuggle('{full_name}', as_='{as_}')"
+            line = f'smuggle("{full_name}", as_="{as_}")'
         else:
             # standard smuggle call, e.g.:
             #   `smuggle pandas as pd`
@@ -179,24 +352,14 @@ def smuggle_parser_colab(line):
             if ' as ' in pkg_name:
                 pkg_name, as_ = pkg_name.split(' as ')
                 # add quotes here so None can be passed without them
-                as_ = f"'{as_.strip()}'"
+                as_ = f'"{as_.strip()}"'
             else:
                 as_ = None
             pkg_name = pkg_name.strip('()\n\t ')
-            line = f"smuggle('{pkg_name}', as_={as_})"
+            line = f'smuggle("{pkg_name}", as_={as_})'
         # restore original indent
         line = ' ' * indent_len + line
     return line
 
 
-def pipname_parser_colab(line):
-    stripped = line.strip()
-    if stripped.startswith('@pipname'):
-        indent_len = len(line) - len(line.lstrip(' '))
-        pipname = stripped.replace('@pipname(', '').strip().split()[0].strip('")\'')
-        config._CURR_INSTALL_NAME = pipname
-    else:
-        return line
-
-
-smuggle_colab._register_smuggler = register_smuggler_colab
+smuggle_colab._register = register_smuggler_colab

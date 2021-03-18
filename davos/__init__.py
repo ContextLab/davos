@@ -7,4 +7,5 @@ __all__ = ['davos', 'smuggle']
 __version__ = get_distribution('davos').version
 
 davos = Davos()
+davos.initialize()
 smuggle = davos.smuggler

@@ -80,13 +80,11 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
                 install_pkg = True
         else:
             install_pkg = False
-            davos.smuggled.add(pkg_name)
     else:
         install_pkg = True
     if install_pkg:
         onion.install_package()
         imported_obj = import_item(name)
-
     # import_item takes care of adding package to sys.modules, along
     # with its parents if it's a subpackage, but *doesn't* add the
     # module name/alias to globals() like the normal import statement
@@ -98,6 +96,7 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
             colab_shell.user_ns[name] = imported_obj
     else:
         colab_shell.user_ns[as_] = imported_obj
+    davos.smuggled.add(pkg_name)
 
 
 def smuggle_parser_colab(line):
@@ -208,9 +207,14 @@ def smuggle_parser_colab(line):
                 raw_onion = raw_onion.partition('#')[0]
                 # {param: value} kwargs dict for smuggle_colab()
                 peeled_onion = Onion.parse_onion_syntax(raw_onion)
-                kwargs_fmt = ', '.join('='.join(map(str, kv)) for kv in peeled_onion.items())
+                kwargs_list = []
+                for k, v in peeled_onion.items():
+                    if isinstance(v, str):
+                        v = '"' + v + '"'
+                    kwargs_list.append(f'{k}={v}')
+                kwargs_fmt = ', '.join(kwargs_list)
                 # insert the kwargs before the closing parenthesis
-                line = f"{base_smuggle_call[-1]}, {kwargs_fmt})"
+                line = f"{base_smuggle_call[:-1]}, {kwargs_fmt})"
         elif ';' in stripped:
             # handles semicolon-separated smuggle calls, e.g.:
             #   `smuggle os.path; from pathlib smuggle Path; smuggle re`
@@ -261,68 +265,15 @@ def smuggle_parser_colab(line):
             if ' as ' in pkg_name:
                 pkg_name, as_ = pkg_name.split(' as ')
                 # add quotes here so None can be passed without them
-                as_ = f"'{as_.strip()}'"
+                as_ = f'"{as_.strip()}"'
             else:
                 as_ = None
             pkg_name = pkg_name.strip('()\n\t ')
-            line = f"smuggle('{pkg_name}', as_={as_})"
+            line = f'smuggle("{pkg_name}", as_={as_})'
         # restore original indent
         line = ' ' * indent_len + line
     return line
 
-
-
-################################# OLD ##################################
-
-
-# def smuggle_colab(pkg_name, as_=None):
-#     # ADD DOCSTRING
-#     # NOTE: pkg_name can be a package, subpackage, module or importable object
-#     try:
-#         imported_obj = import_item(pkg_name)
-#     except ModuleNotFoundError as e:
-#         if config.CONFIRM_INSTALL:
-#             msg = (f"package {pkg_name} is not installed.  Do you want to "
-#                    "install it?")
-#             install_pkg = ask_yes_no(msg, default='n', interrupt='n')
-#         else:
-#             install_pkg = True
-#         if install_pkg:
-#             if config._CURR_INSTALL_NAME is None:
-#                 install_name = pkg_name.split('.')[0]    # toplevel_pkg
-#             else:
-#                 install_name = config._CURR_INSTALL_NAME
-#                 config._CURR_INSTALL_NAME = None
-#             if config.SUPPRESS_STDOUT:
-#                 stdout_stream = StringIO()
-#             else:
-#                 stdout_stream = sys.stdout
-#             with redirect_stdout(stdout_stream):
-#                 exit_code = run_shell_command(f'pip install {install_name}')
-#             if exit_code != 0:
-#                 if config.SUPPRESS_STDOUT:
-#                     sys.stderr.write(stdout_stream.getvalue().strip())
-#                 err_msg = (f"installing package '{pkg_name}' returned a "
-#                            f"non-zero exit code: {exit_code}. See above output "
-#                            "for details")
-#                 raise InstallerError(err_msg) from e
-#             else:
-#                 imported_obj = import_item(pkg_name)
-#         else:
-#             raise e
-#     finally:
-#         # reset value set by pipname after successful import without install needed
-#         config._CURR_INSTALL_NAME = None
-#
-#     colab_shell = config.IPYTHON_SHELL
-#     if as_ is None:
-#         if '.' in pkg_name:
-#             toplevel_pkg = pkg_name.split('.')[0]
-#             colab_shell.user_ns[toplevel_pkg] = sys.modules[toplevel_pkg]
-#         else:
-#             colab_shell.user_ns[pkg_name] = imported_obj
-#     else:
-#         colab_shell.user_ns[as_] = imported_obj
 
 
 smuggle_colab._register = register_smuggler_colab

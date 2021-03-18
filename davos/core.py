@@ -168,12 +168,15 @@ class Onion:
         # TODO: add support for all kinds of non-index installs (see
         #  https://pip.pypa.io/en/stable/reference/pip_install/)
         install_name = self.install_name
-        vcs_field_sep= '#'
-        if self.egg is not None:
-            install_name += vcs_field_sep + self.egg
-            vcs_field_sep = '&'
-        if self.subdirectory is not None:
-            install_name += vcs_field_sep + self.subdirectory
+        if '+' in install_name:
+            vcs_field_sep= '#'
+            if self.egg is not None:
+                install_name += vcs_field_sep + self.egg
+                vcs_field_sep = '&'
+            if self.subdirectory is not None:
+                install_name += vcs_field_sep + self.subdirectory
+        elif self.version_spec is not None:
+            install_name += self.version_spec
         cmd_str = f'pip install {self.installer_args} {install_name}'
         if davos.suppress_stdout:
             stdout_stream = StringIO()

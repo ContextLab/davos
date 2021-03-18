@@ -23,6 +23,11 @@ class Davos:
             cls.__instance = super().__new__(cls)
         return cls.__instance
 
+    def confirm_installed_versions(self):
+        # run after smuggling all desired packages to confirm all
+        # *final* installed versions match requested versions
+        ...
+
     def initialize(self):
         self.confirm_install = False
         self.suppress_stdout = False

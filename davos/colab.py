@@ -16,17 +16,29 @@ __all__ = [
 ]
 
 
+import importlib
 import sys
+import warnings
+from pathlib import Path
 from subprocess import CalledProcessError
 
 from davos import davos
 from davos.core import Onion, prompt_input
-from davos.exceptions import DavosParserError, OnionTypeError
+from davos.exceptions import DavosParserError, OnionTypeError, SmugglerError
 
 if davos.ipython_shell is not None:
+    from IPython.core.display import _display_mimetype
     from IPython.core.inputtransformer import StatelessInputTransformer
     from IPython.core.interactiveshell import system as _run_shell_cmd
     from IPython.utils.importstring import import_item
+    # additional check to make sure this is in Colab notebook rather
+    # than just very old IPython kernel
+    from ipykernel.zmqshell import ZMQInteractiveShell
+    if type(davos.ipython_shell) is not ZMQInteractiveShell:
+        # noinspection PyUnresolvedReferences
+        from google.colab._pip import (
+            _previously_imported_packages as get_updated_imported_pkgs
+        )
 
 
 def register_smuggler_colab():
@@ -67,7 +79,6 @@ def run_shell_command_colab(command):
     return retcode
 
 
-
 def smuggle_colab(name, as_=None, **onion_kwargs):
     # ADD DOCSTRING
     # NOTE: 'name' can be a package, subpackage, module or object
@@ -83,6 +94,7 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
         # TODO(?): find a way to *replace* exception. still shows last
         #  frame of old traceback
         raise OnionTypeError(*e.args).with_traceback(e.__traceback__) from None
+
     if onion.is_installed:
         try:
             imported_obj = import_item(name)
@@ -100,20 +112,77 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
             install_pkg = False
     else:
         install_pkg = True
+
     if install_pkg:
-        onion.install_package()
+        installer_stdout, exit_code = onion.install_package()
+        # packages with C extensions (e.g., numpy, pandas) cannot be
+        # reloaded within an interpreter session. If the package was
+        # previously imported in the current (even if not by user), get
+        # versions before & after reload, and if there's no change, warn
+        # about needing to reset runtime for changes to take effect with
+        # "RESTART RUNTIME" button in output. Elif unable to determine
+        # version both before and after reload, issue lower-priority
+        # warning about uncertainty
+        prev_imported_pkgs = get_updated_imported_pkgs(installer_stdout)
+        # highest-level package should be dealt with last
+        try:
+            prev_imported_pkgs.remove(pkg_name)
+        except ValueError:
+            check_smuggled_pkg = False
+        else:
+            check_smuggled_pkg = True
+        for pkg_name in prev_imported_pkgs:
+            # imported_pkgs_updated computes intersection with
+            # set(sys.modules), so names are guaranteed to be there
+            importlib.reload(sys.modules[pkg_name])
+        if check_smuggled_pkg:
+            old_pkg = sys.modules[pkg_name]
+            try:
+                old_version = old_pkg.__version__
+            except AttributeError:
+                old_version = None
+            new_pkg = importlib.reload(old_pkg)
+            try:
+                new_version = new_pkg.__version__
+            except AttributeError:
+                new_version = None
+            if old_version == new_version:
+                if old_version is new_version is None:
+                    warnings.warn(
+                        "Failed to programmatically package version of "
+                        f"previously imported package '{pkg_name}' both before "
+                        "and after smuggling. If this module contains C "
+                        "extensions, you may need to restart the runtime to "
+                        "use the newly installed version"
+                    )
+                elif onion.version_spec is not None:
+                    # casting the widest net possible for this edge
+                    # case: if specific version not provided, old & new
+                    # package versions are likely to be the same (e.g.,
+                    # VCS/local/archive/forced/etc. install) and since
+                    # user can see the pip-install command's output,
+                    # probably better to be conservative about issuing
+                    # big, bright red warnings. Also adding
+                    # `davos.confirm_installed_versions()` for more
+                    # aggressive checking,
+                    _display_mimetype(
+                        "application/vnd.colab-display-data+json",
+                        (
+                            {'pip_warning': {'packages': pkg_name}},
+                        ),
+                        raw=True
+                    )
         imported_obj = import_item(name)
-    # import_item takes care of adding package to sys.modules, along
-    # with its parents if it's a subpackage, but *doesn't* add the
-    # module name/alias to globals() like the normal import statement
-    colab_shell = davos.ipython_shell
+    # import_item takes care of adding package to sys.modules (& its
+    # parents if it's a subpackage), but doesn't add the module
+    # name/alias to globals() like the normal import statement
     if as_ is None:
         if name == pkg_name:
-            colab_shell.user_ns[name] = sys.modules[name]
+            davos.ipython_shell.user_ns[name] = sys.modules[name]
         else:
-            colab_shell.user_ns[name] = imported_obj
+            davos.ipython_shell.user_ns[name] = imported_obj
     else:
-        colab_shell.user_ns[as_] = imported_obj
+        davos.ipython_shell.user_ns[as_] = imported_obj
     davos.smuggled.add(pkg_name)
 
 
@@ -291,7 +360,6 @@ def smuggle_parser_colab(line):
         # restore original indent
         line = ' ' * indent_len + line
     return line
-
 
 
 smuggle_colab._register = register_smuggler_colab

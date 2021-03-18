@@ -57,7 +57,7 @@ class Onion:
             # 'build': None
         }
         comment_text = comment_text.strip()
-        installer, sep, arg_str = comment_text.parition(':')
+        installer, sep, arg_str = comment_text.partition(':')
         if installer == 'conda':
             peeled_onion['installer'] = 'conda'
         elif installer != 'pip' and installer != 'pypi':

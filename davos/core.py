@@ -29,7 +29,7 @@ class Onion:
         pre, post = args_str.split(arg_name)
         pre = pre.strip()
         post = post.strip()
-        arg_val, _, post = post.partition(' ')[0]
+        arg_val, _, post = post.partition(' ')
         if arg_val.startswith('-') or arg_val == '':
             raise OnionSyntaxError(f"'{arg_name}' flag requires an argument")
         new_args_str = ' '.join((pre, post))

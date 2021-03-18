@@ -102,7 +102,7 @@ class Onion:
 
     def __init__(self, import_name, installer='pip', install_name=None,
                  version_spec=None, build=None, egg=None, subdirectory=None,
-                 installer_args=None):
+                 installer_args=''):
         # ADD DOCSTRING
         # TODO: what happens if force-reinstall, ignore-installed, etc.
         #  and module is already in sys.modules?

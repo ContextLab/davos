@@ -6,11 +6,16 @@ import sys
 from contextlib import redirect_stdout
 from io import StringIO
 
+from packaging.specifiers import Specifier
+
 from davos import davos
 from davos.exceptions import InstallerError, OnionSyntaxError
 
 if davos.ipython_shell is not None:
     from IPython.core.interactiveshell import system as _run_shell_cmd
+    def run_shell_command(cmd_str):
+        #runs a string command in a bash shell and returns its exit code
+        return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
 
 
 class Onion:
@@ -124,26 +129,52 @@ class Onion:
 
     @property
     def is_installed(self):
-        # check whether package exists locally, is correct version,
-        # *if not VCS/local project/etc*, *NOT --force-reinstall, -I,
-        # --ignore-installed, etc.*
-        if not any(davos.local_packages): ...
-
+        # TODO: generalize this to use pip show or conda list
+        # TODO: currently, previously-installed VCS, local, etc.
+        #  packages will always be re-installed... how to better handle
+        #  this?
+        if self.install_name in davos.smuggled:
+            return True
+        elif ('--force-reinstall' in self.installer_args or
+              '--ignore-installed' in self.installer_args or
+              '--upgrade' in self.installer_args or
+              '+' in self.install_name):
+            return False
+        else:
+            pip_show_output = StringIO()
+            with redirect_stdout(pip_show_output):
+                exit_code = run_shell_command(f'pip show {self.install_name}')
+            if exit_code == 1:
+                return False
+            elif self.version_spec is None:
+                return True
+            else:
+                pip_show_output = pip_show_output.getvalue()
+                try:
+                    version_line = next(l for l in pip_show_output
+                                        if l.startswith('version:'))
+                except StopIteration:
+                    # this should never happen, but default to
+                    # installing if version isn't listed in output
+                    return False
+                else:
+                    version = version_line.split(': ')[1]
+                    specifier = Specifier(self.version_spec)
+                    return specifier.contains(version)
 
     def _pip_install_package(self):
-        # NOTE: self.install_name can be:
-        #   - package name (will already be toplevel name)
-        #   - path (str or pathlib.Path) to local package
-        #   - url for remote install, e.g. GitHub repo (**pip only**)
-        #     + if -e/--editable passed, clone and then install locally
-        #       (if no local clone path provided, default to CWD)
         # TODO: would be more efficient to use nullcontext here as long
         #  as it works in ipynb
         # TODO: add support for all kinds of non-index installs (see
         #  https://pip.pypa.io/en/stable/reference/pip_install/)
-
-        cli_args = self._fmt_installer_args()
-        cmd_str = f'pip install {cli_args} {self.install_name}'
+        install_name = self.install_name
+        vcs_field_sep= '#'
+        if self.egg is not None:
+            install_name += vcs_field_sep + self.egg
+            vcs_field_sep = '&'
+        if self.subdirectory is not None:
+            install_name += vcs_field_sep + self.subdirectory
+        cmd_str = f'pip install {self.installer_args} {install_name}'
         if davos.suppress_stdout:
             stdout_stream = StringIO()
         else:
@@ -157,8 +188,8 @@ class Onion:
                            f"code: {exit_code}. See above output for details")
                 raise InstallerError(err_msg)
 
-
-    def _conda_install_package(self): ...
+    def _conda_install_package(self):
+        raise NotImplementedError
 
 
 def prompt_input(prompt, default=None, interrupt=None):
@@ -200,14 +231,6 @@ def prompt_input(prompt, default=None, interrupt=None):
                 raise
         except KeyError:
             pass
-
-
-def run_shell_command(cmd_str):
-    """
-    simple helper that runs a string command in a bash shell
-    and returns its exit code
-    """
-    return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
 
 
 # class nullcontext:

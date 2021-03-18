@@ -53,8 +53,12 @@ def register_smuggler_colab():
 def smuggle_colab(name, as_=None, **onion_kwargs):
     # ADD DOCSTRING
     # NOTE: 'name' can be a package, subpackage, module or object
-    # TODO: what if name is a path to a local file or module?
-    pkg_name = name.split('.')[0]
+    # TODO: move this name splitting logic somewhere else where it's cleaner
+    if not any(char in name for char in ('+', '/', ':')):
+        # dirty way of excluding names for VCS & local/remote files/modules
+        pkg_name = name.split('.')[0]
+    else:
+        pkg_name = name
     try:
         onion = Onion(pkg_name, **onion_kwargs)
     except TypeError as e:
@@ -65,6 +69,7 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
         try:
             imported_obj = import_item(name)
         except ModuleNotFoundError as e:
+            # TODO: check for --yes (conda, also pip?) and bypass if passed
             if davos.confirm_install:
                 msg = (f"package {name} is not installed.  Do you want to "
                        "install it?")
@@ -75,12 +80,16 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
                 install_pkg = True
         else:
             install_pkg = False
+            davos.smuggled.add(pkg_name)
     else:
         install_pkg = True
     if install_pkg:
         onion.install_package()
         imported_obj = import_item(name)
 
+    # import_item takes care of adding package to sys.modules, along
+    # with its parents if it's a subpackage, but *doesn't* add the
+    # module name/alias to globals() like the normal import statement
     colab_shell = davos.ipython_shell
     if as_ is None:
         if name == pkg_name:
@@ -301,9 +310,6 @@ def smuggle_parser_colab(line):
 #                 imported_obj = import_item(pkg_name)
 #         else:
 #             raise e
-#         # import_item takes care of adding package to sys.modules, along
-#         # with its parents if it's a subpackage, but *doesn't* add the
-#         # module name/alias to globals() like the normal import statement
 #     finally:
 #         # reset value set by pipname after successful import without install needed
 #         config._CURR_INSTALL_NAME = None

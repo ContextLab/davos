@@ -15,9 +15,16 @@ class Davos:
         except NameError:
             self.ipython_shell = None
             self.parser_environment = 'PY'
+            import shlex
+            import subprocess
             from davos.python import smuggle_python as _smuggle
+            # def _run_with_output(cmd_str):
+
         else:
             import IPython
+            # from IPython.core.interactiveshell import system as _run_shell_cmd
+            # def _run_with_output(cmd_str, ):
+            #     return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
             if IPython.version_info[0] < 7:
                 # running in Colaboratory or an old IPython/Jupyter
                 # Notebook version
@@ -31,4 +38,7 @@ class Davos:
         self.smuggler._register()
         self.confirm_install = False
         self.suppress_stdout = False
-        self.local_packages = {}
+        self.smuggled = set()
+
+    # def run_shell_command(self, command, live_output=None, timeout=None, **popen_kwargs):
+

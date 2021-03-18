@@ -23,4 +23,4 @@ class Davos:
     smuggler: SmuggleFunc
     confirm_install: bool
     suppress_stdout: bool
-    local_packages: dict[str, LocalPkgInfo]
+    smuggled: set[str]

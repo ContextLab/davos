@@ -147,7 +147,10 @@ class Onion:
         ):
             return False
         elif self.install_name in davos.smuggled:
-            return True
+            if davos.smuggled[self.install_name] == self.version_spec:
+                return True
+            else:
+                return False
         elif '+' in self.install_name:
             # unless same package, URL, & tag were already smuggled in
             # this session, installing from VCS always triggers install

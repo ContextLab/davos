@@ -183,7 +183,7 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
             davos.ipython_shell.user_ns[name] = imported_obj
     else:
         davos.ipython_shell.user_ns[as_] = imported_obj
-    davos.smuggled.add(pkg_name)
+    davos.smuggled[onion.install_name] = onion.version_spec
 
 
 def smuggle_parser_colab(line):

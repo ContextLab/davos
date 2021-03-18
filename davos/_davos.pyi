@@ -25,7 +25,7 @@ class Davos:
     confirm_install: bool
     ipython_shell: Optional[_IPyShell]
     parser_environment: Literal['IPY_NEW', 'IPY_OLD', 'PY']
-    smuggled: set[str]
+    smuggled: dict[str, Optional[str]]
     smuggler: SmuggleFunc
     suppress_stdout: bool
     def __new__(cls) -> _Davos: ...

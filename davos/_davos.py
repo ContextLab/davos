@@ -31,7 +31,7 @@ class Davos:
     def initialize(self):
         self.confirm_install = False
         self.suppress_stdout = False
-        self.smuggled = set()
+        self.smuggled = {}
         try:
             # noinspection PyUnresolvedReferences
             self.ipython_shell = get_ipython()

@@ -15,8 +15,7 @@ class SmugglerError(DavosError):
     pass
 
 
-# class InstallerError(SmugglerError, CalledProcessError):
-class InstallerError(SmugglerError):
+class InstallerError(SmugglerError, CalledProcessError):
     # class for problems encountered by the installer (pip/conda) itself
     # (e.g., failed to connect to internet, resolve environment, find
     # package with given name, etc.)

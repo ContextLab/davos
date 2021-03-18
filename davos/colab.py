@@ -9,7 +9,11 @@ versions of IPython will also use this approach
 """
 
 
-__all__ = ['register_smuggler_colab', 'smuggle_colab']
+__all__ = [
+    'register_smuggler_colab',
+    'run_shell_command_colab',
+    'smuggle_colab'
+]
 
 
 import sys
@@ -20,6 +24,7 @@ from davos.exceptions import DavosParserError, OnionTypeError
 
 if davos.ipython_shell is not None:
     from IPython.core.inputtransformer import StatelessInputTransformer
+    from IPython.core.interactiveshell import system as _run_shell_cmd
     from IPython.utils.importstring import import_item
 
 
@@ -48,6 +53,15 @@ def register_smuggler_colab():
     colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
     colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
     colab_shell.user_ns['smuggle'] = smuggle_colab
+
+
+def run_shell_command_colab(command):
+    # much simpler than plain Python equivalent b/c IPython has a
+    # built-in utility function for running shell commands that handles
+    # pretty much everything we need it to, and also formats outputs
+    # nicely in the notebook
+    return _run_shell_cmd(command)
+
 
 
 def smuggle_colab(name, as_=None, **onion_kwargs):

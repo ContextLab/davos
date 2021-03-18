@@ -9,7 +9,7 @@ def register_smuggler_jupyter():
     raise NotImplementedError("davos does not currently support Jupyter notebooks")
 
 
-def run_shell_command_jupyter(davos_, command, live_stdout=None):
+def run_shell_command_jupyter(command):
     raise NotImplementedError("davos does not currently support Jupyter notebooks")
 
 

@@ -21,12 +21,13 @@ class LocalPkgInfo(TypedDict):
 
 class Davos:
     __instance: ClassVar[Optional[_Davos]]
+    _shell_cmd_helper: Callable[[str], int]
+    confirm_install: bool
     ipython_shell: Optional[_IPyShell]
     parser_environment: Literal['IPY_NEW', 'IPY_OLD', 'PY']
-    smuggler: SmuggleFunc
-    confirm_install: bool
-    suppress_stdout: bool
     smuggled: set[str]
+    smuggler: SmuggleFunc
+    suppress_stdout: bool
     def __new__(cls) -> _Davos: ...
     def initialize(self) -> None: ...
-
+    def run_shell_command(self, command: str, live_stdout: Optional[bool] = ...) -> tuple[str, int]: ...

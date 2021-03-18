@@ -17,6 +17,7 @@ __all__ = [
 
 
 import sys
+from subprocess import CalledProcessError
 
 from davos import davos
 from davos.core import Onion, prompt_input
@@ -60,7 +61,10 @@ def run_shell_command_colab(command):
     # built-in utility function for running shell commands that handles
     # pretty much everything we need it to, and also formats outputs
     # nicely in the notebook
-    return _run_shell_cmd(command)
+    retcode = _run_shell_cmd(command)
+    if retcode != 0:
+        raise CalledProcessError(returncode=retcode, cmd=command)
+    return retcode
 
 
 

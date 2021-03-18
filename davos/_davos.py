@@ -11,6 +11,7 @@ __all__ = ['Davos']
 import sys
 from contextlib import redirect_stdout
 from io import StringIO
+from subprocess import CalledProcessError
 
 
 # noinspection PyAttributeOutsideInit
@@ -43,7 +44,7 @@ class Davos:
                 # Notebook version
                 import davos.colab as internals
                 self.smuggler = internals.smuggle_colab
-                self._shell_cmd_helper = internals.run_shell_cmd_colab
+                self._shell_cmd_helper = internals.run_shell_command_colab
                 self.parser_environment = 'IPY_OLD'
             else:
                 # running in a new(-ish) IPython/Jupyter Notebook
@@ -61,9 +62,19 @@ class Davos:
             command_context = capture_stdout
         else:
             command_context = redirect_stdout
-        with command_context(StringIO()) as stdout:
-            return_code = self._shell_cmd_helper(command)
-        return stdout.getvalue(), return_code
+        try:
+            with command_context(StringIO()) as stdout:
+                return_code = self._shell_cmd_helper(command)
+        except CalledProcessError as e:
+            # if the exception doesn't record the output, add it
+            # manually before raising
+            if e.output is None:
+                stdout = stdout.getvalue()
+                if stdout != '':
+                    e.output = stdout
+            raise e
+        else:
+            return stdout.getvalue(), return_code
 
 
 class capture_stdout:

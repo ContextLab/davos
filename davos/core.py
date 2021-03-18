@@ -1,21 +1,19 @@
-# will hold functions used by all 3 approaches, helper functions, etc.
-# once other 2 smugglers are written
+"""
+This module contains common utilities used by by the `smuggle` statement
+in all three environments (Python, old IPython/Google Colab, and new
+IPython/Jupyter Notebook).
+"""
 
 
-import sys
-from contextlib import redirect_stdout
-from io import StringIO
+__all__ = ['Onion', 'prompt_input']
+
+
+from subprocess import CalledProcessError
 
 from packaging.specifiers import Specifier
 
 from davos import davos
 from davos.exceptions import InstallerError, OnionSyntaxError
-
-if davos.ipython_shell is not None:
-    from IPython.core.interactiveshell import system as _run_shell_cmd
-    def run_shell_command(cmd_str):
-        #runs a string command in a bash shell and returns its exit code
-        return _run_shell_cmd(f"/bin/bash -c '{cmd_str}'")
 
 
 class Onion:
@@ -141,24 +139,34 @@ class Onion:
               '+' in self.install_name):
             return False
         else:
-            pip_show_output = StringIO()
-            with redirect_stdout(pip_show_output):
-                exit_code = run_shell_command(f'pip show {self.install_name}')
-            if exit_code == 1:
-                return False
-            elif self.version_spec is None:
+            show_command = f'pip show {self.install_name}'
+            try:
+                pip_show_output, exit_code = davos.run_shell_command(
+                    show_command, live_stdout=False
+                )
+            except CalledProcessError as e:
+                if e.returncode == 1:
+                    # package not installed
+                    return False
+                else:
+                    msg = ("An unexpected error occurred checking for an "
+                           "existing install of the package "
+                           f"'{self.install_name}'")
+                    raise InstallerError(msg, e) from e
+            if self.version_spec is None:
+                # command completed successfully so *some* version is
+                # installed, and no specific version to install specified
                 return True
             else:
-                pip_show_output = pip_show_output.getvalue()
                 try:
-                    version_line = next(l for l in pip_show_output
+                    version_line = next(l for l in pip_show_output.splitlines()
                                         if l.startswith('version:'))
                 except StopIteration:
                     # this should never happen, but default to
                     # installing if version isn't listed in output
                     return False
                 else:
-                    version = version_line.split(': ')[1]
+                    version = version_line.split(': ', maxsplit=1)[1]
                     specifier = Specifier(self.version_spec)
                     return specifier.contains(version)
 
@@ -178,21 +186,18 @@ class Onion:
         elif self.version_spec is not None:
             install_name += self.version_spec
         cmd_str = f'pip install {self.installer_args} {install_name}'
-        if davos.suppress_stdout:
-            stdout_stream = StringIO()
-        else:
-            stdout_stream = sys.stdout
-        with redirect_stdout(stdout_stream):
-            exit_code = run_shell_command(cmd_str)
-        if exit_code != 0:
-            if davos.suppress_stdout:
-                sys.stderr.write(stdout_stream.getvalue().strip())
-                err_msg = (f"the command '{cmd_str}' returned a non-zero exit "
-                           f"code: {exit_code}. See above output for details")
-                raise InstallerError(err_msg)
+        try:
+            stdout, exit_code = davos.run_shell_command(cmd_str)
+        except CalledProcessError as e:
+            err_msg = (f"the command '{e.cmd}' returned a non-zero "
+                       f"exit code: {e.returncode}. See above output "
+                       f"for details")
+            raise InstallerError(err_msg, e)
 
     def _conda_install_package(self):
-        raise NotImplementedError
+        raise NotImplementedError(
+            "smuggling packages via conda is not yet supported"
+        )
 
 
 def prompt_input(prompt, default=None, interrupt=None):

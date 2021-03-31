@@ -8,7 +8,7 @@ IPython/Jupyter Notebook).
 __all__ = ['Onion', 'prompt_input']
 
 
-import sys
+import re
 from pathlib import Path
 from pkg_resources import (DistributionNotFound, find_distributions,
                            get_distribution, RequirementParseError,
@@ -249,3 +249,70 @@ def prompt_input(prompt, default=None, interrupt=None):
                 raise
         except KeyError:
             pass
+
+
+_base_patterns = {
+    'name_pattern': r'[a-zA-Z]\w*',
+    'qualname_pattern': r'[a-zA-Z][\w.]*\w',
+    'comment_pattern': r'(?m:\#.*$)'
+}
+_base_patterns['as_pattern'] = fr' +as +{_base_patterns["name_pattern"]}'
+
+smuggle_statement_pattern = (
+    r'('
+        r'smuggle +'
+        r'(?P<MULTILINE_BASE>\()?'
+        r'('
+            r'?(MULTILINE_BASE)'
+                r'('
+                    r'\s*'
+                    r'{qualname_pattern}'
+                    r'({as_pattern})?'
+                    r',?'
+                    r' *'                               # NOTE LEADING LITERAL SPACE
+                    r'{comment_pattern}?'
+                    r'(?:'
+                        r'\s*'
+                        r'({qualname_pattern}({as_pattern})?,? *{comment_pattern}?)'
+                    r'|'
+                        r'{comment_pattern}'
+                    r'|'
+                        r'\s*'
+                    r')*'
+                    r'\)'
+                r')'
+            r'|'
+                r'{qualname_pattern}({as_pattern})?'
+        r')'
+    r')'
+    r'|'
+    r'('
+        r'from *{qualname_pattern} +smuggle +'
+        r'(?P<MULTILINE_FROM>\()?'
+        r'('
+            r'?(MULTILINE_FROM)'
+                r'('
+                    r' *'                               # NOTE LEADING LITERAL SPACE
+                    r'({name_pattern}({as_pattern})?,?)?'
+                    r'(?P<FROM_COMMENT>{comment_pattern})?'
+                    r'(?:'
+                        r'\s*'
+                        r'({name_pattern}({as_pattern})?,?)'
+                    r'|'
+                        r'{comment_pattern}'
+                    r'|'
+                        r'\s*'
+                    r')*'
+                    r'\)'
+                    r'('
+                        r'?(FROM_COMMENT)'
+                        r'|'
+                        r' *{comment_pattern}?'           # NOTE LEADING LITERAL SPACE
+                    r')'
+                r')'
+            r'|'
+                r'{name_pattern}({as_pattern})?'
+        r')'
+    r')'
+).format_map(_base_patterns)
+smuggle_statement_regex = re.compile(smuggle_statement_pattern)

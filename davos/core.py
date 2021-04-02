@@ -251,68 +251,102 @@ def prompt_input(prompt, default=None, interrupt=None):
             pass
 
 
-_base_patterns = {
-    'name_pattern': r'[a-zA-Z]\w*',
-    'qualname_pattern': r'[a-zA-Z][\w.]*\w',
-    'comment_pattern': r'(?m:\#.*$)'
+_smuggle_subexprs = {
+    'name_re': r'[a-zA-Z]\w*',
+    'qualname_re': r'[a-zA-Z][\w.]*\w',
+    'onion_re': r'\#+ *pip:[^#]+[^#\s]',
+    'comment_re': r'(?m:\#+.*$)'
 }
-_base_patterns['as_pattern'] = fr' +as +{_base_patterns["name_pattern"]}'
+_smuggle_subexprs['as_re'] = fr' +as +{_smuggle_subexprs["name_re"]}'
 
-smuggle_statement_pattern = (
-    r'('
-        r'smuggle +'
-        r'(?P<MULTILINE_BASE>\()?'
-        r'('
-            r'?(MULTILINE_BASE)'
-                r'('
-                    r'\s*'
-                    r'{qualname_pattern}'
-                    r'({as_pattern})?'
-                    r',?'
-                    r' *'                               # NOTE LEADING LITERAL SPACE
-                    r'{comment_pattern}?'
-                    r'(?:'
-                        r'\s*'
-                        r'({qualname_pattern}({as_pattern})?,? *{comment_pattern}?)'
-                    r'|'
-                        r'{comment_pattern}'
-                    r'|'
-                        r'\s*'
-                    r')*'
-                    r'\)'
-                r')'
-            r'|'
-                r'{qualname_pattern}({as_pattern})?'
-        r')'
-    r')'
-    r'|'
-    r'('
-        r'from *{qualname_pattern} +smuggle +'
-        r'(?P<MULTILINE_FROM>\()?'
-        r'('
-            r'?(MULTILINE_FROM)'
-                r'('
-                    r' *'                               # NOTE LEADING LITERAL SPACE
-                    r'({name_pattern}({as_pattern})?,?)?'
-                    r'(?P<FROM_COMMENT>{comment_pattern})?'
-                    r'(?:'
-                        r'\s*'
-                        r'({name_pattern}({as_pattern})?,?)'
-                    r'|'
-                        r'{comment_pattern}'
-                    r'|'
-                        r'\s*'
-                    r')*'
-                    r'\)'
-                    r'('
-                        r'?(FROM_COMMENT)'
-                        r'|'
-                        r' *{comment_pattern}?'           # NOTE LEADING LITERAL SPACE
+
+smuggle_statement_regex = re.compile((
+    r'^\s*'                                                              # match only if statement is first non-whitespace chars
+    r'(?:'                                                               # wrap in non-capture group so rule applies to both possible syntaxes:
+        r'(?:'                                                           # first valid syntax:
+            r'smuggle +{qualname_re}(?:{as_re})?'                        # match 'smuggle' + pkg name + optional alias
+            r'(?:'                                                       # match the following:
+                r' *'                                                    #  - any amount of horizontal whitespace
+                r','                                                     #  - followed by a comma
+                r' *'                                                    #  - followed by any amount of horizontal whitespace
+                r'{qualname_re}(?:{as_re})?'                             #  - followed by another pkg + optional alias
+            r')*'                                                        # ... any number of times
+            r'(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'             # check for multiple statements separated by semicolon 
+                                                                         #   (matches empty string with positive lookahead assertion 
+                                                                         #   so group gets defined without adding to full match)
+            r'(?(SEMICOLON_SEP)|'                                        # if the aren't multiple semicolon-separated statements:
+                r'(?:'
+                    r' *(?={onion_re})'                                  # consume horizontal whitespace only if followed by onion
+                    r'(?P<ONION>{onion_re})?'                            # capture onion comment in named group
+                r')?'
+            r')'
+        r')|(?:'                                                         # else (line doesn't match valid syntax):
+            r'from *{qualname_re} +smuggle +'                            # 
+            r'(?P<OPEN_PARENS>\()?'                                      # check if open parentheses
+            r'(?(OPEN_PARENS)'                                           # if parentheses opened
+                r'(?:'
+                    r' *'                                                # any n spaces
+                    r'(?:'                                               # start a non-capture group
+                        r'{name_re}(?:{as_re})?'                         # a name with optional alias
+                        r' *'                                            # optionally, any number of spaces
+                        r'(?:'                                           # start another non-capture group
+                            r','                                         # match a comma....
+                            r' *'                                        # ...plus any number of optional spaces
+                            r'{name_re}(?:{as_re})?'                     # followed by another name with optional alias...
+                            r' *'                                        # ...and any number of optional spaces
+                        r')*'                                            # match the preceding optional group any number of times 
+                        r',?'                                            # whether there was 1 item on first line or multiple, match optional comma after last one
+                        r' *'                                            # and finally, any number of optional spaces
+                    r')?'                                                # name(s) on first line are optional
+                    r'(?:'                                               # start non-capture group of 4 alternatives:
+                        r'(?P<FROM_ONION_1>{onion_re}) *{comment_re}'    # 1: onion on first line, optionally followed by unrelated comment(s)
+                    r'|'                                                 # or
+                        r'{comment_re}'                                  # 2: unrelated comment on first line
+                    r'|'                                                 # or
+                        r'(?m:$)'                                        # nothing on first line
+                    r'|'                                                 # or
+                        r'(?P<CLOSE_PARENS>\))'                          # 4: parentheses closed on first line
+                    r')'
+                    r'(?(CLOSE_PARENS)|'                                 # if parentheses were NOT closed on first line
+                        r'(?:'
+                            r'\s*'                                       # match any amount of newlines & indentation
+                            r'(?:'                                       # 3 possibilities for each additional line
+                                r'{name_re}(?:{as_re})?'
+                                r' *'
+                                r'(?:'
+                                    r','
+                                    r' *'
+                                    r'{name_re}(?:{as_re})?'
+                                    r' *'
+                                r')*'
+                                r'[^)\n]*'
+                            r'|'
+                                r' *{comment_re}'
+                            r'|'
+                                r'\n *'
+                            r')'
+                        r')*'
+                        r'\)'                                            # finally, match parentheses closure
                     r')'
                 r')'
             r'|'
-                r'{name_pattern}({as_pattern})?'
+                r'{name_re}(?:{as_re})?'
+                r'(?:'
+                    r' *'
+                    r','
+                    r' *'
+                    r'{name_re}(?:{as_re})?'
+                r')*'
+            r')'
+            r'(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'
+            r'(?(FROM_SEMICOLON_SEP)|'
+                r'(?(FROM_ONION_1)|'
+                    r'(?:'
+                        r' *(?={onion_re})'
+                        r'(?P<FROM_ONION>{onion_re})'
+                    r')?'
+                r')'
+            r')'
         r')'
     r')'
-).format_map(_base_patterns)
-smuggle_statement_regex = re.compile(smuggle_statement_pattern)
+).format_map(_smuggle_subexprs))

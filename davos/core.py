@@ -261,90 +261,90 @@ _smuggle_subexprs['as_re'] = fr' +as +{_smuggle_subexprs["name_re"]}'
 
 
 smuggle_statement_regex = re.compile((
-    r'^\s*'                                                              # match only if statement is first non-whitespace chars
-    r'(?:'                                                               # wrap in non-capture group so rule applies to both possible syntaxes:
-        r'(?:'                                                           # first valid syntax:
-            r'smuggle +{qualname_re}(?:{as_re})?'                        # match 'smuggle' + pkg name + optional alias
-            r'(?:'                                                       # match the following:
-                r' *'                                                    #  - any amount of horizontal whitespace
-                r','                                                     #  - followed by a comma
-                r' *'                                                    #  - followed by any amount of horizontal whitespace
-                r'{qualname_re}(?:{as_re})?'                             #  - followed by another pkg + optional alias
-            r')*'                                                        # ... any number of times
-            r'(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'             # check for multiple statements separated by semicolon 
-                                                                         #   (matches empty string with positive lookahead assertion 
-                                                                         #   so group gets defined without adding to full match)
-            r'(?(SEMICOLON_SEP)|'                                        # if the aren't multiple semicolon-separated statements:
+    r'^\s*'                                                               # match only if statement is first non-whitespace chars
+    r'(?:'                                                                # wrap in non-capture group so rule applies to both possible syntaxes:
+        r'(?:'                                                            # first valid syntax:
+            r'smuggle +{qualname_re}(?:{as_re})?'                         # match 'smuggle' + pkg name + optional alias
+            r'(?:'                                                        # match the following:
+                r' *'                                                     #  - any amount of horizontal whitespace
+                r','                                                      #  - followed by a comma
+                r' *'                                                     #  - followed by any amount of horizontal whitespace
+                r'{qualname_re}(?:{as_re})?'                              #  - followed by another pkg + optional alias
+            r')*'                                                         # ... any number of times
+            r'(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'              # check for multiple statements separated by semicolon 
+                                                                          #   (matches empty string with positive lookahead assertion 
+                                                                          #   so group gets defined without adding to full match)
+            r'(?(SEMICOLON_SEP)|'                                         # if the aren't multiple semicolon-separated statements:
                 r'(?:'
-                    r' *(?={onion_re})'                                  # consume horizontal whitespace only if followed by onion
-                    r'(?P<ONION>{onion_re})?'                            # capture onion comment in named group
-                r')?'
+                    r' *(?={onion_re})'                                   # consume horizontal whitespace only if followed by onion
+                    r'(?P<ONION>{onion_re})?'                             # capture onion comment in named group...
+                r')?'                                                     # ...optionally, if present
             r')'
-        r')|(?:'                                                         # else (line doesn't match valid syntax):
-            r'from *{qualname_re} +smuggle +'                            # 
-            r'(?P<OPEN_PARENS>\()?'                                      # check if open parentheses
-            r'(?(OPEN_PARENS)'                                           # if parentheses opened
-                r'(?:'
-                    r' *'                                                # any n spaces
-                    r'(?:'                                               # start a non-capture group
-                        r'{name_re}(?:{as_re})?'                         # a name with optional alias
-                        r' *'                                            # optionally, any number of spaces
-                        r'(?:'                                           # start another non-capture group
-                            r','                                         # match a comma....
-                            r' *'                                        # ...plus any number of optional spaces
-                            r'{name_re}(?:{as_re})?'                     # followed by another name with optional alias...
-                            r' *'                                        # ...and any number of optional spaces
-                        r')*'                                            # match the preceding optional group any number of times 
-                        r',?'                                            # whether there was 1 item on first line or multiple, match optional comma after last one
-                        r' *'                                            # and finally, any number of optional spaces
-                    r')?'                                                # name(s) on first line are optional
-                    r'(?:'                                               # start non-capture group of 4 alternatives:
-                        r'(?P<FROM_ONION_1>{onion_re}) *{comment_re}'    # 1: onion on first line, optionally followed by unrelated comment(s)
-                    r'|'                                                 # or
-                        r'{comment_re}'                                  # 2: unrelated comment on first line
-                    r'|'                                                 # or
-                        r'(?m:$)'                                        # nothing on first line
-                    r'|'                                                 # or
-                        r'(?P<CLOSE_PARENS>\))'                          # 4: parentheses closed on first line
+        r')|(?:'                                                          # else (line doesn't match valid syntax):
+            r'from *{qualname_re} +smuggle +'                             # match 'from' + package[.module[...]] + 'smuggle '
+            r'(?P<OPEN_PARENS>\()?'                                       # capture open parenthesis for later check, if present
+            r'(?(OPEN_PARENS)'                                            # if parentheses opened:
+                r'(?:'                                                    # logic for matching possible multiline statement:
+                    r' *'                                                 # capture any spaces following open parenthesis
+                    r'(?:'                                                # logic for matching code on *first line*:
+                        r'{name_re}(?:{as_re})?'                          # match a name with optional alias
+                        r' *'                                             # optionally, match any number of spaces
+                        r'(?:'                                            # match the following...:
+                            r','                                          #  - a comma
+                            r' *'                                         #  - optionally followed by any number of spaces
+                            r'{name_re}(?:{as_re})?'                      #  - followed by another name with optional alias
+                            r' *'                                         #  - optionally followed by any number of spaces
+                        r')*'                                             # ...any number of times
+                        r',?'                                             # match optional comma after last name, however many there were
+                        r' *'                                             # finally, match any number of optional spaces
+                    r')?'                                                 # any code on first line (matched by preceding group) is optional
+                    r'(?:'                                                # match 1 of 4 possible ends for first line:
+                        r'(?P<FROM_ONION_1>{onion_re}) *{comment_re}?'    #  1. onion, optionally followed by unrelated comment(s)
+                    r'|'                                                  #
+                        r'{comment_re}'                                   #  2. unrelated, non-onion comment
+                    r'|'                                                  #
+                        r'(?m:$)'                                         #  3. nothing further before EOL
+                    r'|'                                                  #
+                        r'(?P<CLOSE_PARENS>\))'                           #  4. close parenthesis on first line
                     r')'
-                    r'(?(CLOSE_PARENS)|'                                 # if parentheses were NOT closed on first line
-                        r'(?:'
-                            r'\s*'                                       # match any amount of newlines & indentation
-                            r'(?:'                                       # 3 possibilities for each additional line
-                                r'{name_re}(?:{as_re})?'
-                                r' *'
-                                r'(?:'
-                                    r','
-                                    r' *'
-                                    r'{name_re}(?:{as_re})?'
-                                    r' *'
-                                r')*'
-                                r'[^)\n]*'
+                    r'(?(CLOSE_PARENS)|'                                  # if parentheses were NOT closed on first line
+                        r'(?:'                                            # logic for matching subsequent line(s) of multiline smuggle statement:
+                            r'\s*'                                        # match any & all whitespace before 2nd line
+                            r'(?:'                                        # match 1 of 3 possibilities for each additional line:
+                                r'{name_re}(?:{as_re})?'                  #  1. similar to first line, match a name & optional alias...
+                                r' *'                                     #     ...followed by any amount of horizontal whitespace...
+                                r'(?:'                                    #     ...
+                                    r','                                  #     ...followed by comma...
+                                    r' *'                                 #     ...optional whitespace...
+                                    r'{name_re}(?:{as_re})?'              #     ...additional name & optional alias
+                                    r' *'                                 #     ...optional whitespace...
+                                r')*'                                     #     ...repeated any number of times
+                                r'[^)\n]*'                                #     ...plus any other content up to newline or close parenthesis
                             r'|'
-                                r' *{comment_re}'
+                                r' *{comment_re}'                         #  2. match full-line comment, indented an arbitrary amount
                             r'|'
-                                r'\n *'
+                                r'\n *'                                   #  3. an empty line (truly empty or only whitespace characters)
                             r')'
-                        r')*'
-                        r'\)'                                            # finally, match parentheses closure
+                        r')*'                                             # and repeat for any number of additional lines
+                        r'\)'                                             # finally, match close parenthesis
                     r')'
                 r')'
-            r'|'
-                r'{name_re}(?:{as_re})?'
-                r'(?:'
-                    r' *'
-                    r','
-                    r' *'
-                    r'{name_re}(?:{as_re})?'
-                r')*'
+            r'|'                                                          # else (no open parenthesis, so single line or /-continuation):
+                r'{name_re}(?:{as_re})?'                                  # match name with optional alias
+                r'(?:'                                                    # possibly with additional comma-separated names & aliases ...
+                    r' *'                                                 # ...
+                    r','                                                  # ...
+                    r' *'                                                 # ...
+                    r'{name_re}(?:{as_re})?'                              # ...
+                r')*'                                                     # ...
             r')'
-            r'(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'
-            r'(?(FROM_SEMICOLON_SEP)|'
-                r'(?(FROM_ONION_1)|'
+            r'(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'         # check for multiple statements separated by semicolon
+            r'(?(FROM_SEMICOLON_SEP)|'                                    # if there aren't additional ;-separated statements...
+                r'(?(FROM_ONION_1)|'                                      # ...and this isn't a multiline statement with onion on line 1:
                     r'(?:'
-                        r' *(?={onion_re})'
-                        r'(?P<FROM_ONION>{onion_re})'
-                    r')?'
+                        r' *(?={onion_re})'                               # consume horizontal whitespace only if followed by onion
+                        r'(?P<FROM_ONION>{onion_re})'                     # capture onion comment in named group...
+                    r')?'                                                 # ...optionally, if present
                 r')'
             r')'
         r')'

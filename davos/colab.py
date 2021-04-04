@@ -225,7 +225,7 @@ def smuggle_parser_colab(line):
     smuggle_funcs = []
     names_aliases = to_smuggle.split(',')
     for na in names_aliases:
-        if ' as ' in names_aliases:
+        if ' as ' in na:
             name, alias = na.split(' as ')
             name, alias = name.strip(), alias.strip()
         elif is_from_statement:

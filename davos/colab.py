@@ -227,12 +227,16 @@ def smuggle_parser_colab(line):
     for na in names_aliases:
         if ' as ' in na:
             name, alias = na.split(' as ')
-            name, alias = name.strip(), alias.strip()
-        elif is_from_statement:
-            alias = na.strip()
-            name = cmd_prefix.split()[1] + '.' + alias
+            name = '"' + name.strip() + '"'
+            alias = '"' + alias.strip() + '"'
         else:
-            name, alias = na.strip(), None
+            na = na.strip()
+            if is_from_statement:
+                name = '"' + cmd_prefix.split()[1] + '.' + na + '"'
+                alias = '"' + na + '"'
+            else:
+                name = '"' + na + '"'
+                alias = None
         smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
     smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'
     return before_chars + '; '.join(smuggle_funcs) + after_chars

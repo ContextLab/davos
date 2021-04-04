@@ -264,7 +264,7 @@ _smuggle_subexprs['as_re'] = fr' +as +{_smuggle_subexprs["name_re"]}'
 
 smuggle_statement_regex = re.compile((
     r'^\s*'                                                               # match only if statement is first non-whitespace chars
-    r'(?<FULL_CMD>'                                                       # capture full text of command in named group
+    r'(?P<FULL_CMD>'                                                       # capture full text of command in named group
         r'(?:'                                                            # first valid syntax:
             r'smuggle +{qualname_re}(?:{as_re})?'                         # match 'smuggle' + pkg name + optional alias
             r'(?:'                                                        # match the following:

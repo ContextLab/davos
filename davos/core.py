@@ -37,6 +37,7 @@ class Onion:
 
     @staticmethod
     def parse_onion_syntax(comment_text):
+        # TODO: rewrite around new regex-based line parsing
         # TODO: parse comment string for install arguments, use
         #  https://github.com/ContextLab/CDL-docker-stacks/blob/master/CI/conda_environment.py#L56-L65
         #  for splitting version string
@@ -57,14 +58,15 @@ class Onion:
             # 'subdirectory': None,
             # 'build': None
         }
-        comment_text = comment_text.strip()
         installer, sep, arg_str = comment_text.partition(':')
         if installer == 'conda':
             peeled_onion['installer'] = 'conda'
         elif installer != 'pip' and installer != 'pypi':
+            # TODO: current smuggle_statement_regex doesn't allow this possibility
             # unrelated, non-onion inline comment
             return peeled_onion
         if sep == '':
+            # TODO: current smuggle_statement_regex doesn't allow this possibility
             # no colon, no install arguments other than installer name
             return peeled_onion
         version_spec, _, arg_str = arg_str.strip().partition(' ')
@@ -262,7 +264,7 @@ _smuggle_subexprs['as_re'] = fr' +as +{_smuggle_subexprs["name_re"]}'
 
 smuggle_statement_regex = re.compile((
     r'^\s*'                                                               # match only if statement is first non-whitespace chars
-    r'(?:'                                                                # wrap in non-capture group so rule applies to both possible syntaxes:
+    r'(?<FULL_CMD>'                                                       # capture full text of command in named group
         r'(?:'                                                            # first valid syntax:
             r'smuggle +{qualname_re}(?:{as_re})?'                         # match 'smuggle' + pkg name + optional alias
             r'(?:'                                                        # match the following:
@@ -305,9 +307,9 @@ smuggle_statement_regex = re.compile((
                     r'|'                                                  #
                         r'(?m:$)'                                         #  3. nothing further before EOL
                     r'|'                                                  #
-                        r'(?P<CLOSE_PARENS>\))'                           #  4. close parenthesis on first line
+                        r'(?P<CLOSE_PARENS_FIRSTLINE>\))'                 #  4. close parenthesis on first line
                     r')'
-                    r'(?(CLOSE_PARENS)|'                                  # if parentheses were NOT closed on first line
+                    r'(?(CLOSE_PARENS_FIRSTLINE)|'                        # if parentheses were NOT closed on first line
                         r'(?:'                                            # logic for matching subsequent line(s) of multiline smuggle statement:
                             r'\s*'                                        # match any & all whitespace before 2nd line
                             r'(?:'                                        # match 1 of 3 possibilities for each additional line:
@@ -336,7 +338,7 @@ smuggle_statement_regex = re.compile((
                     r','                                                  # ...
                     r' *'                                                 # ...
                     r'{name_re}(?:{as_re})?'                              # ...
-                r')*'                                                     # ...
+                r')*'                                                     # ...repeated any number of times
             r')'
             r'(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'         # check for multiple statements separated by semicolon
             r'(?(FROM_SEMICOLON_SEP)|'                                    # if there aren't additional ;-separated statements...
@@ -350,3 +352,18 @@ smuggle_statement_regex = re.compile((
         r')'
     r')'
 ).format_map(_smuggle_subexprs))
+
+# Condensed, fully substituted regex:
+# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z][\w.]*\w(?: +as +[a-zA-Z]\w*)?(?:
+#  *, *[a-zA-Z][\w.]*\w(?: +as +[a-zA-Z]\w*)?)*(?P<SEMICOLON_SEP>(?= *;
+# *(?:smuggle|from)))?(?(SEMICOLON_SEP)|(?: *(?=\#+ *pip:[^#]+[^#\s])(?P
+# <ONION>\#+ *pip:[^#]+[^#\s])?)?))|(?:from *[a-zA-Z][\w.]*\w +smuggle +
+# (?P<OPEN_PARENS>\()?(?(OPEN_PARENS)(?: *(?:[a-zA-Z]\w*(?: +as +[a-zA-Z
+# ]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*,? *)?(?:(?P<FROM_O
+# NION_1>\#+ *pip:[^#]+[^#\s]) *(?m:\#+.*$)?|(?m:\#+.*$)|(?m:$)|(?P<CLOS
+# E_PARENS>\)))(?(CLOSE_PARENS)|(?:\s*(?:[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*
+# )? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*[^)\n]*| *(?m:\#+.*$)|\
+# n *))*\)))|[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?(?: *, *[a-zA-Z]\w*(?: +as
+#  +[a-zA-Z]\w*)?)*)(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?
+# (FROM_SEMICOLON_SEP)|(?(FROM_ONION_1)|(?: *(?=\#+ *pip:[^#]+[^#\s])(?P
+# <FROM_ONION>\#+ *pip:[^#]+[^#\s]))?))))

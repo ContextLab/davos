@@ -1,3 +1,4 @@
+from re import Pattern
 from typing import Literal, Optional
 
 InputOpts = Literal['y', 'yes', 'n', 'no']
@@ -46,3 +47,5 @@ def prompt_input(
 #
 class Onion(object):
     pass
+
+smuggle_statement_regex: Pattern

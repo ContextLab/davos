@@ -58,17 +58,10 @@ class Onion:
             # 'subdirectory': None,
             # 'build': None
         }
-        installer, sep, arg_str = comment_text.partition(':')
-        if installer == 'conda':
-            peeled_onion['installer'] = 'conda'
-        elif installer != 'pip' and installer != 'pypi':
-            # TODO: current smuggle_statement_regex doesn't allow this possibility
-            # unrelated, non-onion inline comment
-            return peeled_onion
-        if sep == '':
-            # TODO: current smuggle_statement_regex doesn't allow this possibility
-            # no colon, no install arguments other than installer name
-            return peeled_onion
+        installer, arg_str = comment_text.split(':', maxsplit=1)
+        # not yet supported
+        # if installer == 'conda':
+        #     peeled_onion['installer'] = 'conda'
         version_spec, _, arg_str = arg_str.strip().partition(' ')
         # split on ',' to account for 'pkg>=1.0,<=2.0' syntax
         first_subspec = version_spec.split(',')[0]
@@ -118,13 +111,13 @@ class Onion:
         #  and module is already in sys.modules?
         if installer == 'pip' or installer == 'pypi':
             self.install_package = self._pip_install_package
-        elif installer == 'conda':
-            self.install_package = self._conda_install_package
+        # elif installer == 'conda':
+        #     self.install_package = self._conda_install_package
         else:
             # here to handle user calling smuggle() *function* directly
             raise InstallerError(
                 f"Unsupported installer: '{installer}'. Currently supported "
-                "installers are 'pip' and 'conda'"
+                "installers are 'pip'"# and 'conda'"
             )
         self.import_name = import_name
         self.installer = installer
@@ -361,9 +354,9 @@ smuggle_statement_regex = re.compile((
 # (?P<OPEN_PARENS>\()?(?(OPEN_PARENS)(?: *(?:[a-zA-Z]\w*(?: +as +[a-zA-Z
 # ]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*,? *)?(?:(?P<FROM_O
 # NION_1>\#+ *pip:[^#]+[^#\s]) *(?m:\#+.*$)?|(?m:\#+.*$)|(?m:$)|(?P<CLOS
-# E_PARENS>\)))(?(CLOSE_PARENS)|(?:\s*(?:[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*
-# )? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*[^)\n]*| *(?m:\#+.*$)|\
-# n *))*\)))|[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?(?: *, *[a-zA-Z]\w*(?: +as
-#  +[a-zA-Z]\w*)?)*)(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?
-# (FROM_SEMICOLON_SEP)|(?(FROM_ONION_1)|(?: *(?=\#+ *pip:[^#]+[^#\s])(?P
-# <FROM_ONION>\#+ *pip:[^#]+[^#\s]))?))))
+# E_PARENS_FIRSTLINE>\)))(?(CLOSE_PARENS_FIRSTLINE)|(?:\s*(?:[a-zA-Z]\w*
+# (?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*[^)
+# \n]*| *(?m:\#+.*$)|\n *))*\)))|[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?(?: *,
+#  *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?)*)(?P<FROM_SEMICOLON_SEP>(?= *; *(
+# ?:smuggle|from)))?(?(FROM_SEMICOLON_SEP)|(?(FROM_ONION_1)|(?: *(?=\#+
+# *pip:[^#]+[^#\s])(?P<FROM_ONION>\#+ *pip:[^#]+[^#\s]))?))))

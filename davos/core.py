@@ -10,9 +10,9 @@ __all__ = ['Onion', 'prompt_input']
 
 import re
 from pathlib import Path
+from packaging.requirements import InvalidRequirement
 from pkg_resources import (DistributionNotFound, find_distributions,
-                           get_distribution, RequirementParseError,
-                           VersionConflict)
+                           get_distribution, VersionConflict)
 from subprocess import CalledProcessError
 
 from davos import davos
@@ -163,11 +163,11 @@ class Onion:
                 dist_spec += self.version_spec
             try:
                 get_distribution(dist_spec)
-            except (DistributionNotFound, VersionConflict, RequirementParseError):
+            except (DistributionNotFound, VersionConflict, InvalidRequirement):
                 # DistributionNotFound: package is not installed
                 # VersionConflict: package is installed, but installed
                 #   version doesn't fit requested version constraints
-                # RequirementParserError: version_spec is invalid or
+                # InvalidRequirement: version_spec is invalid or
                 # pkg_resources couldn't parse it
                 return False
             else:

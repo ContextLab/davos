@@ -1,5 +1,15 @@
 from argparse import ArgumentParser, SUPPRESS
 
+from davos.exceptions import OnionArgumentError
+
+
+class OnionParser(ArgumentParser):
+    # ADD DOCSTRING
+    def error(self, message):
+        # ADD DOCSTRING
+        raise OnionArgumentError(message)
+
+
 
 # does not include usage for `pip install [options] -r
 # <requirements file> [package-index-options] ...` since it's not
@@ -11,14 +21,25 @@ pip install [options] [-e] <local project path> ...
 pip install [options] <archive url/path> ...
 """.splitlines())
 
-
-pip_parser = ArgumentParser(usage=_pip_install_usage, allow_abbrev=False, exit_on_error=False, )
+pip_parser = OnionParser(usage=_pip_install_usage, add_help=False, argument_default=SUPPRESS)
 
 
 # ======== Install Options ========
 pip_install_opts = pip_parser.add_argument_group(title="Install Options")
-# pip_install_opts.add_argument('-r', '--requirement', metavar='<file>', help="Install from the given requirements file. This option can be used multiple times.")
-# pip_install_opts.add_argument('-c', '--constraint', metavar='<file>', help="Constrain versions using the given constraints file. This option can be used multiple times.")
+# pip_install_opts.add_argument(
+#     '-r',
+#     '--requirement',
+#     metavar='<file>',
+#     help="Install from the given requirements file. This option can be used "
+#          "multiple times."
+# )
+# pip_install_opts.add_argument(
+#     '-c',
+#     '--constraint',
+#     metavar='<file>',
+#     help="Constrain versions using the given constraints file. This option "
+#          "can be used multiple times."
+# )
 pip_install_opts.add_argument(
     '--no-deps',
     action='store_true',
@@ -30,13 +51,17 @@ pip_install_opts.add_argument(
     help="Include pre-release and development versions. By default, pip only "
          "finds stable versions."
 )
-pip_install_opts.add_argument(
+
+spec_or_editable = pip_install_opts.add_mutually_exclusive_group(required=True)
+spec_or_editable.add_argument('spec', nargs='?', help=SUPPRESS)
+spec_or_editable.add_argument(
     '-e',
     '--editable',
     metavar='<path/url>',
     help='Install a project in editable mode (i.e. setuptools "develop mode") '
          'from a local project path or a VCS url.'
 )
+
 pip_install_opts.add_argument(
     '-t',
     '--target',
@@ -84,7 +109,7 @@ pip_install_opts.add_argument(
     '--user',
     action='store_true',
     help="Install to the Python user install directory for your platform. "
-         "Typically ~/.local/, or %APPDATA%Python on Windows. (See the Python "
+         "Typically ~/.local/, or %%APPDATA%%Python on Windows. (See the Python "
          "documentation for site.USER_BASE for full details.)"
 )
 pip_install_opts.add_argument(
@@ -162,12 +187,10 @@ pep_517_subgroup.add_argument(
     dest='use_pep517',
     help=SUPPRESS
 )
-pep_517_subgroup.set_defaults(use_pep517=True)
 
 pip_install_opts.add_argument(
     '--install-option',
     action='append',
-    default=[],
     metavar='<options>',
     help='Extra arguments to be supplied to the setup.py install command (use '
          'like --install-option="--install-scripts=/usr/local/bin"). Use '
@@ -178,7 +201,6 @@ pip_install_opts.add_argument(
 pip_install_opts.add_argument(
     '--global-option',
     action='append',
-    default=[],
     metavar='<options>',
     help="Extra global options to be supplied to the setup.py call before the "
          "install command."
@@ -197,7 +219,6 @@ compile_subgroup.add_argument(
     dest='compile',
     help="Do not compile Python source files to bytecode"
 )
-compile_subgroup.set_defaults(compile=False)
 
 pip_install_opts.add_argument(
     '--no-warn-script-location',
@@ -216,7 +237,6 @@ pip_install_opts.add_argument(
 pip_install_opts.add_argument(
     '--no-binary',
     action='append',
-    default=[],
     metavar='<format_control>',
     help='Do not use binary packages. Can be supplied multiple times, and '
          'each time adds to the existing value. Accepts either ":all:" to '
@@ -228,7 +248,6 @@ pip_install_opts.add_argument(
 pip_install_opts.add_argument(
     '--only-binary',
     action='append',
-    default=[],
     metavar='<format_control>',
     help='Do not use source packages. Can be supplied multiple times, and '
          'each time adds to the existing value. Accepts either ":all:" to '
@@ -251,7 +270,6 @@ pip_install_opts.add_argument(
 )
 pip_install_opts.add_argument(
     '--progress-bar',
-    default='on',
     choices=('off', 'on', 'ascii', 'pretty', 'emoji'),
     metavar='<progress_bar>',
     help="Specify type of progress to be displayed "
@@ -278,7 +296,6 @@ pip_index_opts.add_argument(
 pip_index_opts.add_argument(
     '--extra-index-url',
     action='append',
-    default=[],
     metavar='<url>',
     help="Extra URLs of package indexes to use in addition to --index-url. "
          "Should follow the same rules as --index-url."
@@ -315,14 +332,12 @@ pip_general_opts.add_argument(
     '-v',
     '--verbose',
     action='count',
-    default=0,
     help="Give more output. Option is additive, and can be used up to 3 times."
 )
 pip_general_opts.add_argument(
     '-q',
     '--quiet',
     action='count',
-    default=0,
     help="Give less output. Option is additive, and can be used up to 3 times "
          "(corresponding to WARNING, ERROR, and CRITICAL logging levels)."
 )
@@ -334,7 +349,6 @@ pip_general_opts.add_argument(
 pip_general_opts.add_argument(
     '--retries',
     type=int,
-    default=5,
     metavar='<retries>',
     help="Maximum number of retries each connection should attempt (default 5 "
          "times)."
@@ -342,13 +356,11 @@ pip_general_opts.add_argument(
 pip_general_opts.add_argument(
     '--timeout',
     type=float,
-    default=15,
     metavar='<sec>',
     help="Set the socket timeout (default 15 seconds)."
 )
 pip_general_opts.add_argument(
     '--exists-action',
-    default=None,
     choices=(
         's',
         'switch',
@@ -414,13 +426,11 @@ pip_general_opts.add_argument(
 )
 pip_general_opts.add_argument(
     '--use-feature',
-    action='store_true',
     metavar='<feature>',
     help="Enable new functionality, that may be backward incompatible."
 )
 pip_general_opts.add_argument(
     '--use-deprecated',
-    action='store_true',
     metavar='<feature>',
     help="Enable deprecated functionality, that will be removed in the future."
 )

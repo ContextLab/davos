@@ -83,6 +83,12 @@ class Davos:
 
 
 class capture_stdout:
+    # TODO: move me to davos.core?
+    """
+    Context manager similar to `contextlib.redirect_stdout`, but
+    temporarily writes stdout to another stream *in addition to* --
+    rather than *instead of* -- `sys.stdout`
+    """
     def __init__(self, stream):
         self.stream = stream
         self.sys_stdout_write = sys.stdout.write

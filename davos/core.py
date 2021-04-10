@@ -9,11 +9,9 @@ __all__ = ['Onion', 'prompt_input']
 
 
 import re
-from pathlib import Path
 from packaging.requirements import InvalidRequirement
 from pkg_resources import (
     DistributionNotFound,
-    find_distributions,
     get_distribution,
     VersionConflict
 )
@@ -57,7 +55,7 @@ class Onion:
         # in it, so triple quote to be safe
         return f'"{installer}"', f'"""{args_str}"""', installer_kwargs
 
-    def __init__(self, package_name, installer='pip', args_str='', **installer_kwargs):
+    def __init__(self, package_name, installer, args_str, **installer_kwargs):
         # ADD DOCSTRING
         self.import_name = package_name
         if installer == 'pip':
@@ -75,6 +73,7 @@ class Onion:
         self.args_str = args_str
         full_spec = installer_kwargs.pop('spec').strip("'\"")
         self.is_editable = installer_kwargs.pop('editable')
+        self.verbosity = installer_kwargs.pop('verbosity')
         self.installer_kwargs = installer_kwargs
         self.build = None
         if '+' in full_spec:

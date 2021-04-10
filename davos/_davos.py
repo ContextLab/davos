@@ -16,6 +16,7 @@ from subprocess import CalledProcessError
 
 # noinspection PyAttributeOutsideInit
 class Davos:
+    # ADD DOCSTRING
     __instance = None
 
     def __new__(cls):

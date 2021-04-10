@@ -21,3 +21,5 @@ smuggle = davos.smuggler
 #  parsed by smuggle parser
 # TODO: conditionally add arguments to parsers based on user's installed
 #  version of installer
+# TODO: integrate sensible installer flags into davos behavior (e.g.,
+#  logging, verbosity, etc.)

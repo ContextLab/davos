@@ -1,6 +1,28 @@
-from argparse import ArgumentParser, SUPPRESS
+from argparse import Action, ArgumentParser, SUPPRESS
 
 from davos.exceptions import OnionArgumentError
+
+
+class EditableAction(Action):
+    # ADD DOCSTRING
+    def __init__(
+            self,
+            option_strings,
+            dest,
+            default=None,
+            metavar=None,
+            help=None
+    ):
+        # ADD DOCSTRING
+        # NOTE: `argparse.Action` subclass constructors must contain
+        #  `dest` as a positional arg, but `self.dest` will always be
+        #  `'editable'` for this particular class
+        super().__init__(option_strings, dest, default=default,
+                         metavar=metavar, help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, 'editable', True)
+        setattr(namespace, 'spec', values)
 
 
 class OnionParser(ArgumentParser):
@@ -9,6 +31,9 @@ class OnionParser(ArgumentParser):
         # ADD DOCSTRING
         raise OnionArgumentError(message)
 
+    def parse_args(self, args=None, namespace=None):
+        ns = super().parse_args(args=args, namespace=namespace)
+        args_dict = vars(ns)
 
 
 # does not include usage for `pip install [options] -r
@@ -21,7 +46,9 @@ pip install [options] [-e] <local project path> ...
 pip install [options] <archive url/path> ...
 """.splitlines())
 
-pip_parser = OnionParser(usage=_pip_install_usage, add_help=False, argument_default=SUPPRESS)
+pip_parser = OnionParser(usage=_pip_install_usage,
+                         add_help=False,
+                         argument_default=SUPPRESS)
 
 
 # ======== Install Options ========
@@ -57,6 +84,8 @@ spec_or_editable.add_argument('spec', nargs='?', help=SUPPRESS)
 spec_or_editable.add_argument(
     '-e',
     '--editable',
+    action=EditableAction,
+    default=False,
     metavar='<path/url>',
     help='Install a project in editable mode (i.e. setuptools "develop mode") '
          'from a local project path or a VCS url.'
@@ -177,14 +206,12 @@ pep_517_subgroup = pip_install_opts.add_mutually_exclusive_group()
 pep_517_subgroup.add_argument(
     '--use-pep517',
     action='store_true',
-    dest='use_pep517',
     help="Use PEP 517 for building source distributions (use --no-use-pep517 "
          "to force legacy behaviour)."
 )
 pep_517_subgroup.add_argument(
     '--no-use-pep517',
     action='store_true',
-    dest='use_pep517',
     help=SUPPRESS
 )
 
@@ -210,13 +237,11 @@ compile_subgroup = pip_install_opts.add_mutually_exclusive_group()
 compile_subgroup.add_argument(
     '--compile',
     action='store_true',
-    dest='compile',
     help="Compile Python source files to bytecode"
 )
 compile_subgroup.add_argument(
     '--no-compile',
-    action='store_false',
-    dest='compile',
+    action='store_true',
     help="Do not compile Python source files to bytecode"
 )
 
@@ -317,7 +342,7 @@ pip_index_opts.add_argument(
 )
 
 
-# ======== general arguments ========
+# ======== General Options ========
 pip_general_opts = pip_parser.add_argument_group(title='General Options')
 pip_general_opts.add_argument(
     '--isolated',

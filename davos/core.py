@@ -1,5 +1,5 @@
 """
-This module contains common utilities used by by the `smuggle` statement
+This module contains common utilities used by by the smuggle statement
 in all three environments (Python, old IPython/Google Colab, and new
 IPython/Jupyter Notebook).
 """
@@ -39,7 +39,9 @@ class Onion:
     @staticmethod
     def parse_onion(onion_text):
         onion_text = onion_text.lstrip('# ')
-        installer, arg_str = onion_text.split(': ', maxsplit=1)
+        installer, args_str = onion_text.split(':', maxsplit=1)
+        # remove all space between '<installer>:' and '<args_str>'
+        args_str = args_str.lstrip()
         # regex parsing to identify onion comments already ensures the
         # comment will start with "<installer>:"
         if installer == 'pip':
@@ -55,115 +57,101 @@ class Onion:
                 "An unexpected error occurred while trying to parse onion "
                 f"comment: {onion_text}"
             )
-        installer_args = vars(parser.parse_args(arg_str.split()))
+        installer_kwargs = vars(parser.parse_args(args_str.split()))
         # `arg_str` could potentially have both single and double quotes
         # in it, so triple quote to be safe
-        return f'"{installer}"', installer_args, f'"""{arg_str}"""'
+        return f'"{installer}"', f'"""{args_str}"""', installer_kwargs
 
-
-    @staticmethod
-    def parse_onion_syntax(onion_text):
-        # TODO: rewrite around new regex-based line parsing
-        # TODO: replace short arg versions with long versions to account
-        #  for combinations, e.g. `pip install -UIt <target> package`
-        # NOTE: returns a dict of {param: value} for each, CLI args that
-        #  don't take a value should be ... so they don't
-        #  conflict with None values in constructor
-        # minimal fields that should always be in returned dict
-        peeled_onion = {
-            'installer': 'pip',
-            'installer_args': ''
-            # 'install_name': None,
-            # 'version_spec': None,
-            # 'egg': None,
-            # 'subdirectory': None,
-            # 'build': None
-        }
-        installer, arg_str = onion_text.split(':', maxsplit=1)
-        # not yet supported
-        # if installer == 'conda':
-        #     peeled_onion['installer'] = 'conda'
-        version_spec, _, arg_str = arg_str.strip().partition(' ')
-        # split on ',' to account for 'pkg>=1.0,<=2.0' syntax
-        first_subspec = version_spec.split(',')[0]
-        for spec_delim in ('==', '<=', '>=', '!=', '~=', '<', '>', '='):
-            if spec_delim in first_subspec:
-                inst_name = version_spec[:version_spec.index(spec_delim)]
-                ver_spec = version_spec[version_spec.index(spec_delim):]
-                if installer == 'conda' and '=' in ver_spec[len(spec_delim):]:
-                    raise NotImplementedError(
-                        "smuggling packages via conda is not yet supported"
-                    )
-                    # # if conda-installing specific build of package,
-                    # # separate build version from package version and
-                    # # handle independently
-                    # ver_spec, build = ver_spec.rsplit('=', maxsplit=1)
-                    # peeled_onion['build'] = build
-                break
-        else:
-            # either no version specified or installing from VCS, local
-            # project, local/remote archive, wheel file, etc.
-            ver_spec = None
-            inst_name = version_spec
-            if '+' in version_spec:
-                # pip-installing from VCS (e.g., git+https://...)
-                # requires special handling of --egg & --subdirectory
-                # arguments that would normally be part of URL but can't
-                # due to Onion format
-                egg_name, arg_str = Onion._extract_arg_value('--egg', arg_str)
-                subdir_path, arg_str = Onion._extract_arg_value('--subdirectory',
-                                                               arg_str)
-                peeled_onion['egg'] = egg_name
-                peeled_onion['subdirectory'] = subdir_path
-        # --editable flag must go immediately before package, so parse
-        # it out so it can be placed manually later
-        if '--editable' in arg_str:
-            peeled_onion['editable'] = True
-            arg_str = arg_str.replace('--editable', '')
-        else:
-            peeled_onion['editable'] = False
-        peeled_onion['install_name'] = inst_name
-        peeled_onion['version_spec'] = ver_spec
-        peeled_onion['installer_args'] = arg_str
-        return peeled_onion
-
-    def __init__(
-            self,
-            import_name,
-            installer='pip',
-            install_name=None,
-            version_spec=None,
-            build=None,
-            editable=False,
-            egg=None,
-            subdirectory=None,
-            installer_args=''
-    ):
+    def __init__(self, package_name, installer='pip', args_str='', **installer_kwargs):
         # ADD DOCSTRING
-        # TODO: what happens if force-reinstall, ignore-installed, etc.
-        #  and module is already in sys.modules?
-        if installer == 'pip' or installer == 'pypi':
+        self.import_name = package_name
+        if installer == 'pip':
             self.install_package = self._pip_install_package
-        # elif installer == 'conda':
-        #     self.install_package = self._conda_install_package
+        elif installer == 'conda':
+            raise NotImplementedError(
+                "smuggling packages via conda is not yet supported"
+            )
         else:
             # here to handle user calling smuggle() *function* directly
             raise InstallerError(
                 f"Unsupported installer: '{installer}'. Currently supported "
-                "installers are:\n\t['pip']"# and 'conda'"
+                "installers are:\n\t['pip']"  # and 'conda'"
             )
-        self.import_name = import_name
-        self.installer = installer
-        if install_name is None:
-            self.install_name = import_name
+        self.args_str = args_str
+        self.is_editable = installer_kwargs.pop('editable')
+
+        full_spec = installer_kwargs.pop('spec').strip("'\"")
+        if '+' in full_spec:
+            # INSTALLING FROM LOCAL/REMOTE VCS:
+            #   self.install_name is the VCS program + '+' + absolute
+            #   local path or remote URL, plus any optional fields
+            #   (#egg=..., [#|&]subdirectory=...) except for @<ref>
+            #   specifier, which is used as self.version_spec if present
+
+            # parse out <ref> without affecting setuptools extras syntax
+            _before, _sep, _after = full_spec.rpartition('@')
+            if '+' in _before:
+                # @<ref> was present and we split there. Get everything
+                # up to #egg=..., #subdirectory=..., or end of spec
+                ver_spec = _after.split('#')[0]
+                # self.install_name is full spec with @<ref> removed
+                self.install_name = full_spec.replace(f'@{ver_spec}', '')
+                if self.is_editable:
+                    ver_spec += ' editable'
+                self.version_spec = ver_spec
+            else:
+                # @ either not present or used only for setuptools extra
+                self.install_name = full_spec
+                if self.is_editable:
+                    self.version_spec = 'editable'
+                else:
+                    self.version_spec = None
+            self.build = None
+        elif '/' in full_spec:
+            # INSTALLING FROM LOCAL PROJECT OR PEP 440 DIRECT REFERENCE:
+            #   self.install_name is the absolute path to a local
+            #   project or source archive, or the URL for a remote source
+            #   archive
+            self.install_name = full_spec
+            if self.is_editable:
+                self.version_spec = 'editable'
+            else:
+                self.version_spec = None
+            self.build = None
         else:
-            self.install_name = install_name
-        self.version_spec = version_spec
-        self.build = build
-        self.editable = editable
-        self.egg = egg
-        self.subdirectory = subdirectory
-        self.installer_args = installer_args
+            # INSTALLING USING A REQUIREMENT SPECIFIER:
+            #   most common usage. self.install_name is package name
+            #   provided in onion comment. self.version_spec is
+            #   (optional) version specifier
+
+            # split on ',' to handle multiple specs ('pkg>=1.0,<=2.0')
+            first_subspec = full_spec.split(',')[0]
+            for spec_delim in ('==', '<=', '>=', '!=', '~=', '<', '>', '='):
+                if spec_delim in first_subspec:
+                    self.install_name = full_spec[:full_spec.index(spec_delim)]
+                    ver_spec = full_spec[full_spec.index(spec_delim):]
+                    if (
+                            installer == 'conda' and
+                            '=' in ver_spec[len(spec_delim):]
+                    ):
+                        raise NotImplementedError(
+                            "smuggling packages via conda is not yet supported"
+                        )
+                        # if conda-installing specific build of package,
+                        # separate build version from package version
+                        # and handle independently
+                        # ver_spec, build = ver_spec.rsplit('=', maxsplit=1)
+                    else:
+                        build = None
+
+                    self.version_spec = ver_spec
+                    self.build = build
+                    break
+            else:
+                # no version specified with package name
+                self.install_name = full_spec
+                self.version_spec = None
+                self.build = None
 
     @property
     def is_installed(self):

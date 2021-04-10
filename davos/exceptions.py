@@ -82,10 +82,6 @@ class OnionArgumentError(ArgumentError, OnionParserError):
             self.argument_name = split_message[1].rstrip(':')
             self.message = ' '.join(split_message[2:])
 
-class OnionValueError(OnionParserError, ValueError):
-    # class analogous to ValueError, but for bad values passed to Onion
-    # construct params
-    pass
 
 class OnionSyntaxError(OnionParserError):
     # class analogous to SyntaxError, but for invalid Syntax in Onion

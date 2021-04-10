@@ -24,7 +24,6 @@ from subprocess import CalledProcessError
 
 from davos import davos
 from davos.core import Onion, prompt_input, smuggle_statement_regex
-from davos.exceptions import DavosParserError, OnionTypeError, SmugglerError
 
 if davos.ipython_shell is not None:
     from IPython.core.display import _display_mimetype
@@ -88,18 +87,13 @@ def smuggle_colab(name, as_=None, **onion_kwargs):
         pkg_name = name.split('.')[0]
     else:
         pkg_name = name
-    try:
-        onion = Onion(pkg_name, **onion_kwargs)
-    except TypeError as e:
-        # TODO(?): find a way to *replace* exception. still shows last
-        #  frame of old traceback
-        raise OnionTypeError(*e.args).with_traceback(e.__traceback__) from None
 
+    onion = Onion(pkg_name, **onion_kwargs)
     if onion.is_installed:
         try:
             imported_obj = import_item(name)
         except ModuleNotFoundError as e:
-            # TODO: check for --yes (conda, also pip?) and bypass if passed
+            # TODO: check for --yes (conda) and bypass if passed
             if davos.confirm_install:
                 msg = (f"package {name} is not installed.  Do you want to "
                        "install it?")
@@ -238,192 +232,9 @@ def smuggle_parser_colab(line):
                 name = '"' + na + '"'
                 alias = None
         smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
+
     smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'
     return before_chars + '; '.join(smuggle_funcs) + after_chars
-
-#
-# def smuggle_parser_colab(line):
-#     # ADD DOCSTRING
-#     stripped = line.strip()
-#     if 'smuggle ' not in line:# or (not stripped.startswith('smuggle') and ):
-#         return line
-#
-#     indent_len = len(line) - len(line.lstrip(' '))
-#     if '#' in stripped:
-#         if stripped.index('#') < stripped.index('smuggle '):
-#             return line
-#         elif all(c in stripped for c in '()\n'):
-#             # - handles syntax for using a single statement to smuggle
-#             #   multiple items joined via implicit line continuation
-#             #   inside parentheses, e.g.:
-#             #    ```
-#             #    smuggle (a,    # pkg a onion comment # unrelated comment
-#             #             b,    # pkg b onion comment
-#             #             c)    # pkg c onion comment
-#             #
-#             #    smuggle (      # unrelated comment here is valid
-#             #        d,         # pkg d onion comment
-#             #        e,     # can be any amount of space before comment
-#             #    # comments between lines are also valid
-#             #        f          # pkg f onion comment
-#             #    )              # unrelated comment here also valid
-#             #
-#             #    from g smuggle (    # pkg g onion comment
-#             #        h,
-#             #        i,
-#             #        j
-#             #    )
-#             #    ```
-#             # - Multiline statements are only possible using implicit
-#             # line continuation. Backslash continuation gets passed to
-#             # transformer as a single line
-#             if stripped.startswith('smuggle'):
-#                 # If items are different packages, each could have its
-#                 # own onion comment
-#                 sub_lines = []
-#                 for _line in stripped.splitlines():
-#                     code, sep, comment = _line.partition('#')
-#                     code = code.strip(', ')
-#                     if code.endswith('(') or code == '' or code == ')':
-#                         # - skip empty first lines, i.e. 'smuggle ('
-#                         # - skip lines with no code, just comments
-#                         # - skip empty last lines, i.e. ')'
-#                         continue
-#                     else:
-#                         _line = f"smuggle {code.strip('() ')} {sep} {comment}"
-#                         sub_lines.append(smuggle_parser_colab(_line))
-#             elif stripped.startswith('from '):
-#                 # multiline import of items from the same package can
-#                 # have only a single onion comment. Can go on either the
-#                 # first line (preferred) or last line (also allowed).
-#                 # NOTE: if there is ANY comment on the first line, even
-#                 #  if it is not an onion notation, the last line will
-#                 #  not be looked at
-#                 _lines = stripped.splitlines()
-#                 code, _, comment = _lines[0].partition('#')
-#                 pkg_name = code.split()[1]
-#                 comment = comment.strip()
-#                 if comment == '':
-#                     comment = _lines[-1].partition('#')[2].strip()
-#                 if comment == '':
-#                     sep = ''
-#                 else:
-#                     sep = ' # '
-#                 sub_lines = []
-#                 _lines = stripped.split('smuggle (')[1].splitlines()
-#                 for _line in _lines:
-#                     _line = _line.split('#')[0].strip('), ')
-#                     for name in _line.split(','):
-#                         if name != '':
-#                             _cmd = f'from {pkg_name} smuggle {name}'
-#                             sub_lines.append(_cmd)
-#                 # add onion comment to first statement so package
-#                 # exists when the rest are run
-#                 sub_lines[0] = f'{sub_lines[0]}{sep}{comment}'
-#                 sub_lines = list(map(smuggle_parser_colab, sub_lines))
-#             else:
-#                 raise DavosParserError(
-#                     "failed to parse multiline smuggle statement"
-#                 )
-#             line = '; '.join(sub_lines)
-#         else:
-#             # otherwise, there's only one onion comment
-#             # TODO: a way to catch this, which is invalid and normally
-#             #  raises a SyntaxError:
-#             #   ```
-#             #   import a, \  # a onion comment
-#             #          b, \  # b onion comment
-#             #          c,    # c onion comment
-#             #   ```
-#             stripped, _, raw_onion = stripped.partition('#')
-#             stripped = stripped.strip()
-#             # currently in form: `smuggle(pack.age, as_=['<alias>'|None])`
-#             base_smuggle_call = smuggle_parser_colab(stripped)
-#             # drop any trailing non-onion comments
-#             raw_onion = raw_onion.partition('#')[0]
-#             # {param: value} kwargs dict for smuggle_colab()
-#             peeled_onion = Onion.parse_onion_syntax(raw_onion)
-#             kwargs_list = []
-#             for k, v in peeled_onion.items():
-#                 if isinstance(v, str):
-#                     v = '"' + v + '"'
-#                 kwargs_list.append(f'{k}={v}')
-#             kwargs_fmt = ', '.join(kwargs_list)
-#             # insert the kwargs before the closing parenthesis
-#             line = f"{base_smuggle_call[:-1]}, {kwargs_fmt})"
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#         elif ';' in stripped:
-#             # handles semicolon-separated smuggle calls, e.g.:
-#             #   `smuggle os.path; from pathlib smuggle Path; smuggle re`
-#             # by running function on each call individually & re-joining
-#             line = '; '.join(map(smuggle_parser_colab, stripped.split(';')))
-#         elif ',' in stripped:
-#             # handles comma-separated list of packages/modules/functions
-#             # to smuggle
-#             if stripped.startswith('from '):
-#                 # smuggling multiple names from same package, e.g.:
-#                 #   `from os.path smuggle dirname, join as opj, realpath`
-#                 # is transformed internally into multiple smuggle calls:
-#                 #   `smuggle os.path.dirname as dirname; smuggle os....`
-#                 from_cmd, names = stripped.split(' smuggle ')
-#                 names = names.strip('()\n\t ').split(',')
-#                 all_cmds = [f'{from_cmd} smuggle {name}' for name in names]
-#             else:
-#                 # smuggling multiple packages at once, e.g.:
-#                 #   `smuggle collections.abc as abc, json, os`
-#                 # is transformed into multiple smuggle calls, e.g.:
-#                 #   `smugle collections.abc as abc; smuggle json, sm...`
-#                 names = stripped.replace('smuggle ', '').split(',')
-#                 all_cmds = [f'smuggle {name}' for name in names]
-#             line = '; '.join(map(smuggle_parser_colab, all_cmds))
-#         elif stripped.startswith('from '):
-#             # handles smuggle calls in formats like, e.g.:
-#             #   `from os.path smuggle join as opj`
-#             # by transforming them into, e.g.:
-#             #   `smuggle os.path.join as opj
-#             # This grammar can sometimes fail with the builtin import
-#             # statement, e.g.:
-#             #   `import numpy.array as array` # -> ModuleNotFoundError
-#             # but IPython.utils.importstring.import_item always succeeds
-#             pkg_name, name = stripped.split(' smuggle ')
-#             pkg_name = pkg_name.replace('from ', '').strip()
-#             if ' as ' in name:
-#                 name, as_ = name.split(' as ')
-#             else:
-#                 as_ = name
-#             name = name.strip('()\n\t ')
-#             as_ = as_.strip()
-#             full_name = f'{pkg_name}.{name}'
-#             line = f'smuggle("{full_name}", as_="{as_}")'
-#         else:
-#             # standard smuggle call, e.g.:
-#             #   `smuggle pandas as pd`
-#             pkg_name = stripped.replace('smuggle ', '')
-#             if ' as ' in pkg_name:
-#                 pkg_name, as_ = pkg_name.split(' as ')
-#                 # add quotes here so None can be passed without them
-#                 as_ = f'"{as_.strip()}"'
-#             else:
-#                 as_ = None
-#             pkg_name = pkg_name.strip('()\n\t ')
-#             line = f'smuggle("{pkg_name}", as_={as_})'
-#         # restore original indent
-#         line = ' ' * indent_len + line
-#     return line
 
 
 smuggle_colab._register = register_smuggler_colab

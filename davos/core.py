@@ -161,30 +161,17 @@ class Onion:
         return False
 
     def _pip_install_package(self):
-        # TODO: would be more efficient to use nullcontext here as long
-        #  as it works in ipynb
-        # TODO: add support for all kinds of non-index installs (see
-        #  https://pip.pypa.io/en/stable/reference/pip_install/)
-        install_name = self.install_name
-        if '+' in install_name:
-            vcs_field_sep= '#'
-            if self.egg is not None:
-                install_name += vcs_field_sep + self.egg
-                vcs_field_sep = '&'
-            if self.subdirectory is not None:
-                install_name += vcs_field_sep + self.subdirectory
-        elif self.version_spec is not None:
-            install_name += self.version_spec
-        cmd_str = f'pip install {self.installer_args} {install_name}'
+        cmd_str = f'pip install {self.args_str}'
+        live_stdout = self.verbosity > -3
         try:
-            stdout, exit_code = davos.run_shell_command(cmd_str)
+            stdout, exit_code = davos.run_shell_command(cmd_str,
+                                                        live_stdout=live_stdout)
         except CalledProcessError as e:
             err_msg = (f"the command '{e.cmd}' returned a non-zero "
                        f"exit code: {e.returncode}. See above output "
                        f"for details")
             raise InstallerError(err_msg, e)
-        else:
-            return stdout, exit_code
+        return stdout, exit_code
 
     def _conda_install_package(self):
         raise NotImplementedError(

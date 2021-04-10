@@ -1,3 +1,4 @@
+from argparse import ArgumentError
 from subprocess import CalledProcessError
 
 from davos import davos
@@ -7,20 +8,28 @@ class DavosError(Exception):
     pass
 
 
-class DavosParserError(DavosError):
-    # class for errors raised during the parsing step
+class DavosParserError(DavosError, SyntaxError):
+    """
+    Base class for errors raised during the parsing step.
+
+    Only exceptions derived from SyntaxError can successfully be
+    raised during IPython's input transformation step. All others cause
+    execution to hang indefinitely.
+    """
     pass
 
 
 class SmugglerError(DavosError):
-    # class for errors raised during the smuggle step
+    """class for errors raised during the smuggle step"""
     pass
 
 
 class InstallerError(SmugglerError, CalledProcessError):
-    # class for problems encountered by the installer (pip/conda) itself
-    # (e.g., failed to connect to internet, resolve environment, find
-    # package with given name, etc.)
+    """
+    class for problems encountered by the installer (pip/conda) itself
+    (e.g., failed to connect to internet, resolve environment, find
+    package with given name, etc.)
+    """
     def __init__(self, msg, *args, output=None, stderr=None,
                  show_stdout=None):
         cpe_or_retcode = args[0]
@@ -58,24 +67,27 @@ class InstallerError(SmugglerError, CalledProcessError):
         return self.msg + '\n\t' + super().__str__()
 
 
-class OnionError(SmugglerError):
-    # general class for errors related to the Onion structure/object
+class OnionParserError(DavosParserError):
+    """general class for errors related to the Onion structure/object"""
     pass
 
 
-class OnionTypeError(OnionError, TypeError):
-    # class analogous to TypeError, but for invalid params specified in
-    # Onion construct
-    pass
+class OnionArgumentError(ArgumentError, OnionParserError):
+    # class analogous to argparse.ArgumentError, but for invalid
+    # arguments passed in Onion construct
+    def __init__(self, message):
+        super().__init__(None, message)
+        if message.startswith('argument '):
+            split_message = message.split()
+            self.argument_name = split_message[1].rstrip(':')
+            self.message = ' '.join(split_message[2:])
 
-
-class OnionValueError(OnionError, ValueError):
+class OnionValueError(OnionParserError, ValueError):
     # class analogous to ValueError, but for bad values passed to Onion
     # construct params
     pass
 
-
-class OnionSyntaxError(OnionError, SyntaxError):
+class OnionSyntaxError(OnionParserError):
     # class analogous to SyntaxError, but for invalid Syntax in Onion
     # construct
     def __init__(self, msg, *args, filename=None, lineno=None, offset=None):

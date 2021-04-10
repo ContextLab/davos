@@ -1,9 +1,28 @@
-from argparse import Action, ArgumentParser, SUPPRESS
+import argparse
 
 from davos.exceptions import OnionArgumentError
 
 
-class EditableAction(Action):
+class SubtractAction(argparse.Action):
+    # ADD DOCSTRING
+    def __init__(
+            self,
+            option_strings,
+            dest,
+            default=None,
+            required=False,
+            help=None
+    ):
+        # ADD DOCSTRING
+        super().__init__(option_strings=option_strings, dest=dest, nargs=0,
+                         default=default, required=required, help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        curr_count = getattr(namespace, self.dest, 0)
+        setattr(namespace, self.dest, curr_count - 1)
+
+
+class EditableAction(argparse.Action):
     # ADD DOCSTRING
     def __init__(
             self,
@@ -25,11 +44,17 @@ class EditableAction(Action):
         setattr(namespace, 'spec', values)
 
 
-class OnionParser(ArgumentParser):
+class OnionParser(argparse.ArgumentParser):
     # ADD DOCSTRING
     def error(self, message):
         # ADD DOCSTRING
         raise OnionArgumentError(message)
+
+    # def parse_args(self, args=None, namespace=None):
+    #     ns = super().parse_args(args=args, namespace=namespace)
+    #     args_dict = vars(ns)
+    #     n_quiet = args_dict.pop('quiet', 0)
+
 
 
 # does not include usage for `pip install [options] -r
@@ -44,7 +69,7 @@ pip install [options] <archive url/path> ...
 
 pip_parser = OnionParser(usage=_pip_install_usage,
                          add_help=False,
-                         argument_default=SUPPRESS)
+                         argument_default=argparse.SUPPRESS)
 
 
 # ======== Install Options ========
@@ -76,7 +101,7 @@ pip_install_opts.add_argument(
 )
 
 spec_or_editable = pip_install_opts.add_mutually_exclusive_group(required=True)
-spec_or_editable.add_argument('spec', nargs='?', help=SUPPRESS)
+spec_or_editable.add_argument('spec', nargs='?', help=argparse.SUPPRESS)
 spec_or_editable.add_argument(
     '-e',
     '--editable',
@@ -208,7 +233,7 @@ pep_517_subgroup.add_argument(
 pep_517_subgroup.add_argument(
     '--no-use-pep517',
     action='store_true',
-    help=SUPPRESS
+    help=argparse.SUPPRESS
 )
 
 pip_install_opts.add_argument(
@@ -353,12 +378,14 @@ pip_general_opts.add_argument(
     '-v',
     '--verbose',
     action='count',
+    dest='verbosity',
     help="Give more output. Option is additive, and can be used up to 3 times."
 )
 pip_general_opts.add_argument(
     '-q',
     '--quiet',
     action='count',
+    dest='verbosity',
     help="Give less output. Option is additive, and can be used up to 3 times "
          "(corresponding to WARNING, ERROR, and CRITICAL logging levels)."
 )

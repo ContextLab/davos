@@ -204,36 +204,33 @@ def smuggle_parser_colab(line):
         is_from_statement = False
         onion_chars = matched_groups['ONION']
         has_semicolon_sep = matched_groups['SEMICOLON_SEP'] is not None
+        qualname_prefix = ''
 
     kwargs_str = ''
     if has_semicolon_sep:
         after_chars = '; ' + smuggle_parser_colab(after_chars.lstrip('; '))
     elif onion_chars is not None:
         to_smuggle = to_smuggle.replace(onion_chars, '').rstrip()
-        onion_kwargs = Onion.parse_onion_syntax(onion_chars.lstrip('# '))
-        for arg, val in onion_kwargs.items():
-            if isinstance(val, str):
-                val = f'"{val}"'
-            kwargs_str += f', {arg}={val}'
+        # `Onion.parse_onion()` returns a 3-tuple of:
+        #  - the installer name (str)
+        #  - an {arg: value} mapping from parsed args & defaults (dict)
+        #  - the raw arguments to be passed to the installer (str)
+        installer, installer_args, args_str = Onion.parse_onion(onion_chars)
+        kwargs_str = (f', installer={installer}, '
+                      f'installer_args={installer_args}, '
+                      f'args_str={args_str}')
 
     smuggle_funcs = []
     names_aliases = to_smuggle.split(',')
     for na in names_aliases:
         if ' as ' in na:
             name, alias = na.split(' as ')
+            name = f'"{qualname_prefix}{name.strip()}"'
             alias = f'"{alias.strip()}"'
-            if is_from_statement:
-                name = f'"{qualname_prefix}{name.strip()}"'
-            else:
-                name = f'"{name.strip()}"'
         else:
             na = na.strip()
-            if is_from_statement:
-                name = f'"{qualname_prefix}{na}"'
-                alias = f'"{na}"'
-            else:
-                name = f'"{na}"'
-                alias = None
+            name = f'"{qualname_prefix}{na}"'
+            alias = f'"{na}"' if is_from_statement else None
 
         smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
 

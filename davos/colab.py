@@ -78,17 +78,21 @@ def run_shell_command_colab(command):
     return retcode
 
 
-def smuggle_colab(name, as_=None, **onion_kwargs):
+def smuggle_colab(
+        name,
+        as_=None,
+        installer='pip',
+        args_str='',
+        installer_kwargs=None
+):
     # ADD DOCSTRING
-    # NOTE: 'name' can be a package, subpackage, module or object
-    # TODO: move this name splitting logic somewhere else where it's cleaner
-    if not any(char in name for char in ('+', '/', ':')):
-        # dirty way of excluding names for VCS & local/remote files/modules
-        pkg_name = name.split('.')[0]
-    else:
-        pkg_name = name
+    if installer_kwargs is None:
+        installer_args = {}
 
-    onion = Onion(pkg_name, **onion_kwargs)
+    pkg_name = name.split('.')[0]
+    onion = Onion(pkg_name, installer=installer,
+                  args_str=args_str, **installer_kwargs)
+
     if onion.is_installed:
         try:
             imported_obj = import_item(name)
@@ -213,12 +217,12 @@ def smuggle_parser_colab(line):
         to_smuggle = to_smuggle.replace(onion_chars, '').rstrip()
         # `Onion.parse_onion()` returns a 3-tuple of:
         #  - the installer name (str)
-        #  - an {arg: value} mapping from parsed args & defaults (dict)
         #  - the raw arguments to be passed to the installer (str)
-        installer, installer_args, args_str = Onion.parse_onion(onion_chars)
+        #  - an {arg: value} mapping from parsed args & defaults (dict)
+        installer, args_str, installer_kwargs = Onion.parse_onion(onion_chars)
         kwargs_str = (f', installer={installer}, '
-                      f'installer_args={installer_args}, '
-                      f'args_str={args_str}')
+                      f'args_str={args_str}, '
+                      f'installer_kwargs={installer_kwargs}')
 
     smuggle_funcs = []
     names_aliases = to_smuggle.split(',')

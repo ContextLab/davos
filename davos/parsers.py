@@ -31,10 +31,6 @@ class OnionParser(ArgumentParser):
         # ADD DOCSTRING
         raise OnionArgumentError(message)
 
-    def parse_args(self, args=None, namespace=None):
-        ns = super().parse_args(args=args, namespace=namespace)
-        args_dict = vars(ns)
-
 
 # does not include usage for `pip install [options] -r
 # <requirements file> [package-index-options] ...` since it's not

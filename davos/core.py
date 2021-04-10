@@ -58,7 +58,7 @@ class Onion:
                 f"comment: {onion_text}"
             )
         installer_kwargs = vars(parser.parse_args(args_str.split()))
-        # `arg_str` could potentially have both single and double quotes
+        # arg_str could potentially have both single and double quotes
         # in it, so triple quote to be safe
         return f'"{installer}"', f'"""{args_str}"""', installer_kwargs
 

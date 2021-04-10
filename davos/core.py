@@ -11,31 +11,26 @@ __all__ = ['Onion', 'prompt_input']
 import re
 from pathlib import Path
 from packaging.requirements import InvalidRequirement
-from pkg_resources import (DistributionNotFound, find_distributions,
-                           get_distribution, VersionConflict)
+from pkg_resources import (
+    DistributionNotFound,
+    find_distributions,
+    get_distribution,
+    VersionConflict
+)
 from subprocess import CalledProcessError
 
 from davos import davos
-from davos.exceptions import InstallerError, OnionParserError, OnionSyntaxError, ParserNotImplementedError
+from davos.exceptions import (
+    InstallerError,
+    OnionParserError,
+    OnionSyntaxError,
+    ParserNotImplementedError
+)
 from davos.parsers import pip_parser
 
 
 class Onion:
     # ADD DOCSTRING
-    @staticmethod
-    def _extract_arg_value(arg_name, args_str):
-        # NOTE: does not handle args with multiple space-separated values
-        if arg_name not in args_str:
-            return None, args_str
-        pre, post = args_str.split(arg_name)
-        pre = pre.strip()
-        post = post.strip()
-        arg_val, _, post = post.partition(' ')
-        if arg_val.startswith('-') or arg_val == '':
-            raise OnionSyntaxError(f"'{arg_name}' flag requires an argument")
-        new_args_str = ' '.join((pre, post))
-        return arg_val, new_args_str
-
     @staticmethod
     def parse_onion(onion_text):
         onion_text = onion_text.lstrip('# ')
@@ -75,12 +70,13 @@ class Onion:
             # here to handle user calling smuggle() *function* directly
             raise InstallerError(
                 f"Unsupported installer: '{installer}'. Currently supported "
-                "installers are:\n\t['pip']"  # and 'conda'"
+                "installers are:\n\t'pip'"  # and 'conda'"
             )
         self.args_str = args_str
-        self.is_editable = installer_kwargs.pop('editable')
-
         full_spec = installer_kwargs.pop('spec').strip("'\"")
+        self.is_editable = installer_kwargs.pop('editable')
+        self.installer_kwargs = installer_kwargs
+        self.build = None
         if '+' in full_spec:
             # INSTALLING FROM LOCAL/REMOTE VCS:
             #   self.install_name is the VCS program + '+' + absolute
@@ -96,28 +92,18 @@ class Onion:
                 ver_spec = _after.split('#')[0]
                 # self.install_name is full spec with @<ref> removed
                 self.install_name = full_spec.replace(f'@{ver_spec}', '')
-                if self.is_editable:
-                    ver_spec += ' editable'
-                self.version_spec = ver_spec
+                self.version_spec = f'=={ver_spec}'
             else:
                 # @ either not present or used only for setuptools extra
                 self.install_name = full_spec
-                if self.is_editable:
-                    self.version_spec = 'editable'
-                else:
-                    self.version_spec = None
-            self.build = None
+                self.version_spec = ''
         elif '/' in full_spec:
             # INSTALLING FROM LOCAL PROJECT OR PEP 440 DIRECT REFERENCE:
             #   self.install_name is the absolute path to a local
             #   project or source archive, or the URL for a remote source
             #   archive
             self.install_name = full_spec
-            if self.is_editable:
-                self.version_spec = 'editable'
-            else:
-                self.version_spec = None
-            self.build = None
+            self.version_spec = ''
         else:
             # INSTALLING USING A REQUIREMENT SPECIFIER:
             #   most common usage. self.install_name is package name
@@ -130,69 +116,50 @@ class Onion:
                 if spec_delim in first_subspec:
                     self.install_name = full_spec[:full_spec.index(spec_delim)]
                     ver_spec = full_spec[full_spec.index(spec_delim):]
-                    if (
-                            installer == 'conda' and
-                            '=' in ver_spec[len(spec_delim):]
-                    ):
-                        raise NotImplementedError(
-                            "smuggling packages via conda is not yet supported"
-                        )
-                        # if conda-installing specific build of package,
-                        # separate build version from package version
-                        # and handle independently
-                        # ver_spec, build = ver_spec.rsplit('=', maxsplit=1)
-                    else:
-                        build = None
-
+                    # if (
+                    #         installer == 'conda' and
+                    #         '=' in ver_spec[len(spec_delim):]
+                    # ):
+                    #     # if conda-installing specific build of package,
+                    #     # separate build version from package version
+                    #     # and handle independently
+                    #     ver_spec, build = ver_spec.rsplit('=', maxsplit=1)
                     self.version_spec = ver_spec
-                    self.build = build
                     break
             else:
                 # no version specified with package name
                 self.install_name = full_spec
-                self.version_spec = None
-                self.build = None
+                self.version_spec = ''
 
     @property
     def is_installed(self):
-        # args that trigger install regardless of installed version
+        installer_kwargs = self.installer_kwargs
         if (
-                '--force-reinstall' in self.installer_args or
-                '--ignore-installed' in self.installer_args or
-                '--upgrade' in self.installer_args
+                installer_kwargs.get('force_reinstall') or
+                installer_kwargs.get('ignore_installed') or
+                installer_kwargs.get('upgrade')
         ):
+            # args that trigger install regardless of installed version
             return False
-        elif self.install_name in davos.smuggled:
-            if davos.smuggled[self.install_name] == self.version_spec:
-                return True
-            else:
-                return False
-        elif '+' in self.install_name:
-            # unless same package, URL, & tag were already smuggled in
-            # this session, installing from VCS always triggers install
-            # because versions are too specific to compare reliably
-            # (e.g., could install from many different git commit hashes
-            # tagged with the same version)
-            return False
-        elif Path(self.install_name).expanduser().resolve().exists():
-            # installing from local file or directory
-            local_path = str(Path(self.install_name).expanduser().resolve())
-            return any(find_distributions(local_path, only=True))
-        else:
-            dist_spec = self.install_name
-            if self.version_spec is not None:
-                dist_spec += self.version_spec
+        elif self.args_str == davos.smuggled.get(self.import_name):
+            # if the same version of the same package was smuggled from
+            # the same source with all the same arguments previously in
+            # the current interpreter session/notebook runtime (i.e.,
+            # line is just being rerun)
+            return True
+        elif '/' not in self.install_name:
             try:
-                get_distribution(dist_spec)
+                get_distribution(self.install_name + self.version_spec)
             except (DistributionNotFound, VersionConflict, InvalidRequirement):
-                # DistributionNotFound: package is not installed
-                # VersionConflict: package is installed, but installed
+                # - DistributionNotFound: package is not installed
+                # - VersionConflict: package is installed, but installed
                 #   version doesn't fit requested version constraints
-                # InvalidRequirement: version_spec is invalid or
-                # pkg_resources couldn't parse it
+                # - InvalidRequirement: version_spec is invalid or
+                #   pkg_resources couldn't parse it
                 return False
             else:
                 return True
+        return False
 
     def _pip_install_package(self):
         # TODO: would be more efficient to use nullcontext here as long

@@ -19,6 +19,43 @@ class DavosParserError(DavosError, SyntaxError):
     pass
 
 
+class OnionParserError(DavosParserError):
+    """general class for errors related to the Onion structure/object"""
+    pass
+
+
+class ParserNotImplementedError(OnionParserError, NotImplementedError):
+    """
+    A version of NotImplementedError that can be raised during IPython
+    input transformation step because it inherits from SyntaxError
+    """
+    pass
+
+
+class OnionArgumentError(ArgumentError, OnionParserError):
+    # class analogous to argparse.ArgumentError, but for invalid
+    # arguments passed in Onion construct
+    def __init__(self, message):
+        super().__init__(None, message)
+        if message.startswith('argument '):
+            split_message = message.split()
+            self.argument_name = split_message[1].rstrip(':')
+            self.message = ' '.join(split_message[2:])
+
+
+class OnionSyntaxError(OnionParserError):
+    # class analogous to SyntaxError, but for invalid Syntax in Onion
+    # construct
+    def __init__(self, msg, *args, filename=None, lineno=None, offset=None):
+        # TODO: format kwargs into tuple to init super() with correct
+        #  format to raise at specific location, see
+        #  https://stackoverflow.com/questions/33717804/python-raise-syntaxerror-with-lineno
+        super().__init__(msg, *args)
+        self.filename = filename
+        self.lineno = lineno
+        self.offset = offset
+
+
 class SmugglerError(DavosError):
     """class for errors raised during the smuggle step"""
     pass
@@ -65,32 +102,3 @@ class InstallerError(SmugglerError, CalledProcessError):
 
     def __str__(self):
         return self.msg + '\n\t' + super().__str__()
-
-
-class OnionParserError(DavosParserError):
-    """general class for errors related to the Onion structure/object"""
-    pass
-
-
-class OnionArgumentError(ArgumentError, OnionParserError):
-    # class analogous to argparse.ArgumentError, but for invalid
-    # arguments passed in Onion construct
-    def __init__(self, message):
-        super().__init__(None, message)
-        if message.startswith('argument '):
-            split_message = message.split()
-            self.argument_name = split_message[1].rstrip(':')
-            self.message = ' '.join(split_message[2:])
-
-
-class OnionSyntaxError(OnionParserError):
-    # class analogous to SyntaxError, but for invalid Syntax in Onion
-    # construct
-    def __init__(self, msg, *args, filename=None, lineno=None, offset=None):
-        # TODO: format kwargs into tuple to init super() with correct
-        #  format to raise at specific location, see
-        #  https://stackoverflow.com/questions/33717804/python-raise-syntaxerror-with-lineno
-        super().__init__(msg, *args)
-        self.filename = filename
-        self.lineno = lineno
-        self.offset = offset

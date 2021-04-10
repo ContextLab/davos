@@ -196,8 +196,8 @@ def smuggle_parser_colab(line):
         is_from_statement = True
         onion_chars = matched_groups['FROM_ONION'] or matched_groups['FROM_ONION_1']
         has_semicolon_sep = matched_groups['FROM_SEMICOLON_SEP'] is not None
-        pkg_name = cmd_prefix.split()[1] + '.'
-        to_smuggle = re.sub(r'[()]|\s*\#.*$\s*', ' ', to_smuggle, flags=re.MULTILINE)
+        qualname_prefix = cmd_prefix.split()[1] + '.'
+        to_smuggle = re.sub(r'[()]|\s*\#.*$\s*', ' ', to_smuggle, flags=re.M)
         to_smuggle = to_smuggle.rstrip(', ')
     else:
         # cmd_prefix == ''
@@ -221,16 +221,20 @@ def smuggle_parser_colab(line):
     for na in names_aliases:
         if ' as ' in na:
             name, alias = na.split(' as ')
-            name = '"' + name.strip() + '"'
             alias = '"' + alias.strip() + '"'
+            if is_from_statement:
+                name = '"' + qualname_prefix + name.strip() + '"'
+            else:
+                name = '"' + name.strip() + '"'
         else:
             na = na.strip()
             if is_from_statement:
-                name = '"' + cmd_prefix.split()[1] + '.' + na + '"'
+                name = '"' + qualname_prefix + na + '"'
                 alias = '"' + na + '"'
             else:
                 name = '"' + na + '"'
                 alias = None
+
         smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
 
     smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'

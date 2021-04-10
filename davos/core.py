@@ -16,7 +16,8 @@ from pkg_resources import (DistributionNotFound, find_distributions,
 from subprocess import CalledProcessError
 
 from davos import davos
-from davos.exceptions import InstallerError, OnionSyntaxError
+from davos.exceptions import InstallerError, OnionParserError, OnionSyntaxError, ParserNotImplementedError
+from davos.parsers import pip_parser
 
 
 class Onion:
@@ -34,6 +35,31 @@ class Onion:
             raise OnionSyntaxError(f"'{arg_name}' flag requires an argument")
         new_args_str = ' '.join((pre, post))
         return arg_val, new_args_str
+
+    @staticmethod
+    def parse_onion(onion_text):
+        onion_text = onion_text.lstrip('# ')
+        installer, arg_str = onion_text.split(': ', maxsplit=1)
+        # regex parsing to identify onion comments already ensures the
+        # comment will start with "<installer>:"
+        if installer == 'pip':
+            parser = pip_parser
+        elif installer == 'conda':
+            raise ParserNotImplementedError(
+                "smuggling packages via conda is not yet supported"
+            )
+        else:
+            # theoretically not possible to get here given regex parser,
+            # but include as a failsafe for completeness
+            raise OnionParserError(
+                "An unexpected error occurred while trying to parse onion "
+                f"comment: {onion_text}"
+            )
+        installer_args = vars(parser.parse_args(arg_str.split()))
+        # `arg_str` could potentially have both single and double quotes
+        # in it, so triple quote to be safe
+        return f'"{installer}"', installer_args, f'"""{arg_str}"""'
+
 
     @staticmethod
     def parse_onion_syntax(onion_text):
@@ -101,9 +127,18 @@ class Onion:
         peeled_onion['installer_args'] = arg_str
         return peeled_onion
 
-    def __init__(self, import_name, installer='pip', install_name=None,
-                 version_spec=None, build=None, editable=False, egg=None,
-                 subdirectory=None, installer_args=''):
+    def __init__(
+            self,
+            import_name,
+            installer='pip',
+            install_name=None,
+            version_spec=None,
+            build=None,
+            editable=False,
+            egg=None,
+            subdirectory=None,
+            installer_args=''
+    ):
         # ADD DOCSTRING
         # TODO: what happens if force-reinstall, ignore-installed, etc.
         #  and module is already in sys.modules?
@@ -252,7 +287,8 @@ _smuggle_subexprs = {
 }
 _smuggle_subexprs['as_re'] = fr' +as +{_smuggle_subexprs["name_re"]}'
 
-
+# TODO: pattern currently doesn't enforce commas between names in
+#  multiline smuggle from statement
 smuggle_statement_regex = re.compile((
     r'^\s*'                                                               # match only if statement is first non-whitespace chars
     r'(?P<FULL_CMD>'                                                       # capture full text of command in named group

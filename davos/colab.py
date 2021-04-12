@@ -44,8 +44,13 @@ if davos.ipython_shell is not None:
 
 def activate_parser_colab():
     """
+    **Available in public API via `davos.activate()`**
+
     Registers the `davos` parser as an IPython `InputTransformer` that
-    will be called on the contents of each code cell.
+    will be called on the contents of each code cell.  Can be run
+    manually (`davos.activate()`) after deactivating parser
+    (`davos.deactivate()`) to re-enable the `davos` parser for all
+    future cells (**including the current cell**).
 
     Notes
     -----
@@ -78,11 +83,23 @@ def activate_parser_colab():
 # noinspection PyDeprecation
 def deactivate_parser_colab():
     """
-    Stops the `davos` parser from running for all future cells
-    (including the current cell) until reactivated.
+    **Available in public API via `davos.deactivate()`**
+
+    Disables the `davos` parser for all future cells (**including the
+    current cell**).  The parser may be re-enabled by calling
+    `davos.activate()`.
 
     Notes
     -----
+    1. Any `smuggle` statements following a call to `davos.deactivate()`
+       will result in `SyntaxError`s unless the parser is reactivated
+       first.
+    2. The `davos` parser adds very minimal overhead to cell execution.
+       However, running `davos.deactivate()` once the parser is no
+       longer needed (i.e., after the last `smuggle` statement) may be
+       useful when measuring precise runtimes (e.g. profiling code),
+       particularly because the overhead added is a function of the
+       number of lines rather than complexity.
     *See notes for `activate_parser_colab()`*
     """
     colab_shell = davos.ipython_shell

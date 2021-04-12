@@ -10,7 +10,8 @@ versions of IPython will also use this approach
 
 
 __all__ = [
-    'register_smuggler_colab',
+    'activate_parser_colab',
+    'deactivate_parser_colab',
     'run_shell_command_colab',
     'smuggle_colab'
 ]
@@ -30,7 +31,7 @@ if davos.ipython_shell is not None:
     from IPython.core.inputtransformer import StatelessInputTransformer
     from IPython.core.interactiveshell import system as _run_shell_cmd
     from IPython.utils.importstring import import_item
-    # additional check to make sure this is in Colab notebook rather
+    # additional check to make sure this is in a Colab notebook rather
     # than just very old IPython kernel
     from ipykernel.zmqshell import ZMQInteractiveShell
     if type(davos.ipython_shell) is not ZMQInteractiveShell:
@@ -40,30 +41,59 @@ if davos.ipython_shell is not None:
         )
 
 
-def register_smuggler_colab():
+# noinspection PyDeprecation
+def deactivate_parser_colab():
     """
-    adds the smuggle_inspector function to IPython's list of
-    InputTransformers that get called on the contents of each code cell.
+    Stops the `davos` parser from running for all future cells
+    (including the current cell) until reactivated.
 
-    NOTE: there are multiple different groups of InputTransformers that
-        IPython runs on cell content at different pre-execution stages,
-        between the various steps of the IPython parser. We're adding
-        the smuggle_inspector as a "python_line_transform" which runs
-        after the last step of the IPython parser, but before the code
-        is passed off to the Python parser. At this point, the IPython
-        parser has reassembled both explicit (backslash-based) and
-        implicit (parentheses-based) line continuations, so long smuggle
-        statements broken into multiple lines by either method will be
-        passed to the smuggle_inspector as a single line
+    Notes
+    -----
+    *See notes for `activate_parser_colab()`*
+    """
+    colab_shell = davos.ipython_shell
+    splitter_xforms = colab_shell.input_splitter.python_line_transforms
+    manager_xforms = colab_shell.input_transformer_manager.python_line_transforms
+    for xform in splitter_xforms:
+        if xform.func is smuggle_parser_colab:
+            splitter_xforms.remove(xform)
+            break
+    for xform in manager_xforms:
+        if xform.func is smuggle_parser_colab:
+            manager_xforms.remove(xform)
+            break
+
+
+def activate_parser_colab():
+    """
+    Registers the `davos` parser as an IPython `InputTransformer` that
+    will be called on the contents of each code cell.
+
+    Notes
+    -----
+    1. There are multiple groups of `InputTransformer`s that IPython
+       runs on cell content at different pre-execution stages, between
+       various steps of the IPython parser.  The `davos` parser is added
+       as a "python_line_transform", which runs after the last step of
+       the IPython parser, before the code is passed off to the Python
+       parser. At this point, the IPython parser has reassembled both
+       explicit (backslash-based) and implicit (parentheses-based) line
+       continuations, so the parser will receive multi-line `smuggle`
+       statements as a single line
+    2. The entire `IPython.core.inputsplitter` module was deprecated in
+       v7.0.0, but Colab runs v5.5.0, so the input transformer still
+       needs to be registered in both places for it to work correctly
     """
     colab_shell = davos.ipython_shell
     smuggle_transformer = StatelessInputTransformer.wrap(smuggle_parser_colab)
-    # entire IPython.core.inputsplitter module was deprecated in v7.0.0,
-    # but Colab runs v5.5.0, so we still have to register our
-    # transformer in both places for it to work correctly
     # noinspection PyDeprecation
-    colab_shell.input_splitter.python_line_transforms.append(smuggle_transformer())
-    colab_shell.input_transformer_manager.python_line_transforms.append(smuggle_transformer())
+    splitter_xforms = colab_shell.input_splitter.python_line_transforms
+    manager_xforms = colab_shell.input_transformer_manager.python_line_transforms
+    if not any(t.func is smuggle_parser_colab for t in splitter_xforms):
+        splitter_xforms.append(smuggle_transformer())
+    if not any(t.func is smuggle_parser_colab for t in manager_xforms):
+        manager_xforms.append(smuggle_transformer())
+
     colab_shell.user_ns['smuggle'] = smuggle_colab
 
 
@@ -240,6 +270,3 @@ def smuggle_parser_colab(line):
 
     smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'
     return before_chars + '; '.join(smuggle_funcs) + after_chars
-
-
-smuggle_colab._register = register_smuggler_colab

@@ -13,7 +13,8 @@ __all__ = [
     'activate_parser_colab',
     'deactivate_parser_colab',
     'run_shell_command_colab',
-    'smuggle_colab'
+    'smuggle_colab',
+    'smuggle_parser_colab'
 ]
 
 
@@ -39,29 +40,6 @@ if davos.ipython_shell is not None:
         from google.colab._pip import (
             _previously_imported_packages as get_updated_imported_pkgs
         )
-
-
-# noinspection PyDeprecation
-def deactivate_parser_colab():
-    """
-    Stops the `davos` parser from running for all future cells
-    (including the current cell) until reactivated.
-
-    Notes
-    -----
-    *See notes for `activate_parser_colab()`*
-    """
-    colab_shell = davos.ipython_shell
-    splitter_xforms = colab_shell.input_splitter.python_line_transforms
-    manager_xforms = colab_shell.input_transformer_manager.python_line_transforms
-    for xform in splitter_xforms:
-        if xform.func is smuggle_parser_colab:
-            splitter_xforms.remove(xform)
-            break
-    for xform in manager_xforms:
-        if xform.func is smuggle_parser_colab:
-            manager_xforms.remove(xform)
-            break
 
 
 def activate_parser_colab():
@@ -95,6 +73,29 @@ def activate_parser_colab():
         manager_xforms.append(smuggle_transformer())
 
     colab_shell.user_ns['smuggle'] = smuggle_colab
+
+
+# noinspection PyDeprecation
+def deactivate_parser_colab():
+    """
+    Stops the `davos` parser from running for all future cells
+    (including the current cell) until reactivated.
+
+    Notes
+    -----
+    *See notes for `activate_parser_colab()`*
+    """
+    colab_shell = davos.ipython_shell
+    splitter_xforms = colab_shell.input_splitter.python_line_transforms
+    manager_xforms = colab_shell.input_transformer_manager.python_line_transforms
+    for xform in splitter_xforms:
+        if xform.func is smuggle_parser_colab:
+            splitter_xforms.remove(xform)
+            break
+    for xform in manager_xforms:
+        if xform.func is smuggle_parser_colab:
+            manager_xforms.remove(xform)
+            break
 
 
 def run_shell_command_colab(command):

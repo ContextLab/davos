@@ -21,7 +21,6 @@ from davos import davos
 from davos.exceptions import (
     InstallerError,
     OnionParserError,
-    OnionSyntaxError,
     ParserNotImplementedError
 )
 from davos.parsers import pip_parser

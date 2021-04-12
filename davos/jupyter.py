@@ -1,18 +1,26 @@
-# TODO: add module docstring
+# ADD DOCSTRING
 
 
 __all__ = [
-    'register_smuggler_jupyter',
+    'activate_parser_jupyter',
+    'deactivate_parser_jupyter',
     'run_shell_command_jupyter',
-    'smuggle_jupyter'
+    'smuggle_jupyter',
+    'smuggle_parser_jupyter'
 ]
 
 
 from davos.exceptions import ParserNotImplementedError
 
 
-def register_smuggler_jupyter():
-    raise ParserNotImplementedError(
+def activate_parser_jupyter():
+    raise NotImplementedError(
+        "davos does not currently support Jupyter notebooks"
+    )
+
+
+def deactivate_parser_jupyter():
+    raise NotImplementedError(
         "davos does not currently support Jupyter notebooks"
     )
 
@@ -29,4 +37,7 @@ def smuggle_jupyter():
     )
 
 
-smuggle_jupyter._register_smuggler = register_smuggler_jupyter
+def smuggle_parser_jupyter(line):
+    raise ParserNotImplementedError(
+        "davos does not currently support Jupyter notebooks"
+    )

@@ -40,6 +40,8 @@ class Davos:
             # running with vanilla Python interpreter
             import davos.python as internals
             self.smuggler = internals.smuggle_python
+            self.activate_parser = internals.activate_parser_python
+            self.deactivate_parser = internals.deactivate_parser_python
             self._shell_cmd_helper = internals.run_shell_command_python
             self.ipython_shell = None
             self.parser_environment = 'PY'
@@ -50,6 +52,8 @@ class Davos:
                 # Notebook version
                 import davos.colab as internals
                 self.smuggler = internals.smuggle_colab
+                self.activate_parser = internals.activate_parser_colab
+                self.deactivate_parser = internals.deactivate_parser_colab
                 self._shell_cmd_helper = internals.run_shell_command_colab
                 self.parser_environment = 'IPY_OLD'
             else:
@@ -57,9 +61,11 @@ class Davos:
                 # version
                 import davos.jupyter as internals
                 self.smuggler = internals.smuggle_jupyter
+                self.activate_parser = internals.activate_parser_jupyter
+                self.deactivate_parser = internals.deactivate_parser_jupyter
                 self._shell_cmd_helper = internals.run_shell_command_jupyter
                 self.parser_environment = 'IPY_NEW'
-        self.smuggler._register()
+        self.activate_parser()
 
     def run_shell_command(self, command, live_stdout=None):
         if live_stdout is None:

@@ -5,7 +5,7 @@ configurable options for both internal and user settings
 """
 
 
-__all__ = ['Davos']
+__all__ = ['Davos', 'capture_stdout']
 
 
 import sys
@@ -71,53 +71,61 @@ class Davos:
         try:
             with command_context(StringIO()) as stdout:
                 return_code = self._shell_cmd_helper(command)
+                stdout = stdout.getvalue()
         except CalledProcessError as e:
             # if the exception doesn't record the output, add it
             # manually before raising
-            if e.output is None:
-                stdout = stdout.getvalue()
-                if stdout != '':
-                    e.output = stdout
+            if e.output is None and stdout != '':
+                e.output = stdout
             raise e
         else:
-            return stdout.getvalue(), return_code
+            return stdout, return_code
 
 
 class capture_stdout:
     # TODO: move me to davos.core?
     """
     Context manager similar to `contextlib.redirect_stdout`, but
-    temporarily writes stdout to another stream *in addition to* --
-    rather than *instead of* -- `sys.stdout`
+    different in that it:
+      - temporarily writes stdout to other streams *in addition to*
+        rather than *instead of* `sys.stdout`
+      - accepts any number of streams and sends stdout to each
+      - can optionally keep streams open after exiting context by
+        passing `closing=False`
+
+    Parameters
+    ----------
+    *streams : `*io.IOBase`
+        stream(s) to receive data sent to `sys.stdout`
+
+    closing : `bool`, optional
+        if [default: `True`], close streams upon exiting the context
+        block.
     """
-    def __init__(self, stream):
-        self.stream = stream
+    def __init__(self, *streams, closing=True):
+        self.streams = streams
+        self.closing = closing
+        try:
+            sys_ = globals()['sys']
+        except KeyError:
+            import sys as sys_
+        self.sys_ = sys
         self.sys_stdout_write = sys.stdout.write
 
     def __enter__(self):
-        sys.stdout.write = self._write
-        return self.stream
+        self.sys_.stdout.write = self._write
+        if len(self.streams) == 1:
+            return self.streams[0]
+        return self.streams
 
-    def __exit__(self, *args):
-        sys.stdout.write = self.sys_stdout_write
-        self.stream = self.stream.getvalue()
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.sys_.stdout.write = self.sys_stdout_write
+        if self.closing:
+            for s in self.streams:
+                s.close()
 
     def _write(self, data):
-        self.stream.write(data)
+        for s in self.streams:
+            s.write(data)
         self.sys_stdout_write(data)
-        sys.stdout.flush()
-
-
-# class nullcontext:
-#     """
-#     dummy context manager equivalent to contextlib.nullcontext
-#     (which isn't implemented for Python<3.7)
-#     """
-#     def __init__(self, enter_result=None):
-#         self.enter_result = enter_result
-#
-#     def __enter__(self):
-#         return self.enter_result
-#
-#     def __exit__(self, exc_type, exc_value, traceback):
-#         return None
+        self.sys_.stdout.flush()

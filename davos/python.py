@@ -1,3 +1,6 @@
+# TODO: add module docstring
+
+
 __all__ = [
     'register_smuggler_python',
     'run_shell_command_python',
@@ -11,10 +14,13 @@ import sys
 from subprocess import CalledProcessError, PIPE, Popen
 
 from davos import davos
+from davos.exceptions import ParserNotImplementedError
 
 
 def register_smuggler_python():
-    raise NotImplementedError("davos does not currently support pure Python interpreters")
+    raise ParserNotImplementedError(
+        "davos does not currently support pure Python interpreters"
+    )
 
 
 def run_shell_command_python(command):
@@ -40,7 +46,9 @@ def run_shell_command_python(command):
 
 
 def smuggle_python():
-    raise NotImplementedError("davos does not currently support pure Python interpreters")
+    raise NotImplementedError(
+        "davos does not currently support pure Python interpreters"
+    )
 
 
 smuggle_python._register_smuggler = register_smuggler_python

@@ -5,7 +5,7 @@ IPython/Jupyter Notebook).
 """
 
 
-__all__ = ['Onion', 'prompt_input']
+__all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
 
 
 import re

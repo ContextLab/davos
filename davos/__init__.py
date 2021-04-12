@@ -11,8 +11,6 @@ davos.initialize()
 smuggle = davos.smuggler
 
 
-# FIXME: find NotImplementedErrors raised during parsing step and change
-#  to ParserNotImplementedErrors
 # TODO: add tree diagram to davos.exceptions module to show class
 #  hierarchy
 # TODO: Come up with way to supply proper filename, lineno, columnno,

@@ -55,6 +55,9 @@ class DavosParserError(SyntaxError, DavosError):
         #  - `flot` is a 4-tuple of (**f**ilename, **l**ineno,
         #    **o**ffset, **t**ext) passed to the SyntaxError
         #    constructor.
+
+        # TODO: this may be a lot easier using sys.exc_info(),
+        #  inspect.stack(), inspect.getframeinfo(), etc.
         if target_text is None:
             flot = (None, None, None, None)
         else:

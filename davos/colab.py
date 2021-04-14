@@ -150,7 +150,7 @@ def smuggle_colab(
 ):
     # ADD DOCSTRING
     if installer_kwargs is None:
-        installer_args = {}
+        installer_kwargs = {}
 
     pkg_name = name.split('.')[0]
     onion = Onion(pkg_name, installer=installer,

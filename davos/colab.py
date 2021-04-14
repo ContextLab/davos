@@ -32,6 +32,7 @@ if davos.ipython_shell is not None:
     from IPython.core.display import _display_mimetype
     from IPython.core.inputtransformer import StatelessInputTransformer
     from IPython.core.interactiveshell import system as _run_shell_cmd
+    from IPython.lib.deepreload import reload as deep_reload
     from IPython.utils.importstring import import_item
     # additional check to make sure this is in a Colab notebook rather
     # than just very old IPython kernel
@@ -41,6 +42,17 @@ if davos.ipython_shell is not None:
         from google.colab._pip import (
             _previously_imported_packages as get_updated_imported_pkgs
         )
+
+
+NO_RELOAD_MODULES = (
+    'sys',
+    'os.path',
+    'builtins',
+    '__main__',
+    'numpy',
+    'numpy._globals',
+    'davos'
+)
 
 
 def activate_parser_colab():
@@ -176,6 +188,9 @@ def smuggle_colab(
 
     if install_pkg:
         installer_stdout, exit_code = onion.install_package()
+        # invalidate sys.meta_path module finder caches. Forces import
+        # machinery to notice newly installed module
+        importlib.invalidate_caches()
         # packages with C extensions (e.g., numpy, pandas) cannot be
         # reloaded within an interpreter session. If the package was
         # previously imported in the current runtime (even if not by
@@ -195,14 +210,14 @@ def smuggle_colab(
         for pkg_name in prev_imported_pkgs:
             # imported_pkgs_updated computes intersection with
             # set(sys.modules), so names are guaranteed to be there
-            importlib.reload(sys.modules[pkg_name])
+            deep_reload(sys.modules[pkg_name], exclude=NO_RELOAD_MODULES)
         if check_smuggled_pkg:
             old_pkg = sys.modules[pkg_name]
             try:
                 old_version = old_pkg.__version__
             except AttributeError:
                 old_version = None
-            new_pkg = importlib.reload(old_pkg)
+            new_pkg = deep_reload(old_pkg, exclude=NO_RELOAD_MODULES)
             try:
                 new_version = new_pkg.__version__
             except AttributeError:
@@ -216,7 +231,7 @@ def smuggle_colab(
                         "extensions, you may need to restart the runtime to "
                         "use the newly installed version"
                     )
-                elif onion.version_spec is not None:
+                elif onion.version_spec != '':
                     # casting the widest net possible for this edge
                     # case: if specific version not provided, old & new
                     # package versions are likely to be the same (e.g.,

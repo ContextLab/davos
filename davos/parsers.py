@@ -1,4 +1,10 @@
-from argparse import Action, ArgumentError, ArgumentParser, SUPPRESS
+from argparse import (
+    Action,
+    ArgumentError,
+    ArgumentTypeError,
+    ArgumentParser,
+    SUPPRESS
+)
 
 from davos.exceptions import OnionArgumentError
 
@@ -15,6 +21,8 @@ class OnionParser(ArgumentParser):
                 raise OnionArgumentError(msg=e.message,
                                          argument=e.argument_name,
                                          onion_txt=self._args) from e
+            except ArgumentTypeError as e:
+                raise OnionArgumentError(msg=e.args[0], onion_txt=self._args)
             else:
                 if extras:
                     msg = f"Unrecognized arguments: {' '.join(extras)}"

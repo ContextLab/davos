@@ -51,7 +51,9 @@ NO_RELOAD_MODULES = (
     '__main__',
     'numpy',
     'numpy._globals',
-    'davos'
+    'davos',
+    'importlib',
+    *sys.builtin_module_names
 )
 
 

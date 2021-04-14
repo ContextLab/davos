@@ -53,6 +53,7 @@ NO_RELOAD_MODULES = (
     'numpy._globals',
     'davos',
     'importlib',
+    'types',
     *sys.builtin_module_names
 )
 
@@ -190,6 +191,10 @@ def smuggle_colab(
 
     if install_pkg:
         installer_stdout, exit_code = onion.install_package()
+        # remove package and all of its subpackages from sys.modules
+        for name in tuple(sys.modules.keys()):
+            if name.startswith(f'{pkg_name}.') or name == pkg_name:
+                del sys.modules[name]
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module
         importlib.invalidate_caches()

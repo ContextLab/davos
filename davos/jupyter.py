@@ -3,6 +3,7 @@
 
 __all__ = [
     'activate_parser_jupyter',
+    'check_parser_active_jupyter',
     'deactivate_parser_jupyter',
     'run_shell_command_jupyter',
     'smuggle_jupyter',
@@ -14,6 +15,12 @@ from davos.exceptions import ParserNotImplementedError
 
 
 def activate_parser_jupyter():
+    raise NotImplementedError(
+        "davos does not currently support Jupyter notebooks"
+    )
+
+
+def check_parser_active_jupyter():
     raise NotImplementedError(
         "davos does not currently support Jupyter notebooks"
     )

@@ -11,6 +11,7 @@ versions of IPython will also use this approach
 
 __all__ = [
     'activate_parser_colab',
+    'check_parser_active_colab',
     'deactivate_parser_colab',
     'run_shell_command_colab',
     'smuggle_colab',
@@ -78,6 +79,20 @@ def activate_parser_colab():
         manager_xforms.append(smuggle_transformer())
 
     colab_shell.user_ns['smuggle'] = smuggle_colab
+
+
+def check_parser_active_colab():
+    # ADD DOCSTRING
+    colab_shell = davos.ipython_shell
+    # noinspection PyDeprecation
+    splitter_xforms = colab_shell.input_splitter.python_line_transforms
+    manager_xforms = colab_shell.input_transformer_manager.python_line_transforms
+    if (
+            any(t.func is smuggle_parser_colab for t in splitter_xforms) and
+            any(t.func is smuggle_parser_colab for t in manager_xforms)
+    ):
+        return True
+    return False
 
 
 # noinspection PyDeprecation

@@ -3,6 +3,7 @@
 
 __all__ = [
     'activate_parser_python',
+    'check_parser_active_python',
     'deactivate_parser_python',
     'run_shell_command_python',
     'smuggle_python',
@@ -18,6 +19,12 @@ from subprocess import CalledProcessError, PIPE, Popen
 
 
 def activate_parser_python():
+    raise NotImplementedError(
+        "davos does not currently support pure Python interpreters"
+    )
+
+
+def check_parser_active_python():
     raise NotImplementedError(
         "davos does not currently support pure Python interpreters"
     )

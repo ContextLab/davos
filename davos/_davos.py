@@ -42,6 +42,7 @@ class Davos:
             self.smuggler = internals.smuggle_python
             self.activate_parser = internals.activate_parser_python
             self.deactivate_parser = internals.deactivate_parser_python
+            self.parser_is_active = internals.check_parser_active_python
             self._shell_cmd_helper = internals.run_shell_command_python
             self.ipython_shell = None
             self.parser_environment = 'PY'
@@ -54,6 +55,7 @@ class Davos:
                 self.smuggler = internals.smuggle_colab
                 self.activate_parser = internals.activate_parser_colab
                 self.deactivate_parser = internals.deactivate_parser_colab
+                self.parser_is_active = internals.check_parser_active_colab
                 self._shell_cmd_helper = internals.run_shell_command_colab
                 self.parser_environment = 'IPY_OLD'
             else:
@@ -63,6 +65,7 @@ class Davos:
                 self.smuggler = internals.smuggle_jupyter
                 self.activate_parser = internals.activate_parser_jupyter
                 self.deactivate_parser = internals.deactivate_parser_jupyter
+                self.parser_is_active = internals.check_parser_active_jupyter
                 self._shell_cmd_helper = internals.run_shell_command_jupyter
                 self.parser_environment = 'IPY_NEW'
         self.activate_parser()

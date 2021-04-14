@@ -39,16 +39,17 @@ class Onion:
         if installer == 'pip':
             parser = pip_parser
         elif installer == 'conda':
+            msg = "smuggling packages via conda is not yet supported"
             raise ParserNotImplementedError(
-                "smuggling packages via conda is not yet supported"
+                msg, target_text=onion_text,
+                target_offset=onion_text.index('conda')
             )
         else:
             # theoretically not possible to get here given regex parser,
             # but include as a failsafe for completeness
-            raise OnionParserError(
-                "An unexpected error occurred while trying to parse onion "
-                f"comment: {onion_text}"
-            )
+            msg = ("An unexpected error occurred while trying to parse onion "
+                   f"comment: {onion_text}")
+            raise OnionParserError(msg, target_text=onion_text)
         installer_kwargs = vars(parser.parse_args(args_str.split()))
         # arg_str could potentially have both single and double quotes
         # in it, so triple quote to be safe

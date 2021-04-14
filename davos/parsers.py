@@ -1,4 +1,4 @@
-from argparse import Action, ArgumentParser, SUPPRESS
+from argparse import Action, ArgumentError, ArgumentParser, SUPPRESS
 
 from davos.exceptions import OnionArgumentError
 
@@ -46,9 +46,28 @@ class EditableAction(Action):
 
 class OnionParser(ArgumentParser):
     # ADD DOCSTRING
+    def parse_args(self, args, namespace=None):
+        self._args = ' '.join(args)
+        try:
+            try:
+                ns, extras = super().parse_known_args(args=args,
+                                                      namespace=namespace)
+            except ArgumentError as e:
+                raise OnionArgumentError(msg=e.message,
+                                         argument=e.argument_name,
+                                         onion_txt=self._args) from e
+            else:
+                if extras:
+                    msg = f"Unrecognized arguments: {' '.join(extras)}"
+                    raise OnionArgumentError(msg=msg, argument=extras[0],
+                                             onion_txt=self._args)
+                return ns
+        finally:
+            self._args = None
+
     def error(self, message):
         # ADD DOCSTRING
-        raise OnionArgumentError(message)
+        raise OnionArgumentError(msg=message, onion_txt=self._args)
 
 
 # does not include usage for `pip install [options] -r

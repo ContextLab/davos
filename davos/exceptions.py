@@ -1,4 +1,4 @@
-from argparse import ArgumentError
+from argparse import _get_action_name, ArgumentError
 from subprocess import CalledProcessError
 
 from davos import davos
@@ -31,7 +31,7 @@ class DavosParserError(SyntaxError, DavosError):
     def __init__(
             self,
             msg=None,
-            target_text='',
+            target_text=None,
             target_offset=0,
             *args
     ):
@@ -44,7 +44,7 @@ class DavosParserError(SyntaxError, DavosError):
         #  - `flot` is a 4-tuple of (**f**ilename, **l**ineno,
         #    **o**ffset, **t**ext) passed to the SyntaxError
         #    constructor.
-        if target_text == '':
+        if target_text is None:
             flot = (None, None, None, None)
         else:
             xform_manager = davos.ipython_shell.input_transformer_manager
@@ -84,27 +84,28 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError):
 
 
 class OnionArgumentError(ArgumentError, OnionParserError):
-    # class analogous to argparse.ArgumentError, but for invalid
-    # arguments passed in Onion construct
-    def __init__(self, message):
-        super().__init__(None, message)
-        if message.startswith('argument '):
-            split_message = message.split()
-            self.argument_name = split_message[1].rstrip(':')
-            self.message = ' '.join(split_message[2:])
-
-
-class OnionSyntaxError(OnionParserError):
-    # class analogous to SyntaxError, but for invalid Syntax in Onion
-    # construct
-    def __init__(self, msg, *args, filename=None, lineno=None, offset=None):
-        # TODO: format kwargs into tuple to init super() with correct
-        #  format to raise at specific location, see
-        #  https://stackoverflow.com/questions/33717804/python-raise-syntaxerror-with-lineno
-        super().__init__(msg, *args)
-        self.filename = filename
-        self.lineno = lineno
-        self.offset = offset
+    def __init__(self, msg=None, argument=None, onion_txt=None, *args):
+        if (
+                msg is not None and
+                argument is None and
+                msg.startswith('argument ')
+        ):
+            split_msg = msg.split()
+            argument = split_msg[1].rstrip(':')
+            msg = ' '.join(split_msg[2:])
+        if (onion_txt is not None) and (argument is not None):
+            try:
+                target_offset = onion_txt.index(argument)
+            except IndexError:
+                target_offset = 0
+        else:
+            target_offset = 0
+        # both `argparse.ArgumentError` and `SyntaxError` are non-cooperative,
+        # so need to initialize them separately rather than via call to super()
+        ArgumentError.__init__(self, argument=None, message=msg)
+        OnionParserError.__init__(self, msg=msg, target_text=onion_txt,
+                                  target_offset=target_offset, *args)
+        self.argument_name = argument
 
 
 class SmugglerError(DavosError):

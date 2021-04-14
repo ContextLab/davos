@@ -118,8 +118,8 @@ class capture_stdout:
             sys_ = globals()['sys']
         except KeyError:
             import sys as sys_
-        self.sys_ = sys
-        self.sys_stdout_write = sys.stdout.write
+        self.sys_ = sys_
+        self.sys_stdout_write = sys_.stdout.write
 
     def __enter__(self):
         self.sys_.stdout.write = self._write

@@ -4,6 +4,17 @@ from subprocess import CalledProcessError
 from davos import davos
 
 
+__all__ = [
+    'DavosError',
+    'DavosParserError',
+    'OnionParserError',
+    'OnionArgumentError',
+    'ParserNotImplementedError',
+    'SmugglerError',
+    'InstallerError'
+]
+
+
 class DavosError(Exception):
     pass
 
@@ -75,14 +86,6 @@ class OnionParserError(DavosParserError):
     pass
 
 
-class ParserNotImplementedError(OnionParserError, NotImplementedError):
-    """
-    A version of NotImplementedError that can be raised during IPython
-    input transformation step because it inherits from SyntaxError
-    """
-    pass
-
-
 class OnionArgumentError(ArgumentError, OnionParserError):
     def __init__(self, msg=None, argument=None, onion_txt=None, *args):
         if (
@@ -106,6 +109,14 @@ class OnionArgumentError(ArgumentError, OnionParserError):
         OnionParserError.__init__(self, msg=msg, target_text=onion_txt,
                                   target_offset=target_offset, *args)
         self.argument_name = argument
+
+
+class ParserNotImplementedError(OnionParserError, NotImplementedError):
+    """
+    A version of NotImplementedError that can be raised during IPython
+    input transformation step because it inherits from SyntaxError
+    """
+    pass
 
 
 class SmugglerError(DavosError):

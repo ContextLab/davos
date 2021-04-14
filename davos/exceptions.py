@@ -8,15 +8,66 @@ class DavosError(Exception):
     pass
 
 
-class DavosParserError(DavosError, SyntaxError):
+class DavosParserError(SyntaxError, DavosError):
     """
     Base class for errors raised during the parsing step.
 
-    Only exceptions derived from SyntaxError can successfully be
-    raised during IPython's input transformation step. All others cause
-    execution to hang indefinitely.
+    Since the raw cell contents haven't been passed to the Python
+    compiler yet, IPython doesn't allow input transformers to raise any
+    exceptions other than `SyntaxError` during the input transformation
+    phase.  All others will cause the cell to hang indefinitely, meaning
+    all `davos` library exception classes must inherit from
+    `SyntaxError` in order to work.
+
+    Additionally, when the IPython parser catches a `SyntaxError` raised
+    by an input transformer, it displays it using a custom output
+    formatting class in order to handle `SyntaxError`-specific traceback
+    formatting (line number & position of the offending code, etc.). So
+    since there's no way for the `davos` parser to get around that
+    display format and show exceptions with their "normal" formatting,
+    we may as well use those fields to provide some helpful info rather
+    than just leaving them blank.
     """
-    pass
+    def __init__(
+            self,
+            msg=None,
+            target_text='',
+            target_offset=0,
+            *args
+    ):
+        # ADD DOCSTRING
+        #  - `target_text` is text we're searching for which caused
+        #     error
+        #  - `target_offset` is additional offset from start of
+        #    `target_text` for placing caret (allows us to use longer,
+        #    more specific phrase for `target_text` when needed)
+        #  - `flot` is a 4-tuple of (**f**ilename, **l**ineno,
+        #    **o**ffset, **t**ext) passed to the SyntaxError
+        #    constructor.
+        if target_text == '':
+            flot = (None, None, None, None)
+        else:
+            xform_manager = davos.ipython_shell.input_transformer_manager
+            # number of "real" lines in the current cell before the
+            # start of the current "chunk" (potentially multi-line
+            # python statement) being parsed
+            n_prev_lines = len(xform_manager.source.splitlines())
+            all_cell_lines = xform_manager.source_raw.splitlines()
+            # remaining cell lines starting with the beginning of the
+            # current "chunk" (no way to isolate just the current chunk)
+            rest_cell_lines = all_cell_lines[n_prev_lines:]
+            for ix, line in enumerate(rest_cell_lines, start=1):
+                if target_text in line:
+                    lineno = n_prev_lines + ix
+                    offset = line.index(target_text) + target_offset
+                    break
+            else:
+                offset = None
+                lineno = None
+            # leave lineno as None so IPython will fill it in as
+            # "<ipython-input-...>"
+            flot = (None, lineno, offset, target_text)
+        super().__init__(msg, flot, *args)
 
 
 class OnionParserError(DavosParserError):

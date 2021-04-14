@@ -3,47 +3,6 @@ from argparse import Action, ArgumentError, ArgumentParser, SUPPRESS
 from davos.exceptions import OnionArgumentError
 
 
-class SubtractAction(Action):
-    # ADD DOCSTRING
-    def __init__(
-            self,
-            option_strings,
-            dest,
-            default=None,
-            required=False,
-            help=None
-    ):
-        # ADD DOCSTRING
-        super().__init__(option_strings=option_strings, dest=dest, nargs=0,
-                         default=default, required=required, help=help)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        curr_count = getattr(namespace, self.dest, 0)
-        setattr(namespace, self.dest, curr_count - 1)
-
-
-class EditableAction(Action):
-    # ADD DOCSTRING
-    def __init__(
-            self,
-            option_strings,
-            dest,
-            default=None,
-            metavar=None,
-            help=None
-    ):
-        # ADD DOCSTRING
-        # NOTE: `argparse.Action` subclass constructors must contain
-        #  `dest` as a positional arg, but `self.dest` will always be
-        #  `'editable'` for this particular class
-        super().__init__(option_strings, dest, default=default,
-                         metavar=metavar, help=help)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, 'editable', True)
-        setattr(namespace, 'spec', values)
-
-
 class OnionParser(ArgumentParser):
     # ADD DOCSTRING
     def parse_args(self, args, namespace=None):
@@ -68,6 +27,47 @@ class OnionParser(ArgumentParser):
     def error(self, message):
         # ADD DOCSTRING
         raise OnionArgumentError(msg=message, onion_txt=self._args)
+
+
+class EditableAction(Action):
+    # ADD DOCSTRING
+    def __init__(
+            self,
+            option_strings,
+            dest,
+            default=None,
+            metavar=None,
+            help=None
+    ):
+        # ADD DOCSTRING
+        # NOTE: `argparse.Action` subclass constructors must contain
+        #  `dest` as a positional arg, but `self.dest` will always be
+        #  `'editable'` for this particular class
+        super().__init__(option_strings, dest, default=default,
+                         metavar=metavar, help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, 'editable', True)
+        setattr(namespace, 'spec', values)
+
+
+class SubtractAction(Action):
+    # ADD DOCSTRING
+    def __init__(
+            self,
+            option_strings,
+            dest,
+            default=None,
+            required=False,
+            help=None
+    ):
+        # ADD DOCSTRING
+        super().__init__(option_strings=option_strings, dest=dest, nargs=0,
+                         default=default, required=required, help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        curr_count = getattr(namespace, self.dest, 0)
+        setattr(namespace, self.dest, curr_count - 1)
 
 
 # does not include usage for `pip install [options] -r

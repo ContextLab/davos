@@ -70,12 +70,21 @@ class Onion:
                 f"Unsupported installer: '{installer}'. Currently supported "
                 "installers are:\n\t'pip'"  # and 'conda'"
             )
+        self.build = None
         self.args_str = args_str
+        if args_str == '':
+            # bare smuggle statement without onion comment
+            self.is_editable = False
+            self.verbosity = 0
+            self.installer_kwargs = {}
+            self.install_name = package_name
+            self.version_spec = ''
+            return
+        
         full_spec = installer_kwargs.pop('spec').strip("'\"")
         self.is_editable = installer_kwargs.pop('editable')
         self.verbosity = installer_kwargs.pop('verbosity')
         self.installer_kwargs = installer_kwargs
-        self.build = None
         if '+' in full_spec:
             # INSTALLING FROM LOCAL/REMOTE VCS:
             #   self.install_name is the VCS program + '+' + absolute

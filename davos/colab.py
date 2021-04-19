@@ -32,7 +32,6 @@ if davos.ipython_shell is not None:
     from IPython.core.display import _display_mimetype
     from IPython.core.inputtransformer import StatelessInputTransformer
     from IPython.core.interactiveshell import system as _run_shell_cmd
-    from IPython.lib.deepreload import reload as deep_reload
     from IPython.utils.importstring import import_item
     # additional check to make sure this is in a Colab notebook rather
     # than just very old IPython kernel
@@ -173,7 +172,14 @@ def smuggle_colab(
 
     if onion.is_installed:
         try:
-            imported_obj = import_item(name)
+            # Unlike regular import, can be called on non-module items:
+            #     ```
+            #     import numpy.array`                   # fails
+            #     array = import_item('numpy.array')    # succeeds
+            #     ```
+            # Also adds module (+ parents, if any) to sys.modules if not
+            # already present.
+            smuggled_obj = import_item(name)
         except ModuleNotFoundError as e:
             # TODO: check for --yes (conda) and bypass if passed
             if davos.confirm_install:
@@ -191,82 +197,85 @@ def smuggle_colab(
 
     if install_pkg:
         installer_stdout, exit_code = onion.install_package()
-        # remove package and all of its subpackages from sys.modules
-        for name in tuple(sys.modules.keys()):
-            if name.startswith(f'{pkg_name}.') or name == pkg_name:
-                del sys.modules[name]
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module
         importlib.invalidate_caches()
-        # packages with C extensions (e.g., numpy, pandas) cannot be
-        # reloaded within an interpreter session. If the package was
-        # previously imported in the current runtime (even if not by
-        # user), get versions before & after reload, and if there's no
-        # change, warn about needing to reset runtime for changes to
-        # take effect with "RESTART RUNTIME" button in output. Elif
-        # unable to determine version both before and after reload,
-        # issue lower-priority warning about uncertainty
+        # check whether the smuggled package and/or any installed/updated
+        # dependencies were already imported during the current runtime
         prev_imported_pkgs = get_updated_imported_pkgs(installer_stdout)
-        # highest-level package should be dealt with last
+        # if the smuggled package was previously imported, deal with
+        # it last so it's reloaded after its dependencies are in place
         try:
             prev_imported_pkgs.remove(pkg_name)
         except ValueError:
-            check_smuggled_pkg = False
+            # smuggled package is brand new
+            pass
         else:
-            check_smuggled_pkg = True
-        for pkg_name in prev_imported_pkgs:
-            # imported_pkgs_updated computes intersection with
-            # set(sys.modules), so names are guaranteed to be there
-            deep_reload(sys.modules[pkg_name], exclude=NO_RELOAD_MODULES)
-        if check_smuggled_pkg:
-            old_pkg = sys.modules[pkg_name]
+            prev_imported_pkgs.append(pkg_name)
+
+        failed_reloads = []
+        for dep_name in prev_imported_pkgs:
+            dep_modules_old = {}
+            for mod_name in tuple(sys.modules.keys()):
+                # remove submodules of previously imported packages so
+                # new versions get imported when main package is
+                # reloaded (importlib.reload only reloads top-level
+                # module). IPython.lib.deepreload.reload recursively
+                # reloads submodules, but is basically broken because
+                # it's *too* aggressive. It reloads *all* imported
+                # modules... including the import machinery it needs to
+                # run, which crashes it... (-_-* )
+                if mod_name.startswith(f'{dep_name}.'):
+                    dep_modules_old[mod_name] = sys.modules.pop(mod_name)
+
+            # get (but don't pop) top-level package to that it can be
+            # reloaded (must exist in sys.modules)
+            dep_modules_old[dep_name] = sys.modules[dep_name]
             try:
-                old_version = old_pkg.__version__
-            except AttributeError:
-                old_version = None
-            new_pkg = deep_reload(old_pkg, exclude=NO_RELOAD_MODULES)
-            try:
-                new_version = new_pkg.__version__
-            except AttributeError:
-                new_version = None
-            if old_version == new_version:
-                if old_version is new_version is None:
-                    warnings.warn(
-                        "Failed to programmatically package version of "
-                        f"previously imported package '{pkg_name}' both before "
-                        "and after smuggling. If this module contains C "
-                        "extensions, you may need to restart the runtime to "
-                        "use the newly installed version"
-                    )
-                elif onion.version_spec != '':
-                    # casting the widest net possible for this edge
-                    # case: if specific version not provided, old & new
-                    # package versions are likely to be the same (e.g.,
-                    # VCS/local/archive/forced/etc. install) and since
-                    # user can see the pip-install command's output,
-                    # probably better to be conservative about issuing
-                    # big, bright red warnings. Also adding
-                    # `davos.confirm_installed_versions()` for more
-                    # aggressive checking,
-                    _display_mimetype(
-                        "application/vnd.colab-display-data+json",
-                        (
-                            {'pip_warning': {'packages': pkg_name}},
-                        ),
-                        raw=True
-                    )
-        imported_obj = import_item(name)
-    # import_item takes care of adding package to sys.modules (& its
-    # parents if it's a subpackage), but doesn't add the module
-    # name/alias to globals() like the normal import statement
+                importlib.reload(sys.modules[dep_name])
+            except (ImportError, ModuleNotFoundError, RuntimeError):
+                # if we aren't able to reload the module, put the old
+                # version's submodules we removed back in sys.modules
+                # for now and prepare to show a warning post-execution.
+                # This way:
+                #   1. the user still has a working module until they
+                #      restart the runtime
+                #   2. the error we got doesn't keep getting raised when
+                #      we try to reload/import other modules that
+                #      import it
+                sys.modules.update(dep_modules_old)
+                failed_reloads.append(dep_name)
+
+        if any(failed_reloads):
+            # packages with C extensions (e.g., numpy, pandas) cannot be
+            # reloaded within an interpreter session. If the package was
+            # previously imported in the current runtime (even if not by
+            # user), warn about needing to reset runtime for changes to
+            # take effect with "RESTART RUNTIME" button in output
+            # (doesn't raise an exception, remaining code in cell still
+            # runs)
+            _display_mimetype(
+                "application/vnd.colab-display-data+json",
+                (
+                    {'pip_warning': {'packages': ', '.join(failed_reloads)}},
+                ),
+                raw=True
+            )
+        smuggled_obj = import_item(name)
+        # finally, reload pkg_resources so that just-installed package
+        # will be recognized when querying local versions for later
+        # checks
+        importlib.reload(sys.modules['pkg_resources'])
+
+    # add the object name/alias to the notebook's global namespace
     if as_ is None:
-        if name == pkg_name:
-            davos.ipython_shell.user_ns[name] = sys.modules[name]
-        else:
-            davos.ipython_shell.user_ns[name] = imported_obj
+        davos.ipython_shell.user_ns[name] = smuggled_obj
     else:
-        davos.ipython_shell.user_ns[as_] = imported_obj
-    davos.smuggled[onion.import_name] = onion.args_str
+        davos.ipython_shell.user_ns[as_] = smuggled_obj
+    # cache the smuggled (top-level) package by its full onion comment
+    # so rerunning cells is more efficient, but any change to version,
+    # source, etc. is caught
+    davos.smuggled[pkg_name] = onion.args_str
 
 
 def smuggle_parser_colab(line):

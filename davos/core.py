@@ -11,8 +11,8 @@ __all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
 import re
 from subprocess import CalledProcessError
 
-import packaging
 import pkg_resources
+from packaging.requirements import InvalidRequirement
 
 from davos import davos
 from davos.exceptions import (
@@ -164,7 +164,7 @@ class Onion:
                 pkg_resources.VersionConflict,
                 # version_spec is invalid or pkg_resources couldn't
                 # parse it
-                packaging.requirements.InvalidRequirement
+                InvalidRequirement
             ):
                 return False
             else:

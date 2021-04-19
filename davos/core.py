@@ -153,7 +153,7 @@ class Onion:
             # line is just being rerun)
             return True
         elif '/' not in self.install_name:
-            full_spec = self.install_name + self.version_spec
+            full_spec = self.install_name + self.version_spec.replace("'", "")
             try:
                 pkg_resources.get_distribution(full_spec)
             except (
@@ -172,7 +172,8 @@ class Onion:
         return False
 
     def _pip_install_package(self):
-        cmd_str = f'pip install {self.args_str}'
+        args = self.args_str.replace("<", "'<'").replace(">", "'>'")
+        cmd_str = f'pip install {args}'
         live_stdout = self.verbosity > -3
         try:
             stdout, exit_code = davos.run_shell_command(cmd_str,

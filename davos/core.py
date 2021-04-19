@@ -9,13 +9,10 @@ __all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
 
 
 import re
-from packaging.requirements import InvalidRequirement
-from pkg_resources import (
-    DistributionNotFound,
-    get_distribution,
-    VersionConflict
-)
 from subprocess import CalledProcessError
+
+import packaging
+import pkg_resources
 
 from davos import davos
 from davos.exceptions import (
@@ -156,14 +153,19 @@ class Onion:
             # line is just being rerun)
             return True
         elif '/' not in self.install_name:
+            full_spec = self.install_name + self.version_spec
             try:
-                get_distribution(self.install_name + self.version_spec)
-            except (DistributionNotFound, VersionConflict, InvalidRequirement):
-                # - DistributionNotFound: package is not installed
-                # - VersionConflict: package is installed, but installed
-                #   version doesn't fit requested version constraints
-                # - InvalidRequirement: version_spec is invalid or
-                #   pkg_resources couldn't parse it
+                pkg_resources.get_distribution(full_spec)
+            except (
+                # requested package is not installed
+                pkg_resources.DistributionNotFound,
+                # package is installed, but installed version doesn't
+                # fit requested version constraints
+                pkg_resources.VersionConflict,
+                # version_spec is invalid or pkg_resources couldn't
+                # parse it
+                packaging.requirements.InvalidRequirement
+            ):
                 return False
             else:
                 return True

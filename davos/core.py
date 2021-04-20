@@ -18,7 +18,8 @@ from davos import davos
 from davos.exceptions import (
     InstallerError,
     OnionParserError,
-    ParserNotImplementedError
+    ParserNotImplementedError,
+    SmugglerError
 )
 from davos.parsers import pip_parser
 
@@ -172,7 +173,13 @@ class Onion:
         return False
 
     def _pip_install_package(self):
-        args = self.args_str.replace("<", "'<'").replace(">", "'>'")
+        # TODO: default behavior (no onion comment) is currently to try
+        #  to simply pip-install the package name. Could raise an
+        #  exception instead?
+        if self.args_str == '':
+            args = self.install_name
+        else:
+            args = self.args_str.replace("<", "'<'").replace(">", "'>'")
         cmd_str = f'pip install {args}'
         live_stdout = self.verbosity > -3
         try:

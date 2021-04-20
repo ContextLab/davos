@@ -332,7 +332,7 @@ def smuggle_parser_colab(line):
     else:
         # cmd_prefix == ''
         is_from_statement = False
-        onion_chars = matched_groups['ONION']
+        onion_chars = matched_groups['ONION'].replace('"', "'")
         has_semicolon_sep = matched_groups['SEMICOLON_SEP'] is not None
         qualname_prefix = ''
 

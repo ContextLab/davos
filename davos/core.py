@@ -10,6 +10,7 @@ __all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
 
 import re
 import sys
+from pathlib import Path
 from subprocess import CalledProcessError
 
 import pkg_resources
@@ -190,6 +191,29 @@ class Onion:
                        f"exit code: {e.returncode}. See above output "
                        f"for details")
             raise InstallerError(err_msg, e)
+        # hanle packages installed in non-standard locations
+        install_dir = self.installer_kwargs.get('target')
+        if install_dir is not None and install_dir not in sys.path:
+            # make sure alternate target directory is in the module
+            # search path so import machinery will find it
+            sys.path.insert(0, install_dir)
+        elif self.is_editable:
+            install_dir = self.installer_kwargs.get('src')
+            if install_dir is not None:
+                # passing --src only affects editable VCS installs,
+                # which are guaranteed to have #egg=<pkg_name>
+                proj_name = self.install_name.split('#egg=')[1]
+                # get rid of any quotes used to escape operators
+                proj_name = proj_name.replace('"', '').replace("'", "")
+                # only thing #egg=<pkg_name> may be followed by is
+                # &subdirectory=<subdirectory>
+                proj_name, _, subdir_name = proj_name.partition('&subdirectory=')
+                # pip converts underscores to hyphens when naming dir
+                proj_name = proj_name.replace('_', '-')
+                install_dir = Path(install_dir).resolve().joinpath(proj_name,
+                                                                   subdir_name)
+                if install_dir not in sys.path:
+                    sys.path.insert(0, str(install_dir))
         return stdout, exit_code
 
     def _conda_install_package(self):

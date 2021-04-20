@@ -27,6 +27,7 @@ from subprocess import CalledProcessError
 
 from davos import davos
 from davos.core import Onion, prompt_input, smuggle_statement_regex
+from davos.exceptions import DavosParserError
 
 if davos.ipython_shell is not None:
     from IPython.core.display import _display_mimetype
@@ -55,6 +56,51 @@ NO_RELOAD_MODULES = (
     'types',
     *sys.builtin_module_names
 )
+
+
+def _showsyntaxerror_davos(colab_shell, filename=None):
+    """
+    METHOD UPDATED BY DAVOS PACKAGE
+
+    When davos is imported into a Google Colab notebook, this method is
+    bound to the IPython InteractiveShell instance in place of its
+    normal `showsyntaxerror` method. This allows us to intercept
+    handling of `DavosParserError` (which must derive from
+    `SyntaxError`; see the `davos.exceptions.DavosParserError` docstring
+    for more info) and its subclasses, and display parser exceptions
+    properly with a full traceback.
+
+    ORIGINAL
+    `IPython.core.interactiveshell.InteractiveShell.showsyntaxerror`
+    DOCSTRING:
+
+    Display the syntax error that just occurred.
+
+    This doesn't display a stack trace because there isn't one.
+
+    If a filename is given, it is stuffed in the exception instead
+    of what was there before (because Python's parser always uses
+    "<string>" when reading from a string).
+    """
+    etype, value, tb = colab_shell._get_exc_info()
+    if issubclass(etype, DavosParserError):
+        try:
+            try:
+                stb = value._render_traceback_()
+            except Exception:
+                stb = colab_shell.InteractiveTB.structured_traceback(
+                    etype, value, tb, tb_offset=colab_shell.InteractiveTB.tb_offset
+                )
+            colab_shell._showtraceback(etype, value, stb)
+            if colab_shell.call_pdb:
+                colab_shell.debugger(force=True)
+            return
+        except KeyboardInterrupt:
+            print('\n' + colab_shell.get_exception_only(), file=sys.stderr)
+    else:
+        # original method is stored in Davos instance, but still bound
+        # IPython.core.interactiveshell.InteractiveShell instance
+        return davos._ipython_showsyntaxerror_orig(filename=filename)
 
 
 def activate_parser_colab():
@@ -93,6 +139,7 @@ def activate_parser_colab():
         manager_xforms.append(smuggle_transformer())
 
     colab_shell.user_ns['smuggle'] = smuggle_colab
+    colab_shell.showsyntaxerror = _showsyntaxerror_davos.__get__(colab_shell)
 
 
 def check_parser_active_colab():

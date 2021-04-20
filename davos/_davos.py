@@ -59,6 +59,10 @@ class Davos:
                 self.parser_is_active = internals.check_parser_active_colab
                 self._shell_cmd_helper = internals.run_shell_command_colab
                 self.parser_environment = 'IPY_OLD'
+                # store InteractiveShell's original showsyntaxerror
+                # method so it can be referenced from our overridden
+                # version
+                self._ipython_showsyntaxerror_orig = self.ipython_shell._showsyntaxerror
             else:
                 # running in a new(-ish) IPython/Jupyter Notebook
                 # version

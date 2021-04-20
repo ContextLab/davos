@@ -100,14 +100,20 @@ class OnionArgumentError(ArgumentError, OnionParserError):
             argument = split_msg[1].rstrip(':')
             msg = ' '.join(split_msg[2:])
         if (onion_txt is not None) and (argument is not None):
-            try:
-                target_offset = onion_txt.index(argument)
-            except IndexError:
+            # default sorting is alphabetical where '--a' comes before
+            # '-a', so long option name will always be checked first,
+            # which is what we want
+            for aname in sorted(argument.split('/')):
+                if aname in onion_txt:
+                    target_offset = onion_txt.index(aname)
+                    break
+            else:
                 target_offset = 0
         else:
             target_offset = 0
-        # both `argparse.ArgumentError` and `SyntaxError` are non-cooperative,
-        # so need to initialize them separately rather than via call to super()
+        # both `argparse.ArgumentError` and `SyntaxError` are
+        # non-cooperative, so need to initialize them separately rather
+        # than just running through the MRO via a call to super()
         ArgumentError.__init__(self, argument=None, message=msg)
         OnionParserError.__init__(self, msg=msg, target_text=onion_txt,
                                   target_offset=target_offset, *args)

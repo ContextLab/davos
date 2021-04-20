@@ -9,6 +9,7 @@ __all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
 
 
 import re
+import sys
 from subprocess import CalledProcessError
 
 import pkg_resources
@@ -189,6 +190,14 @@ class Onion:
                        f"exit code: {e.returncode}. See above output "
                        f"for details")
             raise InstallerError(err_msg, e)
+        # if installed in a specific directory, make sure it's in the
+        # module search path so import machinery will find it
+        install_dir = self.installer_kwargs.get('src')
+        if install_dir is None:
+            install_dir = self.installer_kwargs.get('target')
+        if install_dir is not None and install_dir not in sys.path:
+            sys.path.insert(0, install_dir)
+
         return stdout, exit_code
 
     def _conda_install_package(self):

@@ -9,7 +9,6 @@ __all__ = ['Davos', 'capture_stdout']
 
 
 import sys
-from functools import partial
 from contextlib import redirect_stdout
 from io import StringIO
 from subprocess import CalledProcessError
@@ -120,21 +119,16 @@ class capture_stdout:
     def __init__(self, *streams, closing=True):
         self.streams = streams
         self.closing = closing
-        try:
-            sys_ = globals()['sys']
-        except KeyError:
-            import sys as sys_
-        self.sys_ = sys_
-        self.sys_stdout_write = sys_.stdout.write
+        self.sys_stdout_write = sys.stdout.write
 
     def __enter__(self):
-        self.sys_.stdout.write = self._write
+        sys.stdout.write = self._write
         if len(self.streams) == 1:
             return self.streams[0]
         return self.streams
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.sys_.stdout.write = self.sys_stdout_write
+        sys.stdout.write = self.sys_stdout_write
         if self.closing:
             for s in self.streams:
                 s.close()
@@ -143,4 +137,4 @@ class capture_stdout:
         for s in self.streams:
             s.write(data)
         self.sys_stdout_write(data)
-        self.sys_.stdout.flush()
+        sys.stdout.flush()

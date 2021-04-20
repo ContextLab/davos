@@ -18,8 +18,7 @@ from davos import davos
 from davos.exceptions import (
     InstallerError,
     OnionParserError,
-    ParserNotImplementedError,
-    SmugglerError
+    ParserNotImplementedError
 )
 from davos.parsers import pip_parser
 

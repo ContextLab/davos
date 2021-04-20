@@ -22,7 +22,6 @@ __all__ = [
 import importlib
 import re
 import sys
-import warnings
 from subprocess import CalledProcessError
 
 from davos import davos
@@ -42,20 +41,6 @@ if davos.ipython_shell is not None:
         from google.colab._pip import (
             _previously_imported_packages as get_updated_imported_pkgs
         )
-
-
-NO_RELOAD_MODULES = (
-    'sys',
-    'os.path',
-    'builtins',
-    '__main__',
-    'numpy',
-    'numpy._globals',
-    'davos',
-    'importlib',
-    'types',
-    *sys.builtin_module_names
-)
 
 
 def _showsyntaxerror_davos(colab_shell, filename=None):

@@ -9,6 +9,7 @@ __all__ = ['Davos', 'capture_stdout']
 
 
 import sys
+from functools import partial
 from contextlib import redirect_stdout
 from io import StringIO
 from subprocess import CalledProcessError
@@ -77,18 +78,19 @@ class Davos:
             command_context = capture_stdout
         else:
             command_context = redirect_stdout
-        try:
-            with command_context(StringIO()) as stdout:
+        with command_context(StringIO()) as stdout:
+            try:
                 return_code = self._shell_cmd_helper(command)
+            except CalledProcessError as e:
+                # if the exception doesn't record the output, add it
+                # manually before raising
                 stdout = stdout.getvalue()
-        except CalledProcessError as e:
-            # if the exception doesn't record the output, add it
-            # manually before raising
-            if e.output is None and stdout != '':
-                e.output = stdout
-            raise e
-        else:
-            return stdout, return_code
+                if e.output is None and stdout != '':
+                    e.output = stdout
+                raise e
+            else:
+                stdout = stdout.getvalue()
+        return stdout, return_code
 
 
 class capture_stdout:

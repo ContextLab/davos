@@ -61,7 +61,7 @@ class Davos:
                 # store InteractiveShell's original showsyntaxerror
                 # method so it can be referenced from our overridden
                 # version
-                self._ipython_showsyntaxerror_orig = self.ipython_shell._showsyntaxerror
+                self._ipython_showsyntaxerror_orig = self.ipython_shell.showsyntaxerror
             else:
                 # running in a new(-ish) IPython/Jupyter Notebook
                 # version

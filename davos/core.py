@@ -173,6 +173,11 @@ class Onion:
                 return True
         return False
 
+    def _conda_install_package(self):
+        raise NotImplementedError(
+            "smuggling packages via conda is not yet supported"
+        )
+
     def _pip_install_package(self):
         # TODO: default behavior (no onion comment) is currently to try
         #  to simply pip-install the package name. Could raise an
@@ -215,11 +220,6 @@ class Onion:
                 if install_dir not in sys.path:
                     sys.path.insert(0, str(install_dir))
         return stdout, exit_code
-
-    def _conda_install_package(self):
-        raise NotImplementedError(
-            "smuggling packages via conda is not yet supported"
-        )
 
 
 def prompt_input(prompt, default=None, interrupt=None):

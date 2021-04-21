@@ -1,10 +1,9 @@
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable
 from io import StringIO
 from types import TracebackType
 from typing import (
     AnyStr,
-    Callable,
     ClassVar,
     Generic,
     Literal,
@@ -17,6 +16,7 @@ from typing import (
     Union
 )
 from IPython.core.interactiveshell import InteractiveShell
+from davos.core import PipInstallerKwargs
 
 __all__: list[Literal['capture_stdout', 'Davos']]
 
@@ -30,7 +30,7 @@ _E = TypeVar('_E', bound=BaseException)
 
 class Davos:
     __instance: ClassVar[Optional[_D]]
-    _ipython_showsyntaxerror_orig: Callable[[_IPY_SHELL, Optional[str]], None]
+    _ipython_showsyntaxerror_orig: Callable[[Optional[str]], None]
     _shell_cmd_helper: Callable[[str], int]
     activate_parser: Callable[[], None]
     confirm_install: bool
@@ -39,17 +39,17 @@ class Davos:
     parser_environment: Literal['IPY_NEW', 'IPY_OLD', 'PY']
     parser_is_active: Callable[[], bool]
     smuggled: dict[str, str]
-    smuggler: Callable[[str, Optional[str], Literal['pip'], str, Optional[Mapping]], None]
+    smuggler: Callable[[str, Optional[str], Literal['conda', 'pip'], str, Optional[PipInstallerKwargs]], None]
     suppress_stdout: bool
     def __new__(cls: Type[Davos]) -> _D: ...
     def initialize(self) -> None: ...
-    def run_shell_command(self, command: str, live_stdout: Optional[bool] = None) -> tuple[str, int]: ...
+    def run_shell_command(self, command: str, live_stdout: Optional[bool] = ...) -> tuple[str, int]: ...
 
 class capture_stdout(Generic[_S]):
     closing: bool
     streams: _S
     sys_stdout_write: sys.stdout.write
-    def __init__(self, *streams: _StringOrFileIO, closing: bool = True) -> None: ...
+    def __init__(self, *streams: _StringOrFileIO, closing: bool = ...) -> None: ...
     @overload
     def __enter__(self: capture_stdout[_S1]) -> _StringOrFileIO: ...
     @overload

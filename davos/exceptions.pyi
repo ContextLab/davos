@@ -1,6 +1,6 @@
 from argparse import ArgumentError
 from subprocess import CalledProcessError
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 __all__: list[
     Literal[
@@ -41,10 +41,11 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError): ...
 class SmugglerError(DavosError): ...
 
 class InstallerError(SmugglerError, CalledProcessError):
+    msg: str
     def __init__(
             self,
             msg: str,
-            *args: str,
+            *args: Union[CalledProcessError, str],
             output: Optional[str] = ...,
             stderr: Optional[str] = ...,
             show_stdout: Optional[bool] = ...

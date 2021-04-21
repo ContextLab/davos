@@ -1,3 +1,9 @@
+# ADD DOCSTRING
+
+
+__all__ = ['EditableAction', 'OnionParser', 'pip_parser', 'SubtractAction']
+
+
 from argparse import (
     Action,
     ArgumentError,
@@ -30,6 +36,7 @@ class OnionParser(ArgumentParser):
                                              onion_txt=self._args)
                 return ns
         finally:
+            # noinspection PyAttributeOutsideInit
             self._args = None
 
     def error(self, message):

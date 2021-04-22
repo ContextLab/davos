@@ -1,56 +1,35 @@
-# Introduction and usage
+<h1 align="center">davos</h1>
 
-The `davos` library provides Python with a single keyword-like object, `smuggle`, which is like a quick (and often dirty) wrapper for `import`.  Whereas you cannot `import` a library that hasn't been installed yet, you can easily `smuggle` a not-yet-installed library:
+## badges here
+
+## logo here
+
+> _Someone once told me that the night is dark and full of terrors. And tonight I am no knight. Tonight I am Davos the 
+smuggler again. Would that you were an onion._
+<div align="right">
+    &mdash;<a href="https://gameofthrones.fandom.com/wiki/Davos_Seaworth">Ser Davos Seaworth</a>
+    <br>
+    <a href="https://gameofthrones.fandom.com/wiki/A_Clash_of_Kings"><i>A Clash of Kings</i></a> by
+    <a href="https://gameofthrones.fandom.com/wiki/George_R._R._Martin">George R. R. Martin</a>
+</div>
+
+
+The `davos` library provides Python with an additional keyword: **`smuggle`**. 
+
+`smuggle` statements work just like standard `import` statements with one major addition: *you can `smuggle` a package 
+without installing it first*. In addition, a special type of inline comment (called an **onion**) may be added after a
+`smuggle` statement to constrain the imported package's version or pass arguments for installing a missing package.
+
+To enable the `smuggle` keyword, simply `import davos`:
 
 ```python
 import davos
 
-smuggle seaborn as sns # installs seaborn if needed!
+# pip-install numpy if needed
+smuggle numpy as np  # pip: numpy==1.20.2
 
-# now you can use seaborn as if you had imported it the "normal" way
-titanic = sns.utils.load_dataset('titanic')
-sns.barplot(data=titanic, x='class', y='survived', hue='sex', palette=sns.light_palette('seagreen'))
+# the smuggled package is fully imported and usable
+arr = np.arange(15).reshape(3, 5)
+# and the onion comment guarantees the desired version!
+assert np.__version__ == '1.20.2'
 ```
-
-## Other usage options
-
-Once you import the `davos` library, you can use `smuggle` as a stand in keyword-like object anywhere you would have otherwise used `import`.  Any of the following will work:
-```python
-smuggle pickle                             # built-in modules
-from matplotlib smuggle pyplot as plt      # "from" keyword, renaming sub-modules using "as"
-from scipy.spatial.distance smuggle cdist  # import sub-modules using dot notation
-smuggle os, sys                            # comma notation
-smuggle pandas as pd, numpy as np          # comma notation with renaming using "as"
-```
-
-## Unsupported stuff
-
-The `smuggle` function cannot automatically resolve package names.  For example, if the `umap-learn` package isn't installed, `smuggle umap` will attempt to `pip install umap` (which is a different library) rather than `pip install umap-learn`.  If the `pip` name and `import` name don't match, you can manually pass a module's `pip` name to `smuggle` as follows:
-
-```python
-@pipname('scikit-learn')
-smuggle sklearn.decomposition.LatentDirichletAllocation as LDA
-```
-
-Only [Google Colaboratory](colab.research.google.com/) environments are currently supported (as of version 0.0.1).  In future releases we plan to add support for other iPython environments, including Jupyter notebooks and Jupyter Labs.
-
-We do not plan to add support for standard Python at this time-- `davos` is intended to be a convenient hack for facilitating rapid development in notebook environments.  In its current form, `smuggle` should not be used as a "universal" replacement for `import` or `pip`.
-
-
-# Installation
-
-You can install the latest official version of `davos` with `pip` as follows:
-
-```bash
-pip install davos
-```
-
-To install the cutting (bleeding) edge version directly from git, use:
-
-```bash
-pip install git+https://github.com/ContextLab/davos.git
-```
-
-# Origin of the name
-
-The package name is inspired by [Davos Seaworth](https://gameofthrones.fandom.com/wiki/Davos_Seaworth), a famous smuggler from the [Song of Fire and Ice](https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire) series by [George R. R. Martin](https://en.wikipedia.org/wiki/George_R._R._Martin).

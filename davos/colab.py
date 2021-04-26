@@ -37,7 +37,6 @@ if davos.ipython_shell is not None:
     # than just very old IPython kernel
     from ipykernel.zmqshell import ZMQInteractiveShell
     if type(davos.ipython_shell) is not ZMQInteractiveShell:
-        # noinspection PyUnresolvedReferences
         from google.colab._pip import (
             _previously_imported_packages as get_updated_imported_pkgs
         )
@@ -70,9 +69,10 @@ def _showsyntaxerror_davos(colab_shell, filename=None):
     etype, value, tb = colab_shell._get_exc_info()
     if issubclass(etype, DavosParserError):
         try:
+            # noinspection PyBroadException
             try:
                 stb = value._render_traceback_()
-            except Exception:
+            except:
                 stb = colab_shell.InteractiveTB.structured_traceback(
                     etype, value, tb, tb_offset=colab_shell.InteractiveTB.tb_offset
                 )

@@ -35,14 +35,16 @@ class Davos:
     activate_parser: Callable[[], None]
     confirm_install: bool
     deactivate_parser: Callable[[], None]
-    ipython_shell: _IPY_SHELL
+    ipython_shell: Optional[_IPY_SHELL]
     parser_environment: Literal['IPY_NEW', 'IPY_OLD', 'PY']
     parser_is_active: Callable[[], bool]
     smuggled: dict[str, str]
     smuggler: Callable[[str, Optional[str], Literal['conda', 'pip'], str, Optional[PipInstallerKwargs]], None]
+    stdlib_mdoules: set[str]
     suppress_stdout: bool
     def __new__(cls: Type[Davos]) -> _D: ...
     def initialize(self) -> None: ...
+    def get_stdlib_modules(self) -> None: ...
     def run_shell_command(self, command: str, live_stdout: Optional[bool] = ...) -> tuple[str, int]: ...
 
 class capture_stdout(Generic[_S]):

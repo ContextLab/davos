@@ -8,9 +8,10 @@ configurable options for both internal and user settings
 __all__ = ['capture_stdout', 'Davos']
 
 
+import io
 import sys
 from contextlib import redirect_stdout
-from io import StringIO
+from pathlib import Path
 from subprocess import CalledProcessError
 
 
@@ -25,6 +26,7 @@ class Davos:
         return cls.__instance
 
     def initialize(self):
+        # ADD DOCSTRING
         self.confirm_install = False
         self.suppress_stdout = False
         self.smuggled = {}
@@ -67,16 +69,34 @@ class Davos:
                 self.parser_is_active = internals.check_parser_active_jupyter
                 self._shell_cmd_helper = internals.run_shell_command_jupyter
                 self.parser_environment = 'IPY_NEW'
+        self.get_stdlib_modules()
         self.activate_parser()
 
+    def get_stdlib_modules(self):
+        # ADD DOCSTRING
+        stdlib_dir = Path(io.__file__).parent
+        stdlib_modules = set(p.stem for p in stdlib_dir.iterdir())
+        try:
+            stdlib_modules.remove('site-packages')
+        except KeyError:
+            pass
+        if sys.platform.startswith('linux'):
+            try:
+                stdlib_modules.remove('dist-packages')
+            except KeyError:
+                pass
+        self.stdlib_modules = stdlib_modules
+
+
     def run_shell_command(self, command, live_stdout=None):
+        # ADD DOCSTRING
         if live_stdout is None:
             live_stdout = not self.suppress_stdout
         if live_stdout:
             command_context = capture_stdout
         else:
             command_context = redirect_stdout
-        with command_context(StringIO()) as stdout:
+        with command_context(io.StringIO()) as stdout:
             try:
                 return_code = self._shell_cmd_helper(command)
             except CalledProcessError as e:

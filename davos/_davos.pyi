@@ -40,7 +40,7 @@ class Davos:
     parser_is_active: Callable[[], bool]
     smuggled: dict[str, str]
     smuggler: Callable[[str, Optional[str], Literal['conda', 'pip'], str, Optional[PipInstallerKwargs]], None]
-    stdlib_mdoules: set[str]
+    stdlib_modules: set[str]
     suppress_stdout: bool
     def __new__(cls: Type[Davos]) -> _D: ...
     def initialize(self) -> None: ...

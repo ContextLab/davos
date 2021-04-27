@@ -141,7 +141,7 @@ class Onion:
     @property
     def is_installed(self):
         installer_kwargs = self.installer_kwargs
-        if self.import_name in davos.stdlib_mdoules:
+        if self.import_name in davos.stdlib_modules:
             # smuggled module is part of standard library
             return True
         elif (

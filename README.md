@@ -37,13 +37,16 @@ assert np.__version__ == '1.20.2'
 
 ## Table of contents
 - [Installation](#installation)
+- [Overview](#overview)
+  - [Smuggling Missing Packages](#smuggling-missing-packages)
+  - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
+  - [Use Cases](#use-cases)
+    - [Simplify Sharing Reproducible Code & Coding Environments](#simplify-sharing-reproducible-code--coding-environments)
+    - [Guarantee your code always uses the latest version, release, or revision](#guarantee-your-code-always-uses-the-latest-version-release-or-revision)
 - [Usage](#usage)
-  - [Overview](#overview)
-    - [Smuggling Missing Packages](#smuggling-missing-packages)
-    - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
   - [The `smuggle` Statement](#the-smuggle-statement)
   - [The Onion Comment](#the-onion-comment)
-  - [Enabling & Disabling `davos`](#enabling--disabling-davos)
+  - [Customizing `davos` Behavior](#customizing-davos-behavior)
 - [Examples](#examples)
 - [How it works](#how-it-works)
 - [FAQ](#faq)
@@ -75,8 +78,7 @@ or disconnected due to reaching its idle timeout limit, you'll need to rerun the
 VM instance.
 
 
-## Usage
-### Overview
+## Overview
 The primary way to use `davos` is via [the `smuggle` statement](#the-smuggle-statement), which is made available 
 throughout your code simply by running `import davos`. Like 
 [the built-in `import` statement](https://docs.python.org/3/reference/import.html), the `smuggle` statement is used to 
@@ -84,7 +86,7 @@ load code from another package or module into the current namespace. The main di
 handle missing packages and package versions.
 
 
-#### Smuggling Missing Packages
+### Smuggling Missing Packages
 `import` requires that packages be installed _before_ the start of the interpreter session. If you try to `import` a 
 package that can't be found locally, Python will raise a 
 [`ModuleNotFoundError`](https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError), and you will have to 
@@ -97,7 +99,7 @@ use. You can also add an inline ["onion" comment](#the-onion-comment) after a `s
 `davos` will install the package, if it can't be found locally.
 
 
-#### Smuggling Specific Package Versions
+### Smuggling Specific Package Versions
 [Onion comments](#the-onion-comment) can also be used to make `smuggle` statements version-sensitive. 
 
 Python does not provide a way to programmatically ensure a package imported at runtime matches a specific version, or 
@@ -152,41 +154,37 @@ With [a few exceptions](#limitation-c-extensions), smuggling a specific package 
 has already been imported_.
 
 
-#### Use Cases
-1. **Simplify sharing reproducible code & coding environments**
+### Use Cases
+#### Simplify sharing reproducible code & coding environments
+Different versions of the same package can often behave quite differently&mdash;bugs are introduced and fixed, features 
+are implemented and removed, support for Python versions is added and dropped, etc. Because of this, Python code that is 
+meant to be _reproducible_ (e.g., tutorials, demos, data analyses) is commonly shared alongside a set of a set of fixed 
+versions for each package used. And since there is no Python-native way to specify package versions at runtime (see 
+[above](#smuggling-specific-package-versions)), this often takes the form of a pre-configured development environment 
+(e.g., a [Docker](https://www.docker.com/) container), which can be cumbersome, slow to set up, resource-intensive, and 
+confusing for newer users, as well as require shipping both additional specification files _and_ instructions along with 
+your code. Even then, a well-intentioned user may alter the environment in a way that affects your carefully curated set 
+of pinned package versions (such as installing additional packages that trigger dependency updates).
    
-    Different versions of the same package can often behave quite differently&mdash;bugs are introduced and fixed, 
-    features are implemented and removed, support for Python versions is added and dropped, etc. Because of this, Python 
-    code that is meant to be _reproducible_ (e.g., tutorials, demos, data analyses) is commonly shared alongside a set 
-    of a set of fixed versions for each package used. And since there is no Python-native way to specify package 
-    versions at runtime (see [above](#smuggling-specific-package-versions)), this often takes the form of a 
-    pre-configured development environment (e.g., a [Docker](https://www.docker.com/) container), which can be 
-    cumbersome, slow to set up, resource-intensive, and confusing for newer users, as well as require shipping both 
-    additional specification files _and_ instructions along with your code. Even then, a well-intentioned user may alter 
-    the environment in a way that affects your carefully curated set of pinned package versions (such as installing 
-    additional packages that trigger dependency updates).
-   
-    Instead, `davos` allows you to share code with one simple instruction: _just `pip install davos`!_ Replace your 
-    `import` statements with `smuggle` statements, add package versions in onion comments, and let `davos` take care of 
-    the rest. Beyond its simplicity, this approach ensures your predetermined package versions are in place every time 
-    your code is run.
-   
-2. **Guarantee your code always uses the latest version, release, or revision**
-
-    If you want to make sure you're always using the most recent release of a certain package, `davos` makes doing 
-    so easy:
-    ```python
-    smuggle mypkg    # pip: mypkg --upgrade
-    ```
-    Or if you have an automation designed to test your most recent commit on GitHub:
-    ```python
-    smuggle mypkg    # pip: git+https://username/reponame.git
-    ```
+Instead, `davos` allows you to share code with one simple instruction: _just `pip install davos`!_ Replace your `import` 
+statements with `smuggle` statements, add package versions in onion comments, and let `davos` take care of the rest. 
+Beyond its simplicity, this approach ensures your predetermined package versions are in place every time your code is 
+run.
 
 
+#### Guarantee your code always uses the latest version, release, or revision
+If you want to make sure you're always using the most recent release of a certain package, `davos` makes doing so easy:
+```python
+smuggle mypkg    # pip: mypkg --upgrade
+```
+Or if you have an automation designed to test your most recent commit on GitHub:
+```python
+smuggle mypkg    # pip: git+https://username/reponame.git
+```
+
+
+## Usage
 ### The `smuggle` Statement
-#### Purpose
-#### Syntax
 The `smuggle` statement is designed to be used in place of 
 [the built-in `import` statement](https://docs.python.org/3/reference/import.html) and shares
 [its full syntactic definition](https://docs.python.org/3/reference/simple_stmts.html#the-import-statement):
@@ -205,23 +203,17 @@ smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of vali
 
 
 ### The Onion Comment
-#### Purpose
-#### Syntax
-
 ### Enabling & Disabling `davos`
-
 ## Examples
 ### Valid Syntaxes
-
 ## How it works
 ### Google Colab
 ### Jupyter Notebooks
 ### Python scripts
-
 ## FAQ
 
-## Limitations & Final Notes
 
+## Limitations & Final Notes
 - <a name="limitation-c-extensions"></a>**limitation about C extensions here**
 - <a name="limitation-vcs-smuggle"></a>**limitations about packages that specify vcs commits**
   - **installer must be pip**

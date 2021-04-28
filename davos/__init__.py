@@ -3,7 +3,7 @@ import pkg_resources
 from davos._davos import Davos
 
 
-__all__ = ['davos', 'smuggle', 'activate', 'deactivate', 'is_active']
+__all__ = ['activate', 'davos', 'deactivate', 'is_active', 'smuggle']
 __version__ = pkg_resources.get_distribution('davos').version
 
 

@@ -1,0 +1,19 @@
+from typing import Literal, NoReturn
+
+__all__: list[
+    Literal[
+        'activate_parser_python',
+        'check_parser_active_python',
+        'deactivate_parser_python',
+        'run_shell_command_python',
+        'smuggle_python',
+        'smuggle_parser_python'
+    ]
+]
+
+def activate_parser_python() -> NoReturn: ...
+def check_parser_active_python() -> NoReturn: ...
+def deactivate_parser_python() -> NoReturn: ...
+def run_shell_command_python() -> Literal[0]: ...
+def smuggle_python() -> NoReturn: ...
+def smuggle_parser_python(script_text: str) -> NoReturn: ...

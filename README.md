@@ -1,56 +1,249 @@
-# Introduction and usage
+<div align="center">
+  <h1>davos</h1>
+  <img src="https://user-images.githubusercontent.com/26118297/116332586-0c6ce080-a7a0-11eb-94ad-0502c96cf8ef.png" width=500/>
+</div>
 
-The `davos` library provides Python with a single keyword-like object, `smuggle`, which is like a quick (and often dirty) wrapper for `import`.  Whereas you cannot `import` a library that hasn't been installed yet, you can easily `smuggle` a not-yet-installed library:
+🟥🟥🟥 add badges 🟥🟥🟥
 
+
+> _Someone once told me that the night is dark and full of terrors. And tonight I am no knight. Tonight I am Davos the 
+smuggler again. Would that you were an onion._
+<div align="right">
+    &mdash;<a href="https://gameofthrones.fandom.com/wiki/Davos_Seaworth">Ser Davos Seaworth</a>
+    <br>
+    <a href="https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire"><i>A Clash of Kings</i></a> by
+    <a href="https://en.wikipedia.org/wiki/George_R._R._Martin">George R. R. Martin</a>
+</div>
+
+
+The `davos` library provides Python with an additional keyword: **`smuggle`**. 
+
+[`smuggle` statements](#the-smuggle-statement) work just like standard 
+[`import` statements](https://docs.python.org/3/reference/import.html) with one major addition: _you can `smuggle` a 
+package without installing it first_. A special type of comment (called an ["**onion**"](#the-onion-comment)) can also 
+be added after a `smuggle` statement, allowing you to _`smuggle` specific package versions_ and fully control 
+installation of missing packages.
+
+To enable the `smuggle` keyword, simply `import davos`:
 ```python
 import davos
 
-smuggle seaborn as sns # installs seaborn if needed!
+# pip-install numpy if needed
+smuggle numpy as np    # pip: numpy==1.20.2
 
-# now you can use seaborn as if you had imported it the "normal" way
-titanic = sns.utils.load_dataset('titanic')
-sns.barplot(data=titanic, x='class', y='survived', hue='sex', palette=sns.light_palette('seagreen'))
+# the smuggled package is fully imported and usable
+arr = np.arange(15).reshape(3, 5)
+# and the onion comment guarantees the desired version!
+assert np.__version__ == '1.20.2'
 ```
 
-## Other usage options
-
-Once you import the `davos` library, you can use `smuggle` as a stand in keyword-like object anywhere you would have otherwise used `import`.  Any of the following will work:
-```python
-smuggle pickle                             # built-in modules
-from matplotlib smuggle pyplot as plt      # "from" keyword, renaming sub-modules using "as"
-from scipy.spatial.distance smuggle cdist  # import sub-modules using dot notation
-smuggle os, sys                            # comma notation
-smuggle pandas as pd, numpy as np          # comma notation with renaming using "as"
-```
-
-## Unsupported stuff
-
-The `smuggle` function cannot automatically resolve package names.  For example, if the `umap-learn` package isn't installed, `smuggle umap` will attempt to `pip install umap` (which is a different library) rather than `pip install umap-learn`.  If the `pip` name and `import` name don't match, you can manually pass a module's `pip` name to `smuggle` as follows:
-
-```python
-@pipname('scikit-learn')
-smuggle sklearn.decomposition.LatentDirichletAllocation as LDA
-```
-
-Only [Google Colaboratory](colab.research.google.com/) environments are currently supported (as of version 0.0.1).  In future releases we plan to add support for other iPython environments, including Jupyter notebooks and Jupyter Labs.
-
-We do not plan to add support for standard Python at this time-- `davos` is intended to be a convenient hack for facilitating rapid development in notebook environments.  In its current form, `smuggle` should not be used as a "universal" replacement for `import` or `pip`.
+## Table of contents
+- [Installation](#installation)
+- [Overview](#overview)
+  - [Smuggling Missing Packages](#smuggling-missing-packages)
+  - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
+  - [Use Cases](#use-cases)
+    - [Simplify Sharing Reproducible Code & Coding Environments](#simplify-sharing-reproducible-code--coding-environments)
+    - [Guarantee your code always uses the latest version, release, or revision](#guarantee-your-code-always-uses-the-latest-version-release-or-revision)
+    - [Compare behavior across package versions](#compare-behavior-across-package-versions)
+- [Usage](#usage)
+  - [The `smuggle` Statement](#the-smuggle-statement)
+  - [The Onion Comment](#the-onion-comment)
+  - [Customizing `davos` Behavior](#customizing-davos-behavior)
+- [Examples](#examples)
+- [How it works](#how-it-works)
+- [FAQ](#faq)
+- [Limitations & Final Notes](#limitations--final-notes)
 
 
-# Installation
-
-You can install the latest official version of `davos` with `pip` as follows:
-
-```bash
+## Installation
+### Latest stable PyPI release
+🟥🟥🟥 add badges 🟥🟥🟥
+```sh
 pip install davos
 ```
 
-To install the cutting (bleeding) edge version directly from git, use:
 
-```bash
-pip install git+https://github.com/ContextLab/davos.git
+### Latest unstable GitHub update
+🟥🟥🟥 add badges 🟥🟥🟥
+```sh
+pip install git+https://github.com/ContextLab/davos.git#egg=davos
 ```
 
-# Origin of the name
 
-The package name is inspired by [Davos Seaworth](https://gameofthrones.fandom.com/wiki/Davos_Seaworth), a famous smuggler from the [Song of Fire and Ice](https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire) series by [George R. R. Martin](https://en.wikipedia.org/wiki/George_R._R._Martin).
+### Installing in Colaboratory
+To use `davos` in [Google Colab](https://colab.research.google.com/), add a cell at the top of your notebook with an 
+exclamation point (`!`) followed by one of the install commands above (e.g., `!pip install davos`). Run the cell to 
+install `davos` on the runtime virtual machine. 
+
+Note that restarting the notebook runtime does not affect installed packages. However, if the runtime is "factory reset" 
+or disconnected due to reaching its idle timeout limit, you'll need to rerun the cell to reinstall `davos` on the fresh 
+VM instance.
+
+
+## Overview
+The primary way to use `davos` is via [the `smuggle` statement](#the-smuggle-statement), which is made available 
+throughout your code simply by running `import davos`. Like 
+[the built-in `import` statement](https://docs.python.org/3/reference/import.html), the `smuggle` statement is used to 
+load code from another package or module into the current namespace. The main difference between the two is in how they 
+handle missing packages and package versions.
+
+
+### Smuggling Missing Packages
+`import` requires that packages be installed _before_ the start of the interpreter session. If you try to `import` a 
+package that can't be found locally, Python will raise a 
+[`ModuleNotFoundError`](https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError), and you will have to 
+install the package, restart the interpreter to make the new package available, and rerun your code in full.
+
+`smuggle`, however, can handle missing packages on the fly. If you `smuggle` a package that isn't installed locally, 
+`davos` will install it, immediately make its contents accessible to the interpreter's
+[import machinery](https://docs.python.org/3.9/reference/import.html), and load the package into the local namespace for 
+use. You can also add an inline ["onion" comment](#the-onion-comment) after a `smuggle` statement to customize how 
+`davos` will install the package, if it can't be found locally.
+
+
+### Smuggling Specific Package Versions
+[Onion comments](#the-onion-comment) can also be used to make `smuggle` statements version-sensitive. 
+
+Python does not provide a way to programmatically ensure a package imported at runtime matches a specific version, or 
+fits a particular [version constraint](https://www.python.org/dev/peps/pep-0440/#version-specifiers). Although many 
+packages expose their version info via a `__version__` attribute (see 
+[PEP 396](https://www.python.org/dev/peps/pep-0396/)), using this to enforce package versions is generally not viable, 
+as doing so would require:
+
+- writing a potentially large amount of additional code to compare package versions
+- replacing all `from foo import bar` statements with `import foo` to make `foo.__version__` accessible
+- manually installing the desired version, restarting the interpreter, and rerunning your code in full every time an 
+  invalid version is found
+- devising an entirely separate approach for packages that don't have a `__version__` attribute in the first place!
+
+Additionally, for packages installed through a version control system (e.g., git), this would be insensitive to 
+differences between revisions (e.g., commits) within the same semantic version.
+
+**`davos` solves these issues** by allowing you to constrain each package you `smuggle` to a specific version or range 
+of acceptable versions. This can be done simply by placing a 
+[version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) in an 
+[onion comment](#the-onion-comment) next to the corresponding smuggle statement:
+```python
+smuggle numpy as np              # pip: numpy==1.20.2
+from pandas smuggle DataFrame    # pip: pandas>=0.23,<1.0
+```
+In this example, the first line will load [`numpy`](https://numpy.org/) into the local namespace under the alias "`np`", 
+just as" `import numpy as np`" would. `davos` will first check whether `numpy` is installed locally, and if so, whether 
+the installed version _exactly_ matches `1.20.2`. If `numpy` is not installed, or the installed version is anything 
+other than `1.20.2`, `davos` will use the specified _installer_, `pip`, to install `numpy==1.20.2` before loading the 
+package. 
+
+Similarly, the second line will load the "`DataFrame`" object from the [`pandas`](https://pandas.pydata.org/) library, 
+analogously to "`from pandas import DataFrame`". A local `pandas` version of `0.24.1` would be used, but a local version 
+of `1.0.2` would cause `davos` to install a valid `pandas` version as if you had manually run `pip install 
+pandas>=0.23,<1.0`. 
+
+In both cases, the imported versions will fit the constraints specified in their [onion comments](#the-onion-comment), 
+and the next time `numpy` or `pandas` is smuggled with the same constraints, valid local installations will be found.
+
+You can also ensure the state of a packages matches a specific VCS branch, revision, ref, or release. For example:
+```python
+smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@36c12fd
+```
+will load [`hypertools`](https://hypertools.readthedocs.io/en/latest/) (aliased as "`hyp`"), as the package existed 
+[on GitHub](https://github.com/ContextLab/hypertools), at commit 
+[36c12fd](https://github.com/ContextLab/hypertools/tree/36c12fd). The general format for VCS references in 
+[onion comments](#the-onion-comment) follows that of the 
+[`pip-install`](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) command. See the 
+[limitations section on smuggling from VCS](limitation-vcs-smuggle) for additional notes.
+
+With [a few exceptions](#limitation-c-extensions), smuggling a specific package version will work _even if the package 
+has already been imported_.
+
+
+### Use Cases
+#### Simplify sharing reproducible code & coding environments
+Different versions of the same package can often behave quite differently&mdash;bugs are introduced and fixed, features 
+are implemented and removed, support for Python versions is added and dropped, etc. Because of this, Python code that is 
+meant to be _reproducible_ (e.g., tutorials, demos, data analyses) is commonly shared alongside a set of a set of fixed 
+versions for each package used. And since there is no Python-native way to specify package versions at runtime (see 
+[above](#smuggling-specific-package-versions)), this often takes the form of a pre-configured development environment 
+(e.g., a [Docker](https://www.docker.com/) container), which can be cumbersome, slow to set up, resource-intensive, and 
+confusing for newer users, as well as require shipping both additional specification files _and_ instructions along with 
+your code. Even then, a well-intentioned user may alter the environment in a way that affects your carefully curated set 
+of pinned package versions (such as installing additional packages that trigger dependency updates).
+   
+Instead, `davos` allows you to share code with one simple instruction: _just `pip install davos`!_ Replace your `import` 
+statements with `smuggle` statements, add package versions in onion comments, and let `davos` take care of the rest. 
+Beyond its simplicity, this approach ensures your predetermined package versions are in place every time your code is 
+run.
+
+
+#### Guarantee your code always uses the latest version, release, or revision
+If you want to make sure you're always using the most recent release of a certain package, `davos` makes doing so easy:
+```python
+smuggle mypkg    # pip: mypkg --upgrade
+```
+Or if you have an automation designed to test your most recent commit on GitHub:
+```python
+smuggle mypkg    # pip: git+https://username/reponame.git
+```
+
+
+#### Compare behavior across package versions
+The ability to `smuggle` a specific package version even after a different version has been imported makes `davos` a 
+useful tool for comparing behavior across multiple versions of the same package, all within the same runtime:
+```python
+data = list(range(10))
+
+smuggle mypkg                    # pip: mypkg==0.1
+result1 = mypkg.my_func(data)
+
+smuggle mypkg                    # pip: mypkg==0.2
+result2 = mypkg.my_func(data)
+
+smuggle mypkg                    # pip: git+https://github.com/MyOrg/MyRepo.git#egg=mypkg
+result3 = mypkg.my_func(data)
+
+print(result1 == result2 == result3)
+```
+
+
+## Usage
+### The `smuggle` Statement
+The `smuggle` statement is designed to be used in place of 
+[the built-in `import` statement](https://docs.python.org/3/reference/import.html) and shares
+[its full syntactic definition](https://docs.python.org/3/reference/simple_stmts.html#the-import-statement):
+```ebnf
+smuggle_stmt     ::=  "smuggle" module ["as" identifier] ("," module ["as" identifier])*
+                     | "from" relative_module "smuggle" identifier ["as" identifier]
+                     ("," identifier ["as" identifier])*
+                     | "from" relative_module "smuggle" "(" identifier ["as" identifier]
+                     ("," identifier ["as" identifier])* [","] ")"
+                     | "from" module "smuggle" "*"
+module          ::=  (identifier ".")* identifier
+relative_module ::=  "."* module | "."+
+```
+In simpler terms, any valid syntax for `import` is also a valid syntax for `smuggle` (`smuggle foo`, `from foo.bar 
+smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of valid forms.
+
+
+### The Onion Comment
+### Enabling & Disabling `davos`
+## Examples
+### Valid Syntaxes
+## How it works
+### Google Colab
+### Jupyter Notebooks
+### Python scripts
+## FAQ
+
+
+## Limitations & Final Notes
+- <a name="limitation-c-extensions"></a>**limitation about C extensions here**
+- <a name="limitation-vcs-smuggle"></a>**limitations about packages that specify vcs commits**
+  - **installer must be pip**
+  - **non-editable VCS installs always freshly installed**
+- **non-working syntax: `for i in (numpy, pandas, hypertools): smuggle i`**
+
+[comment]: <> (- As with _all_ code, you should use caution when running Python code containing `smuggle` statements that was not written by you or someone you know. )
+
+
+
+Once you import the `davos` library, you can use `smuggle` as a stand in keyword-like object anywhere you would have otherwise used `import`.  Any of the following will work:

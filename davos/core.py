@@ -141,7 +141,10 @@ class Onion:
     @property
     def is_installed(self):
         installer_kwargs = self.installer_kwargs
-        if (
+        if self.import_name in davos.stdlib_modules:
+            # smuggled module is part of standard library
+            return True
+        elif (
                 installer_kwargs.get('force_reinstall') or
                 installer_kwargs.get('ignore_installed') or
                 installer_kwargs.get('upgrade')
@@ -172,6 +175,11 @@ class Onion:
             else:
                 return True
         return False
+
+    def _conda_install_package(self):
+        raise NotImplementedError(
+            "smuggling packages via conda is not yet supported"
+        )
 
     def _pip_install_package(self):
         # TODO: default behavior (no onion comment) is currently to try
@@ -215,11 +223,6 @@ class Onion:
                 if install_dir not in sys.path:
                     sys.path.insert(0, str(install_dir))
         return stdout, exit_code
-
-    def _conda_install_package(self):
-        raise NotImplementedError(
-            "smuggling packages via conda is not yet supported"
-        )
 
 
 def prompt_input(prompt, default=None, interrupt=None):

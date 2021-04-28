@@ -8,6 +8,7 @@ IPython/Jupyter Notebook).
 __all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
 
 
+import importlib
 import re
 import sys
 from pathlib import Path
@@ -161,9 +162,15 @@ class Onion:
             full_spec = self.install_name + self.version_spec.replace("'", "")
             try:
                 pkg_resources.get_distribution(full_spec)
+            except pkg_resources.DistributionNotFound:
+                module_spec = importlib.util.find_spec(self.import_name)
+                if module_spec is None:
+                    # requested package is not installed
+                    return False
+                else:
+                    # requested package is a namespace package
+                    return True
             except (
-                # requested package is not installed
-                pkg_resources.DistributionNotFound,
                 # package is installed, but installed version doesn't
                 # fit requested version constraints
                 pkg_resources.VersionConflict,

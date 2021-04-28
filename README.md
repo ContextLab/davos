@@ -1,8 +1,10 @@
-<h1 align="center">davos</h1>
+<div align="center">
+  <h1>davos</h1>
+  <img src="https://user-images.githubusercontent.com/26118297/116332586-0c6ce080-a7a0-11eb-94ad-0502c96cf8ef.png" width=500/>
+</div>
 
 🟥🟥🟥 add badges 🟥🟥🟥
 
-🟥🟥🟥 add logo 🟥🟥🟥
 
 > _Someone once told me that the night is dark and full of terrors. And tonight I am no knight. Tonight I am Davos the 
 smuggler again. Would that you were an onion._
@@ -27,7 +29,7 @@ To enable the `smuggle` keyword, simply `import davos`:
 import davos
 
 # pip-install numpy if needed
-smuggle numpy as np  # pip: numpy==1.20.2
+smuggle numpy as np    # pip: numpy==1.20.2
 
 # the smuggled package is fully imported and usable
 arr = np.arange(15).reshape(3, 5)
@@ -43,6 +45,7 @@ assert np.__version__ == '1.20.2'
   - [Use Cases](#use-cases)
     - [Simplify Sharing Reproducible Code & Coding Environments](#simplify-sharing-reproducible-code--coding-environments)
     - [Guarantee your code always uses the latest version, release, or revision](#guarantee-your-code-always-uses-the-latest-version-release-or-revision)
+    - [Compare behavior across package versions](#compare-behavior-across-package-versions)
 - [Usage](#usage)
   - [The `smuggle` Statement](#the-smuggle-statement)
   - [The Onion Comment](#the-onion-comment)
@@ -183,6 +186,25 @@ smuggle mypkg    # pip: git+https://username/reponame.git
 ```
 
 
+#### Compare behavior across package versions
+The ability to `smuggle` a specific package version even after a different version has been imported makes `davos` a 
+useful tool for comparing behavior across multiple versions of the same package, all within the same runtime:
+```python
+data = list(range(10))
+
+smuggle mypkg                    # pip: mypkg==0.1
+result1 = mypkg.my_func(data)
+
+smuggle mypkg                    # pip: mypkg==0.2
+result2 = mypkg.my_func(data)
+
+smuggle mypkg                    # pip: git+https://github.com/MyOrg/MyRepo.git#egg=mypkg
+result3 = mypkg.my_func(data)
+
+print(result1 == result2 == result3)
+```
+
+
 ## Usage
 ### The `smuggle` Statement
 The `smuggle` statement is designed to be used in place of 
@@ -225,10 +247,3 @@ smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of vali
 
 
 Once you import the `davos` library, you can use `smuggle` as a stand in keyword-like object anywhere you would have otherwise used `import`.  Any of the following will work:
-```python
-smuggle pickle                             # built-in modules
-from matplotlib smuggle pyplot as plt      # "from" keyword, renaming sub-modules using "as"
-from scipy.spatial.distance smuggle cdist  # import sub-modules using dot notation
-smuggle os, sys                            # comma notation
-smuggle pandas as pd, numpy as np          # comma notation with renaming using "as"
-```

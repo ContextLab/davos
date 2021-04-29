@@ -97,7 +97,7 @@ install the package, restart the interpreter to make the new package available, 
 
 `smuggle`, however, can handle missing packages on the fly. If you `smuggle` a package that isn't installed locally, 
 `davos` will install it, immediately make its contents accessible to the interpreter's
-[import machinery](https://docs.python.org/3.9/reference/import.html), and load the package into the local namespace for 
+[import machinery](https://docs.python.org/3/reference/import.html), and load the package into the local namespace for 
 use. You can also add an inline ["onion" comment](#the-onion-comment) after a `smuggle` statement to customize how 
 `davos` will install the package, if it can't be found locally.
 
@@ -123,13 +123,13 @@ differences between revisions (e.g., commits) within the same semantic version.
 **`davos` solves these issues** by allowing you to constrain each package you `smuggle` to a specific version or range 
 of acceptable versions. This can be done simply by placing a 
 [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) in an 
-[onion comment](#the-onion-comment) next to the corresponding smuggle statement:
+[onion comment](#the-onion-comment) next to the corresponding `smuggle` statement:
 ```python
 smuggle numpy as np              # pip: numpy==1.20.2
 from pandas smuggle DataFrame    # pip: pandas>=0.23,<1.0
 ```
 In this example, the first line will load [`numpy`](https://numpy.org/) into the local namespace under the alias "`np`", 
-just as" `import numpy as np`" would. `davos` will first check whether `numpy` is installed locally, and if so, whether 
+just as "`import numpy as np`" would. `davos` will first check whether `numpy` is installed locally, and if so, whether 
 the installed version _exactly_ matches `1.20.2`. If `numpy` is not installed, or the installed version is anything 
 other than `1.20.2`, `davos` will use the specified _installer_, `pip`, to install `numpy==1.20.2` before loading the 
 package. 
@@ -198,7 +198,7 @@ result1 = mypkg.my_func(data)
 smuggle mypkg                    # pip: mypkg==0.2
 result2 = mypkg.my_func(data)
 
-smuggle mypkg                    # pip: git+https://github.com/MyOrg/MyRepo.git#egg=mypkg
+smuggle mypkg                    # pip: git+https://github.com/MyOrg/mypkg.git
 result3 = mypkg.my_func(data)
 
 print(result1 == result2 == result3)
@@ -211,7 +211,7 @@ The `smuggle` statement is designed to be used in place of
 [the built-in `import` statement](https://docs.python.org/3/reference/import.html) and shares
 [its full syntactic definition](https://docs.python.org/3/reference/simple_stmts.html#the-import-statement):
 ```ebnf
-smuggle_stmt     ::=  "smuggle" module ["as" identifier] ("," module ["as" identifier])*
+smuggle_stmt    ::=  "smuggle" module ["as" identifier] ("," module ["as" identifier])*
                      | "from" relative_module "smuggle" identifier ["as" identifier]
                      ("," identifier ["as" identifier])*
                      | "from" relative_module "smuggle" "(" identifier ["as" identifier]
@@ -220,12 +220,52 @@ smuggle_stmt     ::=  "smuggle" module ["as" identifier] ("," module ["as" ident
 module          ::=  (identifier ".")* identifier
 relative_module ::=  "."* module | "."+
 ```
+
+_NB: uses the modified BNF grammar notation described 
+[here](https://docs.python.org/3/reference/introduction.html#notation) in 
+[The Python Language Reference](https://docs.python.org/3/reference); see 
+[here](https://docs.python.org/3/reference/lexical_analysis.html#identifiers) for the lexical definition of 
+`identifier`_
+
 In simpler terms, any valid syntax for `import` is also a valid syntax for `smuggle` (`smuggle foo`, `from foo.bar 
 smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of valid forms.
 
 
 ### The Onion Comment
-### Enabling & Disabling `davos`
+An _onion comment_ is a special type of inline comment placed on a line containing a `smuggle` statement. Onion comments 
+can be used to control how `davos`:
+
+- determines whether the `smuggle`d package should be installed
+- installs the `smuggle`d package, if necessary
+
+Onion comments follow a simple but specific syntax, inspired in part by the 
+[type comment syntax](https://www.python.org/dev/peps/pep-0484/#type-comments) introduced in 
+[PEP 484](https://www.python.org/dev/peps/pep-0484). The following is a loose (pseudo-)syntactic definition for an onion 
+comment:
+```ebnf
+onion_comment   ::=  "#" installer ":" install_opt* pkg_spec install_opt*
+installer       ::=  ("pip" | "conda")
+pkg_spec        ::=  identifier [version_spec]
+```
+where the `installer` is the program used to install the package, an `install_opt` is an option accepted by the 
+`installer` program's "`install`" command, and an `identifier` is used as defined 
+[here](https://docs.python.org/3/reference/lexical_analysis.html#identifiers). 
+
+The `version_spec` may be a [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) defined by 
+[PEP 440](https://www.python.org/dev/peps/pep-0440), or an alternative syntax valid for the `installer` program. For 
+example, `pip` uses specific syntax for [local](https://pip.pypa.io/en/stable/cli/pip_install/#local-project-installs), 
+[editable](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs), and 
+[VCS-based](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) installation while `conda` supports 
+[additional specifiers](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) and installing specific package 
+builds.
+
+In practice, are identified as matches for the [regular expression](https://en.wikipedia.org/wiki/Regular_expression):
+```regex
+#+ *(?:pip|conda) *: *[^# ].+?(?= +#| *\n| *$)
+```
+
+
+### Customizing `davos` Behavior
 ## Examples
 ### Valid Syntaxes
 ## How it works

@@ -206,7 +206,7 @@ class Onion:
                        f"exit code: {e.returncode}. See above output "
                        f"for details")
             raise InstallerError(err_msg, e)
-        # hanle packages installed in non-standard locations
+        # handle packages installed in non-standard locations
         install_dir = self.installer_kwargs.get('target')
         if install_dir is not None and install_dir not in sys.path:
             # make sure alternate target directory is in the module
@@ -276,7 +276,7 @@ def prompt_input(prompt, default=None, interrupt=None):
 _smuggle_subexprs = {
     'name_re': r'[a-zA-Z]\w*',
     'qualname_re': r'[a-zA-Z][\w.]*\w',
-    'onion_re': r'\#+ *pip:.+?(?= +\#| *\n| *$)',
+    'onion_re': r'\#+ *(?:pip|conda) *: *[^# ].+?(?= +\#| *\n| *$)',
     'comment_re': r'(?m:\#+.*$)'
 }
 _smuggle_subexprs['as_re'] = fr' +as +{_smuggle_subexprs["name_re"]}'

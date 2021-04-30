@@ -365,13 +365,13 @@ def smuggle_parser_colab(line):
     for na in names_aliases:
         if ' as ' in na:
             name, alias = na.split(' as ')
-            name = f'"{qualname_prefix}{name.strip()}"'
+            name = f'"{qualname_prefix}{name}"'
             alias = f'"{alias.strip()}"'
         else:
-            na = na.strip()
             name = f'"{qualname_prefix}{na}"'
-            alias = f'"{na}"' if is_from_statement else None
+            alias = f'"{na.strip()}"' if is_from_statement else None
 
+        name = name.replace(' ', '')
         smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
 
     smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'

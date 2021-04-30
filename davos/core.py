@@ -377,19 +377,19 @@ smuggle_statement_regex = re.compile((
 
 
 # Condensed, fully substituted regex:
-# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as
+# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as 
 # +[a-zA-Z]\w*)?(?: *, *[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as +[a-zA-
 # Z]\w*)?)*(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?(SEMICOLON_SEP
-# )|(?: *(?=\#+ *(?:pip|conda) *: *[^# ].+?(?= +\#| *\n| *$))(?P<ONION>\
-# #+ *(?:pip|conda) *: *[^# ].+?(?= +\#| *\n| *$))?)?))|(?:from *[a-zA-Z
-# ]\w*(?: *\. *[a-zA-Z]\w*)* +smuggle +(?P<OPEN_PARENS>\()?(?(OPEN_PAREN
-# S)(?: *(?:[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as
-# +[a-zA-Z]\w*)? *)*,? *)?(?:(?P<FROM_ONION_1>\#+ *(?:pip|conda) *: *[^#
-#  ].+?(?= +\#| *\n| *$)) *(?m:\#+.*$)?|(?m:\#+.*$)|(?m:$)|(?P<CLOSE_PAR
-# ENS_FIRSTLINE>\)))(?(CLOSE_PARENS_FIRSTLINE)|(?:\s*(?:[a-zA-Z]\w*(?: +
-# as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*[^)\n]*|
-#  *(?m:\#+.*$)|\n *))*\)))|[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?(?: *, *[a-
-# zA-Z]\w*(?: +as +[a-zA-Z]\w*)?)*)(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smu
-# ggle|from)))?(?(FROM_SEMICOLON_SEP)|(?(FROM_ONION_1)|(?: *(?=\#+ *(?:p
-# ip|conda) *: *[^# ].+?(?= +\#| *\n| *$))(?P<FROM_ONION>\#+ *(?:pip|con
-# da) *: *[^# ].+?(?= +\#| *\n| *$)))?))))
+# )|(?: *(?=\#+ *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))(?P<ONION
+# >\#+ *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))?)?))|(?:from *[a-
+# zA-Z]\w*(?: *\. *[a-zA-Z]\w*)* +smuggle +(?P<OPEN_PARENS>\()?(?(OPEN_P
+# ARENS)(?: *(?:[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?:
+# +as +[a-zA-Z]\w*)? *)*,? *)?(?:(?P<FROM_ONION_1>\#+ *(?:pip|conda) *:
+# *[^#\n ].+?(?= +\#| *\n| *$)) *(?m:\#+.*$)?|(?m:\#+.*$)|(?m:$)|(?P<CLO
+# SE_PARENS_FIRSTLINE>\)))(?(CLOSE_PARENS_FIRSTLINE)|(?:\s*(?:[a-zA-Z]\w
+# *(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*[^
+# )\n]*| *(?m:\#+.*$)|\n *))*\)))|[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?(?: *
+# , *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?)*)(?P<FROM_SEMICOLON_SEP>(?= *; *
+# (?:smuggle|from)))?(?(FROM_SEMICOLON_SEP)|(?(FROM_ONION_1)|(?: *(?=\#+
+#  *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))(?P<FROM_ONION>\#+ *(?
+# :pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)))?))))

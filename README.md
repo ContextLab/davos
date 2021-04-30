@@ -48,7 +48,11 @@ assert np.__version__ == '1.20.2'
     - [Compare behavior across package versions](#compare-behavior-across-package-versions)
 - [Usage](#usage)
   - [The `smuggle` Statement](#the-smuggle-statement)
+    - [Syntax](#smuggle-statement-syntax)
+    - [Rules](#smuggle-statement-rules)
   - [The Onion Comment](#the-onion-comment)
+    - [Syntax](#onion-comment-syntax)
+    - [Rules](#onion-comment-rules)
   - [Customizing `davos` Behavior](#customizing-davos-behavior)
 - [Examples](#examples)
 - [How it works](#how-it-works)
@@ -207,6 +211,7 @@ print(result1 == result2 == result3)
 
 ## Usage
 ### The `smuggle` Statement
+#### <a name="smuggle-statement-syntax"></a>Syntax
 The `smuggle` statement is designed to be used in place of 
 [the built-in `import` statement](https://docs.python.org/3/reference/import.html) and shares
 [its full syntactic definition](https://docs.python.org/3/reference/simple_stmts.html#the-import-statement):
@@ -231,6 +236,23 @@ In simpler terms, any valid syntax for `import` is also a valid syntax for `smug
 smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of valid forms.
 
 
+#### <a name="smuggle-statement-rules"></a>Rules
+- Like `import` statements, `smuggle` statements are whitespace-insensitive, except when a lack of whitespace between 
+  two tokens would cause them to be interpreted as a different token:
+  ```python
+  from   os      . path    smuggle  dirname     ,join        as    opj    # valid
+  from os.path smuggle join asopj                            # invalid
+  ```
+- Any context that would prevent an `import` statement from being executed will do the same to a `smuggle` statement:
+  ```python
+  # smuggle numpy as np           # not executed
+  foo = """
+  smuggle numpy as np"""          # not executed
+  print('smuggle numpy as np')    # not executed
+  ```
+- Because the `davos` parser is, of course, less complex than the full Python parser, there are a couple edge cases in which the built-in `import` statement 
+
+
 ### The Onion Comment
 An _onion comment_ is a special type of inline comment placed on a line containing a `smuggle` statement. Onion comments 
 can be used to control how `davos`:
@@ -238,6 +260,8 @@ can be used to control how `davos`:
 - determines whether the `smuggle`d package should be installed
 - installs the `smuggle`d package, if necessary
 
+
+#### <a name="onion-comment-syntax"></a>Syntax
 Onion comments follow a simple but specific syntax, inspired in part by the 
 [type comment syntax](https://www.python.org/dev/peps/pep-0484/#type-comments) introduced in 
 [PEP 484](https://www.python.org/dev/peps/pep-0484). The following is a loose (pseudo-)syntactic definition for an onion 
@@ -263,6 +287,10 @@ In practice, are identified as matches for the [regular expression](https://en.w
 ```regex
 #+ *(?:pip|conda) *: *[^# ].+?(?= +#| *\n| *$)
 ```
+
+
+#### <a name="onion-comment-rules"></a>Rules
+onion comment rules
 
 
 ### Customizing `davos` Behavior

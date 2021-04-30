@@ -273,21 +273,22 @@ def prompt_input(prompt, default=None, interrupt=None):
             pass
 
 
+_name_re = r'[a-zA-Z]\w*'
 _smuggle_subexprs = {
-    'name_re': r'[a-zA-Z]\w*',
-    'qualname_re': r'[a-zA-Z][\w.]*\w',
+    'name_re': _name_re,
+    'qualname_re': fr'{_name_re}(?: *\. *{_name_re})*',
+    'as_re': fr' +as +{_name_re}',
     'onion_re': r'\#+ *(?:pip|conda) *: *[^# ].+?(?= +\#| *\n| *$)',
     'comment_re': r'(?m:\#+.*$)'
 }
-_smuggle_subexprs['as_re'] = fr' +as +{_smuggle_subexprs["name_re"]}'
 
 # TODO: pattern currently doesn't enforce commas between names in
 #  multiline smuggle from statement
 smuggle_statement_regex = re.compile((
     r'^\s*'                                                               # match only if statement is first non-whitespace chars
-    r'(?P<FULL_CMD>'                                                       # capture full text of command in named group
+    r'(?P<FULL_CMD>'                                                      # capture full text of command in named group
         r'(?:'                                                            # first valid syntax:
-            r'smuggle +{qualname_re}(?:{as_re})?'                         # match 'smuggle' + pkg name + optional alias
+            r'smuggle +{qualname_re}(?:{as_re})?'                         # match 'smuggle' + pkg/module name + optional alias
             r'(?:'                                                        # match the following:
                 r' *'                                                     #  - any amount of horizontal whitespace
                 r','                                                      #  - followed by a comma
@@ -295,20 +296,20 @@ smuggle_statement_regex = re.compile((
                 r'{qualname_re}(?:{as_re})?'                              #  - followed by another pkg + optional alias
             r')*'                                                         # ... any number of times
             r'(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?'              # check for multiple statements separated by semicolon 
-                                                                          #   (matches empty string with positive lookahead assertion 
-                                                                          #   so group gets defined without adding to full match)
+                                                                          #   (match empty string with positive lookahead assertion 
+                                                                          #   so named group gets defined without consuming)
             r'(?(SEMICOLON_SEP)|'                                         # if the aren't multiple semicolon-separated statements:
                 r'(?:'
                     r' *(?={onion_re})'                                   # consume horizontal whitespace only if followed by onion
                     r'(?P<ONION>{onion_re})?'                             # capture onion comment in named group...
                 r')?'                                                     # ...optionally, if present
             r')'
-        r')|(?:'                                                          # else (line doesn't match valid syntax):
+        r')|(?:'                                                          # else (line doesn't match first valid syntax):
             r'from *{qualname_re} +smuggle +'                             # match 'from' + package[.module[...]] + 'smuggle '
             r'(?P<OPEN_PARENS>\()?'                                       # capture open parenthesis for later check, if present
             r'(?(OPEN_PARENS)'                                            # if parentheses opened:
                 r'(?:'                                                    # logic for matching possible multiline statement:
-                    r' *'                                                 # capture any spaces following open parenthesis
+                    r' *'                                                 # capture any spaces following opening parenthesis
                     r'(?:'                                                # logic for matching code on *first line*:
                         r'{name_re}(?:{as_re})?'                          # match a name with optional alias
                         r' *'                                             # optionally, match any number of spaces
@@ -374,18 +375,21 @@ smuggle_statement_regex = re.compile((
     r')'
 ).format_map(_smuggle_subexprs))
 
+
 # Condensed, fully substituted regex:
-# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z][\w.]*\w(?: +as +[a-zA-Z]\w*)?(?:
-#  *, *[a-zA-Z][\w.]*\w(?: +as +[a-zA-Z]\w*)?)*(?P<SEMICOLON_SEP>(?= *;
-# *(?:smuggle|from)))?(?(SEMICOLON_SEP)|(?: *(?=\#+ *pip:.+?(?= +\#| *\n
-# | *$))(?P<ONION>\#+ *pip:.+?(?= +\#| *\n| *$))?)?))|(?:from *[a-zA-Z][
-# \w.]*\w +smuggle +(?P<OPEN_PARENS>\()?(?(OPEN_PARENS)(?: *(?:[a-zA-Z]\
-# w*(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*,
-# ? *)?(?:(?P<FROM_ONION_1>\#+ *pip:.+?(?= +\#| *\n| *$)) *(?m:\#+.*$)?|
-# (?m:\#+.*$)|(?m:$)|(?P<CLOSE_PARENS_FIRSTLINE>\)))(?(CLOSE_PARENS_FIRS
-# TLINE)|(?:\s*(?:[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?
-# : +as +[a-zA-Z]\w*)? *)*[^)\n]*| *(?m:\#+.*$)|\n *))*\)))|[a-zA-Z]\w*(
-# ?: +as +[a-zA-Z]\w*)?(?: *, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?)*)(?P<F
-# ROM_SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?(FROM_SEMICOLON_SEP)|(?
-# (FROM_ONION_1)|(?: *(?=\#+ *pip:.+?(?= +\#| *\n| *$))(?P<FROM_ONION>\#
-# + *pip:.+?(?= +\#| *\n| *$)))?))))
+# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as
+# +[a-zA-Z]\w*)?(?: *, *[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as +[a-zA-
+# Z]\w*)?)*(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?(SEMICOLON_SEP
+# )|(?: *(?=\#+ *(?:pip|conda) *: *[^# ].+?(?= +\#| *\n| *$))(?P<ONION>\
+# #+ *(?:pip|conda) *: *[^# ].+?(?= +\#| *\n| *$))?)?))|(?:from *[a-zA-Z
+# ]\w*(?: *\. *[a-zA-Z]\w*)* +smuggle +(?P<OPEN_PARENS>\()?(?(OPEN_PAREN
+# S)(?: *(?:[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as
+# +[a-zA-Z]\w*)? *)*,? *)?(?:(?P<FROM_ONION_1>\#+ *(?:pip|conda) *: *[^#
+#  ].+?(?= +\#| *\n| *$)) *(?m:\#+.*$)?|(?m:\#+.*$)|(?m:$)|(?P<CLOSE_PAR
+# ENS_FIRSTLINE>\)))(?(CLOSE_PARENS_FIRSTLINE)|(?:\s*(?:[a-zA-Z]\w*(?: +
+# as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*[^)\n]*|
+#  *(?m:\#+.*$)|\n *))*\)))|[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?(?: *, *[a-
+# zA-Z]\w*(?: +as +[a-zA-Z]\w*)?)*)(?P<FROM_SEMICOLON_SEP>(?= *; *(?:smu
+# ggle|from)))?(?(FROM_SEMICOLON_SEP)|(?(FROM_ONION_1)|(?: *(?=\#+ *(?:p
+# ip|conda) *: *[^# ].+?(?= +\#| *\n| *$))(?P<FROM_ONION>\#+ *(?:pip|con
+# da) *: *[^# ].+?(?= +\#| *\n| *$)))?))))

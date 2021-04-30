@@ -32,8 +32,9 @@ class Onion:
     def parse_onion(onion_text):
         onion_text = onion_text.lstrip('# ')
         installer, args_str = onion_text.split(':', maxsplit=1)
-        # remove all space between '<installer>:' and '<args_str>'
-        args_str = args_str.lstrip()
+        # normalize whitespace
+        installer = installer.strip()
+        args_str = ' '.join(args_str.split()).strip()
         # regex parsing to identify onion comments already ensures the
         # comment will start with "<installer>:"
         if installer == 'pip':

@@ -320,28 +320,36 @@ def smuggle_parser_colab(line):
     smuggle_chars = matched_groups['FULL_CMD']
     before_chars, after_chars = line.split(smuggle_chars)
     cmd_prefix, to_smuggle = smuggle_chars.split('smuggle ', maxsplit=1)
+    cmd_prefix = cmd_prefix.strip()
+    to_smuggle = to_smuggle.strip()
 
     if cmd_prefix:
-        # cmd_prefix == 'from <package[.module[...]]> '
+        # cmd_prefix == '"from" package[.module[...]] '
         is_from_statement = True
         onion_chars = matched_groups['FROM_ONION'] or matched_groups['FROM_ONION_1']
         has_semicolon_sep = matched_groups['FROM_SEMICOLON_SEP'] is not None
-        qualname_prefix = cmd_prefix.split()[1] + '.'
-        to_smuggle = re.sub(r'[()]|\s*\#.*$\s*', ' ', to_smuggle, flags=re.M)
-        to_smuggle = to_smuggle.rstrip(', ')
+        qualname_prefix = f"{''.join(cmd_prefix.split()[1:])}."
+        # remove parentheses around line continuations
+        to_smuggle = to_smuggle.replace(')', '').replace('(', '')
+        # remove inline comments
+        if '\n' in to_smuggle:
+            to_smuggle = ' '.join(l.split('#')[0] for l in to_smuggle.splitlines())
+        else:
+            to_smuggle = to_smuggle.split('#')[0]
+        # normalize whitespace
+        to_smuggle = ' '.join(to_smuggle.split()).strip(', ')
     else:
         # cmd_prefix == ''
         is_from_statement = False
         onion_chars = matched_groups['ONION']
-        if onion_chars is not None:
-            onion_chars = onion_chars.replace('"', "'")
         has_semicolon_sep = matched_groups['SEMICOLON_SEP'] is not None
         qualname_prefix = ''
 
-    kwargs_str = ''
+    kwargs_str = ''        
     if has_semicolon_sep:
         after_chars = '; ' + smuggle_parser_colab(after_chars.lstrip('; '))
     elif onion_chars is not None:
+        onion_chars = onion_chars.replace('"', "'")
         to_smuggle = to_smuggle.replace(onion_chars, '').rstrip()
         # `Onion.parse_onion()` returns a 3-tuple of:
         #  - the installer name (str)

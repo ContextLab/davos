@@ -1,6 +1,6 @@
 <div align="center">
   <h1>davos</h1>
-  <img src="https://user-images.githubusercontent.com/26118297/116332586-0c6ce080-a7a0-11eb-94ad-0502c96cf8ef.png" width=500/>
+  <img src="https://user-images.githubusercontent.com/26118297/116332586-0c6ce080-a7a0-11eb-94ad-0502c96cf8ef.png" width=250/>
 </div>
 
 🟥🟥🟥 add badges 🟥🟥🟥

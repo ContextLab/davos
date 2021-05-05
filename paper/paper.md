@@ -27,7 +27,7 @@ Whereas you cannot `import` a library that hasn't been installed yet, you can
 easily `smuggle` a not-yet-installed library:
 
 ```python
-import davos              # this adds the smuggle and pipname functions to the Python workspace
+import davos              # this adds the smuggle "keyword" to the Python workspace
 smuggle seaborn as sns    # installs seaborn if needed!
 
 # now you can use seaborn as if you had imported it the "normal" way

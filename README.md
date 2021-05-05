@@ -102,8 +102,17 @@ install the package, restart the interpreter to make the new package available, 
 `smuggle`, however, can handle missing packages on the fly. If you `smuggle` a package that isn't installed locally, 
 `davos` will install it, immediately make its contents accessible to the interpreter's
 [import machinery](https://docs.python.org/3/reference/import.html), and load the package into the local namespace for 
-use. You can also add an inline ["onion" comment](#the-onion-comment) after a `smuggle` statement to customize how 
+use. You can add an inline ["onion" comment](#the-onion-comment) after a `smuggle` statement to customize how 
 `davos` will install the package, if it can't be found locally.
+
+An [onion comment](#the-onion-comment) is also useful for smuggling a package whose _distribution name_ (i.e., the name 
+used when installing it) is different from its _top-level module name_ (i.e., the name used when importing it). For 
+example:
+```python
+from sklearn.decomposition import pca    # pip: scikit-learn
+```
+The [onion comment](#the-onion-comment) here (`# pip: scikit-learn`) tells `davos` that if "`sklearn`" does not exist 
+locally, the "`scikit-learn`" package should be installed.
 
 
 ### Smuggling Specific Package Versions
@@ -225,38 +234,95 @@ smuggle_stmt    ::=  "smuggle" module ["as" identifier] ("," module ["as" identi
 module          ::=  (identifier ".")* identifier
 relative_module ::=  "."* module | "."+
 ```
+<sup>
+  <i>
+    NB: uses the modified BNF grammar notation described in 
+    <a href="https://docs.python.org/3/reference">The Python Language Reference</a>, 
+    <a href="https://docs.python.org/3/reference/introduction.html#notation">here</a>; see 
+    <a href="https://docs.python.org/3/reference/lexical_analysis.html#identifiers">here</a> for the lexical definition 
+    of <code>identifier</code>
+  </i>
+</sup>
 
-_NB: uses the modified BNF grammar notation described 
-[here](https://docs.python.org/3/reference/introduction.html#notation) in 
-[The Python Language Reference](https://docs.python.org/3/reference); see 
-[here](https://docs.python.org/3/reference/lexical_analysis.html#identifiers) for the lexical definition of 
-`identifier`_
 
 In simpler terms, any valid syntax for `import` is also a valid syntax for `smuggle` (`smuggle foo`, `from foo.bar 
 smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of valid forms.
 
 
 #### <a name="smuggle-statement-rules"></a>Rules
-- Like `import` statements, `smuggle` statements are whitespace-insensitive, except when a lack of whitespace between 
-  two tokens would cause them to be interpreted as a different token:
+- Like `import` statements, `smuggle` statements are whitespace-insensitive, unless a lack of whitespace between two 
+  tokens would cause them to be interpreted as a different token:
   ```python
-  from   os      . path    smuggle  dirname     ,join        as    opj    # valid
-  from os.path smuggle join asopj                            # invalid
+  from   os    . path    smuggle  dirname     ,join       as    opj    # valid
+  from os.path smuggle dirname, join asopj                             # invalid
   ```
-- Any context that would prevent an `import` statement from being executed will do the same to a `smuggle` statement:
+- Any context that would cause an `import` statement _not_ to be executed will do the same to a `smuggle` statement:
   ```python
-  # smuggle numpy as np           # not executed
+  # smuggle matplotlib.pyplot as plt           # not executed
+  print('smuggle matplotlib.pyplot as plt')    # not executed
   foo = """
-  smuggle numpy as np"""          # not executed
-  print('smuggle numpy as np')    # not executed
+  smuggle matplotlib.pyplot as plt"""          # not executed
   ```
-- Because the `davos` parser is, of course, less complex than the full Python parser, there are a couple edge cases in which the built-in `import` statement 
+- Because the `davos` parser is less complex than the full Python parser, there are two, fairly non-disruptive, edge 
+  cases where an `import` statement would be syntactically valid but a `smuggle` statement would not:
+  1. The [exec](https://docs.python.org/3.8/library/functions.html#exec) function
+     ```python
+     exec('from pathlib import Path')         # executed
+     exec('from pathlib smuggle Path')        # raises SyntaxError
+     ```
+  2. A one-line [compound statement](https://docs.python.org/3.9/reference/compound_stmts.html#compound-statements) 
+     clause:
+     ```python
+     if True: import random                   # executed
+     if True: smuggle random                  # raises SyntaxError
+     
+     while True: import math; break           # executed
+     while True: smuggle math; break          # raises SyntaxError
+     
+     for _ in range(1): import json           # executed
+     for _ in range(1): smuggle json          # raises SyntaxError
+     
+     # etc...
+     ```
+- In [IPython](https://ipython.readthedocs.io/en/stable/) environments (e.g., [Jupyter](https://jupyter.org/) & 
+  [Colaboratory](https://colab.research.google.com/)) `smuggle` statements always load names into the global namespace:
+  ```python
+  # example.ipynb
+  import davos
+  
+  
+  def import_example():
+      import datetime
+  
+  
+  def smuggle_example():
+      smuggle datetime
+  
+  
+  import_example()
+  type(datetime)                               # raises NameError
+  
+  smuggle_example()
+  type(datetime)                               # executed
+  ```
+  However, this does not affect plain Python scripts:
+  ```python
+  # example.py
+  import davos
+  
+  
+  def smuggle_example():
+      smuggle datetime
+  
+  
+  smuggle_example()
+  type(datetime)                               # raises NameError
+  ```
 
 
 ### The Onion Comment
 An _onion comment_ is a special type of inline comment placed on a line containing a `smuggle` statement. Onion comments 
 can be used to control how `davos`:
-
 - determines whether the `smuggle`d package should be installed
 - installs the `smuggle`d package, if necessary
 
@@ -271,21 +337,47 @@ onion_comment   ::=  "#" installer ":" install_opt* pkg_spec install_opt*
 installer       ::=  ("pip" | "conda")
 pkg_spec        ::=  identifier [version_spec]
 ```
-where the `installer` is the program used to install the package, an `install_opt` is an option accepted by the 
-`installer` program's "`install`" command, and an `identifier` is used as defined 
-[here](https://docs.python.org/3/reference/lexical_analysis.html#identifiers). 
+<sup>
+  <i>
+    NB: uses the modified BNF grammar notation described in 
+    <a href="https://docs.python.org/3/reference">The Python Language Reference</a>, 
+    <a href="https://docs.python.org/3/reference/introduction.html#notation">here</a>; see 
+    <a href="https://docs.python.org/3/reference/lexical_analysis.html#identifiers">here</a> for the lexical definition 
+    of <code>identifier</code>
+  </i>
+</sup>
 
-The `version_spec` may be a [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) defined by 
-[PEP 440](https://www.python.org/dev/peps/pep-0440), or an alternative syntax valid for the `installer` program. For 
-example, `pip` uses specific syntax for [local](https://pip.pypa.io/en/stable/cli/pip_install/#local-project-installs), 
+where `installer` is the program used to install the package; `install_opt` is any option accepted by the installer's
+"`install`" command; and `version_spec` may be a 
+[version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) defined by 
+[PEP 440](https://www.python.org/dev/peps/pep-0440) followed by a 
+[version string](https://www.python.org/dev/peps/pep-0440/#public-version-identifiers), or an alternative syntax valid 
+for the given `installer` program. For example, `pip` uses specific syntax for 
+[local](https://pip.pypa.io/en/stable/cli/pip_install/#local-project-installs), 
 [editable](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs), and 
-[VCS-based](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) installation while `conda` supports 
-[additional specifiers](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) and installing specific package 
-builds.
+[VCS-based](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) installation, while `conda` supports 
+[additional specifier characters](https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/pkg-specs.html#examples) 
+and three-part 
+[package match specifications](https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/pkg-specs.html#package-match-specifications).
 
-In practice, are identified as matches for the [regular expression](https://en.wikipedia.org/wiki/Regular_expression):
+Less formally, an onion comment simply consists of two parts, separated by a colon: 
+1. the name of the installer program
+2. the arguments passed to the program's "install" command
+
+Thus, you can essentially think of writing an onion comment as taking the full shell command you would run to install 
+the package, and replacing "_install_" with "_:_". For instance, the command:
+```
+pip install -I --no-cache-dir numpy==1.20.2 -vvv
+```
+is easily translated into an onion comment as:
+```python
+smuggle numpy    # pip: -I --no-cache-dir numpy==1.20.2 -vvv
+```
+
+In practice, onion comments are identified as matches for the
+[regular expression](https://en.wikipedia.org/wiki/Regular_expression):
 ```regex
-#+ *(?:pip|conda) *: *[^# ].+?(?= +#| *\n| *$)
+#+ *(?:pip|conda) *: *[^#\n ].+?(?= +#| *\n| *$)
 ```
 
 
@@ -308,7 +400,6 @@ onion comment rules
 - <a name="limitation-vcs-smuggle"></a>**limitations about packages that specify vcs commits**
   - **installer must be pip**
   - **non-editable VCS installs always freshly installed**
-- **non-working syntax: `for i in (numpy, pandas, hypertools): smuggle i`**
 
 [comment]: <> (- As with _all_ code, you should use caution when running Python code containing `smuggle` statements that was not written by you or someone you know. )
 

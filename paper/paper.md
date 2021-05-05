@@ -55,7 +55,7 @@ If subsequent uses of `import` are replaced with `smuggle`, `davos` will install
 the to-be-imported library or package if needed, and then import it into the
 current workspace.
 
-## Other usage options
+## Using the `smuggle` keyword-like object
 
 Once you import the `davos` library, you can use `smuggle` as a stand in keyword-like object anywhere you would have otherwise used `import`.  Any of the following will work:
 

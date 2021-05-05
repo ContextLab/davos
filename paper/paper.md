@@ -105,7 +105,7 @@ smuggle seaborn as sns # pip: seaborn==0.9.0
 sns.__version__        #version is now '0.9.0`
 ```
 
-This functionality can serve as a hack for leveraging functionality that is
+This can serve as a hack for leveraging functionality that is
 only available in specific versions of a given library.
 
 In general, packages that are installed using `smuggle` are immediately available

@@ -109,9 +109,8 @@ This can serve as a hack for leveraging functionality that is
 only available in specific versions of a given library.
 
 In general, packages that are installed using `smuggle` are immediately available
-within the current workspace, in the current runtime environment.
-
-Some exceptions to this behavior include:
+within the current workspace, in the current runtime environment.  Some exceptions to
+this behavior include:
   - Libraries like `numpy`, which wrap `C` functions, cannot be updated within
   the current runtime. The runtime must be manually restarted in order to complete
   the installation of these libraries.
@@ -130,7 +129,7 @@ Some exceptions to this behavior include:
 You can install the latest official version of `davos` with `pip` as follows:
 
 ```bash
-pip install davos
+pip install --upgrade davos
 ```
 
 To install the cutting (bleeding) edge version directly from git, use:
@@ -146,5 +145,5 @@ The package name is inspired by [Davos Seaworth](https://gameofthrones.fandom.co
 # More information
 
 Additional documentation, including more advanced usage instructions,
-implementation details, and other details may be found in the packages
+implementation details, and other details may be found in the package's
 [README](https://github.com/ContextLab/davos/blob/main/README.md) file.

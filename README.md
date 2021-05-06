@@ -253,6 +253,7 @@ smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of vali
 - Like `import` statements, `smuggle` statements are whitespace-insensitive, unless a lack of whitespace between two 
   tokens would cause them to be interpreted as a different token:
   ```python
+  from os.path smuggle dirname, join as opj                            # valid
   from   os    . path    smuggle  dirname     ,join       as    opj    # valid
   from os.path smuggle dirname, join asopj                             # invalid
   ```
@@ -366,7 +367,7 @@ Less formally, an onion comment simply consists of two parts, separated by a col
 
 Thus, you can essentially think of writing an onion comment as taking the full shell command you would run to install 
 the package, and replacing "_install_" with "_:_". For instance, the command:
-```
+```sh
 pip install -I --no-cache-dir numpy==1.20.2 -vvv
 ```
 is easily translated into an onion comment as:
@@ -382,7 +383,94 @@ In practice, onion comments are identified as matches for the
 
 
 #### <a name="onion-comment-rules"></a>Rules
-onion comment rules
+- An onion comment may be followed by unrelated inline comments, as long as they are separated by at least one space:
+  ```python
+  smuggle tqdm    # pip: tqdm>=4.46,<4.60 # this comment is ignored
+  smuggle tqdm    # pip: tqdm>=4.46,<4.60            # so is this one
+  smuggle tqdm    # pip: tqdm>=4.46,<4.60# but this comment raises OnionArgumentError
+  ```
+- An onion comment must be the first inline comment immediately following a `smuggle` statement, otherwise it is not 
+  parsed:
+  ```python
+  smuggle numpy    # pip: numpy!=1.19.1        # <-- guarantees smuggled version is *not* v1.19.1
+  smuggle numpy    # has no effect -->         # pip: numpy==1.19.1 
+  ```
+  This also allows you to easily "comment out" onion comments:
+  ```python
+  smuggle numpy    ## pip: numpy!=1.19.1       # <-- has no effect
+  ```
+- Onion comments must be placed on the same line as the `smuggle` statement, otherwise they are not parsed:
+  ```python
+  # pip: python-dateutil                       # <-- has no effect
+  smuggle dateutil                             # raises InstallerError (no "dateutil" package exists)
+  
+  smuggle dateutil                             # raises InstallerError (no "dateutil" package exists)
+  # pip: python-dateutil                       # <-- has no effect
+  
+  smuggle dateutil    # pip: python-dateutil   # installs "python-dateutil" package, if necessary
+  ```
+- Onion comments are generally whitespace-insensitive, but installer arguments must be separated by at least one space:
+  ```python
+  from umap smuggle UMAP    # pip: umap-learn --user -v --no-clean       # valid
+  from umap smuggle UMAP#pip     :umap-learn    --user -v    --no-clean  # valid
+  from umap smuggle UMAP    # pip: umap-learn --user -v--no-clean        # raises OnionArgumentError
+  ```
+- Onion comments have no effect on standard library modules:
+  ```python
+  smuggle threading    # pip: threading==9999  # <-- has no effect
+  ```
+- When smuggling multiple packages with a _single_ `smuggle` statement, an onion comment may be used to refer to the 
+  **first** package listed:
+  ```python
+  smuggle nilearn, nibabel, nltools    # pip: nilearn==0.7.1
+  ```
+- If multiple _separate_ `smuggle` statements appear on a single line separated by semicolons, an onion comment 
+  may be used to modify the **last** `smuggle` statement:
+  ```python
+  smuggle IPython; smuggle ipywidgets; smuggle ipykernel    # pip: ipykernel~=6.0 --pre
+  ```
+- For multiline `smuggle` statements, an onion comment may be placed on either the first or last line:
+  ```python
+  from scipy.interpolate smuggle (    # pip: scipy==1.6.3
+      interp1d,
+      interpn as interp_ndgrid,
+      LinearNDInterpolator,
+      NearestNDInterpolator,
+  )
+  
+  from scipy.interpolate smuggle (interp1d,    # this comment and has no effect
+                                  interpn as interp_ndgrid,
+                                  LinearNDInterpolator,
+                                  NearestNDInterpolator)    # pip: scipy==1.6.3
+  ```
+  though the first line takes priority:
+  ```python
+  from scipy.interpolate smuggle (    # pip: scipy==1.6.3    # <-- this version is installed
+      interp1d,
+      interpn as interp_ndgrid,
+      LinearNDInterpolator,
+      NearestNDInterpolator,
+  )    # pip: scipy==1.6.2    # <-- this comment is ignored
+  ```
+  and all comments _not_ on the first or last line are ignored:
+  ```python
+  from scipy.interpolate smuggle (interp1d,
+                                  interpn as interp_ndgrid,    # pip: scipy==1.6.3    # <-- ignored
+                                  LinearNDInterpolator,    # unrelated comment        # <-- ignored
+                                  NearestNDInterpolator)    # pip: scipy==1.6.2       # <-- parsed
+  ```
+- Because the onion comment is meant to control installation of a single `smuggle`d package, and because the purpose of 
+  installing that package is to make it available for immediate use, installer options that either A) install more than 
+  a single package and its dependencies (e.g., from a specification file), or B) do not install the specified package 
+  are disallowed. The options listed below for each installer will raise an `OnionArgumentError`:
+  - pip:
+    - `-r`/`--requirement`
+  - conda:
+    - `-d`/`--dry-run`
+    - `--download-only`
+    - `--file`
+    - `--only-deps`
+    - `--update-all`/`--all`
 
 
 ### Customizing `davos` Behavior

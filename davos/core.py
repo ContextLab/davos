@@ -279,7 +279,7 @@ _smuggle_subexprs = {
     'name_re': _name_re,
     'qualname_re': fr'{_name_re}(?: *\. *{_name_re})*',
     'as_re': fr' +as +{_name_re}',
-    'onion_re': r'\#+ *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)',
+    'onion_re': r'\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)',
     'comment_re': r'(?m:\#+.*$)'
 }
 

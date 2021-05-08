@@ -20,7 +20,6 @@ __all__ = [
 
 
 import importlib
-import re
 import sys
 from subprocess import CalledProcessError
 

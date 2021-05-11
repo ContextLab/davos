@@ -1,0 +1,2 @@
+# exclude notebooks from breakdown
+*.ipynb linguist-documentation

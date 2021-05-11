@@ -306,7 +306,7 @@ def smuggle_colab(
     # cache the smuggled (top-level) package by its full onion comment
     # so rerunning cells is more efficient, but any change to version,
     # source, etc. is caught
-    davos.smuggled[pkg_name] = onion.args_str
+    davos.smuggled[pkg_name] = onion.cache_key
 
 
 def smuggle_parser_colab(line):

@@ -73,6 +73,7 @@ class Onion:
             )
         self.build = None
         self.args_str = args_str
+        self.cache_key = f"{installer};{';'.join(args_str.split())}"
         if args_str == '':
             # bare smuggle statement without onion comment
             self.is_editable = False
@@ -81,7 +82,6 @@ class Onion:
             self.install_name = package_name
             self.version_spec = ''
             return
-
         full_spec = installer_kwargs.pop('spec').strip("'\"")
         self.is_editable = installer_kwargs.pop('editable')
         self.verbosity = installer_kwargs.pop('verbosity', 0)
@@ -153,7 +153,7 @@ class Onion:
         ):
             # args that trigger install regardless of installed version
             return False
-        elif self.args_str == davos.smuggled.get(self.import_name):
+        elif self.args_str == davos.smuggled.get(self.cache_key):
             # if the same version of the same package was smuggled from
             # the same source with all the same arguments previously in
             # the current interpreter session/notebook runtime (i.e.,
@@ -279,7 +279,7 @@ _smuggle_subexprs = {
     'name_re': _name_re,
     'qualname_re': fr'{_name_re}(?: *\. *{_name_re})*',
     'as_re': fr' +as +{_name_re}',
-    'onion_re': r'\#+ *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)',
+    'onion_re': r'\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)',
     'comment_re': r'(?m:\#+.*$)'
 }
 

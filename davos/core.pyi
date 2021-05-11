@@ -61,6 +61,7 @@ class PipInstallerKwargs(TypedDict, total=False):
 class Onion:
     args_str: str
     build: Optional[str]
+    cache_key: str
     import_name: str
     install_name: str
     install_package: Callable[[], tuple[str, int]]

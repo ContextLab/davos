@@ -102,20 +102,13 @@ pip_parser = OnionParser(usage=_pip_install_usage,
 
 # ======== Install Options ========
 pip_install_opts = pip_parser.add_argument_group(title="Install Options")
-# pip_install_opts.add_argument(
-#     '-r',
-#     '--requirement',
-#     metavar='<file>',
-#     help="Install from the given requirements file. This option can be used "
-#          "multiple times."
-# )
-# pip_install_opts.add_argument(
-#     '-c',
-#     '--constraint',
-#     metavar='<file>',
-#     help="Constrain versions using the given constraints file. This option "
-#          "can be used multiple times."
-# )
+pip_install_opts.add_argument(
+    '-c',
+    '--constraint',
+    metavar='<file>',
+    help="Constrain versions using the given constraints file. This option "
+         "can be used multiple times."
+)
 pip_install_opts.add_argument(
     '--no-deps',
     action='store_true',

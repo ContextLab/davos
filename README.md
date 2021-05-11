@@ -164,7 +164,7 @@ will load [`hypertools`](https://hypertools.readthedocs.io/en/latest/) (aliased 
 [36c12fd](https://github.com/ContextLab/hypertools/tree/36c12fd). The general format for VCS references in 
 [onion comments](#the-onion-comment) follows that of the 
 [`pip-install`](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) command. See the 
-[limitations section on smuggling from VCS](limitation-vcs-smuggle) for additional notes.
+[limitations section on smuggling from VCS](#limitation-vcs-smuggle) for additional notes.
 
 With [a few exceptions](#limitation-c-extensions), smuggling a specific package version will work _even if the package 
 has already been imported_.
@@ -475,6 +475,12 @@ In practice, onion comments are identified as matches for the
 
 ### Customizing `davos` Behavior
 ## Examples
+- smuggle specific version
+- smuggle package from VCS
+- smuggle package from local dir
+- smuggle editable package
+- smuggle package with extra requirements
+- smuggle latest version fo package
 ### Valid Syntaxes
 ## How it works
 ### Google Colab
@@ -484,13 +490,46 @@ In practice, onion comments are identified as matches for the
 
 
 ## Limitations & Final Notes
-- <a name="limitation-c-extensions"></a>**limitation about C extensions here**
-- <a name="limitation-vcs-smuggle"></a>**limitations about packages that specify vcs commits**
-  - **installer must be pip**
-  - **non-editable VCS installs always freshly installed**
+- <a name="limitation-c-extensions"></a>**Smuggling packages with C-extensions**
+  
+  Some Python packages that rely heavily on custom data types implemented via 
+  [C-extensions](https://docs.python.org/3.9/extending/extending.html) (e.g., `numpy`, `pandas`) dynamically generate 
+  modules defining various C functions and data structures, and link them to the Python interpreter when they are first 
+  imported. Depending on how these objects are initialized, they may not be subject to normal garbage collection, and 
+  persist despite their reference count dropping to zero. This can lead to unexpected errors when reloading the Python 
+  module that creates them, particularly if their dynamically generated source code has been changed (e.g., because the 
+  reloaded package is a different version).
+  
+  This can occasionally affect `davos`'s ability to `smuggle` a new version of a package (or dependency) that was 
+  previously `import`ed. To handle this, `davos` first checks each package it installs against 
+  [`sys.modules`](https://docs.python.org/3.9/library/sys.html#sys.modules). If a different version has already been 
+  loaded by the interpreter, `davos` will attempt to replace it with the requested version (in the vast majority of 
+  cases, this is not a problem). However, if this fails due to a C-extension-related issue, `davos` will reinstate the 
+  old package version _in memory_, while replacing it with the new package version _on disk_.    
+  🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥
+  **describe behavior after implementing option to trigger restart & rerun cells above**
+  
+[comment]: <> (  In a Jupyter/Colbab )
+
+[comment]: <> (  notebook, `davos` will prompt you to restart the kernel while allowing the remaining code in the current cell to )
+
+[comment]: <> (  execute. )
+  
+[comment]: <> (  This way:)
+
+[comment]: <> (    - the `smuggle` statement finishes executing without error)
+
+[comment]: <> (    - )
+
+[comment]: <> (    - the next time the interpreter is launched, the `smuggle`d version will be used)
+
+- <a name="limitation-vcs-smuggle"></a>**Smuggling packages from version control systems**
+  - To `smuggle` a package from a local or remote VCS URL, you must specify `pip` (i.e., not `conda`) as the  
+    [installer](#smuggle-statement-syntax), as only `pip` supports VCS installation.
+  - The first time during an interpreter session that a given package is installed from a VCS URL, it is assumed not to 
+    be present locally, and is therefore freshly installed. `pip` clones non-editable VCS repositories into a temporary 
+    directory, installs them with setuptools, and then immediately deletes them. Since no information is retained about 
+    the state of the repository at installation, it is impossible to determine whether an existing package satisfies the 
+    state (branch, commit hash, etc.) requested for `smuggle`d package.
 
 [comment]: <> (- As with _all_ code, you should use caution when running Python code containing `smuggle` statements that was not written by you or someone you know. )
-
-
-
-Once you import the `davos` library, you can use `smuggle` as a stand in keyword-like object anywhere you would have otherwise used `import`.  Any of the following will work:

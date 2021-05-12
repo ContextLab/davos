@@ -69,6 +69,10 @@ class Davos:
                 self.parser_is_active = internals.check_parser_active_jupyter
                 self._shell_cmd_helper = internals.run_shell_command_jupyter
                 self.parser_environment = 'IPY_NEW'
+                # store InteractiveShell's original showsyntaxerror
+                # method so it can be referenced from our overridden
+                # version
+                self._ipython_showsyntaxerror_orig = self.ipython_shell.showsyntaxerror
         self.get_stdlib_modules()
         self.activate_parser()
 

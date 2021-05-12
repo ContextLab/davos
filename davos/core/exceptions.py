@@ -6,6 +6,7 @@ from davos import davos
 
 __all__ = [
     'DavosError',
+    'DavosConfigError',
     'DavosParserError',
     'OnionParserError',
     'OnionArgumentError',
@@ -16,6 +17,11 @@ __all__ = [
 
 
 class DavosError(Exception):
+    pass
+
+
+class DavosConfigError(DavosError):
+    """general class for errors related to the Davos Config object"""
     pass
 
 

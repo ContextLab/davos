@@ -242,9 +242,12 @@ def smuggle_jupyter(
     davos.smuggled[pkg_name] = onion.cache_key
 
 
-
 def smuggle_parser_jupyter(line):
     # ADD DOCSTRING
+    if isinstance(line, list):
+        # _line[:-1] because lines always end with \n
+        return [f'{smuggle_parser_jupyter(_line[:-1])}\n' for _line in line]
+    
     match = smuggle_statement_regex.match(line)
     if match is None:
         return line

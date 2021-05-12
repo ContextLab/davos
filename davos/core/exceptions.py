@@ -20,7 +20,11 @@ class DavosError(Exception):
 
 class DavosConfigError(DavosError):
     """general class for errors related to the Davos Config object"""
-    pass
+    def __init__(self, field, msg):
+        # ADD DOCSTRING
+        self.field = field
+        self.msg = msg
+        super().__init__(f"'davos.config.{field}': {msg}")
 
 
 class DavosParserError(SyntaxError, DavosError):

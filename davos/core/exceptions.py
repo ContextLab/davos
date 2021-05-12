@@ -1,9 +1,3 @@
-from argparse import ArgumentError
-from subprocess import CalledProcessError
-
-from davos import davos
-
-
 __all__ = [
     'DavosError',
     'DavosConfigError',
@@ -14,6 +8,10 @@ __all__ = [
     'SmugglerError',
     'InstallerError'
 ]
+
+
+from argparse import ArgumentError
+from subprocess import CalledProcessError
 
 
 class DavosError(Exception):
@@ -67,7 +65,8 @@ class DavosParserError(SyntaxError, DavosError):
         if target_text is None:
             flot = (None, None, None, None)
         else:
-            xform_manager = davos.ipython_shell.input_transformer_manager
+            from davos import config
+            xform_manager = config.ipython_shell.input_transformer_manager
             # number of "real" lines in the current cell before the
             # start of the current "chunk" (potentially multi-line
             # python statement) being parsed
@@ -168,7 +167,8 @@ class InstallerError(SmugglerError, CalledProcessError):
                          stderr=stderr)
         self.msg = msg
         if show_stdout is None:
-            if davos.suppress_stdout and output is not None:
+            from davos import config
+            if config.suppress_stdout and output is not None:
                 show_stdout = True
             else:
                 show_stdout = False

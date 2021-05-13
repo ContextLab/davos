@@ -60,6 +60,8 @@ class DavosConfig(metaclass=SingletonConfig):
             else:
                 self._environment = 'IPython>=7.0'
             self._ipy_showsyntaxerror_orig = self._ipython_shell.showsyntaxerror
+        self._conda_avail = None
+        self._conda_env_path = None
         self._smuggled = {}
         self._stdlib_modules = self._get_stdlib_modules()
         ########################################
@@ -69,6 +71,14 @@ class DavosConfig(metaclass=SingletonConfig):
         self._allow_rerun = False
         self._confirm_install = False
         self._suppress_stdout = False
+        # re: see ContextLab/davos#10
+        # reference pip executable using full path so IPython shell 
+        # commands install packages in the notebook kernel environment, 
+        # not the notebook server environment
+        #
+        # pip is assumed to be installed -- been included by default 
+        # with Python binary installers since 3.4
+        self._pip_executable = f'{sys.exec_prefix}/bin/pip'
 
     def __repr__(self):
         # TODO: implement me 
@@ -101,6 +111,41 @@ class DavosConfig(metaclass=SingletonConfig):
         self._allow_rerun = value
         
     @property
+    def conda_avail(self):
+        if self._conda_avail is None:
+            from davos.implementations import get_conda_info
+            get_conda_info()
+        return self._conda_avail
+            
+    @conda_avail.setter
+    def conda_avail(self, _):
+        raise DavosConfigError('conda_avail', 'field is read-only')
+    
+    @property
+    def conda_env_path(self):
+        if self._conda_avail is None:
+            # _conda_env_path is None if we haven't checked conda 
+            # yet *and* if conda is not available vs _conda_avail is 
+            # None only if we haven't checked yet
+            from davos.implementations import get_conda_info
+            get_conda_info()
+        return self._conda_env_path
+    
+    @conda_env_path.setter
+    def conda_env_path(self, env_path):
+        try:
+            env_path = pathlib.Path(env_path).resolve(strict=True)
+        except FileNotFoundError as e:
+            raise DavosConfigError(
+                'conda_env_path',  f"No such file or directory: '{env_path}'"
+            ) from e
+        if str(env_path) != self._conda_env_path:
+            if not env_path.is_dir():
+                raise DavosConfigError('conda_env_path', 
+                                       f"'{env_path}' is not a directory")
+            self._conda_env_path = str(env_path)
+        
+    @property
     def confirm_install(self):
         return self._confirm_install
     
@@ -126,6 +171,25 @@ class DavosConfig(metaclass=SingletonConfig):
     @ipython_shell.setter
     def ipython_shell(self, _):
         raise DavosConfigError('ipython_shell', 'field is read-only')
+    
+    @property
+    def pip_executable(self) -> str:
+        return self._pip_executable
+    
+    @pip_executable.setter
+    def pip_executable(self, exe_path):
+        try:
+            exe_path = pathlib.Path(exe_path).resolve(strict=True)
+        except FileNotFoundError as e:
+            raise DavosConfigError(
+                'pip_executable',  f"No such file or directory: '{exe_path}'"
+            ) from e
+        if str(exe_path) != self._pip_executable:
+            if not exe_path.is_file():
+                raise DavosConfigError(
+                    'pip_executable', f"'{exe_path}' is not an executable file"
+                )
+            self._pip_executable = str(exe_path)
 
     @property
     def smuggled(self):

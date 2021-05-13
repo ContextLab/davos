@@ -1,8 +1,29 @@
+import sys
 from collections.abc import Callable
+from io import StringIO
 from re import Pattern
-from typing import Literal, NoReturn, Optional, TypedDict, Union
+from types import TracebackType
+from typing import (
+    AnyStr, 
+    Generic, 
+    Literal, 
+    NoReturn, 
+    Optional, 
+    overload, 
+    TextIO, 
+    Type, 
+    TypedDict, 
+    TypeVar, 
+    Union
+)
 
 __all__: list[Literal['Onion', 'prompt_input', 'smuggle_statement_regex']]
+
+_E = TypeVar('_E', bound=BaseException)
+_StringOrFileIO = Union[StringIO, TextIO]
+_S = TypeVar('_S')
+_S1 = tuple[_StringOrFileIO]
+_SN = tuple[_StringOrFileIO, ...]
 
 class _PipInstallerKwargs(TypedDict, total=False):
     abi: str
@@ -58,6 +79,21 @@ class _PipInstallerKwargs(TypedDict, total=False):
     user: bool
     verbosity: Literal[-3, -2, -1, 0, 1, 2, 3]
 
+class capture_stdout(Generic[_S]):
+    closing: bool
+    streams: _S
+    sys_stdout_write: sys.stdout.write
+    def __init__(self, *streams: _StringOrFileIO, closing: bool = ...) -> None: ...
+    @overload
+    def __enter__(self: capture_stdout[_S1]) -> _StringOrFileIO: ...
+    @overload
+    def __enter__(self: capture_stdout[_SN]) -> _SN: ...
+    @overload
+    def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None: ...
+    @overload
+    def __exit__(self, exc_type: Type[_E], exc_value: _E, traceback: TracebackType) -> bool: ...
+    def _write(self, data: AnyStr) -> None: ...
+
 class Onion:
     args_str: str
     build: Optional[str]
@@ -88,6 +124,8 @@ def prompt_input(
         default: Optional[Literal['n', 'no', 'y', 'yes']] = ...,
         interrupt: Optional[Literal['n', 'no', 'y', 'yes']] = ...
 ) -> bool: ...
+
+def run_shell_command(command: str, live_stdout: Optional[bool] = ...) -> tuple[str, int]: ...
 
 _name_re: Literal[r'[a-zA-Z]\w*']
 

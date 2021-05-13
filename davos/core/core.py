@@ -10,8 +10,10 @@ __all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
 
 
 import importlib
+import io
 import re
 import sys
+from contextlib import redirect_stdout
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -25,6 +27,50 @@ from davos.core.exceptions import (
     ParserNotImplementedError
 )
 from davos.core.parsers import pip_parser
+from davos.implementations import _shell_cmd_helper
+
+
+class capture_stdout:
+    """
+    Context manager similar to `contextlib.redirect_stdout`, but
+    different in that it:
+      - temporarily writes stdout to other streams *in addition to*
+        rather than *instead of* `sys.stdout`
+      - accepts any number of streams and sends stdout to each
+      - can optionally keep streams open after exiting context by
+        passing `closing=False`
+
+    Parameters
+    ----------
+    *streams : `*io.IOBase`
+        stream(s) to receive data sent to `sys.stdout`
+
+    closing : `bool`, optional
+        if [default: `True`], close streams upon exiting the context
+        block.
+    """
+    def __init__(self, *streams, closing=True):
+        self.streams = streams
+        self.closing = closing
+        self.sys_stdout_write = sys.stdout.write
+
+    def __enter__(self):
+        sys.stdout.write = self._write
+        if len(self.streams) == 1:
+            return self.streams[0]
+        return self.streams
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        sys.stdout.write = self.sys_stdout_write
+        if self.closing:
+            for s in self.streams:
+                s.close()
+
+    def _write(self, data):
+        for s in self.streams:
+            s.write(data)
+        self.sys_stdout_write(data)
+        sys.stdout.flush()
 
 
 class Onion:
@@ -204,8 +250,8 @@ class Onion:
         cmd_str = f'pip install {args}'
         live_stdout = self.verbosity > -3
         try:
-            stdout, exit_code = davos.run_shell_command(cmd_str,
-                                                        live_stdout=live_stdout)
+            stdout, exit_code = run_shell_command(cmd_str, 
+                                                  live_stdout=live_stdout)
         except CalledProcessError as e:
             err_msg = (f"the command '{e.cmd}' returned a non-zero "
                        f"exit code: {e.returncode}. See above output "
@@ -278,7 +324,31 @@ def prompt_input(prompt, default=None, interrupt=None):
             pass
 
 
+def run_shell_command(command, live_stdout=None):
+    # ADD DOCSTRING
+    if live_stdout is None:
+        live_stdout = not config._suppress_stdout
+    if live_stdout:
+        command_context = capture_stdout
+    else:
+        command_context = redirect_stdout
+    with command_context(io.StringIO()) as stdout:
+        try:
+            return_code = _shell_cmd_helper(command)
+        except CalledProcessError as e:
+            # if the exception doesn't record the output, add it
+            # manually before raising
+            stdout = stdout.getvalue()
+            if e.output is None and stdout != '':
+                e.output = stdout
+            raise e
+        else:
+            stdout = stdout.getvalue()
+    return stdout, return_code
+
+
 _name_re = r'[a-zA-Z]\w*'
+
 _smuggle_subexprs = {
     'name_re': _name_re,
     'qualname_re': fr'{_name_re}(?: *\. *{_name_re})*',
@@ -379,7 +449,6 @@ smuggle_statement_regex = re.compile((
         r')'
     r')'
 ).format_map(_smuggle_subexprs))
-
 
 # Condensed, fully substituted regex:
 # ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as 

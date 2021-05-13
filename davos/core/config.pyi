@@ -16,7 +16,6 @@ __all__: list[Literal['DavosConfig']]
 
 _Environment = Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']
 _IpyShell = TypeVar('_IpyShell', bound=ZMQInteractiveShell)
-_PathLike = Union[PurePosixPath, str]
 
 class _IpyShowSyntaxErrorPre7(Protocol):
     def __call__(self, filename: Optional[str] = ...) -> None: ...
@@ -32,7 +31,8 @@ class DavosConfig(metaclass=SingletonConfig):
     _active: bool
     _allow_rerun: bool
     _conda_avail: Optional[bool]
-    _conda_env_path: Optional[str]
+    _conda_env: Optional[str]
+    _conda_envs_dirs: Optional[dict[str, str]]
     _confirm_install: bool
     _environment: Final[_Environment]
     _ipy_showsyntaxerror_orig: Final[Optional[Union[_IpyShowSyntaxErrorPre7, _IpyShowSyntaxErrorPost7]]]
@@ -58,9 +58,11 @@ class DavosConfig(metaclass=SingletonConfig):
     @conda_avail.setter
     def conda_avail(self, _: Any) -> NoReturn: ...
     @property
-    def conda_env_path(self) -> Optional[str]: ...
-    @conda_env_path.setter
-    def conda_env_path(self, env_path: _PathLike) -> None: ...
+    def conda_env(self) -> Optional[str]: ...
+    @conda_env.setter
+    def conda_env(self, new_env: str) -> None: ...
+    @property
+    def conda_envs_dirs(self) -> Optional[dict[str, str]]: ...
     @property
     def confirm_install(self) -> bool: ...
     @confirm_install.setter
@@ -76,7 +78,7 @@ class DavosConfig(metaclass=SingletonConfig):
     @property
     def pip_executable(self) -> str: ...
     @pip_executable.setter
-    def pip_executable(self, exe_path: _PathLike) -> None: ...
+    def pip_executable(self, exe_path: Union[PurePosixPath, str]) -> None: ...
     @property
     def smuggled(self) -> _Environment: ...
     @smuggled.setter

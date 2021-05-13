@@ -6,6 +6,7 @@ __all__ = ['DavosConfig']
 
 import pathlib
 import sys
+from os.path import expandvars
 
 from davos.core.exceptions import DavosConfigError
 
@@ -61,7 +62,7 @@ class DavosConfig(metaclass=SingletonConfig):
                 self._environment = 'IPython>=7.0'
             self._ipy_showsyntaxerror_orig = self._ipython_shell.showsyntaxerror
         self._conda_avail = None
-        self._conda_env_path = None
+        self._conda_envs_dirs = None
         self._smuggled = {}
         self._stdlib_modules = self._get_stdlib_modules()
         ########################################
@@ -69,6 +70,7 @@ class DavosConfig(metaclass=SingletonConfig):
         ########################################
         self._active = True
         self._allow_rerun = False
+        self._conda_env = None
         self._confirm_install = False
         self._suppress_stdout = False
         # re: see ContextLab/davos#10
@@ -113,8 +115,8 @@ class DavosConfig(metaclass=SingletonConfig):
     @property
     def conda_avail(self):
         if self._conda_avail is None:
-            from davos.implementations import get_conda_info
-            get_conda_info()
+            from davos.implementations import check_conda
+            check_conda()
         return self._conda_avail
             
     @conda_avail.setter
@@ -122,28 +124,43 @@ class DavosConfig(metaclass=SingletonConfig):
         raise DavosConfigError('conda_avail', 'field is read-only')
     
     @property
-    def conda_env_path(self):
+    def conda_env(self):
         if self._conda_avail is None:
-            # _conda_env_path is None if we haven't checked conda 
+            # _conda_env is None if we haven't checked conda 
             # yet *and* if conda is not available vs _conda_avail is 
             # None only if we haven't checked yet
-            from davos.implementations import get_conda_info
-            get_conda_info()
-        return self._conda_env_path
+            from davos.implementations import check_conda
+            check_conda()
+        return self._conda_env
     
-    @conda_env_path.setter
-    def conda_env_path(self, env_path):
-        try:
-            env_path = pathlib.Path(env_path).resolve(strict=True)
-        except FileNotFoundError as e:
+    @conda_env.setter
+    def conda_env(self, new_env):
+        if self._conda_avail is None:
+            from davos.implementations import check_conda
+            check_conda()
+        if self._conda_avail is False:
             raise DavosConfigError(
-                'conda_env_path',  f"No such file or directory: '{env_path}'"
-            ) from e
-        if str(env_path) != self._conda_env_path:
-            if not env_path.is_dir():
-                raise DavosConfigError('conda_env_path', 
-                                       f"'{env_path}' is not a directory")
-            self._conda_env_path = str(env_path)
+                "conda_env", 
+                "Cannot set conda environment. No local conda installation found"
+            )
+        elif new_env != self._conda_env:
+            if (
+                    self._conda_envs_dirs is not None and 
+                    new_env not in self._conda_envs_dirs.keys()
+            ): 
+                raise DavosConfigError(
+                    "conda_env", 
+                    f"unrecognized environment name: '{new_env}'. Local "
+                    f"environments are:\n\t{', '.join(self._conda_envs_dirs.keys())}"
+                )
+            self._conda_env = new_env
+                
+    @property
+    def conda_envs_dirs(self):
+        if self._conda_avail is None:
+            from davos.implementations import check_conda
+            check_conda()
+        return self._conda_envs_dirs
         
     @property
     def confirm_install(self):
@@ -178,8 +195,9 @@ class DavosConfig(metaclass=SingletonConfig):
     
     @pip_executable.setter
     def pip_executable(self, exe_path):
+        exe_path = pathlib.Path(expandvars(exe_path)).expanduser()
         try:
-            exe_path = pathlib.Path(exe_path).resolve(strict=True)
+            exe_path = exe_path.resolve(strict=True)
         except FileNotFoundError as e:
             raise DavosConfigError(
                 'pip_executable',  f"No such file or directory: '{exe_path}'"

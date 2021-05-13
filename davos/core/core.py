@@ -6,7 +6,13 @@ IPython/Jupyter Notebook).
 """
 
 
-__all__ = ['Onion', 'prompt_input', 'smuggle_statement_regex']
+__all__ = [
+    'capture_stdout', 
+    'Onion', 
+    'prompt_input', 
+    'run_shell_command', 
+    'smuggle_statement_regex'
+]
 
 
 import importlib

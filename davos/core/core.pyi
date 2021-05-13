@@ -17,7 +17,15 @@ from typing import (
     Union
 )
 
-__all__: list[Literal['Onion', 'prompt_input', 'smuggle_statement_regex']]
+__all__: list[
+    Literal[
+        'capture_stdout', 
+        'Onion', 
+        'prompt_input', 
+        'run_shell_command', 
+        'smuggle_statement_regex'
+    ]
+]
 
 _E = TypeVar('_E', bound=BaseException)
 _StringOrFileIO = Union[StringIO, TextIO]

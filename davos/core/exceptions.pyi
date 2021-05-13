@@ -17,7 +17,10 @@ __all__: list[
 
 class DavosError(Exception): ...
 
-class DavosConfigError(DavosError): ...
+class DavosConfigError(DavosError):
+    field: str
+    msg: str
+    def __init__(self, field: str, msg: str) -> None: ...
 
 class DavosParserError(SyntaxError, DavosError):
     def __init__(

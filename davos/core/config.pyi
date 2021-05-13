@@ -1,11 +1,22 @@
-from typing import Any, ClassVar, Final, Literal, NoReturn, Optional, TypeVar
-
+from collections.abc import Callable
+from typing import (
+    Any, 
+    ClassVar, 
+    Final, 
+    Literal, 
+    NoReturn, 
+    Optional, 
+    TypeVar, 
+    Union
+)
 from ipykernel.zmqshell import ZMQInteractiveShell
 
-__all__ = list[Literal['DavosConfig']]
+__all__: list[Literal['DavosConfig']]
 
 _Environment = Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']
 _IpyShell = TypeVar('_IpyShell', bound=ZMQInteractiveShell)
+_IpyShowSyntaxErrorPre7 = Callable[[_IpyShell, Optional[str]], None]
+_IpyShowSyntaxErrorPost7 = Callable[[_IpyShell, Optional[str], bool], None]
 
 class SingletonConfig(type):
     __instance: ClassVar[Optional[DavosConfig]]
@@ -16,6 +27,7 @@ class DavosConfig(metaclass=SingletonConfig):
     _allow_rerun: bool
     _confirm_install: bool
     _environment: Final[_Environment]
+    _ipy_showsyntaxerror_orig: Final[Optional[Union[_IpyShowSyntaxErrorPre7, _IpyShowSyntaxErrorPost7]]]
     _ipython_shell: Final[Optional[_IpyShell]]
     _smuggled: dict[str: str]
     _stdlib_modules: Final[set[str]]

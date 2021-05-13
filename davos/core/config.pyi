@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from typing import (
     Any, 
     ClassVar, 
@@ -6,6 +5,7 @@ from typing import (
     Literal, 
     NoReturn, 
     Optional, 
+    Protocol, 
     TypeVar, 
     Union
 )
@@ -15,8 +15,12 @@ __all__: list[Literal['DavosConfig']]
 
 _Environment = Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']
 _IpyShell = TypeVar('_IpyShell', bound=ZMQInteractiveShell)
-_IpyShowSyntaxErrorPre7 = Callable[[_IpyShell, Optional[str]], None]
-_IpyShowSyntaxErrorPost7 = Callable[[_IpyShell, Optional[str], bool], None]
+
+class _IpyShowSyntaxErrorPre7(Protocol):
+    def __call__(self, filename: Optional[str] = ...) -> None: ...
+    
+class _IpyShowSyntaxErrorPost7(Protocol):
+    def __call__(self, filename: Optional[str] = ..., running_compile_code: bool = ...) -> None: ...
 
 class SingletonConfig(type):
     __instance: ClassVar[Optional[DavosConfig]]

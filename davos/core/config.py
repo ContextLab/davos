@@ -1,18 +1,24 @@
+# ADD DOCSTRING
+
+
+__all__ = ['DavosConfig']
+
+
 import pathlib
 import sys
 
 from davos.core.exceptions import DavosConfigError
 
 
-class Singleton(type):
-    __instances = {}
+class SingletonConfig(type):
+    __instance = None
     def __call__(cls, *args, **kwargs):
-        if cls not in cls.__instances:
-            cls.__instances[cls] = super().__call__(*args, **kwargs)
-        return cls.__instances[cls]
+        if cls.__instance is None:
+            cls.__instance = super().__call__(*args, **kwargs)
+        return cls.__instance
 
 
-class DavosConfig(metaclass=Singleton):
+class DavosConfig(metaclass=SingletonConfig):
     @staticmethod
     def _get_stdlib_modules():
         stdlib_dir = pathlib.Path(pathlib.__file__).parent
@@ -27,7 +33,11 @@ class DavosConfig(metaclass=Singleton):
             except KeyError:
                 pass
         return stdlib_modules
-    
+
+    # noinspection PyFinal
+    # suppressing due to PyCharm bug where inspection doesn't 
+    # differentiate between declarations here and in stub file (which it 
+    # should, according to PEP 591)
     def __init__(self):
         ########################################
         #           READ-ONLY FIELDS           #
@@ -110,7 +120,7 @@ class DavosConfig(metaclass=Singleton):
     @property
     def ipython_shell(self):
         return self._ipython_shell
-    
+
     @ipython_shell.setter
     def ipython_shell(self, _):
         raise DavosConfigError('ipython_shell', 'field is read-only')

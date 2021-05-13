@@ -108,7 +108,8 @@ class Onion:
     cache_key: str
     import_name: str
     install_name: str
-    install_package: Callable[[], tuple[str, int]]
+    install_package: Callable[[], str]
+    installer: Literal['conda', 'pip']
     installer_kwargs: _PipInstallerKwargs
     is_editable: bool
     verbosity: Literal[-3, -2, -1, 0, 1, 2, 3]
@@ -123,10 +124,16 @@ class Onion:
             **installer_kwargs: Union[bool, float, int, str, list[str]]
     ) -> None: ...
     @property
+    def install_cmd(self) -> str: ...
+    @property
     def is_installed(self) -> bool: ...
     def _conda_install_package(self) -> NoReturn: ...
     def _pip_install_package(self) -> str: ...
 
+def get_previously_imported_pkgs(
+        install_cmd_stdout: str, 
+        installer: Literal['conda', 'pip']
+) -> list[str]: ...
 def prompt_input(
         prompt: str,
         default: Optional[Literal['n', 'no', 'y', 'yes']] = ...,

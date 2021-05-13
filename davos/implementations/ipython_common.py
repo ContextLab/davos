@@ -2,7 +2,7 @@
 
 
 # TODO: fill me in
-__all__ = []
+__all__ = ['check_conda']
 
 
 import sys
@@ -28,7 +28,6 @@ def _run_shell_command_helper(command):
     retcode = _run_shell_cmd(command)
     if retcode != 0:
         raise CalledProcessError(returncode=retcode, cmd=command)
-    return retcode
 
 
 def _showsyntaxerror_davos(ipy_shell, filename=None, running_compiled_code=False):
@@ -88,29 +87,26 @@ def check_conda():
         config._conda_avail = True
         
         # try to create mapping of environment names to paths to 
-        # validate environments used going forward
+        # validate environments used going forward. Want both names and 
+        # paths so we can check both `-n`/`--name` & `-p`/`--prefix` 
+        # when parsing onion comments
         envs_dict_command = "conda info --envs | grep -E '^\w' | sed -E 's/ +\*? +/ /g'"
-        conda_info_output, retcode = run_shell_command(envs_dict_command, 
-                                                       live_stdout=False)
-        # if no environments are found or output can't be parsed for 
-        # some reason, just count any conda env provided as valid. This 
-        # doesn't cause any major problems, we just can't catch errors 
-        # as early and defer to the conda executable to throw an error 
-        # when the user actually goes to install a package into an 
-        # environment that doesn't exist
-        if retcode == 0:
-            # noinspection PyBroadException
-            try:
-                envs_dirs_dict = dict(map(str.split, 
-                                          conda_info_output.splitlines()))
-            except:
-                envs_dirs_dict = None
-            else:
-                config._conda_envs_dirs = envs_dirs_dict
-        else:
+        # noinspection PyBroadException
+        try:
+            conda_info_output = run_shell_command(envs_dict_command, 
+                                                  live_stdout=False)
+            envs_dirs_dict = dict(map(str.split, conda_info_output.splitlines()))
+        except Exception:
+            # if no environments are found or output can't be parsed for 
+            # some reason, just count any conda env provided as valid. 
+            # This doesn't cause any major problems, we just can't catch 
+            # errors as early and defer to the conda executable to throw 
+            # an error when the user actually goes to install a package 
+            # into an environment that doesn't exist
             # just set to None so it can be referenced down below
             envs_dirs_dict = None
         
+        config._conda_envs_dirs = envs_dirs_dict
         # format of first line of output seems to reliably be:
         # `# packages in environment at /path/to/environment/dir:`
         # but can't hurt to parse more conservatively since output 

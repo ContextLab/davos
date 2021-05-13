@@ -33,7 +33,7 @@ from davos.core.exceptions import (
     ParserNotImplementedError
 )
 from davos.core.parsers import pip_parser
-from davos.implementations import _shell_cmd_helper
+from davos.implementations import _run_shell_command_helper
 
 
 class capture_stdout:
@@ -256,8 +256,7 @@ class Onion:
         cmd_str = f'pip install {args}'
         live_stdout = self.verbosity > -3
         try:
-            stdout, exit_code = run_shell_command(cmd_str, 
-                                                  live_stdout=live_stdout)
+            stdout = run_shell_command(cmd_str, live_stdout=live_stdout)
         except CalledProcessError as e:
             err_msg = (f"the command '{e.cmd}' returned a non-zero "
                        f"exit code: {e.returncode}. See above output "
@@ -286,7 +285,7 @@ class Onion:
                                                                    subdir_name)
                 if install_dir not in sys.path:
                     sys.path.insert(0, str(install_dir))
-        return stdout, exit_code
+        return stdout
 
 
 def prompt_input(prompt, default=None, interrupt=None):
@@ -340,7 +339,7 @@ def run_shell_command(command, live_stdout=None):
         command_context = redirect_stdout
     with command_context(io.StringIO()) as stdout:
         try:
-            return_code = _shell_cmd_helper(command)
+            _run_shell_command_helper(command)
         except CalledProcessError as e:
             # if the exception doesn't record the output, add it
             # manually before raising
@@ -350,7 +349,7 @@ def run_shell_command(command, live_stdout=None):
             raise e
         else:
             stdout = stdout.getvalue()
-    return stdout, return_code
+    return stdout
 
 
 _name_re = r'[a-zA-Z]\w*'

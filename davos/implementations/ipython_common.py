@@ -36,6 +36,30 @@ def _run_shell_command_helper(command):
         raise CalledProcessError(returncode=retcode, cmd=command)
 
 
+def _set_custom_showsyntaxerror():
+    if config._ipy_showsyntaxerror_orig is not None:
+        # function has already been called
+        return
+    # TODO: unless it causes circular import, raise DavosError elif 
+    #  config.ipython_shell is None (i.e., function was called when 
+    #  using pure Python implementation)
+
+    ipy_shell = config.ipython_shell
+    new_doc = textwrap.dedent(f"""\
+        ===============================
+
+        METHOD UPDATED BY DAVOS PACKAGE
+        {_showsyntaxerror_davos.__doc__}
+        ===============================
+
+        ORIGINAL DOCSTRING:
+        {config._ipy_showsyntaxerror_orig.__doc__}\
+    """)
+
+    _showsyntaxerror_davos.__doc__ = new_doc
+    config._ipy_showsyntaxerror_orig = ipy_shell.showsyntaxerror
+
+
 def _showsyntaxerror_davos(ipy_shell, filename=None, running_compiled_code=False):
     """
     When `davos` is imported into an IPython notebook, this method is 

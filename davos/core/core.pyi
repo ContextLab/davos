@@ -2,8 +2,9 @@ import sys
 from collections.abc import Callable
 from io import StringIO
 from re import Pattern
-from types import TracebackType
+from types import BuiltinFunctionType, FunctionType, ModuleType, TracebackType
 from typing import (
+    Any,
     AnyStr, 
     Generic, 
     Literal, 
@@ -106,6 +107,7 @@ def get_previously_imported_pkgs(
         install_cmd_stdout: str, 
         installer: Literal['conda', 'pip']
 ) -> list[str]: ...
+def import_name(name: str) -> Union[ModuleType, FunctionType, BuiltinFunctionType, Any]: ...
 
 class Onion:
     args_str: str
@@ -141,6 +143,13 @@ def prompt_input(
         interrupt: Optional[Literal['n', 'no', 'y', 'yes']] = ...
 ) -> bool: ...
 def run_shell_command(command: str, live_stdout: Optional[bool] = ...) -> str: ...
+def smuggle(
+        name: str, 
+        as_: Optional[str] = ..., 
+        installer: Literal['conda', 'pip'] = ..., 
+        args_str: str = ..., 
+        installer_kwargs: Optional[PipInstallerKwargs] = ...
+) -> None: ...
 
 _name_re: Literal[r'[a-zA-Z]\w*']
 

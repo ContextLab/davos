@@ -2,7 +2,7 @@ from typing import Literal, Optional, TypeVar
 from ipykernel.zmqshell import ZMQInteractiveShell
 from davos.core.core import PipInstallerKwargs
 
-__all__ = list[Literal['check_conda', 'smuggle']]
+__all__ = list[Literal['check_conda']]
 
 _IpyShell = TypeVar('_IpyShell', bound=ZMQInteractiveShell)
 
@@ -14,10 +14,3 @@ def _showsyntaxerror_davos(
         running_compiled_code: bool = ...
 ) -> None: ...
 def check_conda() -> None: ...
-def smuggle(
-        name: str, 
-        as_: Optional[str] = ..., 
-        installer: Literal['conda', 'pip'] = ..., 
-        args_str: str = ..., 
-        installer_kwargs: Optional[PipInstallerKwargs] = ...
-) -> None: ...

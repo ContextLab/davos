@@ -2,10 +2,9 @@
 
 
 # TODO: fill me in
-__all__ = ['check_conda', 'smuggle']
+__all__ = ['check_conda']
 
 
-import importlib
 import textwrap
 import sys
 from contextlib import redirect_stdout
@@ -14,15 +13,9 @@ from subprocess import CalledProcessError
 
 from IPython.core.error import UsageError
 from IPython.core.interactiveshell import system as _run_shell_cmd
-from IPython.utils.importstring import import_item
 
 from davos import config
-from davos.core.core import (
-    get_previously_imported_pkgs, 
-    Onion, 
-    prompt_input, 
-    run_shell_command
-)
+from davos.core.core import run_shell_command
 from davos.core.exceptions import DavosError, DavosParserError
 
 
@@ -173,128 +166,3 @@ def check_conda():
                     "comment\n\t3. pass your environment's name to  "
                     "`-n`/`--name` in each onion comment"
                 )
-
-
-def smuggle(
-        name, 
-        as_=None, 
-        installer='pip', 
-        args_str='', 
-        installer_kwargs=None
-):
-    # ADD DOCSTRING
-    if installer_kwargs is None:
-        installer_kwargs = {}
-
-    pkg_name = name.split('.')[0]
-    onion = Onion(pkg_name, installer=installer,
-                  args_str=args_str, **installer_kwargs)
-
-    if onion.is_installed:
-        try:
-            # Unlike regular import, can be called on non-module items:
-            #     ```
-            #     import numpy.array`                   # fails
-            #     array = import_item('numpy.array')    # succeeds
-            #     ```
-            # Also adds module (+ parents, if any) to sys.modules if not
-            # already present.
-            smuggled_obj = import_item(name)
-        except ModuleNotFoundError as e:
-            # TODO: check for --yes (conda) and bypass if passed
-            if config._confirm_install:
-                msg = (f"package '{pkg_name}' will be installed with the "
-                       f"following command:\n\t`{onion.install_cmd}`\n"
-                       f"Proceed?")
-                install_pkg = prompt_input(msg, default='y')
-                if not install_pkg:
-                    raise e
-            else:
-                install_pkg = True
-        else:
-            install_pkg = False
-    else:
-        install_pkg = True
-
-    if install_pkg:
-        installer_stdout = onion.install_package()
-        # check whether the smuggled package and/or any installed/updated
-        # dependencies were already imported during the current runtime
-        prev_imported_pkgs = get_previously_imported_pkgs(installer_stdout, 
-                                                          onion.installer)
-        # invalidate sys.meta_path module finder caches. Forces import
-        # machinery to notice newly installed module
-        importlib.invalidate_caches()
-        # if the smuggled package was previously imported, deal with
-        # it last so it's reloaded after its dependencies are in place
-        try:
-            prev_imported_pkgs.remove(pkg_name)
-        except ValueError:
-            # smuggled package is brand new
-            pass
-        else:
-            prev_imported_pkgs.append(pkg_name)
-
-        failed_reloads = []
-        for dep_name in prev_imported_pkgs:
-            dep_modules_old = {}
-            for mod_name in tuple(sys.modules.keys()):
-                # remove submodules of previously imported packages so
-                # new versions get imported when main package is
-                # reloaded (importlib.reload only reloads top-level
-                # module). IPython.lib.deepreload.reload recursively
-                # reloads submodules, but is basically broken because
-                # it's *too* aggressive. It reloads *all* imported
-                # modules... including the import machinery it needs to
-                # run, which crashes it... (-_-* )
-                if mod_name.startswith(f'{dep_name}.'):
-                    dep_modules_old[mod_name] = sys.modules.pop(mod_name)
-
-            # get (but don't pop) top-level package to that it can be
-            # reloaded (must exist in sys.modules)
-            dep_modules_old[dep_name] = sys.modules[dep_name]
-            try:
-                importlib.reload(sys.modules[dep_name])
-            except (ImportError, ModuleNotFoundError, RuntimeError):
-                # if we aren't able to reload the module, put the old
-                # version's submodules we removed back in sys.modules
-                # for now and prepare to show a warning post-execution.
-                # This way:
-                #   1. the user still has a working module until they
-                #      restart the runtime
-                #   2. the error we got doesn't keep getting raised when
-                #      we try to reload/import other modules that
-                #      import it
-                sys.modules.update(dep_modules_old)
-                failed_reloads.append(dep_name)
-
-        if any(failed_reloads):
-            # packages with C extensions (e.g., numpy, pandas) cannot be
-            # reloaded within an interpreter session. If the package was
-            # previously imported in the current runtime (even if not by
-            # user), warn about needing to reset runtime for changes to
-            # take effect with "RESTART RUNTIME" button in output
-            # (doesn't raise an exception, remaining code in cell still
-            # runs)
-            _display_mimetype(
-                "application/vnd.colab-display-data+json",
-                (
-                    {'pip_warning': {'packages': ', '.join(failed_reloads)}},
-                ),
-                raw=True
-            )
-        smuggled_obj = import_item(name)
-        # finally, reload pkg_resources so that just-installed package
-        # will be recognized when querying local versions for later
-        # checks
-        importlib.reload(sys.modules['pkg_resources'])
-
-    # add the object name/alias to the notebook's global namespace
-    if as_ is None:
-        config.ipython_shell.user_ns[name] = smuggled_obj
-    else:
-        config.ipython_shell.user_ns[as_] = smuggled_obj
-    # cache the smuggled (top-level) package by its full onion comment
-    # so rerunning cells is more efficient, but any change to version,
-    # source, etc. is caught
-    config.smuggled[pkg_name] = onion.cache_key

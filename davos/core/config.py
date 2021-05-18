@@ -6,6 +6,7 @@ __all__ = ['DavosConfig']
 
 import pathlib
 import sys
+import warnings
 from os.path import expandvars
 
 from davos.core.exceptions import DavosConfigError
@@ -71,6 +72,7 @@ class DavosConfig(metaclass=SingletonConfig):
         self._allow_rerun = False
         self._conda_env = None
         self._confirm_install = False
+        self._noninteractive = False
         self._suppress_stdout = False
         # re: see ContextLab/davos#10
         # reference pip executable using full path so IPython shell 
@@ -170,6 +172,10 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('confirm_install', 
                                    "field may be 'True' or 'False'")
+        elif self._noninteractive and value:
+            raise DavosConfigError('confirm_install', 
+                                   "field may not be 'True' in noninteractive "
+                                   "mode")
         self._confirm_install = value
         
     @property
@@ -187,6 +193,22 @@ class DavosConfig(metaclass=SingletonConfig):
     @ipython_shell.setter
     def ipython_shell(self, _):
         raise DavosConfigError('ipython_shell', 'field is read-only')
+    
+    @property
+    def noninteractive(self):
+        return self._noninteractive
+    
+    @noninteractive.setter
+    def noninteractive(self, value):
+        if not isinstance(value, bool):
+            raise DavosConfigError('confirm_install', 
+                                   "field may be 'True' or 'False'")
+        if value and self._confirm_install:
+            warnings.warn(
+                "noninteractive mode enabled, setting `confirm_install = False`"
+            )
+            self._confirm_install = False
+        self._noninteractive = value
     
     @property
     def pip_executable(self) -> str:

@@ -37,6 +37,7 @@ class DavosConfig(metaclass=SingletonConfig):
     _environment: Final[_Environment]
     _ipy_showsyntaxerror_orig: Optional[Union[_IpyShowSyntaxErrorPre7, _IpyShowSyntaxErrorPost7]]
     _ipython_shell: Final[Optional[_IpyShell]]
+    _noninteractive: bool
     _pip_executable: str
     _smuggled: dict[str: str]
     _stdlib_modules: Final[set[str]]
@@ -75,6 +76,10 @@ class DavosConfig(metaclass=SingletonConfig):
     def ipython_shell(self) -> Optional[_IpyShell]: ...
     @ipython_shell.setter
     def ipython_shell(self, _: Any) -> NoReturn: ...
+    @property
+    def noninteractive(self) -> bool: ...
+    @noninteractive.setter
+    def noninteractive(self, value) -> None: ...
     @property
     def pip_executable(self) -> str: ...
     @pip_executable.setter

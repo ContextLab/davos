@@ -560,6 +560,9 @@ def smuggle(
     config.smuggled[pkg_name] = onion.cache_key
 
 
+def smuggle_parser(line): ...
+
+
 
 _pip_installed_pkgs_re = re.compile("^Successfully installed (.*)$", re.M)
 
@@ -573,8 +576,7 @@ _smuggle_subexprs = {
     'comment_re': r'(?m:\#+.*$)'
 }
 
-# TODO: pattern currently doesn't enforce commas between names in
-#  multiline smuggle from statement
+
 smuggle_statement_regex = re.compile((
     r'^\s*'                                                               # match only if statement is first non-whitespace chars
     r'(?P<FULL_CMD>'                                                      # capture full text of command in named group

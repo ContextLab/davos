@@ -50,7 +50,6 @@ class DavosConfig(metaclass=SingletonConfig):
             # imported from a non-interactive Python script
             self._ipython_shell = None
             self._environment = 'Python'
-            self._ipy_showsyntaxerror_orig = None
         else:
             import IPython
             if IPython.version_info[0] < 7:
@@ -60,9 +59,9 @@ class DavosConfig(metaclass=SingletonConfig):
                     self._environment = 'IPython<7.0'
             else:
                 self._environment = 'IPython>=7.0'
-            self._ipy_showsyntaxerror_orig = self._ipython_shell.showsyntaxerror
         self._conda_avail = None
         self._conda_envs_dirs = None
+        self._ipy_showsyntaxerror_orig = None
         self._smuggled = {}
         self._stdlib_modules = self._get_stdlib_modules()
         ########################################

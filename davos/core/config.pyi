@@ -35,7 +35,7 @@ class DavosConfig(metaclass=SingletonConfig):
     _conda_envs_dirs: Optional[dict[str, str]]
     _confirm_install: bool
     _environment: Final[_Environment]
-    _ipy_showsyntaxerror_orig: Final[Optional[Union[_IpyShowSyntaxErrorPre7, _IpyShowSyntaxErrorPost7]]]
+    _ipy_showsyntaxerror_orig: Optional[Union[_IpyShowSyntaxErrorPre7, _IpyShowSyntaxErrorPost7]]
     _ipython_shell: Final[Optional[_IpyShell]]
     _pip_executable: str
     _smuggled: dict[str: str]

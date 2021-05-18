@@ -58,6 +58,7 @@ def _set_custom_showsyntaxerror():
 
     _showsyntaxerror_davos.__doc__ = new_doc
     config._ipy_showsyntaxerror_orig = ipy_shell.showsyntaxerror
+    ipy_shell.showsyntaxerror = _showsyntaxerror_davos.__get__(ipy_shell)
 
 
 def _showsyntaxerror_davos(ipy_shell, filename=None, running_compiled_code=False):

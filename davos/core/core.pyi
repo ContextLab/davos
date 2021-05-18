@@ -33,7 +33,7 @@ _S = TypeVar('_S')
 _S1 = tuple[_StringOrFileIO]
 _SN = tuple[_StringOrFileIO, ...]
 
-class _PipInstallerKwargs(TypedDict, total=False):
+class PipInstallerKwargs(TypedDict, total=False):
     abi: str
     cache_dir: str
     cert: str
@@ -102,6 +102,11 @@ class capture_stdout(Generic[_S]):
     def __exit__(self, exc_type: Type[_E], exc_value: _E, traceback: TracebackType) -> bool: ...
     def _write(self, data: AnyStr) -> None: ...
 
+def get_previously_imported_pkgs(
+        install_cmd_stdout: str, 
+        installer: Literal['conda', 'pip']
+) -> list[str]: ...
+
 class Onion:
     args_str: str
     build: Optional[str]
@@ -110,12 +115,12 @@ class Onion:
     install_name: str
     install_package: Callable[[], str]
     installer: Literal['conda', 'pip']
-    installer_kwargs: _PipInstallerKwargs
+    installer_kwargs: PipInstallerKwargs
     is_editable: bool
     verbosity: Literal[-3, -2, -1, 0, 1, 2, 3]
     version_spec: str
     @staticmethod
-    def parse_onion(onion_text: str) -> tuple[str, str, _PipInstallerKwargs]: ...
+    def parse_onion(onion_text: str) -> tuple[str, str, PipInstallerKwargs]: ...
     def __init__(
             self,
             package_name: str,
@@ -130,10 +135,6 @@ class Onion:
     def _conda_install_package(self) -> NoReturn: ...
     def _pip_install_package(self) -> str: ...
 
-def get_previously_imported_pkgs(
-        install_cmd_stdout: str, 
-        installer: Literal['conda', 'pip']
-) -> list[str]: ...
 def prompt_input(
         prompt: str,
         default: Optional[Literal['n', 'no', 'y', 'yes']] = ...,

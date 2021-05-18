@@ -81,6 +81,43 @@ class capture_stdout:
         sys.stdout.flush()
 
 
+def get_previously_imported_pkgs(install_cmd_stdout, installer):
+    if installer == 'conda':
+        raise NotImplementedError(
+            "conda-install stdout parsing not implemented yet"
+        )
+    else:
+        installed_pkg_regex = _pip_installed_pkgs_re
+
+    matches = installed_pkg_regex.findall(install_cmd_stdout)
+    if len(matches) == 0:
+        return []
+
+    # flatten and split matches to separate packages
+    matches_iter = itertools.chain(*(map(str.split, matches)))
+    prev_imported_pkgs = []
+    for dist_name in matches_iter:
+        pkg_name = dist_name.rpartition('-')[0]
+        try:
+            dist = pkg_resources.get_distribution(pkg_name)
+        except pkg_resources.DistributionNotFound:
+            # package either either new (was not previously installed) 
+            # or an implicit namespace package that will show up in 
+            # another package's top-level names
+            continue
+
+        try:
+            toplevel_names = dist.get_metadata('top_level.txt').split()
+        except FileNotFoundError:
+            toplevel_names = (pkg_name,)
+
+        for name in toplevel_names:
+            if name in sys.modules:
+                prev_imported_pkgs.append(name)
+
+    return prev_imported_pkgs
+
+
 class Onion:
     # ADD DOCSTRING
     @staticmethod
@@ -290,43 +327,6 @@ class Onion:
                     sys.path.insert(0, str(install_dir))
         return stdout
 
-
-def get_previously_imported_pkgs(install_cmd_stdout, installer):
-    if installer == 'conda':
-        raise NotImplementedError(
-            "conda install stdout parsing not implemented yet"
-        )
-    else:
-        installed_pkg_regex = _pip_installed_pkgs_re
-    
-    matches = installed_pkg_regex.findall(install_cmd_stdout)
-    if len(matches) == 0:
-        return []
-    
-    # flatten and split matches to separate packages
-    matches_iter = itertools.chain(*(map(str.split, matches)))
-    prev_imported_pkgs = []
-    for dist_name in matches_iter:
-        pkg_name = dist_name.rpartition('-')[0]
-        try:
-            dist = pkg_resources.get_distribution(pkg_name)
-        except pkg_resources.DistributionNotFound:
-            # package either either new (was not previously installed) 
-            # or an implicit namespace package that will show up in 
-            # another package's top-level names
-            continue
-        
-        try:
-            toplevel_names = dist.get_metadata('top_level.txt').split()
-        except FileNotFoundError:
-            toplevel_names = (pkg_name,)
-        
-        for name in toplevel_names:
-            if name in sys.modules:
-                prev_imported_pkgs.append(name)
-                
-    return prev_imported_pkgs
-        
 
 def prompt_input(prompt, default=None, interrupt=None):
     # ADD DOCSTRING

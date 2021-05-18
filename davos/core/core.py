@@ -239,7 +239,12 @@ class Onion:
             args = self.install_name
         else:
             args = self.args_str.replace("<", "'<'").replace(">", "'>'")
-        return f'{self.installer} install {args}'
+        if self.installer == 'pip':
+            install_exe = config._pip_executable
+        else:
+            install_exe = self.installer
+            
+        return f'{install_exe} install {args}'
 
     @property
     def is_installed(self):

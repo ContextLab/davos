@@ -61,7 +61,11 @@ def _set_custom_showsyntaxerror():
     ipy_shell.showsyntaxerror = _showsyntaxerror_davos.__get__(ipy_shell)
 
 
-def _showsyntaxerror_davos(ipy_shell, filename=None, running_compiled_code=False):
+def _showsyntaxerror_davos(
+        ipy_shell, 
+        filename=None, 
+        running_compiled_code=False
+):
     """
     When `davos` is imported into an IPython notebook, this method is 
     bound to the IPython InteractiveShell instance in place of its
@@ -70,7 +74,7 @@ def _showsyntaxerror_davos(ipy_shell, filename=None, running_compiled_code=False
     `SyntaxError`; see the `davos.exceptions.DavosParserError` docstring
     for more info) and its subclasses, and display parser exceptions
     properly with complete tracebacks.
-    
+
     The original wrapped method is is stored in 
     `davos.config._ipy_showsyntaxerror_orig`
     """
@@ -116,7 +120,7 @@ def check_conda():
     else:
         conda_list_output = conda_list_output.getvalue()
         config._conda_avail = True
-        
+
         # try to create mapping of environment names to paths to 
         # validate environments used going forward. Want both names and 
         # paths so we can check both `-n`/`--name` & `-p`/`--prefix` 
@@ -137,7 +141,7 @@ def check_conda():
             # into an environment that doesn't exist
             # just set to None so it can be referenced down below
             envs_dirs_dict = None
-        
+
         config._conda_envs_dirs = envs_dirs_dict
         # format of first line of output seems to reliably be:
         # `# packages in environment at /path/to/environment/dir:`
@@ -171,7 +175,13 @@ def check_conda():
                 )
 
 
-def smuggle(name, as_=None, installer='pip', args_str='', installer_kwargs=None):
+def smuggle(
+        name, 
+        as_=None, 
+        installer='pip', 
+        args_str='', 
+        installer_kwargs=None
+):
     # ADD DOCSTRING
     if installer_kwargs is None:
         installer_kwargs = {}

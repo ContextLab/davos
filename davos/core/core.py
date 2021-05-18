@@ -19,7 +19,6 @@ import importlib
 import itertools
 import io
 import re
-import site
 import sys
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -232,7 +231,7 @@ class Onion:
                 # no version specified with package name
                 self.install_name = full_spec
                 self.version_spec = ''
-                
+
     @property
     def install_cmd(self):
         if self.args_str == '':
@@ -243,7 +242,7 @@ class Onion:
             install_exe = config._pip_executable
         else:
             install_exe = self.installer
-            
+
         return f'{install_exe} install {args}'
 
     @property

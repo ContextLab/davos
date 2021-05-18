@@ -1,8 +1,10 @@
+# ADD DOCSTRING
+
 # TODO: THIS MODULE SHOULD CONTAIN THE CORRECT IMPLEMENTATION FOR EACH 
 #  INTERCHANGEABLE FUNCTION SO THAT OTHER FILES CAN IMPORT FROM HERE
 
+# TODO: add __all__
 
-from textwrap import dedent
 
 from davos import config
 
@@ -19,7 +21,7 @@ else:
         _showsyntaxerror_davos,
         check_conda
     )
-    
+
     _set_custom_showsyntaxerror()
     ...
     if import_environment == 'IPython>=7.0':

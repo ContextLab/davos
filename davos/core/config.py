@@ -91,20 +91,6 @@ class DavosConfig(metaclass=SingletonConfig):
         return super().__repr__()
 
     @property
-    def active(self):
-        return self._active
-
-    @active.setter
-    def active(self, state):
-        if state is True:
-            from davos.implementations import activate as switch
-        elif state is False:
-            from davos.implementations import deactivate as switch
-        else:
-            raise DavosConfigError('active', "field may be 'True' or 'False'")
-        switch()
-
-    @property
     def allow_rerun(self):
         return self._allow_rerun
 
@@ -114,56 +100,6 @@ class DavosConfig(metaclass=SingletonConfig):
             raise DavosConfigError('allow_rerun',
                                    "field may be 'True' or 'False'")
         self._allow_rerun = value
-
-    @property
-    def conda_avail(self):
-        if self._conda_avail is None:
-            from davos.implementations import check_conda
-            check_conda()
-        return self._conda_avail
-
-    @conda_avail.setter
-    def conda_avail(self, _):
-        raise DavosConfigError('conda_avail', 'field is read-only')
-
-    @property
-    def conda_env(self):
-        if self._conda_avail is None:
-            # _conda_env is None if we haven't checked conda
-            # yet *and* if conda is not available vs _conda_avail is
-            # None only if we haven't checked yet
-            from davos.implementations import check_conda
-            check_conda()
-        return self._conda_env
-
-    @conda_env.setter
-    def conda_env(self, new_env):
-        if self._conda_avail is None:
-            from davos.implementations import check_conda
-            check_conda()
-        if self._conda_avail is False:
-            raise DavosConfigError(
-                "conda_env",
-                "Cannot set conda environment. No local conda installation found"
-            )
-        elif new_env != self._conda_env:
-            if (
-                    self._conda_envs_dirs is not None and
-                    new_env not in self._conda_envs_dirs.keys()
-            ):
-                raise DavosConfigError(
-                    "conda_env",
-                    f"unrecognized environment name: '{new_env}'. Local "
-                    f"environments are:\n\t{', '.join(self._conda_envs_dirs.keys())}"
-                )
-            self._conda_env = new_env
-
-    @property
-    def conda_envs_dirs(self):
-        if self._conda_avail is None:
-            from davos.implementations import check_conda
-            check_conda()
-        return self._conda_envs_dirs
 
     @property
     def confirm_install(self):

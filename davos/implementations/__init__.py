@@ -124,5 +124,5 @@ def _conda_envs_dirs_fset(conf, _):
 
 DavosConfig.active = property(fget=_active_fget, fset=_active_fset)
 DavosConfig.conda_avail = property(fget=_conda_avail_fget, fset=_conda_avail_fset)
-DavosConfig.conda_envs_dirs = property(fget=_conda_envs_dirs_fget, fset=_conda_envs_dirs_fset)
 DavosConfig.conda_env = property(fget=_conda_env_fget, fset=_conda_env_fset)
+DavosConfig.conda_envs_dirs = property(fget=_conda_envs_dirs_fget, fset=_conda_envs_dirs_fset)

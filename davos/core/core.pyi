@@ -1,12 +1,8 @@
-import sys
 from collections.abc import Callable
 from io import StringIO
-from re import Pattern
 from types import (
     BuiltinFunctionType, 
-    BuiltinMethodType, 
     FunctionType, 
-    MethodType, 
     ModuleType, 
     TracebackType
 )
@@ -103,7 +99,7 @@ class PipInstallerKwargs(TypedDict, total=False):
 class capture_stdout(Generic[_S]):
     closing: bool
     streams: _S
-    sys_stdout_write: Union[BuiltinMethodType, MethodType]
+    sys_stdout_write: Callable[[AnyStr], Optional[int]]
     def __init__(self, *streams: _StringOrFileIO, closing: bool = ...) -> None: ...
     @overload
     def __enter__(self: capture_stdout[_SingleStream]) -> _StringOrFileIO: ...
@@ -163,4 +159,4 @@ def smuggle(
         args_str: str = ..., 
         installer_kwargs: Optional[PipInstallerKwargs] = ...
 ) -> None: ...
-def smuggle_parser(line: str) -> str: ...
+def parse_line(line: str) -> str: ...

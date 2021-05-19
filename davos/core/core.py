@@ -34,7 +34,9 @@ from davos.core.exceptions import (
     ParserNotImplementedError
 )
 from davos.core.parsers import pip_parser
-from davos.core.regexps import 
+# noinspection PyUnresolvedReferences
+from davos.core.regexps import _pip_installed_pkgs_re, smuggle_statement_regex
+# noinspection PyUnresolvedReferences
 from davos.implementations import (
     _check_conda_avail_helper, 
     _run_shell_command_helper
@@ -624,4 +626,70 @@ def smuggle(
     config.smuggled[pkg_name] = onion.cache_key
 
 
-def smuggle_parser(line): return line
+# noinspection DuplicatedCode
+def parse_line(line):
+    # ADD DOCSTRING
+    match = smuggle_statement_regex.match(line)
+    if match is None:
+        return line
+
+    matched_groups = match.groupdict()
+    smuggle_chars = matched_groups['FULL_CMD']
+    before_chars, after_chars = line.split(smuggle_chars)
+    cmd_prefix, to_smuggle = smuggle_chars.split('smuggle ', maxsplit=1)
+    cmd_prefix = cmd_prefix.strip()
+    to_smuggle = to_smuggle.strip()
+
+    if cmd_prefix:
+        # cmd_prefix is `"from" package[.module[...]] `
+        is_from_statement = True
+        onion_chars = matched_groups['FROM_ONION'] or matched_groups['FROM_ONION_1']
+        has_semicolon_sep = matched_groups['FROM_SEMICOLON_SEP'] is not None
+        qualname_prefix = f"{''.join(cmd_prefix.split()[1:])}."
+        # remove parentheses around line continuations
+        to_smuggle = to_smuggle.replace(')', '').replace('(', '')
+        # remove inline comments
+        if '\n' in to_smuggle:
+            to_smuggle = ' '.join(l.split('#')[0] for l in to_smuggle.splitlines())
+        else:
+            to_smuggle = to_smuggle.split('#')[0]
+        # normalize whitespace
+        to_smuggle = ' '.join(to_smuggle.split()).strip(', ')
+    else:
+        # cmd_prefix is ''
+        is_from_statement = False
+        onion_chars = matched_groups['ONION']
+        has_semicolon_sep = matched_groups['SEMICOLON_SEP'] is not None
+        qualname_prefix = ''
+
+    kwargs_str = ''
+    if has_semicolon_sep:
+        after_chars = '; ' + parse_line(after_chars.lstrip('; '))
+    elif onion_chars is not None:
+        onion_chars = onion_chars.replace('"', "'")
+        to_smuggle = to_smuggle.replace(onion_chars, '').rstrip()
+        # `Onion.parse_onion()` returns a 3-tuple of:
+        #  - the installer name (str)
+        #  - the raw arguments to be passed to the installer (str)
+        #  - an {arg: value} mapping from parsed args & defaults (dict)
+        installer, args_str, installer_kwargs = Onion.parse_onion(onion_chars)
+        kwargs_str = (f', installer={installer}, '
+                      f'args_str={args_str}, '
+                      f'installer_kwargs={installer_kwargs}')
+
+    smuggle_funcs = []
+    names_aliases = to_smuggle.split(',')
+    for na in names_aliases:
+        if ' as ' in na:
+            name, alias = na.split(' as ')
+            name = f'"{qualname_prefix}{name}"'
+            alias = f'"{alias.strip()}"'
+        else:
+            name = f'"{qualname_prefix}{na}"'
+            alias = f'"{na.strip()}"' if is_from_statement else None
+
+        name = name.replace(' ', '')
+        smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
+
+    smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'
+    return before_chars + '; '.join(smuggle_funcs) + after_chars

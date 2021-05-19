@@ -77,3 +77,8 @@ def _deactivate_helper(smuggle_func, parser_func):
 
     if ipy_shell.user_ns.get('smuggle') is smuggle_func:
         del ipy_shell.user_ns['smuggle']
+
+
+def generate_parser_func(line_parser):
+    # ADD DOCSTRING
+    return line_parser

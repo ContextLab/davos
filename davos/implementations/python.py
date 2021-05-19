@@ -35,7 +35,7 @@ def _check_conda_avail_helper():
     return conda_list_output.getvalue()
 
 
-def _deactivate_helper(smuggle_func, parser_func): 
+def _deactivate_helper(smuggle_func, parser_func):
     # TODO: implement me
     ...
 
@@ -59,3 +59,13 @@ def _run_shell_command_helper(command):
         # forward CTRL + C to process before raising
         process.send_signal(signal.SIGINT)
         raise
+
+
+def generate_parser_func(line_parser):
+    # ADD DOCSTRING
+    # TODO: implement me
+    def full_parser(lines):
+        # TODO: implement me
+        return lines
+
+    return full_parser

@@ -3,7 +3,8 @@
 # TODO: THIS MODULE SHOULD CONTAIN THE CORRECT IMPLEMENTATION FOR EACH 
 #  INTERCHANGEABLE FUNCTION SO THAT OTHER FILES CAN IMPORT FROM HERE
 
-# TODO: add __all__
+
+__all__ = ['full_parser']
 
 
 from davos import config
@@ -18,7 +19,8 @@ if import_environment == 'Python':
         _activate_helper, 
         _check_conda_avail_helper,
         _deactivate_helper,
-        _run_shell_command_helper
+        _run_shell_command_helper,
+        generate_parser_func
     )
 else:
     from davos.implementations.ipython_common import (
@@ -31,12 +33,14 @@ else:
     if import_environment == 'IPython>=7.0':
         from davos.implementations.ipython_post7 import (
             _activate_helper, 
-            _deactivate_helper
+            _deactivate_helper,
+            generate_parser_func
         )
     else:
         from davos.implementations.ipython_pre7 import (
             _activate_helper, 
-            _deactivate_helper
+            _deactivate_helper,
+            generate_parser_func
         )
         if import_environment == 'Colaboratory':
             # from davos.implementations.colab import ...
@@ -46,7 +50,10 @@ else:
             pass
 
 
-from davos.core.core import check_conda, smuggle, smuggle_parser
+from davos.core.core import check_conda, smuggle, parse_line
+
+
+full_parser = generate_parser_func(parse_line)
 
 
 def _active_fget(conf):
@@ -57,9 +64,9 @@ def _active_fget(conf):
 def _active_fset(conf, value):
     """setter for davos.config.active"""
     if value is True:
-        _activate_helper(smuggle, smuggle_parser)
+        _activate_helper(smuggle, full_parser)
     elif value is False:
-        _deactivate_helper(smuggle, smuggle_parser)
+        _deactivate_helper(smuggle, full_parser)
     else:
         raise DavosConfigError('active', "field may be 'True' or 'False'")
 

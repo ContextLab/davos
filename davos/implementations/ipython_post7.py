@@ -1,7 +1,7 @@
 # ADD DOCSTRING
 
 
-# TODO: add __all__
+__all__ = ['generate_parser_func']
 
 
 from davos import config
@@ -47,3 +47,17 @@ def _deactivate_helper(smuggle_func, parser_func):
 
     if ipy_shell.user_ns.get('smuggle') is smuggle_func:
         del ipy_shell.user_ns['smuggle']
+
+
+def generate_parser_func(line_parser):
+    # ADD DOCSTRING
+    def full_parser(lines):
+        # each line ends with '\n', so drop last character before 
+        # parsing & re-append newline afterwards
+        return [f'{line_parser(line[:-1])}\n' for line in lines]
+
+    # prevents transformer from being run multiple times when 
+    # IPython parses partial line to determine whether input is 
+    # complete
+    full_parser.has_side_effects = True
+    return full_parser

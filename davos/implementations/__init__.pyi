@@ -2,16 +2,13 @@ from collections.abc import Callable
 from typing import Any, Literal, NoReturn, Optional, Protocol, Union
 from davos.core.config import DavosConfig, IpythonShell
 from davos.core.core import PipInstallerKwargs
-from davos.implementations import (
-    ipython_common as ipyc, 
-    ipython_post7 as ipypost, 
-    ipython_pre7 as ipypre, 
-    python as py
-)
+from davos.implementations.ipython_post7 import IPyPost7FullParserFunc
+from davos.implementations.python import PyFullParserFunc
 
-# TODO: add __all__
+__all__ = list[Literal['full_parser']]
 
-ParserFunc = Callable[[str], str]
+LineParserFunc = Callable[[str], str]
+FullParserFunc = Union[IPyPost7FullParserFunc, LineParserFunc, PyFullParserFunc]
 
 class SmuggleFunc(Protocol):
     def __call__(
@@ -23,11 +20,13 @@ class SmuggleFunc(Protocol):
             installer_kwargs: Optional[PipInstallerKwargs] = ...
     ) -> None: ...
 
-_activate_helper: Callable[[SmuggleFunc, ParserFunc], None]
+_activate_helper: Callable[[SmuggleFunc, FullParserFunc], None]
 _check_conda_avail_helper: Callable[[], Optional[str]]
-_deactivate_helper: Callable[[SmuggleFunc, ParserFunc], None]
+_deactivate_helper: Callable[[SmuggleFunc, FullParserFunc], None]
 _run_shell_command_helper: Callable[[str], None]
 _set_custom_showsyntaxerror: Callable[[], None]
+generate_parser_func: Callable[[LineParserFunc], FullParserFunc]
+full_parser: FullParserFunc
 
 class ShowSyntaxErrorDavos(Protocol):
     def __call__(

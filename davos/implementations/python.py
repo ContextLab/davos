@@ -13,7 +13,9 @@ from io import StringIO
 from subprocess import CalledProcessError, PIPE, Popen
 
 
-def _activate_helper(smuggle_func, parser_func): ...
+def _activate_helper(smuggle_func, parser_func): 
+    # TODO: implement me
+    ...
 
 
 def _check_conda_avail_helper():
@@ -33,7 +35,9 @@ def _check_conda_avail_helper():
     return conda_list_output.getvalue()
 
 
-def _deactivate_helper(smuggle_func, parser_func): ...
+def _deactivate_helper(smuggle_func, parser_func): 
+    # TODO: implement me
+    ...
 
 
 def _run_shell_command_helper(command):

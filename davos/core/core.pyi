@@ -2,16 +2,24 @@ import sys
 from collections.abc import Callable
 from io import StringIO
 from re import Pattern
-from types import BuiltinFunctionType, FunctionType, ModuleType, TracebackType
+from types import (
+    BuiltinFunctionType, 
+    BuiltinMethodType, 
+    FunctionType, 
+    MethodType, 
+    ModuleType, 
+    TracebackType
+)
 from typing import (
     Any,
-    AnyStr, 
+    AnyStr,
     Generic, 
-    Literal, 
+    Literal,
     NoReturn, 
     Optional, 
     overload, 
     TextIO, 
+    Tuple,
     Type, 
     TypedDict, 
     TypeVar, 
@@ -31,9 +39,13 @@ __all__: list[
 _E = TypeVar('_E', bound=BaseException)
 _StringOrFileIO = Union[StringIO, TextIO]
 _S = TypeVar('_S')
-_S1 = tuple[_StringOrFileIO]
-_SN = tuple[_StringOrFileIO, ...]
 
+class _SingleStream(tuple[_StringOrFileIO]):
+    def __len__(self) -> Literal[1]: ...
+
+class _MultiStream(Tuple[_StringOrFileIO, ...]):
+    def __len__(self) -> int: ...
+    
 class PipInstallerKwargs(TypedDict, total=False):
     abi: str
     cache_dir: str
@@ -91,12 +103,12 @@ class PipInstallerKwargs(TypedDict, total=False):
 class capture_stdout(Generic[_S]):
     closing: bool
     streams: _S
-    sys_stdout_write: sys.stdout.write
+    sys_stdout_write: Union[BuiltinMethodType, MethodType]
     def __init__(self, *streams: _StringOrFileIO, closing: bool = ...) -> None: ...
     @overload
-    def __enter__(self: capture_stdout[_S1]) -> _StringOrFileIO: ...
+    def __enter__(self: capture_stdout[_SingleStream]) -> _StringOrFileIO: ...
     @overload
-    def __enter__(self: capture_stdout[_SN]) -> _SN: ...
+    def __enter__(self: capture_stdout[_MultiStream]) -> _MultiStream: ...
     @overload
     def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None: ...
     @overload

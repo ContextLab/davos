@@ -1,16 +1,13 @@
-from typing import Literal, Optional, TypeVar
-from ipykernel.zmqshell import ZMQInteractiveShell
-from davos.core.core import PipInstallerKwargs
+from typing import Optional
+from davos.core.config import IpythonShell
 
-__all__ = list[Literal['check_conda']]
-
-_IpyShell = TypeVar('_IpyShell', bound=ZMQInteractiveShell)
+__all__ = list
 
 def _check_conda_avail_helper() -> Optional[str]: ...
 def _run_shell_command_helper(command: str) -> None: ...
 def _set_custom_showsyntaxerror() -> None: ...
 def _showsyntaxerror_davos(
-        ipy_shell: _IpyShell, 
+        ipy_shell: IpythonShell, 
         filename: Optional[str] = ..., 
         running_compiled_code: bool = ...
 ) -> None: ...

@@ -8,6 +8,7 @@ IPython/Jupyter Notebook).
 
 __all__ = [
     'capture_stdout', 
+    'check_conda',
     'Onion', 
     'prompt_input', 
     'run_shell_command', 

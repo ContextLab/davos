@@ -7,25 +7,25 @@ from typing import (
     NoReturn, 
     Optional, 
     Protocol, 
-    TypeVar, 
     Union
 )
-from ipykernel.zmqshell import ZMQInteractiveShell
+from google.colab._shell import Shell                            # type: ignore
+from IPython.core.interactiveshell import InteractiveShell       # type: ignore
 
 __all__: list[Literal['DavosConfig']]
 
 _Environment = Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']
-_IpyShell = TypeVar('_IpyShell', bound=ZMQInteractiveShell)
+IpythonShell = Union[InteractiveShell, Shell]
 
-class _IpyShowSyntaxErrorPre7(Protocol):
+class IpyShowSyntaxErrorPre7(Protocol):
     def __call__(self, filename: Optional[str] = ...) -> None: ...
     
-class _IpyShowSyntaxErrorPost7(Protocol):
+class IpyShowSyntaxErrorPost7(Protocol):
     def __call__(self, filename: Optional[str] = ..., running_compile_code: bool = ...) -> None: ...
 
 class SingletonConfig(type):
     __instance: ClassVar[Optional[DavosConfig]]
-    def __call__(cls, *args, **kwargs) -> DavosConfig: ...
+    def __call__(cls, *args: Any, **kwargs: Any) -> DavosConfig: ...
     
 class DavosConfig(metaclass=SingletonConfig):
     _active: bool
@@ -35,11 +35,11 @@ class DavosConfig(metaclass=SingletonConfig):
     _conda_envs_dirs: Optional[dict[str, str]]
     _confirm_install: bool
     _environment: Final[_Environment]
-    _ipy_showsyntaxerror_orig: Optional[Union[_IpyShowSyntaxErrorPre7, _IpyShowSyntaxErrorPost7]]
-    _ipython_shell: Final[Optional[_IpyShell]]
+    _ipy_showsyntaxerror_orig: Optional[Union[IpyShowSyntaxErrorPre7, IpyShowSyntaxErrorPost7]]
+    _ipython_shell: Final[Optional[IpythonShell]]
     _noninteractive: bool
     _pip_executable: str
-    _smuggled: dict[str: str]
+    _smuggled: dict[str, str]
     _stdlib_modules: Final[set[str]]
     _suppress_stdout: bool
     @staticmethod
@@ -65,7 +65,7 @@ class DavosConfig(metaclass=SingletonConfig):
     @property
     def conda_envs_dirs(self) -> Optional[dict[str, str]]: ...
     @conda_envs_dirs.setter
-    def conda_envs_dirs(self, _) -> NoReturn: ...
+    def conda_envs_dirs(self, _: Any) -> NoReturn: ...
     @property
     def confirm_install(self) -> bool: ...
     @confirm_install.setter
@@ -75,13 +75,13 @@ class DavosConfig(metaclass=SingletonConfig):
     @environment.setter
     def environment(self, _: Any) -> NoReturn: ...
     @property
-    def ipython_shell(self) -> Optional[_IpyShell]: ...
+    def ipython_shell(self) -> Optional[IpythonShell]: ...
     @ipython_shell.setter
     def ipython_shell(self, _: Any) -> NoReturn: ...
     @property
     def noninteractive(self) -> bool: ...
     @noninteractive.setter
-    def noninteractive(self, value) -> None: ...
+    def noninteractive(self, value: bool) -> None: ...
     @property
     def pip_executable(self) -> str: ...
     @pip_executable.setter
@@ -93,4 +93,4 @@ class DavosConfig(metaclass=SingletonConfig):
     @property
     def suppress_stdout(self) -> bool: ...
     @suppress_stdout.setter
-    def suppress_stdout(self, value) -> None: ...
+    def suppress_stdout(self, value: bool) -> None: ...

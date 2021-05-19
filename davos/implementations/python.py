@@ -8,10 +8,29 @@ import locale
 import shlex
 import signal
 import sys
+from contextlib import redirect_stdout
+from io import StringIO
 from subprocess import CalledProcessError, PIPE, Popen
 
 
 def _activate_helper(smuggle_func, parser_func): ...
+
+
+def _check_conda_avail_helper():
+    """
+    Pure Python implementation of helper function for 
+    `davos.core.core.check_conda`. Checks whether conda executable is 
+    available for use
+    """
+    try:
+        with redirect_stdout(StringIO()) as conda_list_output:
+            # using `conda list` instead of a more straightforward 
+            # command so stdout is formatted the same as the IPython 
+            # implementation (which must use `conda list`)
+            _run_shell_command_helper('conda list Python')
+    except CalledProcessError:
+        return None
+    return conda_list_output.getvalue()
 
 
 def _deactivate_helper(smuggle_func, parser_func): ...

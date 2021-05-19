@@ -19,6 +19,28 @@ from davos.core.core import run_shell_command
 from davos.core.exceptions import DavosError, DavosParserError
 
 
+def _check_conda_avail_helper():
+    """
+    IPython implementation of helper function for 
+    `davos.core.core.check_conda`. Checks whether conda executable is 
+    available for use
+    """
+    try:
+        with redirect_stdout(StringIO()) as conda_list_output:
+            # this specific line magic seems to be the only reliable way 
+            # to *actually* get the kernel environment -- shell (!) 
+            # commands and all conda magic (%) commands other than 
+            # `conda list` run in the base conda environment. Listed 
+            # package is arbitrary, but listing single package is much 
+            # faster than listing all, so using IPython because it's 
+            # guaranteed to be installed
+            config._ipython_shell.run_line_magic('conda', 'list IPython')
+    except UsageError:
+        # %conda line magic is not available
+        return None
+    return conda_list_output.getvalue()
+
+
 def _run_shell_command_helper(command):
     # much simpler than plain Python equivalent because IPython has a
     # built-in utility function for running shell commands that handles

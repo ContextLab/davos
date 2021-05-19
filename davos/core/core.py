@@ -29,12 +29,16 @@ from packaging.requirements import InvalidRequirement
 
 from davos import config
 from davos.core.exceptions import (
+    DavosError,
     InstallerError, 
     OnionParserError, 
     ParserNotImplementedError
 )
 from davos.core.parsers import pip_parser
-from davos.implementations import _run_shell_command_helper
+from davos.implementations import (
+    _check_conda_avail_helper, 
+    _run_shell_command_helper
+)
 
 
 class capture_stdout:
@@ -78,6 +82,66 @@ class capture_stdout:
             s.write(data)
         self.sys_stdout_write(data)
         sys.stdout.flush()
+
+
+def check_conda():
+    # ADD DOCSTRING
+    conda_list_output = _check_conda_avail_helper()
+    if conda_list_output is None:
+        config._conda_avail = False
+        return
+
+    config._conda_avail = True
+    # try to create mapping of environment names to paths to validate 
+    # environments used in onion comments or to set config.conda_env. 
+    # Want both names and paths so we can check both `-n`/`--name` & 
+    # `-p`/`--prefix` when parsing onion comments
+    envs_dict_command = "conda info --envs | grep -E '^\w' | sed -E 's/ +\*? +/ /g'"
+    # noinspection PyBroadException
+    try:
+        conda_info_output = run_shell_command(envs_dict_command,
+                                              live_stdout=False)
+        # noinspection PyTypeChecker
+        envs_dirs_dict = dict(map(str.split, conda_info_output.splitlines()))
+    except Exception:
+        # if no environments are found or output can't be parsed for 
+        # some reason, just count any conda env provided as valid. This 
+        # doesn't cause any major problems, we just can't catch errors 
+        # as early and defer to the conda executable to throw an error 
+        # when the user actually goes to install a package into an 
+        # environment that doesn't exist.
+        # (just set to None so it can be referenced down below)
+        envs_dirs_dict = None
+
+    config._conda_envs_dirs = envs_dirs_dict
+    # format of first line of output seems to reliably be: `# packages 
+    # in environment at /path/to/environment/dir:` but can't hurt to 
+    # parse more conservatively since output is so short
+    for w in conda_list_output.split():
+        if '/' in w:
+            env_name = w.split('/')[-1].rstrip(':')
+            if (
+                    envs_dirs_dict is not None and
+                    env_name in envs_dirs_dict.keys()
+            ):
+                config._conda_env = env_name
+                return
+
+    if envs_dirs_dict is not None:
+        # if we somehow fail to parse the environment directory path 
+        # from the output, but we DID successfully create the 
+        # environment mapping, something weird is going on and it's 
+        # worth throwing an error with some info now. Otherwise, defer 
+        # potential errors to conda executable
+        raise DavosError(
+            "Failed to programmatically determine path to conda environment "
+            "directory. If you want to install smuggled packages using conda, "
+            "you can either:\n\t1. set `davos.config.conda_env_path` to your "
+            "environment's path (e.g., $CONDA_PREFIX/envs/this_env)\n\t2. "
+            "pass the environment path to `-p`/`--prefix` in each onion "
+            "comment\n\t3. pass your environment's name to `-n`/`--name` in "
+            "each onion comment"
+        )
 
 
 def get_previously_imported_pkgs(install_cmd_stdout, installer):
@@ -560,7 +624,7 @@ def smuggle(
     config.smuggled[pkg_name] = onion.cache_key
 
 
-def smuggle_parser(line): ...
+def smuggle_parser(line): return line
 
 
 

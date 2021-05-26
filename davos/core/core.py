@@ -17,9 +17,9 @@ __all__ = [
 
 import importlib
 import itertools
-import io
 import sys
 from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -486,7 +486,7 @@ def run_shell_command(command, live_stdout=None):
         command_context = capture_stdout
     else:
         command_context = redirect_stdout
-    with command_context(io.StringIO()) as stdout:
+    with command_context(StringIO()) as stdout:
         try:
             _run_shell_command_helper(command)
         except CalledProcessError as e:

@@ -53,8 +53,21 @@ else:
 from davos.core.core import check_conda, smuggle, parse_line
 
 
+# Implementation-specific wrapper around davos.core.core.parse_line
 full_parser = generate_parser_func(parse_line)
 
+
+########################################
+#  ADDITIONAL DAVOS.CONFIG PROPERTIES  #
+########################################
+# some properties are added to the davos.core.config.DavosConfig class 
+# here rather than when it's initially defined, because they depend on 
+# either:
+#  1. an implementation-specific function that hasn't been determined 
+#     yet, or
+#  2. a function defined in the `davos.core.core` module (namely, 
+#     `check_conda`) which needs to be imported after 
+#     implementation-specific functions are set here.
 
 def _active_fget(conf):
     """getter for davos.config.active"""
@@ -74,6 +87,7 @@ def _active_fset(conf, value):
 
 
 def _conda_avail_fget(conf):
+    """getter for davos.config.conda_avail"""
     if conf._conda_avail is None:
         check_conda()
 
@@ -81,10 +95,12 @@ def _conda_avail_fget(conf):
 
 
 def _conda_avail_fset(conf, _):
+    """setter for davos.config.conda_avail"""
     raise DavosConfigError('conda_avail', 'field is read-only')
 
 
 def _conda_env_fget(conf):
+    """getter for davos.config.conda_env"""
     if conf._conda_avail is None:
         # _conda_env is None if we haven't checked conda yet *and* if 
         # conda is not available vs _conda_avail is None only if we 
@@ -95,6 +111,7 @@ def _conda_env_fget(conf):
 
 
 def _conda_env_fset(conf, new_env):
+    """setter for davos.config.conda_env"""
     if conf._conda_avail is None:
         check_conda()
 
@@ -119,6 +136,7 @@ def _conda_env_fset(conf, new_env):
 
 
 def _conda_envs_dirs_fget(conf):
+    """getter for davos.config.conda_envs_dirs"""
     if conf._conda_avail is None:
         check_conda()
 
@@ -126,10 +144,13 @@ def _conda_envs_dirs_fget(conf):
 
 
 def _conda_envs_dirs_fset(conf, _):
+    """setter for davos.config.conda_envs_dirs"""
     raise DavosConfigError('conda_envs_dirs', 'field is read-only')
 
 
 DavosConfig.active = property(fget=_active_fget, fset=_active_fset)
-DavosConfig.conda_avail = property(fget=_conda_avail_fget, fset=_conda_avail_fset)
+DavosConfig.conda_avail = property(fget=_conda_avail_fget, 
+                                   fset=_conda_avail_fset)
 DavosConfig.conda_env = property(fget=_conda_env_fget, fset=_conda_env_fset)
-DavosConfig.conda_envs_dirs = property(fget=_conda_envs_dirs_fget, fset=_conda_envs_dirs_fset)
+DavosConfig.conda_envs_dirs = property(fget=_conda_envs_dirs_fget, 
+                                       fset=_conda_envs_dirs_fset)

@@ -18,25 +18,41 @@ class DotDict(dict):
 
 JS_FUNCTIONS = DotDict({
     'jupyter': {
-        'restartRunAbove': """
-            function restartRunCellsAbove(){
-                const notebook = Jupyter.notebook,
+        'restartRunCellsAbove': """\
+            const restartRunCellsAbove = function() {
+                const outputArea = this,
+                    notebook = Jupyter.notebook,
+                    // first cell currently selected, if multiple
                     anchorCellIndex = notebook.get_anchor_index(),
+                    // most recently selected cell, if multiple
                     selectedCellIndex = notebook.get_selected_index(),
-                    runningCellElement = document.getElementsByClassName('cell running')[0],
-                    allCellElements = notebook.get_cell_elements(),
-                    runningCellIndex = allCellElements.index(runningCellElement);
+                    runningCell = outputArea.element.parents('.cell'),
+                    allCells = notebook.get_cell_elements(),
+                    runningCellIndex = allCells.index(runningCell);
 
-                function queueCellsAndReselect() {
+                const queueCellsAndResetSelection = function() {
                     notebook.execute_cell_range(0, runningCellIndex + 1);
                     notebook.select(anchorCellIndex);
                     if (selectedCellIndex !== anchorCellIndex) {
+                        // select multiple cells without moving anchor
                         notebook.select(selectedCellIndex, false);
                     }
                 }
 
-                notebook.kernel.restart(queueCellsAndReselect);
-            }
+                notebook.kernel.restart(queueCellsAndResetSelection);
+            }.bind(this)
+        """,
+        'displayButtonPrompt': """\
+            const displayPromptButton = function(buttonText, onClick) {
+                buttonText = (typeof buttonText !== 'undefined') ? buttonText : '';
+                onClick = (typeof onClick !== 'undefined') ? onClick : () => console.log('clicked');
+                const runningCell = this.element.parents('.cell'),
+                    buttonElement = document.createElement('BUTTON');
+                buttonElement.classList.add('davos', 'prompt-button');
+                buttonElement.textContent = buttonText;
+                buttonElement.addEventListener('click', )
+                
+            }.bind(this)
         """
     }
 })

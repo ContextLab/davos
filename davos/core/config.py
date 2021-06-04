@@ -8,8 +8,9 @@ import pathlib
 import sys
 import warnings
 from os.path import expandvars
+from subprocess import CalledProcessError, check_output
 
-from davos.core.exceptions import DavosConfigError
+from davos.core.exceptions import DavosConfigError, DavosError
 
 
 class SingletonConfig(type):
@@ -83,7 +84,36 @@ class DavosConfig(metaclass=SingletonConfig):
         #
         # pip is assumed to be installed -- been included by default
         # with Python binary installers since 3.4
-        self._pip_executable = f'{sys.exec_prefix}/bin/pip'
+        if (
+                self._environment != 'Colaboratory' and 
+                Path(f'{sys.exec_prefix}/bin/pip').is_file()
+        ):
+            self._pip_executable = f'{sys.exec_prefix}/bin/pip'
+        else:
+            # pip exe wasn't in expected location (or it's colab, where 
+            # things are all over the place)
+            try:
+                pip_exe = check_output(['which', 'pip'], encoding='utf-8').strip()
+            except CalledProcessError:
+                # try one more thing before we just throw up our hands...
+                try:
+                    chceck_output([sys.executable, '-c', 'import pip'])
+                except CalledProcessError as e:
+                    raise DavosError(
+                        "Could not find 'pip' executable in $PATH or package "
+                        "in 'sys.modules'"
+                    ) from e
+                else:
+                    warnings.warn(
+                        "Could not find 'pip' executable in $PATH. Falling "
+                        f"back to module invokation ('{sys.executable} -m "
+                        "pip'). You can fix this by setting "
+                        "'davos.config.pip_executable' to your 'pip' "
+                        "executable's path."
+                    )
+                    self._pip_executable = f'{sys.executable} -m pip'
+            else:
+                self._pip_executable = pip_exe
 
     def __repr__(self):
         # TODO: implement me
@@ -186,3 +216,6 @@ class DavosConfig(metaclass=SingletonConfig):
             raise DavosConfigError('suppress_stdout',
                                    "field may be 'True' or 'False'")
         self._suppress_stdout = value
+
+    def _set_initial_pip_exe(self):
+        

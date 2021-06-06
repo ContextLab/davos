@@ -216,6 +216,3 @@ class DavosConfig(metaclass=SingletonConfig):
             raise DavosConfigError('suppress_stdout',
                                    "field may be 'True' or 'False'")
         self._suppress_stdout = value
-
-    def _set_initial_pip_exe(self):
-        

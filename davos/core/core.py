@@ -162,7 +162,7 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
     matches_iter = itertools.chain(*(map(str.split, matches)))
     prev_imported_pkgs = []
     for dist_name in matches_iter:
-        pkg_name = dist_name.rpartition('-')[0]
+        pkg_name = dist_name.rsplit('-', maxsplit=1)[0]
         try:
             dist = pkg_resources.get_distribution(pkg_name)
         except pkg_resources.DistributionNotFound:

@@ -5,6 +5,7 @@ from typing import Literal, Optional, Union
 __all__: list[
     Literal[
         'DavosError',
+        'DavosConfigError',
         'DavosParserError',
         'InstallerError',
         'OnionParserError',
@@ -15,6 +16,11 @@ __all__: list[
 ]
 
 class DavosError(Exception): ...
+
+class DavosConfigError(DavosError):
+    field: str
+    msg: str
+    def __init__(self, field: str, msg: str) -> None: ...
 
 class DavosParserError(SyntaxError, DavosError):
     def __init__(

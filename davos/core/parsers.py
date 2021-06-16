@@ -12,7 +12,7 @@ from argparse import (
     SUPPRESS
 )
 
-from davos.exceptions import OnionArgumentError
+from davos.core.exceptions import OnionArgumentError
 
 
 class OnionParser(ArgumentParser):
@@ -482,11 +482,11 @@ pip_general_opts.add_argument(
     help="Don't periodically check PyPI to determine whether a new version of "
          "pip is available for download. Implied with --no-index."
 )
-# NOTE: I think this would have no effect in Jupyter/Colab environments
+
 pip_general_opts.add_argument(
     '--no-color',
     action='store_true',
-    help="uppress colored output."
+    help="Suppress colored output."
 )
 pip_general_opts.add_argument(
     '--no-python-version-warning',

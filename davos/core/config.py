@@ -6,6 +6,7 @@ __all__ = ['DavosConfig']
 
 import pathlib
 import sys
+import traceback
 import warnings
 from os.path import expandvars
 from subprocess import CalledProcessError, check_output
@@ -24,21 +25,6 @@ class SingletonConfig(type):
 
 class DavosConfig(metaclass=SingletonConfig):
     # ADD DOCSTRING
-    @staticmethod
-    def _get_stdlib_modules():
-        stdlib_dir = pathlib.Path(pathlib.__file__).parent
-        stdlib_modules = set(p.stem for p in stdlib_dir.iterdir())
-        try:
-            stdlib_modules.remove('site-packages')
-        except KeyError:
-            pass
-        if sys.platform.startswith('linux'):
-            try:
-                stdlib_modules.remove('dist-packages')
-            except KeyError:
-                pass
-        return stdlib_modules
-
     # noinspection PyFinal
     # suppressing due to PyCharm bug where inspection doesn't
     # differentiate between declarations here and in stub file (which it
@@ -51,6 +37,8 @@ class DavosConfig(metaclass=SingletonConfig):
             # noinspection PyUnresolvedReferences
             self._ipython_shell = get_ipython()
         except NameError:
+            # see _block_greedy_ipython_completer() docstring
+            _block_greedy_ipython_completer()
             # imported from a non-interactive Python script
             self._ipython_shell = None
             self._environment = 'Python'
@@ -67,7 +55,7 @@ class DavosConfig(metaclass=SingletonConfig):
         self._conda_envs_dirs = None
         self._ipy_showsyntaxerror_orig = None
         self._smuggled = {}
-        self._stdlib_modules = self._get_stdlib_modules()
+        self._stdlib_modules = _get_stdlib_modules()
         ########################################
         #          CONFIGURABLE FIELDS         #
         ########################################
@@ -216,3 +204,41 @@ class DavosConfig(metaclass=SingletonConfig):
             raise DavosConfigError('suppress_stdout',
                                    "field may be 'True' or 'False'")
         self._suppress_stdout = value
+
+
+def _block_greedy_ipython_completer():
+    # ADD DOCSTRING - can borrow from https://github.com/ContextLab/hypertools/blob/e7b7446/hypertools/plot/backend.py#L374
+    # extract 20 most recent entries. Completer module usually appears 
+    # ~12 deep after davos & importlib, so add small buffer to be safe 
+    # but start searching from oldest.
+    stack_trace = traceback.extract_stack(limit=20)
+    # drop most recent 3 frames, which are always internal davos calls
+    for frame in stack_trace[:-3]:
+        if frame.filename.endswith('IPython/core/completerlib.py'):
+            # if stack contains calls to functions in completer module, 
+            # davos was imported for greed TAB-completion. Remove 
+            # davos.core & davos.core.config from sys.modules so they're 
+            # reloaded when imported for real and raise generic 
+            # exception to make completer function return early.
+            del sys.modules['davos.core']
+            del sys.modules['davos.core.config']
+            raise Exception
+    else:
+        # davos is being imported into a non-interactive environment
+        return
+
+
+def _get_stdlib_modules():
+    # ADD DOCSTRING
+    stdlib_dir = pathlib.Path(pathlib.__file__).parent
+    stdlib_modules = set(p.stem for p in stdlib_dir.iterdir())
+    try:
+        stdlib_modules.remove('site-packages')
+    except KeyError:
+        pass
+    if sys.platform.startswith('linux'):
+        try:
+            stdlib_modules.remove('dist-packages')
+        except KeyError:
+            pass
+    return stdlib_modules

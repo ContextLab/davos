@@ -1,7 +1,7 @@
 # ADD DOCSTRING
 
 
-# TODO: fill me in
+# TODO: fill me in (& fill in corresponding stub object)
 __all__ = []
 
 
@@ -83,7 +83,7 @@ def _showsyntaxerror_davos(
     """
     When `davos` is imported into an IPython notebook, this method is 
     bound to the IPython InteractiveShell instance in place of its
-    normal `showsyntaxerror` method. This allows `davos`` to intercept
+    normal `showsyntaxerror` method. This allows `davos` to intercept
     handling of `DavosParserError` (which must derive from
     `SyntaxError`; see the `davos.exceptions.DavosParserError` docstring
     for more info) and its subclasses, and display parser exceptions

@@ -1,6 +1,9 @@
 # ADD DOCSTRING
 
 
+__all__ = ['DotDict', 'JS_FUNCTIONS']
+
+
 class DotDict(dict):
     # ADD DOCSTRING
     # simple helper that allows a dict to be accessed like a JS object

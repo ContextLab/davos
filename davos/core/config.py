@@ -86,7 +86,7 @@ class DavosConfig(metaclass=SingletonConfig):
         # with Python binary installers since 3.4
         if (
                 self._environment != 'Colaboratory' and 
-                Path(f'{sys.exec_prefix}/bin/pip').is_file()
+                pathlib.Path(f'{sys.exec_prefix}/bin/pip').is_file()
         ):
             self._pip_executable = f'{sys.exec_prefix}/bin/pip'
         else:

@@ -1,2 +1,5 @@
 # exclude notebooks from breakdown
 *.ipynb linguist-documentation
+
+# count file with JS functions as JavaScript
+davos/implementations/js_funcs.py linguist-language=JavaScript

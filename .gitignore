@@ -4,6 +4,9 @@
 # PyCharm project config dir
 *.idea
 
+# Mypy daemon status file
+.dmypy.json
+
 # Python bytecode
 *__pycache__
 

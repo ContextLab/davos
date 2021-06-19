@@ -41,6 +41,7 @@ jobs:
           # install Python 3.9 (used to run notebooks via selenium, not the 
           # tests themselves)
           conda install python=3.9
+          conda init bash
           # install Firefox browser
           sudo apt-get install firefox
           # install python packages
@@ -84,3 +85,6 @@ jobs:
       - name: launch Jupyter server
         if: matrix.notebook-type == 'jupyter'
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token=
+      
+      - name: run pytest
+        run: pytest -sv tests/

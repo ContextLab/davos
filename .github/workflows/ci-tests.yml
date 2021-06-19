@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 defaults:
   run:
-    shell: bash
+    shell: bash -leo pipefail {0}
 
 jobs:
   run-tests:
@@ -74,13 +74,14 @@ jobs:
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION
           
-          cat ~/.bashrc
-          cat ~/.bash_profile
-          
+          if [ -f ~/.bashrc ]; then cat ~/.bashrc; else echo "not found"; fi
+          if [ -f ~/.bash_profile ]; then cat ~/.bash_profile; else echo "not found"; fi
+          printenv
           conda --help
           conda info --envs
           
           conda activate kernel-env
+          
           # install IPython, ipykernel, davos
           pip install "IPython=$IPYTHON_VERSION" "ipykernel>=5.0.0"
           pip install .

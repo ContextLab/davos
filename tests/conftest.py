@@ -2,6 +2,7 @@ import json
 import re
 import time
 from os import getenv
+from pathlib import Path
 
 import pytest
 from selenium import webdriver
@@ -69,8 +70,18 @@ class JupyterDriver(NotebookDriver):
 
 class NotebookFile(pytest.File):
     test_func_pattern = re.compile('(?<=def )test_[^(]+', re.MULTILINE)
-    
+
+    def __init__(self, fspath, *, driver_cls, parent=None, config=None, session=None, nodeid=None):
+        super().__init__(fspath=fspath, parent=parent, config=config, session=session, nodeid=nodeid)
+        self.driver_cls = driver_cls
+        self.driver = None
+        repo_root = Path(getenv("GITHUB_WORKSPACE", "/Users/paxtonfitzpatrick/Documents/Dartmouth/CDL/davos")).resolve(strict=True)
+        notebook_abspath = Path(self.fspath).resolve(strict=True)
+        self.notebook_path = str(notebook_abspath.relative_to(repo_root))
+        
     def collect(self):
+        # print(self.__class__.mro())
+        # print(dir(self))
         with self.fspath.open() as nb:
             notebook_json = json.load(nb)
         for cell in notebook_json['cells']:
@@ -80,24 +91,44 @@ class NotebookFile(pytest.File):
                 # TODO: make sure tests_require is being enforced
                 if match := self.test_func_pattern.search(cell_contents):
                     yield NotebookTest.from_parent(self, name=match.group())
-                    
+    
+    def setup(self):
+        self.driver = self.driver_cls(self.notebook_path)
+        return super().setup()
+    
+    def teardown(self):
+        self.driver.quit()
+        return super().teardown()
+        
 
 class NotebookTest(pytest.Item):
     def runtest(self): 
         # code that determines whether test passes or fails
+        # should call: self.parent.driver.<test_running_func>(self.name)
+        # print('\n', self.parent, '\n')
         return
     
-    def repr_failure(self, execinfo): ...
+    def repr_failure(self, execinfo):
+        # TODO: write me
+        ...
     
     def reportinfo(self):
+        # TODO: write me
         return self.fspath, None, ""
         
 
-def pytest_collect_file(parent, path):
+def pytest_collect_file(path, parent):
+    notebook_type = getenv("NOTEBOOK_TYPE", 'colab')
+    if notebook_type == 'colab':
+        driver_cls = ColabDriver
+    else:
+        driver_cls = JupyterDriver
     if path.basename.startswith('test') and path.ext == ".ipynb":
-        return NotebookFile.from_parent(parent, fspath=path)
+        if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
+            print(path)
+            return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)
 
 
-@pytest.fixture(scope='module')
-def nb_driver():
-    ...
+# @pytest.fixture(scope='module')
+# def nb_driver(request): ...
+#     

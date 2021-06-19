@@ -73,9 +73,6 @@ jobs:
           pip install notebook "ipykernel>=5.0.0"
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION
-          
-          if [ -f ~/.bashrc ]; then cat ~/.bashrc; else echo "not found"; fi
-          if [ -f ~/.bash_profile ]; then cat ~/.bash_profile; else echo "not found"; fi
           printenv
           conda --help
           conda info --envs
@@ -86,8 +83,9 @@ jobs:
           pip install "IPython$IPYTHON_VERSION" "ipykernel>=5.0.0"
           pip install .
           # make environment available as a jupyter kernel
-          python -m ipykernel install --user --name=kernel-env
+          python -m ipykernel install --sys-prefix --name=kernel-env
           conda deactivate
+          jupyter kernelspec list
           
       - name: launch Jupyter server
         if: matrix.notebook-type == 'jupyter'

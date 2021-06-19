@@ -1,0 +1,97 @@
+name: CI Tests
+
+on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  run-tests:
+    name: "Run CI tests"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        notebook-type: [jupyter]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        ipython-version: ['==5.5.0', '>=7.0.0']
+        include:
+          - notebook-type: colab
+            python-version: 3.7
+            ipython-version: '==5.5.0'
+    env:
+      NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+      IPYTHON_VERSION: ${{ matrix.ipython-version }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          # common python version used to run notebooks via selenium, *not* the 
+          # version used by the notebook kernel
+          python-version: 3.9
+          auto-update-conda: true
+          auto-activate-base: true
+          activate-environment: ""
+
+      - name: install test requirements
+        run: |
+          # install Firefox browser
+          sudo apt-get install firefox
+          # install python packages
+          pip install \
+              "pytest>=6.0.1" \
+              "selenium>=3.141" \
+              python-geckodriver-autoinstaller
+          # install geckodriver
+          driver_path=$(python -c '
+          
+          import shutil
+          from pathlib import Path
+          
+          import geckodriver_autoinstaller
+          
+          
+          driver_src = Path(geckodriver_autoinstaller.install(cwd=True))
+          driver_dest = driver_src.rename(driver_src.parents[1].joinpath(driver_src.name))
+          driver_src.parent.rmdir()
+          print(driver_dest)
+          
+          '
+          # export driver path as environment variable
+          echo "DRIVER_PATH=$driver_path" >> $GITHUB_ENV
+
+      - name: setup notebook kernel environment
+        if: matrix.notebook-type == 'jupyter'
+        run: |
+          # install jupyter notebooks in base environment
+          pip install notebook "ipykernel>=5.0.0"
+          # create kernel environment
+          conda create -n kernel-env python=$PYTHON_VERSION
+          conda activate kernel-env
+          # install IPython, ipykernel, davos
+          pip install "IPython=$IPYTHON_VERSION" "ipykernel>=5.0.0"
+          pip install .
+          # make environment available as a jupyter kernel
+          python -m ipykernel install --user --name=kernel-env
+          conda deactivate
+          
+          
+        
+
+
+
+
+# setup matrix
+# colab tests:
+# - `sudo apt-get install firefox`
+# - `pip install seleniumbase`
+# - `seleniumbase install geckodriver`
+# - download selenium geckodriver (firefox)
+# - get URL parts needed ot open correct version of notebook in colab (user, notebook path, ref, etc.)
+# - export URL parts (MAY ALREADY EXIST!!) and geckodriver path (DRIVER_PATH) as env vars for use in tests
+# - load Davos Google account's username & password from GitHub secrets into env vars (GMAIL_ADDRESS & GMAIL_PASSWORD)
+# - pytest -v --browser=firefox --headless

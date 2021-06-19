@@ -1,3 +1,5 @@
+import json
+import re
 import time
 from os import getenv
 
@@ -63,3 +65,39 @@ class JupyterDriver(NotebookDriver):
         self.driver.find_element_by_id(f"kernel-submenu-{kernel_name} > a").click()
         # allow time for kernel to change
         time.sleep(5)
+
+
+class NotebookFile(pytest.File):
+    test_func_pattern = re.compile('(?<=def )test_[^(]+', re.MULTILINE)
+    
+    def collect(self):
+        with self.fspath.open() as nb:
+            notebook_json = json.load(nb)
+        for cell in notebook_json['cells']:
+            if cell['cell_type'] == 'code':
+                cell_contents = ''.join(cell['source'])
+                # noinspection PyCompatibility
+                # TODO: make sure tests_require is being enforced
+                if match := self.test_func_pattern.search(cell_contents):
+                    yield NotebookTest.from_parent(self, name=match.group())
+                    
+
+class NotebookTest(pytest.Item):
+    def runtest(self): 
+        # code that determines whether test passes or fails
+        return
+    
+    def repr_failure(self, execinfo): ...
+    
+    def reportinfo(self):
+        return self.fspath, None, ""
+        
+
+def pytest_collect_file(parent, path):
+    if path.basename.startswith('test') and path.ext == ".ipynb":
+        return NotebookFile.from_parent(parent, fspath=path)
+
+
+@pytest.fixture(scope='module')
+def nb_driver():
+    ...

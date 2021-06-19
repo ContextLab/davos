@@ -62,7 +62,7 @@ jobs:
           driver_src.parent.rmdir()
           print(driver_dest)
           
-          '
+          ')
           # export driver path as environment variable
           echo "DRIVER_PATH=$driver_path" >> $GITHUB_ENV
 

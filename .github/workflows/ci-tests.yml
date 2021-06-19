@@ -73,7 +73,14 @@ jobs:
           pip install notebook "ipykernel>=5.0.0"
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION
-          source activate kernel-env
+          
+          cat ~/.bashrc
+          cat ~/.bash_profile
+          
+          conda --help
+          conda info --envs
+          
+          conda activate kernel-env
           # install IPython, ipykernel, davos
           pip install "IPython=$IPYTHON_VERSION" "ipykernel>=5.0.0"
           pip install .

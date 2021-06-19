@@ -45,7 +45,7 @@ jobs:
           sudo apt-get install firefox
           # install python packages
           pip install \
-              "pytest>=6.0.1" \
+              "pytest>=6.0.1,<6.3" \
               "selenium>=3.141" \
               python-geckodriver-autoinstaller
           # install geckodriver

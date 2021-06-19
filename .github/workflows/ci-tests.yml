@@ -81,12 +81,6 @@ jobs:
           python -m ipykernel install --user --name=kernel-env
           conda deactivate
           
-          
-        
-
-
-
-
-# setup matrix
-# colab tests:
-# - pytest -v --browser=firefox --headless
+      - name: launch Jupyter server
+        if: matrix.notebook-type == 'jupyter'
+        run: jupyter notebook --no-browser --port=8888 --NotebookApp.token=

@@ -32,15 +32,15 @@ jobs:
       - name: install miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          # common python version used to run notebooks via selenium, *not* the 
-          # version used by the notebook kernel
-          python-version: 3.9
           auto-update-conda: true
           auto-activate-base: true
           activate-environment: ""
 
       - name: setup base environment
         run: |
+          # install Python 3.9 (used to run notebooks via selenium, not the 
+          # tests themselves)
+          conda install python=3.9
           # install Firefox browser
           sudo apt-get install firefox
           # install python packages

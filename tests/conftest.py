@@ -8,6 +8,7 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
 
 
 class NotebookDriver:
@@ -15,7 +16,10 @@ class NotebookDriver:
         self.url = url
         if browser.lower() != 'firefox':
             raise NotImplementedError("Test only implemented for Firefox")
-        self.driver = webdriver.Firefox(executable_path=getenv('DRIVER_PATH'))
+        options = Options()
+        options.headless = True
+        self.driver = webdriver.Firefox(options=options, 
+                                        executable_path=getenv('DRIVER_PATH'))
         self.driver.get(url)
 
 
@@ -105,7 +109,8 @@ class NotebookFile(pytest.File):
         self.driver.run_all_cells()
     
     def teardown(self):
-        self.driver.quit()
+        if self.driver is not None:
+            self.driver.quit()
         return super().teardown()
         
 

@@ -52,15 +52,24 @@ class ColabDriver(NotebookDriver):
             # (button takes a second to become clickable)
             time.sleep(3)
             self.driver.find_element_by_id("ok").click()
+            
+    def get_test_result(self, func_name):
+        # TODO: implement me
+        return True
 
 
 class JupyterDriver(NotebookDriver):
     def __init__(self, notebook_path, ip='127.0.0.1', port='8888', browser='firefox'):
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url, browser=browser)
+        self.set_kernel('kernel-env')
         
     def run_all_cells(self):
         self.driver.find_element_by_id("run_all_cells").click()
+        
+    def get_test_result(self, func_name):
+        # TODO: implement me
+        return True
         
     def set_kernel(self, kernel_name):
         self.driver.find_element_by_id(f"kernel-submenu-{kernel_name} > a").click()
@@ -75,13 +84,11 @@ class NotebookFile(pytest.File):
         super().__init__(fspath=fspath, parent=parent, config=config, session=session, nodeid=nodeid)
         self.driver_cls = driver_cls
         self.driver = None
-        repo_root = Path(getenv("GITHUB_WORKSPACE", "/Users/paxtonfitzpatrick/Documents/Dartmouth/CDL/davos")).resolve(strict=True)
+        repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
         notebook_abspath = Path(self.fspath).resolve(strict=True)
         self.notebook_path = str(notebook_abspath.relative_to(repo_root))
         
     def collect(self):
-        # print(self.__class__.mro())
-        # print(dir(self))
         with self.fspath.open() as nb:
             notebook_json = json.load(nb)
         for cell in notebook_json['cells']:
@@ -93,8 +100,9 @@ class NotebookFile(pytest.File):
                     yield NotebookTest.from_parent(self, name=match.group())
     
     def setup(self):
+        super().setup()
         self.driver = self.driver_cls(self.notebook_path)
-        return super().setup()
+        self.driver.run_all_cells()
     
     def teardown(self):
         self.driver.quit()
@@ -103,10 +111,8 @@ class NotebookFile(pytest.File):
 
 class NotebookTest(pytest.Item):
     def runtest(self): 
-        # code that determines whether test passes or fails
-        # should call: self.parent.driver.<test_running_func>(self.name)
-        # print('\n', self.parent, '\n')
-        return
+        test_result = self.parent.driver.get_test_result(self.name)
+        return test_result
     
     def repr_failure(self, execinfo):
         # TODO: write me
@@ -118,17 +124,11 @@ class NotebookTest(pytest.Item):
         
 
 def pytest_collect_file(path, parent):
-    notebook_type = getenv("NOTEBOOK_TYPE", 'colab')
+    notebook_type = getenv("NOTEBOOK_TYPE")
     if notebook_type == 'colab':
         driver_cls = ColabDriver
     else:
         driver_cls = JupyterDriver
     if path.basename.startswith('test') and path.ext == ".ipynb":
         if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
-            print(path)
             return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)
-
-
-# @pytest.fixture(scope='module')
-# def nb_driver(request): ...
-#     

@@ -47,7 +47,7 @@ jobs:
           pip install \
               pytest==6.2 \
               "selenium>=3.141" \
-              python-geckodriver-autoinstaller
+              geckodriver-autoinstaller
           # install geckodriver
           driver_path=$(python -c '
           

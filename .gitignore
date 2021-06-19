@@ -4,14 +4,18 @@
 # PyCharm project config dir
 *.idea
 
-# Mypy daemon status file
-.dmypy.json
-
 # Python bytecode
 *__pycache__
 
 # Python package distribution egg
 davos.egg-info
+
+# Mypy daemon status file
+.dmypy.json
+
+# selenium Firefox driver & log
+tests/geckodriver
+Tests/geckodriver.log
 
 # scripts & notebooks for scratch/debugging
 scratch

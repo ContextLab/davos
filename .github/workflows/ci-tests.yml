@@ -83,7 +83,7 @@ jobs:
           pip install "IPython$IPYTHON_VERSION" "ipykernel>=5.0.0"
           pip install .
           # make environment available as a jupyter kernel
-          python -m ipykernel install --sys-prefix --name=kernel-env
+          python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
           conda deactivate
           jupyter kernelspec list
           

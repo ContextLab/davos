@@ -76,7 +76,7 @@ class JupyterDriver(NotebookDriver):
         return True
         
     def set_kernel(self, kernel_name):
-        self.driver.find_element_by_id(f"kernel-submenu-{kernel_name} > a").click()
+        self.driver.find_element_by_css_selector(f"#kernel-submenu-{kernel_name} > a").click()
         # allow time for kernel to change
         time.sleep(5)
 

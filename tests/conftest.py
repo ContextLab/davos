@@ -92,13 +92,12 @@ class ColabDriver(NotebookDriver):
         pwd_input_box.send_keys(getenv("GMAIL_PASSWORD"))
         self.click("passwordNext", By.ID)
         time.sleep(3)
-        try:
-            self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
-        except:
-            print("FAILED")
-        else:
-            print("SUCCESS")
-            print('\n\n++++++++++\n\n', self.driver.page_source.encode("utf-8"), '\n\n++++++++++\n\n')
+        self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
+        time.sleep(3)
+        recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
+        recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
+        self.click("button[jsname='LgbsSe']")
+        
         
     def run_all_cells(self, pre_approved=False):
         keyboard_shortcut = ActionChains(self.driver) \
@@ -111,16 +110,8 @@ class ColabDriver(NotebookDriver):
             # (button takes a second to become clickable, seems to be 
             # obscured by other element, raises 
             # ElementClickInterceptedException)
-            time.sleep(5)
-            try:
-                self.driver.find_element_by_id("ok").click()
-                # self.click("ok", By.ID)
-            except Exception as e:
-                print('\n\n++++++++++\n\n', self.driver.page_source.encode("utf-8"), '\n\n++++++++++\n\n')
-                import sys, traceback
-                sys.stdout.flush()
-                traceback.print_exception(type(e), e, e.__traceback__)
-                sys.exit(1)
+            time.sleep(3)
+            self.click("ok", By.ID)
             
     def get_test_result(self, func_name):
         # TODO: implement me
@@ -211,6 +202,5 @@ def pytest_collect_file(path, parent):
     else:
         driver_cls = JupyterDriver
     if path.basename.startswith('test') and path.ext == ".ipynb":
-        # if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
-        if notebook_type in path.basename:
+        if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
             return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)

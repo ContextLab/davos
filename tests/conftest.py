@@ -21,6 +21,9 @@ class NotebookDriver:
         self.driver = webdriver.Firefox(options=options, 
                                         executable_path=getenv('DRIVER_PATH'))
         self.driver.get(url)
+        
+    def quit(self):
+        self.driver.quit()
 
 
 class ColabDriver(NotebookDriver):
@@ -69,6 +72,9 @@ class JupyterDriver(NotebookDriver):
         super().__init__(url=url, browser=browser)
         
     def run_all_cells(self):
+        self.driver.find_element_by_css_selector(
+            "#menus > div > div > ul > li:nth-child(5) > a"
+        ).click()
         self.driver.find_element_by_id("run_all_cells").click()
         
     def get_test_result(self, func_name):

@@ -17,7 +17,7 @@ class NotebookDriver:
         if browser.lower() != 'firefox':
             raise NotImplementedError("Test only implemented for Firefox")
         options = Options()
-        options.headless = False
+        options.headless = True
         self.driver = webdriver.Firefox(options=options, 
                                         executable_path=getenv('DRIVER_PATH'))
         self.driver.get(url)

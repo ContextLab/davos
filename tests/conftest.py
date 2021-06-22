@@ -92,7 +92,13 @@ class ColabDriver(NotebookDriver):
         pwd_input_box.send_keys(getenv("GMAIL_PASSWORD"))
         self.click("passwordNext", By.ID)
         time.sleep(3)
-        self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
+        try:
+            self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
+        except:
+            print("FAILED")
+        else:
+            print("SUCCESS")
+            print('\n\n++++++++++\n\n', self.driver.page_source.encode("utf-8"), '\n\n++++++++++\n\n')
         
     def run_all_cells(self, pre_approved=False):
         keyboard_shortcut = ActionChains(self.driver) \
@@ -110,9 +116,10 @@ class ColabDriver(NotebookDriver):
                 self.driver.find_element_by_id("ok").click()
                 # self.click("ok", By.ID)
             except Exception as e:
-                print('\n\n++++++++++\n\n', self.driver.page_source, '\n\n++++++++++\n\n')
+                print('\n\n++++++++++\n\n', self.driver.page_source.encode("utf-8"), '\n\n++++++++++\n\n')
                 import sys, traceback
-                traceback.print_exc()
+                sys.stdout.flush()
+                traceback.print_exception(type(e), e, e.__traceback__)
                 sys.exit(1)
             
     def get_test_result(self, func_name):

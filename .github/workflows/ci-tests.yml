@@ -1,6 +1,29 @@
 name: CI Tests
 
-on: [push, pull_request]
+#on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - 'paper/**'
+      - '.gitattributes'
+      - 'LICENSE'
+      - 'README.md'
+  pull_request:
+    paths-ignore:
+      - 'paper/**'
+      - '.gitattributes'
+      - 'LICENSE'
+      - 'README.md'
+  workflow_dispatch: 
+    inputs: 
+      debug_enabled:
+        description: 'Pause before tests for tmate debugging'
+        required: false
+        default: 'false'
+      notebook_type:
+        description: 'Job type to debug {colab|jupyter|all}'
+        required: false
+        default: 'all'
 
 defaults:
   run:
@@ -92,9 +115,21 @@ jobs:
         if: matrix.notebook-type == 'jupyter'
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &
         
-      - name: debug workflow
-        if: matrix.notebook-type == 'colab'
+      - name: debug colab
+        if: |
+          github.event_name == 'workflow_dispatch' \
+          && github.event.inputs.debug_enabled == 'true' \
+          && matrix.notebook-type == 'colab' \
+          && (github.event.inputs.notebook_type == 'colab' || github.event.inputs.notebook_type == 'all')
         uses: mxschmitt/action-tmate@v3
-      
-#      - name: run pytest
-#        run: pytest -sv tests/
+        
+      - name: debug jupyter
+        if: |
+          github.event_name == 'workflow_dispatch' \
+          && github.event.inputs.debug_enabled == 'true' \
+          && matrix.notebook-type == 'jupyter' \
+          && (github.event.inputs.notebook_type == 'jupyter' || github.event.inputs.notebook_type == 'all')
+        uses: mxschmitt/action-tmate@v3
+
+      - name: run pytest
+        run: pytest -sv tests/

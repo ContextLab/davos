@@ -93,11 +93,14 @@ class ColabDriver(NotebookDriver):
         pwd_input_box.send_keys(getenv("GMAIL_PASSWORD"))
         self.click("passwordNext", By.ID)
         time.sleep(3)
-        self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
-        time.sleep(3)
-        recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
-        recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
-        self.click("button[jsname='LgbsSe']")
+        if self.driver.current_url != self.url:
+            # handle additional "verify it's you" page
+            self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
+            time.sleep(3)
+            recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
+            recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
+            self.click("button[jsname='LgbsSe']")
+            time.sleep(3)
         
         
     def run_all_cells(self, pre_approved=False):
@@ -111,7 +114,7 @@ class ColabDriver(NotebookDriver):
             # (button takes a second to become clickable, seems to be 
             # obscured by other element, raises 
             # ElementClickInterceptedException)
-            time.sleep(5)
+            time.sleep(3)
             try:
                 self.driver.find_element_by_id("ok").click()
             except WebDriverException as e:

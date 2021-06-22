@@ -110,8 +110,8 @@ class ColabDriver(NotebookDriver):
             # (button takes a second to become clickable, seems to be 
             # obscured by other element, raises 
             # ElementClickInterceptedException)
-            time.sleep(3)
-            self.click("ok", By.ID)
+            time.sleep(5)
+            self.driver.find_element_by_id("ok").click()
             
     def get_test_result(self, func_name):
         # TODO: implement me

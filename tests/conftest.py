@@ -91,6 +91,8 @@ class ColabDriver(NotebookDriver):
         pwd_input_box = self.driver.find_element_by_name("password")
         pwd_input_box.send_keys(getenv("GMAIL_PASSWORD"))
         self.click("passwordNext", By.ID)
+        time.sleep(3)
+        self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
         
     def run_all_cells(self, pre_approved=False):
         keyboard_shortcut = ActionChains(self.driver) \
@@ -202,5 +204,6 @@ def pytest_collect_file(path, parent):
     else:
         driver_cls = JupyterDriver
     if path.basename.startswith('test') and path.ext == ".ipynb":
-        if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
+        # if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
+        if notebook_type in path.basename:
             return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)

@@ -24,8 +24,8 @@ jobs:
       NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
       PYTHON_VERSION: ${{ matrix.python-version }}
       IPYTHON_VERSION: ${{ matrix.ipython-version }}
-      GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
-      GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
+      #GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
+      #GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
     steps:
       - uses: actions/checkout@v2
 
@@ -90,6 +90,10 @@ jobs:
       - name: launch Jupyter server
         if: matrix.notebook-type == 'jupyter'
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &
+        
+      - name: debug workflow
+        if: matrix.notebook-type == 'colab'
+        uses: mxschmitt/action-tmate@v3
       
-      - name: run pytest
-        run: pytest -sv tests/
+#      - name: run pytest
+#        run: pytest -sv tests/

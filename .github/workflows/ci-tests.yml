@@ -31,7 +31,7 @@ defaults:
 
 jobs:
   run-tests:
-    name: "Run CI tests"
+    name: "Run CI tests (${{ matrix.notebook-type }} notebooks, Python==${{ matrix.python-version }}, IPython${{ matrix.ipython-version }})"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

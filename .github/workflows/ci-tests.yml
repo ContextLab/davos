@@ -117,10 +117,9 @@ jobs:
 
       - name: debug runner
         if: |
-          matrix.notebook-type == 'colab'
-#          github.event_name == 'workflow_dispatch'
-#          && github.event.inputs.debug_enabled == 'true'
-#          && (matrix.notebook-type == 'all' || matrix.notebook-type == github.event.inputs.notebook_type)
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.debug_enabled == 'true'
+          && (matrix.notebook-type == 'all' || matrix.notebook-type == github.event.inputs.notebook_type)
         uses: mxschmitt/action-tmate@v3
 
       - name: run pytest

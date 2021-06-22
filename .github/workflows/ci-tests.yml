@@ -24,8 +24,9 @@ jobs:
       NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
       PYTHON_VERSION: ${{ matrix.python-version }}
       IPYTHON_VERSION: ${{ matrix.ipython-version }}
-      #GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
-      #GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
+      GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
+      GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
+      RECOVERY_GMAIL_ADDRESS: ${{ secrets.DAVOS_RECOVERY_GMAIL_ADDRESS }}
     steps:
       - uses: actions/checkout@v2
 

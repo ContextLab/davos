@@ -58,7 +58,10 @@ class NotebookDriver:
             wait = WebDriverWait(self.driver, timeout=timeout, 
                                  poll_frequency=poll_frequency, 
                                  ignored_exceptions=ignored_exceptions)
-            el_is_clickable = EC.element_to_be_clickable((by, __locator_or_el))
+            locator = (by, __locator_or_el)
+            el_is_visible = EC.visibility_of_element_located(locator)
+            el_is_clickable = EC.element_to_be_clickable(locator)
+            wait.until(el_is_visible)
             clickable_el = wait.until(el_is_clickable)
             clickable_el.click()
             return clickable_el
@@ -97,7 +100,10 @@ class ColabDriver(NotebookDriver):
         keyboard_shortcut.perform()
         if not pre_approved:
             # approve notebook not authored by Google
-            # (button takes a second to become clickable)
+            # (button takes a second to become clickable, seems to be 
+            # obscured by other element, raises 
+            # ElementClickInterceptedException)
+            time.sleep(5)
             self.click("ok", By.ID)
             
     def get_test_result(self, func_name):

@@ -6,9 +6,17 @@ from pathlib import Path
 
 import pytest
 from selenium import webdriver
+from selenium.common.exceptions import (
+    ElementNotInteractableException, 
+    TimeoutException
+)
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class NotebookDriver:
@@ -17,11 +25,44 @@ class NotebookDriver:
         if browser.lower() != 'firefox':
             raise NotImplementedError("Test only implemented for Firefox")
         options = Options()
-        options.headless = True
+        options.headless = False
         self.driver = webdriver.Firefox(options=options, 
                                         executable_path=getenv('DRIVER_PATH'))
         self.driver.get(url)
         
+    def click(
+            self, 
+            __locator_or_el, 
+            /,
+            by=By.CSS_SELECTOR, 
+            timeout=10, 
+            poll_frequency=0.5, 
+            ignored_exceptions=None
+    ):
+        if isinstance(__locator_or_el, WebElement):
+            start_time = time.time()
+            while True:
+                try:
+                    __locator_or_el.click()
+                except (ElementNotInteractableException, *ignored_exceptions) as e:
+                    if time.time() - start_time >= timeout:
+                        raise TimeoutException(
+                            f"{__locator_or_el} was not clickable after "
+                            f"{timeout} seconds"
+                        ) from e
+                    else:
+                        pass
+                else:
+                    return __locator_or_el
+        else:
+            wait = WebDriverWait(self.driver, timeout=timeout, 
+                                 poll_frequency=poll_frequency, 
+                                 ignored_exceptions=ignored_exceptions)
+            el_is_clickable = EC.element_to_be_clickable((by, __locator_or_el))
+            clickable_el = wait.until(el_is_clickable)
+            clickable_el.click()
+            return clickable_el
+
     def quit(self):
         self.driver.quit()
 
@@ -36,17 +77,17 @@ class ColabDriver(NotebookDriver):
 
     def sign_in_google(self):
         # click "Sign in" button
-        self.driver.find_element_by_css_selector("#gb > div > div.gb_Se > a").click()
+        self.click("#gb > div > div.gb_Se > a")
         # enter email
         email_input_box = self.driver.find_element_by_id("identifierId")
         email_input_box.send_keys(getenv("GMAIL_ADDRESS"))
-        self.driver.find_element_by_id("identifierNext").click()
+        self.click("identifierNext", By.ID)
         # screen takes a moment to progress
         time.sleep(3)
         # enter password
         pwd_input_box = self.driver.find_element_by_name("password")
         pwd_input_box.send_keys(getenv("GMAIL_PASSWORD"))
-        self.driver.find_element_by_id("passwordNext").click()
+        self.click("passwordNext", By.ID)
         
     def run_all_cells(self, pre_approved=False):
         keyboard_shortcut = ActionChains(self.driver) \
@@ -57,8 +98,7 @@ class ColabDriver(NotebookDriver):
         if not pre_approved:
             # approve notebook not authored by Google
             # (button takes a second to become clickable)
-            time.sleep(3)
-            self.driver.find_element_by_id("ok").click()
+            self.click("ok", By.ID)
             
     def get_test_result(self, func_name):
         # TODO: implement me
@@ -72,10 +112,9 @@ class JupyterDriver(NotebookDriver):
         super().__init__(url=url, browser=browser)
         
     def run_all_cells(self):
-        self.driver.find_element_by_css_selector(
-            "#menus > div > div > ul > li:nth-child(5) > a"
-        ).click()
-        self.driver.find_element_by_id("run_all_cells").click()
+        # wait up to 10 seconds for "Cell" menu item to be clickable
+        self.click("#menus > div > div > ul > li:nth-child(5) > a")
+        self.click("run_all_cells", By.ID)
         
     def get_test_result(self, func_name):
         # TODO: implement me

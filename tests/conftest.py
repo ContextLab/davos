@@ -17,7 +17,7 @@ class NotebookDriver:
         if browser.lower() != 'firefox':
             raise NotImplementedError("Test only implemented for Firefox")
         options = Options()
-        options.headless = True
+        options.headless = False
         self.driver = webdriver.Firefox(options=options, 
                                         executable_path=getenv('DRIVER_PATH'))
         self.driver.get(url)
@@ -64,9 +64,9 @@ class ColabDriver(NotebookDriver):
 
 class JupyterDriver(NotebookDriver):
     def __init__(self, notebook_path, ip='127.0.0.1', port='8888', browser='firefox'):
+        self.set_kernel(notebook_path)
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url, browser=browser)
-        self.set_kernel('kernel-env')
         
     def run_all_cells(self):
         self.driver.find_element_by_id("run_all_cells").click()
@@ -75,10 +75,19 @@ class JupyterDriver(NotebookDriver):
         # TODO: implement me
         return True
         
-    def set_kernel(self, kernel_name):
-        self.driver.find_element_by_css_selector(f"#kernel-submenu-{kernel_name} > a").click()
-        # allow time for kernel to change
-        time.sleep(5)
+    def set_kernel(self, notebook_path):
+        repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
+        notebook_path = repo_root.joinpath(notebook_path)
+        with notebook_path.open() as nb:
+            notebook_json = json.load(nb)
+        notebook_json['metadata']['kernelspec'] = {
+            'display_name': 'kernel-env',
+            'language': 'python',
+            'name': 'kernel-env'
+        }
+        with notebook_path.open('w') as nb:
+            json.dump(notebook_json, nb)
+
 
 
 class NotebookFile(pytest.File):

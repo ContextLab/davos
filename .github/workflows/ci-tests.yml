@@ -124,3 +124,10 @@ jobs:
 
       - name: run pytest
         run: pytest -sv tests/
+
+      - name: upload selenium error artifact
+        if: env.ERROR_PAGE_SOURCE != ""
+        uses: actions/upload-artifact@v2
+        with:
+          name: error-page-source
+          path: ${{ env.ERROR_PAGE_SOURCE }}

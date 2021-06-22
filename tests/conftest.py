@@ -8,7 +8,8 @@ import pytest
 from selenium import webdriver
 from selenium.common.exceptions import (
     ElementNotInteractableException, 
-    TimeoutException
+    TimeoutException,
+    WebDriverException
 )
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
@@ -111,7 +112,20 @@ class ColabDriver(NotebookDriver):
             # obscured by other element, raises 
             # ElementClickInterceptedException)
             time.sleep(5)
-            self.driver.find_element_by_id("ok").click()
+            try:
+                self.driver.find_element_by_id("ok").click()
+            except WebDriverException as e:
+                # write source of current page to file
+                page_src_path = Path('page_at_error.html').resolve()
+                page_src_path.write_text(self.driver.page_source)
+                # export path to file as environment variable
+                with open(getenv('GITHUB_ENV')) as f:
+                    f.write(f"\nERROR_PAGE_SOURCE={page_src_path}")
+                # raise exception and show URL
+                raise WebDriverException(
+                    f"Error on page: {self.driver.current_url}. Page source "
+                    f"in {page_src_path} will be uploaded as build artifact"
+                ) from e
             
     def get_test_result(self, func_name):
         # TODO: implement me
@@ -202,5 +216,6 @@ def pytest_collect_file(path, parent):
     else:
         driver_cls = JupyterDriver
     if path.basename.startswith('test') and path.ext == ".ipynb":
-        if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
+        if notebook_type in path.basename:
+        # if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
             return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)

@@ -117,17 +117,17 @@ jobs:
         
       - name: debug colab
         if: |
-          github.event_name == 'workflow_dispatch' \
-          && github.event.inputs.debug_enabled == 'true' \
-          && matrix.notebook-type == 'colab' \
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.debug_enabled == 'true'
+          && matrix.notebook-type == 'colab'
           && (github.event.inputs.notebook_type == 'colab' || github.event.inputs.notebook_type == 'all')
         uses: mxschmitt/action-tmate@v3
         
       - name: debug jupyter
         if: |
-          github.event_name == 'workflow_dispatch' \
-          && github.event.inputs.debug_enabled == 'true' \
-          && matrix.notebook-type == 'jupyter' \
+          github.event_name == 'workflow_dispatch'
+          && github.event.inputs.debug_enabled == 'true'
+          && matrix.notebook-type == 'jupyter'
           && (github.event.inputs.notebook_type == 'jupyter' || github.event.inputs.notebook_type == 'all')
         uses: mxschmitt/action-tmate@v3
 

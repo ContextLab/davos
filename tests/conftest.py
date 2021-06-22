@@ -104,7 +104,14 @@ class ColabDriver(NotebookDriver):
             # obscured by other element, raises 
             # ElementClickInterceptedException)
             time.sleep(5)
-            self.click("ok", By.ID)
+            try:
+                self.driver.find_element_by_id("ok").click()
+                # self.click("ok", By.ID)
+            except Exception as e:
+                print('\n\n++++++++++\n\n', self.driver.page_source, '\n\n++++++++++\n\n')
+                import sys, traceback
+                traceback.print_exc()
+                sys.exit(1)
             
     def get_test_result(self, func_name):
         # TODO: implement me

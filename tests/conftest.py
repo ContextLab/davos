@@ -33,7 +33,9 @@ class element_has_class:
     
 
 class NotebookTestFailed(Exception):
-    pass
+    def __init__(self, tb_str):
+        self.tb_str = tb_str
+        super().__init__()
 
 
 class NotebookDriver:
@@ -76,12 +78,12 @@ class NotebookDriver:
                                  poll_frequency=poll_frequency, 
                                  ignored_exceptions=ignored_exceptions)
             locator = (by, __locator_or_el)
-            el_is_visible = EC.visibility_of_element_located(locator)
-            el_is_clickable = EC.element_to_be_clickable(locator)
-            wait.until(el_is_visible)
-            clickable_el = wait.until(el_is_clickable)
-            clickable_el.click()
-            return clickable_el
+            element_is_visible = EC.visibility_of_element_located(locator)
+            element_is_clickable = EC.element_to_be_clickable(locator)
+            wait.until(element_is_visible)
+            element = wait.until(element_is_clickable)
+            element.click()
+            return element
 
     def quit(self):
         self.driver.quit()
@@ -94,6 +96,13 @@ class ColabDriver(NotebookDriver):
         url = f"https://colab.research.google.com/github/{username}/davos/blob/{ref}/{notebook_path}"
         super().__init__(url=url, browser=browser)
         self.sign_in_google()
+        self.set_template_vars({'$GITHUB_USERNAME': username, '$GITHUB_REF': ref})
+        
+    def set_template_vars(self, to_replace):
+        for template, val in to_replace.items():
+            template_xpath = f"//span[contains(text(), '{template}')]"
+            template_el = self.driver.find_element_by_xpath(template_xpath)
+            self.driver.execute_script(f'arguments[0].innerText = "{val}"', template_el)
 
     def sign_in_google(self):
         # click "Sign in" button
@@ -146,8 +155,11 @@ class ColabDriver(NotebookDriver):
                 ) from e
 
     def get_test_result(self, func_name):
-        # TODO: implement me
-        return True
+        result_element = self.driver.find_element_by_id(f"{func_name}_result")
+        result = result_element.text.split(maxsplit=2)[1:]
+        if result[0] == 'FAILED':
+            return result[1]
+        return None
     
     def wait_for_test_start(self):
         # TODO: make this more robustt --  maybe loop in reverse over 
@@ -179,7 +191,7 @@ class JupyterDriver(NotebookDriver):
         
     def get_test_result(self, func_name):
         # TODO: implement me
-        return True
+        return None
         
     def set_kernel(self, notebook_path):
         repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
@@ -198,8 +210,18 @@ class JupyterDriver(NotebookDriver):
 class NotebookFile(pytest.File):
     test_func_pattern = re.compile('(?<=def )test_[^(]+', re.MULTILINE)
 
-    def __init__(self, fspath, *, driver_cls, parent=None, config=None, session=None, nodeid=None):
-        super().__init__(fspath=fspath, parent=parent, config=config, session=session, nodeid=nodeid)
+    def __init__(
+            self, 
+            fspath, 
+            *, 
+            driver_cls, 
+            parent=None, 
+            config=None, 
+            session=None, 
+            nodeid=None
+    ):
+        super().__init__(fspath=fspath, parent=parent, config=config, 
+                         session=session, nodeid=nodeid)
         self.driver_cls = driver_cls
         self.driver = None
         repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
@@ -221,6 +243,7 @@ class NotebookFile(pytest.File):
                     yield NotebookTest.from_parent(self, name=test_name)
     
     def setup(self):
+        # TODO: refactor this to call self.driver.<setup_func>()
         super().setup()
         self.driver = self.driver_cls(self.notebook_path)
         self.driver.run_all_cells()
@@ -240,25 +263,30 @@ class NotebookFile(pytest.File):
 
 class NotebookTest(pytest.Item):
     def runtest(self): 
-        test_result = self.parent.driver.get_test_result(self.name)
-        return test_result
-    
-    def repr_failure(self, execinfo):
-        # TODO: write me
-        ...
-    
-    def reportinfo(self):
-        # TODO: write me
-        return self.fspath, None, ""
-        
+        traceback_ = self.parent.driver.get_test_result(self.name)
+        if traceback_ is not None:
+            # test failed, traceback_ is the pre-formatted traceback to 
+            # be displayed
+            raise NotebookTestFailed(traceback_)
+        return None
+
+    def repr_failure(self, excinfo, style=None):
+        if isinstance(excinfo.value, NotebookTestFailed):
+            return excinfo.value.tb_str
+        return super().repr_failure(excinfo=excinfo, style=style)
 
 def pytest_collect_file(path, parent):
     notebook_type = getenv("NOTEBOOK_TYPE")
+    test_file_patterns = (notebook_type, 'shared', 'common')
     if notebook_type == 'colab':
         driver_cls = ColabDriver
     else:
         driver_cls = JupyterDriver
-    if path.basename.startswith('test') and path.ext == ".ipynb":
-        if notebook_type in path.basename:
-        # if any(key in path.basename for key in (notebook_type, 'shared', 'common')):
-            return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)
+    
+    if (
+            path.basename.startswith('test') and 
+            path.ext == ".ipynb" and
+            any(pat in path.basename for pat in test_file_patterns)
+    ):
+        return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)
+    return None

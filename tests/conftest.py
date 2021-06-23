@@ -20,6 +20,22 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
+class element_has_class:
+    def __init__(self, locator, cls_name):
+        self.locator = locator
+        self.cls_name = cls_name
+        
+    def __call__(self, driver):
+        element = driver.find_element(*self.locator)
+        if self.cls_name in element.get_attribute('class').split():
+            return element
+        return False
+    
+
+class NotebookTestFailed(Exception):
+    pass
+
+
 class NotebookDriver:
     def __init__(self, url, browser='firefox'):
         self.url = url
@@ -101,8 +117,7 @@ class ColabDriver(NotebookDriver):
             recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
             self.click("button[jsname='LgbsSe']")
             time.sleep(3)
-        
-        
+
     def run_all_cells(self, pre_approved=False):
         keyboard_shortcut = ActionChains(self.driver) \
             .key_down(Keys.META).send_keys() \
@@ -133,6 +148,22 @@ class ColabDriver(NotebookDriver):
     def get_test_result(self, func_name):
         # TODO: implement me
         return True
+    
+    def wait_for_test_start(self):
+        # TODO: make this more robustt --  maybe loop in reverse over 
+        #  cells and find the one whose text == "run_cell()"
+        test_runner_cell = self.driver.find_elements_by_class_name("cell")[-1]
+        test_runner_cell_id = test_runner_cell.get_attribute("id")
+        # wait for runtime to connect and queue all cells
+        wait = WebDriverWait(self.driver, 10)
+        is_queued = element_has_class((By.ID, test_runner_cell_id), "pending")
+        test_runner_cell = wait.until(is_queued)
+        # wait for cell that runs test functions to start execution
+        # needs a longer timeout due to davos installation
+        wait = WebDriverWait(self.driver, 60)
+        is_running_tests = element_has_class((By.ID, test_runner_cell_id), "code-has-output")
+        test_runner_cell = wait.until(is_running_tests)
+        self.driver.switch_to.frame(test_runner_cell.find_element_by_tag_name("iframe"))
 
 
 class JupyterDriver(NotebookDriver):
@@ -164,7 +195,6 @@ class JupyterDriver(NotebookDriver):
             json.dump(notebook_json, nb)
 
 
-
 class NotebookFile(pytest.File):
     test_func_pattern = re.compile('(?<=def )test_[^(]+', re.MULTILINE)
 
@@ -175,6 +205,7 @@ class NotebookFile(pytest.File):
         repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
         notebook_abspath = Path(self.fspath).resolve(strict=True)
         self.notebook_path = str(notebook_abspath.relative_to(repo_root))
+        self._test_names = []
         
     def collect(self):
         with self.fspath.open() as nb:
@@ -185,12 +216,21 @@ class NotebookFile(pytest.File):
                 # noinspection PyCompatibility
                 # TODO: make sure tests_require is being enforced
                 if match := self.test_func_pattern.search(cell_contents):
-                    yield NotebookTest.from_parent(self, name=match.group())
+                    test_name = match.group()
+                    self._test_names.append(test_name)
+                    yield NotebookTest.from_parent(self, name=test_name)
     
     def setup(self):
         super().setup()
         self.driver = self.driver_cls(self.notebook_path)
         self.driver.run_all_cells()
+        self.driver.wait_for_test_start()
+        # driver will wait for up to 5 minutes for each test to complete
+        # and its result to become readable. Upper limit for *driver* 
+        # timeout is intentionally high so individual *tests* can 
+        # specify pytest-style timeouts via the @mark_timeout() 
+        # decorator in the notebook
+        self.driver.implicitly_wait(300)
     
     def teardown(self):
         if self.driver is not None:

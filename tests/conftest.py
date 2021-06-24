@@ -1,3 +1,4 @@
+import html
 import json
 import re
 import time
@@ -84,9 +85,17 @@ class NotebookDriver:
             element = wait.until(element_is_clickable)
             element.click()
             return element
+    
+    def get_test_runner_cell(self):
+        # TODO: make this more robust --  maybe loop in reverse over 
+        #  cells and find the one whose text == "run_cell()"
+        return self.driver.find_elements_by_class_name("cell")[-1]
 
     def quit(self):
         self.driver.quit()
+        
+    def set_max_timeout(self, timeout):
+        self.driver.implicitly_wait(timeout)
 
 
 class ColabDriver(NotebookDriver):
@@ -162,19 +171,18 @@ class ColabDriver(NotebookDriver):
         return None
     
     def wait_for_test_start(self):
-        # TODO: make this more robustt --  maybe loop in reverse over 
-        #  cells and find the one whose text == "run_cell()"
-        test_runner_cell = self.driver.find_elements_by_class_name("cell")[-1]
+        test_runner_cell = self.get_test_runner_cell()
         test_runner_cell_id = test_runner_cell.get_attribute("id")
         # wait for runtime to connect and queue all cells
         wait = WebDriverWait(self.driver, 10)
         is_queued = element_has_class((By.ID, test_runner_cell_id), "pending")
-        test_runner_cell = wait.until(is_queued)
+        wait.until(is_queued)
         # wait for cell that runs test functions to start execution
         # needs a longer timeout due to davos installation
         wait = WebDriverWait(self.driver, 60)
         is_running_tests = element_has_class((By.ID, test_runner_cell_id), "code-has-output")
-        test_runner_cell = wait.until(is_running_tests)
+        wait.until(is_running_tests)
+        # switch focus to iframe containing cell output
         self.driver.switch_to.frame(test_runner_cell.find_element_by_tag_name("iframe"))
 
 
@@ -205,7 +213,14 @@ class JupyterDriver(NotebookDriver):
         }
         with notebook_path.open('w') as nb:
             json.dump(notebook_json, nb)
-
+    
+    def wait_for_test_start(self):
+        test_runner_cell = self.get_test_runner_cell()
+        wait = WebDriverWait(self.driver, 60)
+        locator = (By.CLASS_NAME, 'output_area')
+        first_test_executed = EC.presence_of_element_located(locator)
+        wait.until(first_test_executed)
+        
 
 class NotebookFile(pytest.File):
     test_func_pattern = re.compile('(?<=def )test_[^(]+', re.MULTILINE)
@@ -253,7 +268,7 @@ class NotebookFile(pytest.File):
         # timeout is intentionally high so individual *tests* can 
         # specify pytest-style timeouts via the @mark_timeout() 
         # decorator in the notebook
-        self.driver.implicitly_wait(300)
+        self.driver.set_max_timeout(300)
     
     def teardown(self):
         if self.driver is not None:
@@ -272,7 +287,7 @@ class NotebookTest(pytest.Item):
 
     def repr_failure(self, excinfo, style=None):
         if isinstance(excinfo.value, NotebookTestFailed):
-            return excinfo.value.tb_str
+            return html.unescape(excinfo.value.tb_str)
         return super().repr_failure(excinfo=excinfo, style=style)
 
 def pytest_collect_file(path, parent):

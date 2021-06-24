@@ -111,9 +111,12 @@ class ColabDriver(NotebookDriver):
         # assumes variables are set in first code cell
         template_var_cell = self.driver.find_elements_by_class_name('code')[0]
         cell_contents = template_var_cell.get_property('innerText')
+        # replace Latin1 non-breaking spaces with UTF-8 spaces
+        cell_contents = cell_contents.replace(u'\xa0', u' ')
         for template, val in to_replace.items():
-            cell_contents.replace(template, val)
-        set_cell_text_js = f"arguments[0].innerText = {cell_contents}"
+            cell_contents = cell_contents.replace(template, val)
+        set_cell_text_js = f"arguments[0].setText(`{cell_contents}`)"
+        print(set_cell_text_js)
         self.driver.execute_script(set_cell_text_js, template_var_cell)
 
     def sign_in_google(self):

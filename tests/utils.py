@@ -93,10 +93,7 @@ def install_davos(source='github', ref=None, fork=None):
         Defaults to the base repository (ContextLab). If source 
         is not 'github', this has no effect.
 
-    """
-    if is_installed('davos'):
-        return
-    
+    """    
     source = source.lower()
     if source == 'github':
         if fork is None:
@@ -189,6 +186,7 @@ def run_tests():
         if name.startswith('test_') and isinstance(obj, types.FunctionType):
             tests.append((name, obj))
 
+    longest_name_len = len(max((t[0] for t in tests), key=len))
     print(f"collected {len(tests)} items\n")
     for test_name, test_func in tests:
         try:
@@ -200,6 +198,8 @@ def run_tests():
         else:
             status = 'PASSED'
 
+        # need at least 1 space between test name and result for parsing
+        whitespace = ' ' * (longest_name_len - len(test_name) + 1)
         html_ = (f"<div id='{test_name}_result' style=\"white-space:pre\">"
-                 f"{test_name}{' ' * (70 - len(test_name))}{status}</div>")
+                 f"{test_name}{whitespace}{status}</div>")
         display_html(html_, raw=True)

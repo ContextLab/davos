@@ -99,8 +99,9 @@ jobs:
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION
           printenv
-          conda --help
-          conda info --envs
+          echo ${{ github }}
+          echo ${{ github.event.pull_request.head.sha }}
+          echo ${{ github.sha }}
           
           conda activate kernel-env
           

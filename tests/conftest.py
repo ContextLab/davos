@@ -101,7 +101,7 @@ class NotebookDriver:
 class ColabDriver(NotebookDriver):
     def __init__(self, notebook_path, browser='firefox'):
         username = getenv("GITHUB_REPOSITORY").split('/')[0]
-        ref = getenv("GITHUB_SHA")
+        ref = getenv("HEAD_SHA")
         url = f"https://colab.research.google.com/github/{username}/davos/blob/{ref}/{notebook_path}"
         super().__init__(url=url, browser=browser)
         self.sign_in_google()

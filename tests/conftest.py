@@ -108,10 +108,13 @@ class ColabDriver(NotebookDriver):
         self.set_template_vars({'$GITHUB_USERNAME': username, '$GITHUB_REF': ref})
         
     def set_template_vars(self, to_replace):
+        # assumes variables are set in first code cell
+        template_var_cell = self.driver.find_elements_by_class_name('code')[0]
+        cell_contents = template_var_cell.get_property('innerText')
         for template, val in to_replace.items():
-            template_xpath = f"//span[contains(text(), '{template}')]"
-            template_el = self.driver.find_element_by_xpath(template_xpath)
-            self.driver.execute_script(f'arguments[0].innerText = "{val}"', template_el)
+            cell_contents.replace(template, val)
+        set_cell_text_js = f"arguments[0].innerText = {cell_contents}"
+        self.driver.execute_script(set_cell_text_js, template_var_cell)
 
     def sign_in_google(self):
         # click "Sign in" button

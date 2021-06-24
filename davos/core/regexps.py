@@ -4,7 +4,7 @@ import re
 __all__ = ['smuggle_statement_regex']
 
 
-_pip_installed_pkgs_re = re.compile("^Successfully installed (.*)$", re.M)
+_pip_installed_pkgs_re = re.compile("^Successfully installed (.*)$", re.MULTILINE)
 
 
 _name_re = r'[a-zA-Z]\w*'

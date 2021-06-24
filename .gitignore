@@ -18,7 +18,7 @@ davos.egg-info
 
 # selenium Firefox driver & log
 tests/geckodriver
-tests/geckodriver.log
+**/geckodriver.log
 
 # scripts & notebooks for scratch/debugging
 scratch

@@ -94,6 +94,9 @@ def install_davos(source='github', ref=None, fork=None):
         is not 'github', this has no effect.
 
     """
+    if is_installed('davos'):
+        return
+    
     source = source.lower()
     if source == 'github':
         if fork is None:

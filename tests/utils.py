@@ -34,13 +34,6 @@ class TestingEnvironmentError(DavosAssertionError, OSError):
     pass
 
 
-class NonColabEnvironmentError(TestingEnvironmentError):
-    """Raised if this notebook is run outside of Colaboratory"""
-    def __init__(self, *args):
-        msg = "Tests in this notebook are meant to be run in a Colaboratory environment"
-        super().__init__(msg, *args)
-
-
 class TestTimeoutError(DavosAssertionError):
     """Raised if a test exceeds its timeout limit"""
     pass

@@ -5,6 +5,7 @@ import ast
 import contextlib
 import functools
 import html
+import inspect
 import os
 import pkg_resources
 import signal
@@ -179,8 +180,9 @@ def matches_expected_output(expected, result):
 
 
 def run_tests():
+    caller_globals = inspect.currentframe().f_back.f_globals
     tests = []
-    for name, obj in globals().items():
+    for name, obj in caller_globals.items():
         if name.startswith('test_') and isinstance(obj, types.FunctionType):
             tests.append((name, obj))
 

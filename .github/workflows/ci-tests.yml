@@ -50,7 +50,7 @@ jobs:
       GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
       GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
       RECOVERY_GMAIL_ADDRESS: ${{ secrets.DAVOS_RECOVERY_GMAIL_ADDRESS }}
-      HEAD_SHA: ${{ github.event.name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v2
 

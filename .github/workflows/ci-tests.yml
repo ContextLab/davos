@@ -102,7 +102,7 @@ jobs:
           conda activate kernel-env
           # install IPython, ipykernel, requests, davos in kernel environment
           pip install "IPython$IPYTHON_VERSION" "ipykernel>=5.0.0" requests
-          if [[ "$PYTHON_VERSION" == "3.6" ]]; then
+          if [[ "$PYTHON_VERSION" == "3.6" || "$PYTHON_VERSION" == "3.7" ]]; then
               pip install typing-extensions
           fi
           pip install .

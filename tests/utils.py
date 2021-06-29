@@ -6,21 +6,27 @@ import functools
 import html
 import inspect
 import os
+import re
+
 import pkg_resources
 import signal
 import sys
 import types
+from collections.abc import Sequence
 # use typing generics for compatibility with Python 3.6
 from typing import (
     Any,
     Callable,
-    Dict, 
-    List, 
-    NoReturn, 
-    Optional, 
-    overload, 
-    Tuple, 
-    TypeVar, 
+    Dict,
+    Generic,
+    List,
+    NoReturn,
+    Optional,
+    overload,
+    Pattern,
+    Tuple,
+    Type,
+    TypeVar,
     Union
 )
 
@@ -35,6 +41,7 @@ from IPython.display import display_html
 
 
 _E = TypeVar('_E', bound=BaseException)
+_E1 = TypeVar('_E1', bound=BaseException)
 _F = TypeVar('_F', bound=Callable[..., None])
 _InstallerKwargVals = Union[bool, int, str]
 
@@ -237,6 +244,110 @@ def matches_expected_output(expected: str, result: str) -> bool:
         else:
             all_match = all_match and expected_chunk == result_chunk
     return all_match
+
+
+class ExceptionInfo(Generic[_E]):
+    _common_err_msg = ".{} can only be used after the context manager exits"
+    """
+    Simplified stand-in for _pytest._code.code.ExceptionInfo. Mocks
+    some basic functionality useful in 'raises' context manager.
+    """
+    def __init__(
+            self,
+            excinfo: Optional[Tuple[Type[_E], _E, types.TracebackType]]
+    ) -> None:
+        self._excinfo = excinfo
+
+    @property
+    def type(self) -> Type[_E]:
+        assert self._excinfo is not None, self._common_err_msg.format('type')
+        return self._excinfo[0]
+
+    @property
+    def value(self) -> _E:
+        assert self._excinfo is not None, self._common_err_msg.format('value')
+        return self._excinfo[1]
+
+    @property
+    def tb(self) -> types.TracebackType:
+        assert self._excinfo is not None, self._common_err_msg.format('tb')
+        return self._excinfo[2]
+
+    @property
+    def typename(self) -> str:
+        assert self._excinfo is not None, self._common_err_msg.format('typename')
+        return self.type.__name__
+
+    def match(self, regexp: Union[str, Pattern[str]]) -> Literal[True]:
+        exc_str = str(self.value)
+        msg = "Regex pattern {!r} does not match {!r}."
+        if regexp == exc_str:
+            msg += " Did you mean to `re.escape()` the regex?"
+        assert re.search(regexp, exc_str), msg.format(regexp, exc_str)
+        # return True so method can be asserted from external code
+        return True
+
+
+class raises:
+    def __init__(
+            self, 
+            expected_exception: Union[Type[_E], Tuple[Type[_E]]], 
+            *, 
+            match: Optional[Union[str, Pattern[str]]] = None
+    ) -> None:
+        if issubclass(expected_exception, BaseException):
+            expected_exception = (expected_exception,)
+        elif isinstance(expected_exception, Sequence):
+            expected_exception = tuple(expected_exception)
+        else:
+            raise TypeError(
+                "expected_exception may be a exception type or a sequence of "
+                "exception types"
+            )
+        self.expected_exceptions: Tuple[Type[_E]] = expected_exception
+        self.match_expr = match
+        self.excinfo: Optional[ExceptionInfo[_E]] = None
+    
+    def __enter__(self) -> ExceptionInfo[_E]:
+        self.excinfo = ExceptionInfo(None)
+        return self.excinfo
+
+    @overload
+    def __exit__(
+            self,
+            exc_type: None,
+            exc_value: None,
+            exc_tb: None
+    ) -> NoReturn: ...
+    @overload    # noqa: E301
+    def __exit__(
+            self,
+            exc_type: Type[_E],
+            exc_value: _E,
+            exc_tb: types.TracebackType
+    ) -> Literal[True]: ...
+    @overload    # noqa: E301
+    def __exit__(
+            self,
+            exc_type: Type[_E1],
+            exc_value: _E1,
+            exc_tb: types.TracebackType
+    ) -> Literal[False]: ...
+    def __exit__(    # noqa: E301
+            self,
+            exc_type: Optional[Type[_E]],
+            exc_value: Optional[_E],
+            exc_tb: Optional[types.TracebackType]
+    ) -> bool:
+        if exc_type is None:
+            raise DavosAssertionError(f"DID NOT RAISE {self.expected_exceptions}")
+        elif not issubclass(exc_type, self.expected_exceptions):
+            # causes exc_valuue to be raised
+            return False
+        self.excinfo._excinfo = (exc_type, exc_value, exc_tb)
+        if self.match_expr is not None:
+            self.excinfo.match(self.match_expr)
+        return True
 
 
 def run_tests() -> None:

@@ -264,6 +264,10 @@ class JupyterDriver(NotebookDriver):
         self.set_kernel(notebook_path)
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url)
+        self.clear_all_outputs()
+    
+    def clear_all_outputs(self):
+        self.driver.execute_script("Jupyter.notebook.clear_all_output()")
 
     def run_all_cells(self) -> None:
         # wait up to 10 seconds for "Cell" menu item to be clickable

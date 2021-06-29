@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     import py
 
 
-######################## TYPING-RELATED OBJECTS ########################
+######################## TYPING-RELATED OBJECTS ########################    # noqa: E266
 _BY_OPTS = Literal[
     'class name',
     'css selector',
@@ -174,8 +174,6 @@ class ColabDriver(NotebookDriver):
         super().__init__(url=url)
         self.sign_in_google()
         self.factory_reset_runtime()
-        self.clear_all_outputs()
-        self.set_template_vars({'$GITHUB_USERNAME': username, '$GITHUB_REF': ref})
 
     def clear_all_outputs(self):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")
@@ -185,14 +183,15 @@ class ColabDriver(NotebookDriver):
 
     def set_template_vars(self, to_replace: dict[str, str]) -> None:
         # assumes variables are set in first code cell
-        template_var_cell = self.driver.find_elements_by_class_name('code')[0]
-        cell_contents: str = template_var_cell.get_property('innerText')
+        template_cell = self.driver.find_elements_by_class_name('code')[0]
+        cell_contents: str = template_cell.get_property('innerText')
         # replace Latin1 non-breaking spaces with UTF-8 spaces
         cell_contents = cell_contents.replace(u'\xa0', u' ')
-        for template, val in to_replace.items():
+        for key, val in to_replace.items():
+            template = f"${key}$"
             cell_contents = cell_contents.replace(template, val)
         set_cell_text_js = f"arguments[0].setText(`{cell_contents}`)"
-        self.driver.execute_script(set_cell_text_js, template_var_cell)
+        self.driver.execute_script(set_cell_text_js, template_cell)
 
     def sign_in_google(self) -> None:
         # click "Sign in" button
@@ -296,6 +295,14 @@ class JupyterDriver(NotebookDriver):
         with notebook_path.open('w') as nb:
             json.dump(notebook_json, nb)
 
+    def set_template_vars(self, to_replace: dict[str, str]) -> None:
+        cell_contents = self.driver.execute_script("return Jupyter.notebook.get_cell(0).get_text()")
+        for key, val in to_replace.items():
+            template = f"${key}$"
+            cell_contents = cell_contents.replace(template, val)
+        set_cell_text_js = "Jupyter.notebook.get_cell(0).set_text(arguments[0])"
+        self.driver.execute_script(set_cell_text_js, cell_contents)
+
     def wait_for_test_start(self) -> None:
         wait = WebDriverWait(self.driver, 60)
         locator = (By.CSS_SELECTOR, "#notebook-container > div:last-child .output_area")
@@ -343,6 +350,14 @@ class NotebookFile(pytest.File):
         # TODO: refactor this to call self.driver.<setup_func>()
         super().setup()
         self.driver = self.driver_cls(self.notebook_path)
+        self.driver.clear_all_outputs()
+        self.driver.set_template_vars({
+            'GITHUB_USERNAME': getenv("GITHUB_REPOSITORY").split('/')[0],
+            'GITHUB_REF': getenv("HEAD_SHA"),
+            'NOTEBOOK_TYPE': getenv('NOTEBOOK_TYPE'),
+            'PYTHON_VERSION': getenv('PYTHON_VERSION'),
+            'IPYTHON_VERSION': getenv('IPYTHON_VERSION')
+        })
         # give DOM a moment to update before running & waiting
         time.sleep(3)
         self.driver.run_all_cells()

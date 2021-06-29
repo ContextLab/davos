@@ -144,6 +144,12 @@ class NotebookDriver:
     def get_test_result(self, func_name: str) -> Optional[str]:
         result_element = self.driver.find_element_by_id(f"{func_name}_result")
         result: list[str] = result_element.text.split(maxsplit=2)[1:]
+        if len(result) == 0:
+            # managed to read element text in the moment between when it 
+            # was created and when it was populated
+            time.sleep(3)
+            result_element = self.driver.find_element_by_id(f"{func_name}_result")
+            result = result_element.text.split(maxsplit=2)[1:]
         if result[0] == 'FAILED':
             return result[1]
         return None

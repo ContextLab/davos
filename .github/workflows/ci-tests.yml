@@ -31,20 +31,41 @@ defaults:
 
 jobs:
   run-tests:
-    name: "Run CI tests (${{ matrix.notebook-type }} notebooks, Python==${{ matrix.python-version }}, IPython${{ matrix.ipython-version }})"
+    name: "Run CI tests (${{ matrix.notebook-type }}, Python==${{ matrix.python-version }}, IPython${{ matrix.ipython-version }})"
     runs-on: ubuntu-latest
     # only run on pull requests between forks to avoid duplicate runs with 'push' event
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
       matrix:
-        notebook-type: [jupyter]
-        python-version: [3.6, 3.7, 3.8, 3.9]
-        ipython-version: ['==5.5.0', '>=7.0.0']
         include:
-          - notebook-type: colab
+          - notebook-type: jupyter
+            python-version: 3.6
+            ipython-version: 5.5.0
+          - notebook-type: jupyter
+            python-version: 3.6
+            ipython-version: 7.16    # latest version to support Python 3.6
+          - notebook-type: jupyter
             python-version: 3.7
-            ipython-version: '==5.5.0'
+            ipython-version: 5.5.0
+          - notebook-type: jupyter
+            python-version: 3.7
+            ipython-version: latest
+          - notebook-type: jupyter
+            python-version: 3.8
+            ipython-version: 7.3.0    # earliest version to support Python 3.8
+          - notebook-type: jupyter
+            python-version: 3.8
+            ipython-version: latest
+          - notebook-type: jupyter
+            python-version: 3.9
+            ipython-version: 7.15
+          - notebook-type: jupyter
+            python-version: 3.9
+            ipython-version: latest
+          - notebook-type: colab
+            python-version: 3.7       # I/Python versions are arbitrary for Colab-based
+            ipython-version: 5.5.0    # tests. Chosen to denote versions Colab uses
     env:
       NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
       PYTHON_VERSION: ${{ matrix.python-version }}
@@ -65,16 +86,15 @@ jobs:
 
       - name: setup base environment
         run: |
-          # install Python 3.9 (used to run notebooks via selenium, not the 
-          # tests themselves)
+          # install Python 3.9 (used to run notebooks via selenium, not the tests themselves)
           conda install python=3.9
+          
           # install Firefox browser
           sudo apt-get install firefox
+          
           # install python packages
-          pip install \
-              pytest==6.2 \
-              "selenium>=3.141" \
-              geckodriver-autoinstaller
+          pip install pytest==6.2 "selenium>=3.141" geckodriver-autoinstaller
+          
           # install geckodriver
           driver_path=$(python -c '
           
@@ -89,27 +109,34 @@ jobs:
           print(driver_dest)
           
           ')
-          # export driver path as environment variable
+          
+          # export path to driver as environment variable
           echo "DRIVER_PATH=$driver_path" >> $GITHUB_ENV
 
       - name: setup notebook kernel environment
         if: matrix.notebook-type == 'jupyter'
         run: |
-          # install jupyter notebooks in base environment
+          # install jupyter notebooks application in base environment
           pip install notebook "ipykernel>=5.0.0"
+          
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION          
+          
+          # install IPython, ipykernel, requests, & davos in kernel environment
           conda activate kernel-env
-          # install IPython, ipykernel, requests, davos in kernel environment
-          pip install "IPython$IPYTHON_VERSION" "ipykernel>=5.0.0" requests
-          if [[ "$PYTHON_VERSION" == "3.6" || "$PYTHON_VERSION" == "3.7" ]]; then
+          if [[ "$IPYTHON_VERSION" == "latest" ]]; then
+              pip install --upgrade IPython
+          else
+              pip install IPython==$IPYTHON_VERSION
+          fi
+          if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
               pip install typing-extensions
           fi
           pip install .
+          
           # make environment available as a jupyter kernel
           python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
           conda deactivate
-          jupyter kernelspec list
           
       - name: launch Jupyter server
         if: matrix.notebook-type == 'jupyter'

@@ -8,21 +8,21 @@ from collections.abc import Iterable, Iterator
 from os import getenv
 from pathlib import Path, PurePosixPath
 from typing import (
-    Any, 
-    Literal, 
-    Optional, 
-    overload, 
-    Type, 
-    TYPE_CHECKING, 
-    TypedDict, 
-    TypeVar, 
+    Any,
+    Literal,
+    Optional,
+    overload,
+    Type,
+    TYPE_CHECKING,
+    TypedDict,
+    TypeVar,
     Union
 )
 
 import pytest
 from selenium import webdriver
 from selenium.common.exceptions import (
-    ElementNotInteractableException, 
+    ElementNotInteractableException,
     TimeoutException,
     WebDriverException
 )
@@ -38,16 +38,15 @@ if TYPE_CHECKING:
     import _pytest
     import py
 
-
 ######################## TYPING-RELATED OBJECTS ########################
 _BY_OPTS = Literal[
-    'class name', 
-    'css selector', 
-    'id', 
-    'link text', 
-    'name', 
-    'partial link text', 
-    'tag name', 
+    'class name',
+    'css selector',
+    'id',
+    'link text',
+    'name',
+    'partial link text',
+    'tag name',
     'xpath'
 ]
 
@@ -68,6 +67,8 @@ class _NotebookJson(TypedDict):
     metadata: dict[str, Union[dict[str, dict[str, Any]]]]
     nbformat: int
     nbformat_minor: int
+
+
 ########################################################################
 
 
@@ -76,13 +77,13 @@ class element_has_class:
     def __init__(self, locator: tuple[_BY_OPTS, str], cls_name: str) -> None:
         self.locator = locator
         self.cls_name = cls_name
-        
+
     def __call__(self, driver: webdriver.Firefox) -> Union[WebElement, Literal[False]]:
         element = driver.find_element(*self.locator)
         if self.cls_name in element.get_attribute('class').split():
             return element
         return False
-    
+
 
 class NotebookTestFailed(Exception):
     def __init__(self, tb_str: str) -> None:
@@ -100,14 +101,14 @@ class NotebookDriver:
             options=options, executable_path=getenv('DRIVER_PATH')
         )
         self.driver.get(url)
-    
+
     def click(
-            self, 
-            __locator_or_el: Union[str, WebElement], 
-            /, 
-            by: _BY_OPTS = By.CSS_SELECTOR, 
-            timeout: int = 10, 
-            poll_frequency: float = 0.5, 
+            self,
+            __locator_or_el: Union[str, WebElement],
+            /,
+            by: _BY_OPTS = By.CSS_SELECTOR,
+            timeout: int = 10,
+            poll_frequency: float = 0.5,
             ignored_exceptions: Optional[Union[_E, Iterable[_E]]] = None
     ) -> WebElement:
         if isinstance(__locator_or_el, WebElement):
@@ -128,8 +129,8 @@ class NotebookDriver:
                 else:
                     return __locator_or_el
         else:
-            wait = WebDriverWait(self.driver, timeout=timeout, 
-                                 poll_frequency=poll_frequency, 
+            wait = WebDriverWait(self.driver, timeout=timeout,
+                                 poll_frequency=poll_frequency,
                                  ignored_exceptions=ignored_exceptions)
             locator = (by, __locator_or_el)
             element_is_visible = EC.visibility_of_element_located(locator)
@@ -138,14 +139,14 @@ class NotebookDriver:
             element: WebElement = wait.until(element_is_clickable)
             element.click()
             return element
-    
+
     def get_test_result(self, func_name: str) -> Optional[str]:
         result_element = self.driver.find_element_by_id(f"{func_name}_result")
         result: list[str] = result_element.text.split(maxsplit=2)[1:]
         if result[0] == 'FAILED':
             return result[1]
         return None
-    
+
     def get_test_runner_cell(self) -> WebElement:
         # TODO: make this more robust --  maybe loop in reverse over 
         #  cells and find the one whose text == "run_cell()"
@@ -153,7 +154,7 @@ class NotebookDriver:
 
     def quit(self) -> None:
         self.driver.quit()
-        
+
     def set_max_timeout(self, timeout: float) -> None:
         self.driver.implicitly_wait(timeout)
 
@@ -165,8 +166,16 @@ class ColabDriver(NotebookDriver):
         url = f"https://colab.research.google.com/github/{username}/davos/blob/{ref}/{notebook_path}"
         super().__init__(url=url)
         self.sign_in_google()
+        self.factory_reset_runtime()
+        self.clear_all_outputs()
         self.set_template_vars({'$GITHUB_USERNAME': username, '$GITHUB_REF': ref})
-        
+
+    def clear_all_outputs(self):
+        self.driver.execute_script("colab.global.notebook.clearAllOutputs()")
+
+    def factory_reset_runtime(self):
+        self.driver.execute_script("colab.global.notebook.kernel.unassignCurrentVm({skipConfirm: 1})")
+
     def set_template_vars(self, to_replace: dict[str, str]) -> None:
         # assumes variables are set in first code cell
         template_var_cell = self.driver.find_elements_by_class_name('code')[0]
@@ -194,7 +203,8 @@ class ColabDriver(NotebookDriver):
         time.sleep(3)
         if self.driver.current_url != self.url:
             # handle additional "verify it's you" page
-            self.click("#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
+            self.click(
+                "#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
             time.sleep(3)
             recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
             recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
@@ -227,16 +237,16 @@ class ColabDriver(NotebookDriver):
                     f"Error on page: {self.driver.current_url}. Page source "
                     f"in {page_src_path} will be uploaded as build artifact"
                 ) from e
-    
+
     def wait_for_test_start(self) -> None:
         test_runner_cell = self.get_test_runner_cell()
         test_runner_cell_id: str = test_runner_cell.get_attribute("id")
-        # wait for runtime to connect and queue all cells
-        wait = WebDriverWait(self.driver, 10)
-        is_queued = element_has_class((By.ID, test_runner_cell_id), "pending")
-        wait.until(is_queued)
-        # wait for cell that runs test functions to start execution
-        # needs a longer timeout due to davos installation
+        # # wait for runtime to connect and queue all cells
+        # wait = WebDriverWait(self.driver, 10)
+        # is_queued = element_has_class((By.ID, test_runner_cell_id), "pending")
+        # wait.until(is_queued)
+        # # wait for cell that runs test functions to start execution
+        # # needs a longer timeout due to davos installation
         wait = WebDriverWait(self.driver, 60)
         is_running_tests = element_has_class((By.ID, test_runner_cell_id), "code-has-output")
         wait.until(is_running_tests)
@@ -246,20 +256,20 @@ class ColabDriver(NotebookDriver):
 
 class JupyterDriver(NotebookDriver):
     def __init__(
-            self, 
-            notebook_path: Union[PurePosixPath, str], 
-            ip: str = '127.0.0.1', 
+            self,
+            notebook_path: Union[PurePosixPath, str],
+            ip: str = '127.0.0.1',
             port: str = '8888'
     ) -> None:
         self.set_kernel(notebook_path)
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url)
-        
+
     def run_all_cells(self) -> None:
         # wait up to 10 seconds for "Cell" menu item to be clickable
         self.click("#menus > div > div > ul > li:nth-child(5) > a")
         self.click("run_all_cells", By.ID)
-        
+
     def set_kernel(self, notebook_path: str) -> None:
         repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
         notebook_path: Path = repo_root.joinpath(notebook_path)
@@ -272,30 +282,30 @@ class JupyterDriver(NotebookDriver):
         }
         with notebook_path.open('w') as nb:
             json.dump(notebook_json, nb)
-    
+
     def wait_for_test_start(self) -> None:
         test_runner_cell = self.get_test_runner_cell()
-        wait = WebDriverWait(self.driver, 60)
+        wait = WebDriverWait(test_runner_cell, 60)
         locator = (By.CLASS_NAME, 'output_area')
         first_test_executed = EC.presence_of_element_located(locator)
         wait.until(first_test_executed)
-        
+
 
 class NotebookFile(pytest.File):
     test_func_pattern = re.compile('(?<=def )test_[^(]+', re.MULTILINE)
 
     # noinspection PyUnresolvedReferences
     def __init__(
-            self, 
-            fspath: str, 
-            *, 
-            driver_cls: Type[Union[ColabDriver, JupyterDriver]], 
-            parent: Optional[_pytest.nodes.Node] = None, 
-            config: Optional[_pytest.config.Config] = None, 
-            session: Optional[_pytest.main.Session] = None, 
+            self,
+            fspath: str,
+            *,
+            driver_cls: Type[Union[ColabDriver, JupyterDriver]],
+            parent: Optional[_pytest.nodes.Node] = None,
+            config: Optional[_pytest.config.Config] = None,
+            session: Optional[_pytest.main.Session] = None,
             nodeid: Optional[str] = None
     ):
-        super().__init__(fspath=fspath, parent=parent, config=config, 
+        super().__init__(fspath=fspath, parent=parent, config=config,
                          session=session, nodeid=nodeid)
         self.driver_cls = driver_cls
         self.driver: Optional[Union[ColabDriver, JupyterDriver]] = None
@@ -303,7 +313,7 @@ class NotebookFile(pytest.File):
         notebook_abspath = Path(self.fspath).resolve(strict=True)
         self.notebook_path = str(notebook_abspath.relative_to(repo_root))
         self._test_names: list[str] = []
-        
+
     def collect(self) -> Iterator[NotebookTest]:
         with self.fspath.open() as nb:
             notebook_json: _NotebookJson = json.load(nb)
@@ -316,7 +326,7 @@ class NotebookFile(pytest.File):
                     test_name = match.group()
                     self._test_names.append(test_name)
                     yield NotebookTest.from_parent(self, name=test_name)
-    
+
     def setup(self) -> None:
         # TODO: refactor this to call self.driver.<setup_func>()
         super().setup()
@@ -329,18 +339,18 @@ class NotebookFile(pytest.File):
         # specify pytest-style timeouts via the @mark_timeout() 
         # decorator in the notebook
         self.driver.set_max_timeout(300)
-    
+
     def teardown(self) -> None:
         if self.driver is not None:
             self.driver.quit()
         return super().teardown()
-        
+
 
 # noinspection PyUnresolvedReferences
 class NotebookTest(pytest.Item):
     parent: NotebookFile
-    
-    def runtest(self) -> None: 
+
+    def runtest(self) -> None:
         traceback_ = self.parent.driver.get_test_result(self.name)
         if traceback_ is not None:
             # test failed, traceback_ is the pre-formatted traceback to 
@@ -350,19 +360,23 @@ class NotebookTest(pytest.Item):
 
     @overload
     def repr_failure(
-            self, 
-            excinfo: _pytest._code.code.ExceptionInfo[NotebookTestFailed], 
+            self,
+            excinfo: _pytest._code.code.ExceptionInfo[NotebookTestFailed],
             style: None
-    ) -> str: ...
+    ) -> str:
+        ...
+
     @overload
     def repr_failure(
-            self, 
-            excinfo: _pytest._code.code.ExceptionInfo[BaseException], 
+            self,
+            excinfo: _pytest._code.code.ExceptionInfo[BaseException],
             style: Optional[_pytest._code.code._TracebackStyle]
-    ) -> _pytest._code.code.TerminalRepr: ...
+    ) -> _pytest._code.code.TerminalRepr:
+        ...
+
     def repr_failure(
-            self, 
-            excinfo: _pytest._code.code.ExceptionInfo[Union[NotebookTestFailed, BaseException]], 
+            self,
+            excinfo: _pytest._code.code.ExceptionInfo[Union[NotebookTestFailed, BaseException]],
             style: Optional[_pytest._code.code._TracebackStyle] = None
     ) -> Union[str, _pytest._code.code.TerminalRepr]:
         if isinstance(excinfo.value, NotebookTestFailed):
@@ -371,7 +385,7 @@ class NotebookTest(pytest.Item):
 
 
 def pytest_collect_file(
-        path: py.path.local, 
+        path: py.path.local,
         parent: pytest.Collector
 ) -> Optional[NotebookFile]:
     notebook_type: str = getenv("NOTEBOOK_TYPE")
@@ -380,9 +394,9 @@ def pytest_collect_file(
         driver_cls = ColabDriver
     else:
         driver_cls = JupyterDriver
-    
+
     if (
-            path.basename.startswith('test') and 
+            path.basename.startswith('test') and
             path.ext == ".ipynb" and
             any(pat in path.basename for pat in test_file_patterns)
     ):

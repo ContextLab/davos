@@ -73,7 +73,7 @@ class capture_stdout:
             return self.streams[0]
         return self.streams
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_tb):
         sys.stdout.write = self.sys_stdout_write
         if self.closing:
             for s in self.streams:

@@ -122,16 +122,17 @@ jobs:
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION          
           
-          # install IPython, ipykernel, requests, & davos in kernel environment
+          # install davos & various test requirements in kernel environment
           conda activate kernel-env
+          if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
+              pip install typing-extensions
+          fi
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython
           else
               pip install IPython==$IPYTHON_VERSION
           fi
-          if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
-              pip install typing-extensions
-          fi
+          pip install "ipykernel>=5.0.0" requests .
           pip install .
           
           # make environment available as a jupyter kernel

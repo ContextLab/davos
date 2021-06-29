@@ -100,8 +100,8 @@ jobs:
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION          
           conda activate kernel-env
-          # install IPython, ipykernel, davos
-          pip install "IPython$IPYTHON_VERSION" "ipykernel>=5.0.0"
+          # install IPython, ipykernel, requests, davos in kernel environment
+          pip install "IPython$IPYTHON_VERSION" "ipykernel>=5.0.0" requests
           if [[ "$PYTHON_VERSION" == "3.6" ]]; then
               pip install typing-extensions
           fi

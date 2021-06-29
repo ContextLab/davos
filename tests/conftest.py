@@ -173,8 +173,6 @@ class ColabDriver(NotebookDriver):
 
     def clear_all_outputs(self):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")
-        # takes a moment for outputs to clear
-        time.sleep(5)
 
     def factory_reset_runtime(self):
         self.driver.execute_script("colab.global.notebook.kernel.unassignCurrentVm({skipConfirm: 1})")
@@ -293,9 +291,8 @@ class JupyterDriver(NotebookDriver):
             json.dump(notebook_json, nb)
 
     def wait_for_test_start(self) -> None:
-        test_runner_cell = self.get_test_runner_cell()
-        wait = WebDriverWait(test_runner_cell, 60)
-        locator = (By.CLASS_NAME, 'output_area')
+        wait = WebDriverWait(self.driver, 60)
+        locator = (By.CSS_SELECTOR, "#notebook-container > div:last-child .output_area")
         first_test_executed = EC.presence_of_element_located(locator)
         wait.until(first_test_executed)
 
@@ -340,6 +337,8 @@ class NotebookFile(pytest.File):
         # TODO: refactor this to call self.driver.<setup_func>()
         super().setup()
         self.driver = self.driver_cls(self.notebook_path)
+        # give DOM a moment to update before running & waiting
+        time.sleep(3)
         self.driver.run_all_cells()
         self.driver.wait_for_test_start()
         # driver will wait for up to 5 minutes for each test to complete

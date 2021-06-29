@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     import _pytest
     import py
 
+
 ######################## TYPING-RELATED OBJECTS ########################
 _BY_OPTS = Literal[
     'class name',
@@ -172,6 +173,8 @@ class ColabDriver(NotebookDriver):
 
     def clear_all_outputs(self):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")
+        # takes a moment for outputs to clear
+        time.sleep(5)
 
     def factory_reset_runtime(self):
         self.driver.execute_script("colab.global.notebook.kernel.unassignCurrentVm({skipConfirm: 1})")
@@ -267,6 +270,8 @@ class JupyterDriver(NotebookDriver):
         self.clear_all_outputs()
     
     def clear_all_outputs(self):
+        # takes a moment for Jupyter.notebook JS object to be defined
+        time.sleep(5)
         self.driver.execute_script("Jupyter.notebook.clear_all_output()")
 
     def run_all_cells(self) -> None:

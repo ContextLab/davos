@@ -205,7 +205,7 @@ def is_installed(pkg_name: str) -> bool:
 
 
 def mark_timeout(timeout: int = 120) -> Callable[[_F], _F]:
-    # stand-in for @pytest.mark.timeout (from pytest-timeout plugin)
+    # stand-in for pytest.mark.timeout (from pytest-timeout plugin)
     def decorator(func: _F) -> _F:
         def handler(signum: int, frame: Optional[types.FrameType]) -> NoReturn:
             raise TestTimeoutError(
@@ -375,3 +375,18 @@ def run_tests() -> None:
                  f"{test_name}{whitespace}{status}</div>")
         # noinspection PyTypeChecker
         display_html(html_, raw=True)
+
+
+def mark_skipif(condition, *, reason=None):
+    # stand-in for pytest.mark.skipif
+    marker = {
+        'name': 'skipif',
+        'args': (condition,),
+        'kwargs': {'reason': reason}
+    }
+    def decorator(func):    # noqa: E306
+        if not hasattr(func, '_markers'):
+            setattr(func, '_markers', [])
+        func._markers.append(marker)
+        return func
+    return decorator

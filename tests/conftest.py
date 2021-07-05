@@ -547,7 +547,7 @@ def pytest_runtest_setup(item: pytest.Item):
         if mark.name == 'colab' and NOTEBOOK_TYPE != 'colab':
             missing_reqs.append('Google Colab')
         elif mark.name == 'jupyter' and NOTEBOOK_TYPE != 'jupyter':
-            missing_reqs.append('Google Colab')
+            missing_reqs.append('Jupyter notebooks')
         elif (mark.name == 'ipython_pre7' and
                 (IPYTHON_VERSION == 'latest' or
                  int(IPYTHON_VERSION.split('.')[0]) >= 7)):

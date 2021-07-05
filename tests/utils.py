@@ -214,7 +214,10 @@ def mark_skipif(condition: bool, *, reason: str) -> Callable[[_F], _F]:
     # stand-in for pytest.mark.skipif
     def decorator(func: _F) -> _F:
         if condition:
-            func._skiptest = f'({reason})'
+            if hasattr(func, '_skiptest'):
+                func._skiptest += f', {reason}'
+            else:
+                func._skiptest = f'{reason}'
         return func
 
     return decorator
@@ -380,7 +383,7 @@ def run_tests() -> None:
         whitespace = ' ' * (longest_name_len - len(test_name) + 1)
         skip_reason: Optional[str] = getattr(test_func, '_skiptest', None)
         if skip_reason is not None:
-            reason_esc: str = html.escape(skip_reason)
+            reason_esc: str = f"({html.escape(skip_reason)})"
             status = f'SKIPPED{whitespace}{reason_esc}'
         else:
             try:

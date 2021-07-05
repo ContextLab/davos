@@ -1,12 +1,12 @@
 """shared utilities for davos tests"""
 
 import ast
-import contextlib
 import functools
 import html
 import inspect
 import os
 import re
+from contextlib import redirect_stdout
 
 import pkg_resources
 import signal
@@ -31,9 +31,9 @@ from typing import (
 )
 
 if sys.version_info.minor < 8:
-    from typing_extensions import Literal
+    from typing_extensions import Literal, TypedDict
 else:
-    from typing import Literal
+    from typing import Literal, TypedDict
 
 import IPython
 from IPython.core.ultratb import FormattedTB
@@ -44,6 +44,12 @@ _E = TypeVar('_E', bound=BaseException)
 _E1 = TypeVar('_E1', bound=BaseException)
 _F = TypeVar('_F', bound=Callable[..., None])
 _InstallerKwargVals = Union[bool, int, str]
+
+
+class _DecoratorData(TypedDict):
+    name: str
+    args: tuple
+    kwargs: dict[str, Any]
 
 
 ########################################
@@ -204,6 +210,16 @@ def is_installed(pkg_name: str) -> bool:
         return True
 
 
+def mark_skipif(condition: bool, *, reason: str) -> Callable[[_F], _F]:
+    # stand-in for pytest.mark.skipif
+    def decorator(func: _F) -> _F:
+        if condition:
+            func._skiptest = f'({reason})'
+        return func
+
+    return decorator
+
+
 def mark_timeout(timeout: int = 120) -> Callable[[_F], _F]:
     # stand-in for pytest.mark.timeout (from pytest-timeout plugin)
     def decorator(func: _F) -> _F:
@@ -360,33 +376,24 @@ def run_tests() -> None:
     longest_name_len = len(max((t[0] for t in tests), key=len))
     print(f"collected {len(tests)} items\n")
     for test_name, test_func in tests:
-        try:
-            with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull):
-                test_func()
-        except Exception as e:
-            tb = format_traceback(e)
-            status = f'FAILED\n{tb}\n{"-" * 75}'
-        else:
-            status = 'PASSED'
-
         # need at least 1 space between test name and result for parsing
         whitespace = ' ' * (longest_name_len - len(test_name) + 1)
+        skip_reason: Optional[str] = getattr(test_func, '_skiptest', None)
+        if skip_reason is not None:
+            reason_esc: str = html.escape(skip_reason)
+            status = f'SKIPPED{whitespace}{reason_esc}'
+        else:
+            try:
+                with open(os.devnull, 'w') as devnull, redirect_stdout(devnull):
+                    test_func()
+            except Exception as e:
+                tb = format_traceback(e)
+                status = f'FAILED\n{tb}\n{"-" * 75}'
+            else:
+                status = 'PASSED'
+
         html_ = (f"<div id='{test_name}_result' style=\"white-space:pre\">"
                  f"{test_name}{whitespace}{status}</div>")
         # noinspection PyTypeChecker
         display_html(html_, raw=True)
 
-
-def mark_skipif(condition, *, reason=None):
-    # stand-in for pytest.mark.skipif
-    marker = {
-        'name': 'skipif',
-        'args': (condition,),
-        'kwargs': {'reason': reason}
-    }
-    def decorator(func):    # noqa: E306
-        if not hasattr(func, '_markers'):
-            setattr(func, '_markers', [])
-        func._markers.append(marker)
-        return func
-    return decorator

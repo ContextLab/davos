@@ -321,9 +321,30 @@ class JupyterDriver(NotebookDriver):
 
 
 class NotebookFile(pytest.File):
-    test_func_pattern = re.compile('(?<=def )test_[^(]+', re.MULTILINE)
+    test_func_pattern = re.compile(r'(?:^@.+\n)*def test_[^(]+\(.*\):', re.M)
 
-    # noinspection PyUnresolvedReferences
+    @staticmethod
+    def process_decorators(
+            decs_asts: list[Union[ast.Call, ast.Name]]
+    ) -> list[_pytest.mark.structures.MarkDecorator]:
+        pytest_markers = []
+        # reverse so multiple decorators are added from inside, out
+        for dec in reversed(decs_asts):
+            if isinstance(dec, ast.Call):
+                # noinspection PyTypeChecker
+                # (expects ast.expr, will always be ast.Name)
+                name_ast_obj: ast.Name = dec.func
+                args = [ast.literal_eval(arg) for arg in dec.args]
+                kwargs = {arg.arg: ast.literal_eval(arg.value) for arg in dec.keywords}
+            else:
+                name_ast_obj = dec
+                args = []
+                kwargs = {}
+            mark_name = name_ast_obj.id.removeprefix('mark_')
+            marker = getattr(pytest.mark, mark_name)(*args, **kwargs)
+            pytest_markers.append(marker)
+        return pytest_markers
+
     def __init__(
             self,
             fspath: str,
@@ -349,12 +370,24 @@ class NotebookFile(pytest.File):
         for cell in notebook_json['cells']:
             if cell['cell_type'] == 'code':
                 cell_contents = ''.join(cell['source'])
-                # noinspection PyCompatibility
-                # TODO: make sure tests_require is being enforced
-                if match := self.test_func_pattern.search(cell_contents):
-                    test_name = match.group()
+                match_groups: list[str] = self.test_func_pattern.findall(cell_contents)
+                for match in match_groups:
+                    # add body to function signature so it can be parsed
+                    valid_funcdef = match + ' pass'
+                    # noinspection PyTypeChecker
+                    # (expects ast.stmt, will always be ast.FunctionDef)
+                    test_ast: ast.FunctionDef = ast.parse(valid_funcdef).body[0]
+                    test_name = test_ast.name
+                    test_obj: NotebookTest = NotebookTest.from_parent(self, name=test_name)
+                    if test_ast.decorator_list:
+                        # noinspection PyTypeChecker
+                        # (expects list[ast.stmt], will always be
+                        # list[Union[ast.Call, ast.Name]])
+                        pytest_marks = self.process_decorators(test_ast.decorator_list)
+                        for mark in pytest_marks:
+                            test_obj.add_marker(mark)
                     self._test_names.append(test_name)
-                    yield NotebookTest.from_parent(self, name=test_name)
+                    yield test_obj
 
     def setup(self) -> None:
         # TODO: refactor this to call self.driver.<setup_func>()
@@ -444,3 +477,19 @@ def pytest_collect_file(
     ):
         return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)
     return None
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]):
+    from pprint import pprint
+    skip_marker = pytest.mark.skip(reason='whatever reason blah blah')
+    for item in items:
+        print(item, type(item), '\n')
+        if item.name.endswith('version'):
+            item.add_marker(skip_marker)
+            pprint(item.__dict__)
+
+            # pprint(item.__dict__)
+            # print('\n\n\n')
+
+
+# def pytest_configure()

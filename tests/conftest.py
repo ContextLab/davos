@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import html
 import json
 import re
@@ -31,6 +32,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.remote.webelement import WebElement
+# noinspection PyPep8Naming
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -40,7 +42,7 @@ if TYPE_CHECKING:
 
 
 ######################## TYPING-RELATED OBJECTS ########################    # noqa: E266
-_BY_OPTS = Literal[
+_ByOpts = Literal[
     'class name',
     'css selector',
     'id',
@@ -63,6 +65,12 @@ class _CellJson(TypedDict, total=False):
     source: list[str]
 
 
+class _DecoratorData(TypedDict):
+    name: str
+    args: tuple
+    kwargs: dict[str, Any]
+
+
 class _NotebookJson(TypedDict):
     cells: list[_CellJson]
     metadata: dict[str, Union[dict[str, dict[str, Any]]]]
@@ -75,7 +83,7 @@ class _NotebookJson(TypedDict):
 
 # noinspection PyPep8Naming
 class element_has_class:
-    def __init__(self, locator: tuple[_BY_OPTS, str], cls_name: str) -> None:
+    def __init__(self, locator: tuple[_ByOpts, str], cls_name: str) -> None:
         self.locator = locator
         self.cls_name = cls_name
 
@@ -92,22 +100,22 @@ class NotebookTestFailed(Exception):
         super().__init__()
 
 
-# noinspection PyCompatibility
 class NotebookDriver:
     def __init__(self, url: str) -> None:
         self.url = url
         options = Options()
-        options.headless = True
+        options.headless = False
         self.driver = webdriver.Firefox(
             options=options, executable_path=getenv('DRIVER_PATH')
         )
         self.driver.get(url)
 
+    # noinspection PyCompatibility
     def click(
             self,
             __locator_or_el: Union[str, WebElement],
             /,
-            by: _BY_OPTS = By.CSS_SELECTOR,
+            by: _ByOpts = By.CSS_SELECTOR,
             timeout: int = 10,
             poll_frequency: float = 0.5,
             ignored_exceptions: Optional[Union[_E, Iterable[_E]]] = None
@@ -268,6 +276,7 @@ class JupyterDriver(NotebookDriver):
             port: str = '8888'
     ) -> None:
         self.set_kernel(notebook_path)
+        # noinspection HttpUrlsUsage
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url)
         self.clear_all_outputs()
@@ -378,6 +387,9 @@ class NotebookFile(pytest.File):
 # noinspection PyUnresolvedReferences
 class NotebookTest(pytest.Item):
     parent: NotebookFile
+
+    def reportinfo(self) -> Tuple[Union[py.path.local, str], Optional[int], str]:
+        return self.fspath, 0, ""
 
     def runtest(self) -> None:
         traceback_ = self.parent.driver.get_test_result(self.name)

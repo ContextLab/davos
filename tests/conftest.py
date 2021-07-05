@@ -38,6 +38,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 if TYPE_CHECKING:
     import _pytest
+    import pluggy
     import py
 
 
@@ -123,9 +124,11 @@ class element_has_class:
 
 
 class NotebookTestFailed(Exception):
-    def __init__(self, tb_str: str) -> None:
-        self.tb_str = tb_str
-        super().__init__()
+    pass
+
+
+class NotebookTestSkipped(Exception):
+    pass
 
 
 class NotebookDriver:
@@ -177,7 +180,7 @@ class NotebookDriver:
             element.click()
             return element
 
-    def get_test_result(self, func_name: str) -> Optional[str]:
+    def get_test_result(self, func_name: str) -> list[str]:
         result_element = self.driver.find_element_by_id(f"{func_name}_result")
         result: list[str] = result_element.text.split(maxsplit=2)[1:]
         if len(result) == 0:
@@ -186,9 +189,7 @@ class NotebookDriver:
             time.sleep(3)
             result_element = self.driver.find_element_by_id(f"{func_name}_result")
             result = result_element.text.split(maxsplit=2)[1:]
-        if result[0] == 'FAILED':
-            return result[1]
-        return None
+        return result
 
     def get_test_runner_cell(self) -> WebElement:
         # TODO: make this more robust --  maybe loop in reverse over 
@@ -381,8 +382,11 @@ class NotebookFile(pytest.File):
                 args = []
                 kwargs = {}
             mark_name = name_ast_obj.id.removeprefix('mark_')
-            marker = getattr(pytest.mark, mark_name)(*args, **kwargs)
-            pytest_markers.append(marker)
+            if mark_name != 'skipif':
+                # ignore mark_skipif decorator so condition is evaluated
+                # in notebook
+                marker = getattr(pytest.mark, mark_name)(*args, **kwargs)
+                pytest_markers.append(marker)
         return pytest_markers
 
     def __init__(
@@ -429,7 +433,7 @@ class NotebookFile(pytest.File):
                     yield test_obj
 
     def setup(self) -> None:
-        # TODO: refactor this to call self.driver.<setup_func>()
+        # TODO: refactor this to call self.driver.<setup_func>()?
         super().setup()
         self.driver = self.driver_cls(self.notebook_path)
         self.driver.clear_all_outputs()
@@ -459,12 +463,21 @@ class NotebookTest(pytest.Item):
         return self.fspath, 0, ""
 
     def runtest(self) -> None:
-        traceback_ = self.parent.driver.get_test_result(self.name)
-        if traceback_ is not None:
-            # test failed, traceback_ is the pre-formatted traceback to 
+        result_info = self.parent.driver.get_test_result(self.name)
+        outcome = result_info[0]
+        if outcome == 'PASSED':
+            return None
+        elif outcome == 'SKIPPED':
+            # test was skipped due to mark_skipif/mark_xfail conditions
+            # evaluating to True within the notebook context.
+            # result_info[1] is the "reason" passed to the decorator
+            raise NotebookTestSkipped(result_info[1])
+        elif outcome == 'FAILED':
+            # test failed, result_info[1] is the pre-formatted traceback to
             # be displayed
-            raise NotebookTestFailed(traceback_)
-        return None
+            raise NotebookTestFailed(result_info[1])
+        else:
+            raise ValueError(f"received unexpected test outcome: {outcome}")
 
     @overload
     def repr_failure(
@@ -513,6 +526,19 @@ def pytest_collect_file(
 
 def pytest_markeval_namespace(config: _pytest.config.Config):
     return SHARED_VARS
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_call(item: pytest.Item):
+    """
+    handles @mark_skipif and @mark_xfail decorators whose conditions
+    need to be evaluated inside the notebook
+    """
+    outcome: pluggy.callers._Result = yield
+    excinfo = outcome.excinfo
+    if excinfo is not None and excinfo[0] is NotebookTestSkipped:
+        msg = html.unescape(str(excinfo[1]))
+        pytest.skip(msg)
 
 
 def pytest_runtest_setup(item: pytest.Item):

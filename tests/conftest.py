@@ -7,7 +7,7 @@ import re
 import time
 from collections.abc import Iterable, Iterator
 from os import getenv
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import (
     Any,
     Literal,
@@ -52,8 +52,18 @@ _ByOpts = Literal[
     'tag name',
     'xpath'
 ]
-
 _E = TypeVar('_E', bound=BaseException)
+_IpyVersions = Literal['5.5.0', '7.3.0', '7.15', '7.16', 'latest']
+_NbTypes = Literal['colab', 'jupyter']
+_PyVersions = Literal['3.6', '3.7', '3.8', '3.9']
+
+
+class _SharedVars(TypedDict):
+    GITHUB_USERNAME: str
+    GITHUB_REF: str
+    NOTEBOOK_TYPE: _NbTypes
+    IPYTHON_VERSION: _IpyVersions
+    PYTHON_VERSION: _PyVersions
 
 
 # could type-hint notebook JSON many levels deep, but unnecessary
@@ -79,6 +89,24 @@ class _NotebookJson(TypedDict):
 
 
 ########################################################################
+
+
+GITHUB_USERNAME: str = getenv("GITHUB_REPOSITORY").split('/')[0]
+GITHUB_REF: str = getenv("HEAD_SHA")
+REPO_ROOT: Path = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
+# noinspection PyTypeChecker
+IPYTHON_VERSION: _IpyVersions = getenv('IPYTHON_VERSION')
+# noinspection PyTypeChecker
+NOTEBOOK_TYPE: _NbTypes = getenv('NOTEBOOK_TYPE')
+# noinspection PyTypeChecker
+PYTHON_VERSION: _PyVersions = getenv('PYTHON_VERSION')
+SHARED_VARS: _SharedVars = {
+    'GITHUB_USERNAME': GITHUB_USERNAME,
+    'GITHUB_REF': GITHUB_REF,
+    'NOTEBOOK_TYPE': NOTEBOOK_TYPE,
+    'IPYTHON_VERSION': IPYTHON_VERSION,
+    'PYTHON_VERSION': PYTHON_VERSION
+}
 
 
 # noinspection PyPep8Naming
@@ -175,10 +203,8 @@ class NotebookDriver:
 
 
 class ColabDriver(NotebookDriver):
-    def __init__(self, notebook_path: Union[PurePosixPath, str]) -> None:
-        username = getenv("GITHUB_REPOSITORY").split('/')[0]
-        ref = getenv("HEAD_SHA")
-        url = f"https://colab.research.google.com/github/{username}/davos/blob/{ref}/{notebook_path}"
+    def __init__(self, notebook_path: Union[Path, str]) -> None:
+        url = f"https://colab.research.google.com/github/{GITHUB_USERNAME}/davos/blob/{GITHUB_REF}/{notebook_path}"
         super().__init__(url=url)
         self.sign_in_google()
         self.factory_reset_runtime()
@@ -189,7 +215,14 @@ class ColabDriver(NotebookDriver):
     def factory_reset_runtime(self):
         self.driver.execute_script("colab.global.notebook.kernel.unassignCurrentVm({skipConfirm: 1})")
 
-    def set_template_vars(self, to_replace: dict[str, str]) -> None:
+    def set_template_vars(
+            self,
+            extra_vars: Optional[dict[str, str]] = None
+    ) -> None:
+        if extra_vars is None:
+            to_replace = SHARED_VARS
+        else:
+            to_replace = SHARED_VARS | extra_vars
         # assumes variables are set in first code cell
         template_cell = self.driver.find_elements_by_class_name('code')[0]
         cell_contents: str = template_cell.get_property('innerText')
@@ -218,7 +251,8 @@ class ColabDriver(NotebookDriver):
         if self.driver.current_url != self.url:
             # handle additional "verify it's you" page
             self.click(
-                "#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div")
+                "#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div"
+            )
             time.sleep(3)
             recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
             recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
@@ -271,8 +305,7 @@ class ColabDriver(NotebookDriver):
 class JupyterDriver(NotebookDriver):
     @staticmethod
     def set_kernel(notebook_path: str) -> None:
-        repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
-        notebook_path: Path = repo_root.joinpath(notebook_path)
+        notebook_path: Path = REPO_ROOT.joinpath(notebook_path)
         with notebook_path.open() as nb:
             notebook_json = json.load(nb)
         notebook_json['metadata']['kernelspec'] = {
@@ -285,7 +318,7 @@ class JupyterDriver(NotebookDriver):
 
     def __init__(
             self,
-            notebook_path: Union[PurePosixPath, str],
+            notebook_path: Union[Path, str],
             ip: str = '127.0.0.1',
             port: str = '8888'
     ) -> None:
@@ -305,7 +338,14 @@ class JupyterDriver(NotebookDriver):
         self.click("#menus > div > div > ul > li:nth-child(5) > a")
         self.click("run_all_cells", By.ID)
 
-    def set_template_vars(self, to_replace: dict[str, str]) -> None:
+    def set_template_vars(
+            self,
+            extra_vars: Optional[dict[str, str]] = None
+    ) -> None:
+        if extra_vars is None:
+            to_replace = SHARED_VARS
+        else:
+            to_replace = SHARED_VARS | extra_vars
         cell_contents = self.driver.execute_script("return Jupyter.notebook.get_cell(0).get_text()")
         for key, val in to_replace.items():
             template = f"${key}$"
@@ -359,9 +399,8 @@ class NotebookFile(pytest.File):
                          session=session, nodeid=nodeid)
         self.driver_cls = driver_cls
         self.driver: Optional[Union[ColabDriver, JupyterDriver]] = None
-        repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
         notebook_abspath = Path(self.fspath).resolve(strict=True)
-        self.notebook_path = str(notebook_abspath.relative_to(repo_root))
+        self.notebook_path = str(notebook_abspath.relative_to(REPO_ROOT))
         self._test_names: list[str] = []
 
     def collect(self) -> Iterator[NotebookTest]:
@@ -394,13 +433,7 @@ class NotebookFile(pytest.File):
         super().setup()
         self.driver = self.driver_cls(self.notebook_path)
         self.driver.clear_all_outputs()
-        self.driver.set_template_vars({
-            'GITHUB_USERNAME': getenv("GITHUB_REPOSITORY").split('/')[0],
-            'GITHUB_REF': getenv("HEAD_SHA"),
-            'NOTEBOOK_TYPE': getenv('NOTEBOOK_TYPE'),
-            'PYTHON_VERSION': getenv('PYTHON_VERSION'),
-            'IPYTHON_VERSION': getenv('IPYTHON_VERSION')
-        })
+        self.driver.set_template_vars()
         # give DOM a moment to update before running & waiting
         time.sleep(3)
         self.driver.run_all_cells()
@@ -463,9 +496,8 @@ def pytest_collect_file(
         path: py.path.local,
         parent: pytest.Collector
 ) -> Optional[NotebookFile]:
-    notebook_type: str = getenv("NOTEBOOK_TYPE")
-    test_file_patterns = (notebook_type, 'shared', 'common')
-    if notebook_type == 'colab':
+    test_file_patterns = (NOTEBOOK_TYPE, 'shared', 'common')
+    if NOTEBOOK_TYPE == 'colab':
         driver_cls = ColabDriver
     else:
         driver_cls = JupyterDriver
@@ -479,17 +511,25 @@ def pytest_collect_file(
     return None
 
 
-def pytest_collection_modifyitems(items: list[pytest.Item]):
-    from pprint import pprint
-    skip_marker = pytest.mark.skip(reason='whatever reason blah blah')
-    for item in items:
-        print(item, type(item), '\n')
-        if item.name.endswith('version'):
-            item.add_marker(skip_marker)
-            pprint(item.__dict__)
-
-            # pprint(item.__dict__)
-            # print('\n\n\n')
+def pytest_markeval_namespace(config: _pytest.config.Config):
+    return SHARED_VARS
 
 
-# def pytest_configure()
+def pytest_runtest_setup(item: pytest.Item):
+    missing_reqs = []
+    for mark in item.iter_markers():
+        if mark.name == 'colab' and NOTEBOOK_TYPE != 'colab':
+            missing_reqs.append('Google Colab')
+        elif mark.name == 'jupyter' and NOTEBOOK_TYPE != 'jupyter':
+            missing_reqs.append('Google Colab')
+        elif (mark.name == 'ipython_pre7' and
+                (IPYTHON_VERSION == 'latest' or
+                 int(IPYTHON_VERSION.split('.')[0]) >= 7)):
+            missing_reqs.append('IPython<7.0.0')
+        elif (mark.name == 'ipython_post7' and
+              IPYTHON_VERSION != 'latest' and
+              int(IPYTHON_VERSION.split('.')[0]) < 7):
+            missing_reqs.append('IPython>=7.0.0')
+
+    if missing_reqs:
+        pytest.skip(f"Test requires {', '.join(missing_reqs)}")

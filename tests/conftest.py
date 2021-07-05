@@ -269,6 +269,20 @@ class ColabDriver(NotebookDriver):
 
 
 class JupyterDriver(NotebookDriver):
+    @staticmethod
+    def set_kernel(notebook_path: str) -> None:
+        repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
+        notebook_path: Path = repo_root.joinpath(notebook_path)
+        with notebook_path.open() as nb:
+            notebook_json = json.load(nb)
+        notebook_json['metadata']['kernelspec'] = {
+            'display_name': 'kernel-env',
+            'language': 'python',
+            'name': 'kernel-env'
+        }
+        with notebook_path.open('w') as nb:
+            json.dump(notebook_json, nb)
+
     def __init__(
             self,
             notebook_path: Union[PurePosixPath, str],
@@ -290,19 +304,6 @@ class JupyterDriver(NotebookDriver):
         # wait up to 10 seconds for "Cell" menu item to be clickable
         self.click("#menus > div > div > ul > li:nth-child(5) > a")
         self.click("run_all_cells", By.ID)
-
-    def set_kernel(self, notebook_path: str) -> None:
-        repo_root = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
-        notebook_path: Path = repo_root.joinpath(notebook_path)
-        with notebook_path.open() as nb:
-            notebook_json = json.load(nb)
-        notebook_json['metadata']['kernelspec'] = {
-            'display_name': 'kernel-env',
-            'language': 'python',
-            'name': 'kernel-env'
-        }
-        with notebook_path.open('w') as nb:
-            json.dump(notebook_json, nb)
 
     def set_template_vars(self, to_replace: dict[str, str]) -> None:
         cell_contents = self.driver.execute_script("return Jupyter.notebook.get_cell(0).get_text()")

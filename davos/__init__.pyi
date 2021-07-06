@@ -19,7 +19,7 @@ def activate() -> None: ...
 def configure(
         *, 
         active: bool = ..., 
-        allow_rerun: bool = ..., 
+        auto_rerun: bool = ...,
         conda_env: str = ..., 
         confirm_install: bool = ..., 
         noninteractive: bool = ..., 

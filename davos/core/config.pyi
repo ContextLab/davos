@@ -29,7 +29,7 @@ class SingletonConfig(type):
     
 class DavosConfig(metaclass=SingletonConfig):
     _active: bool
-    _allow_rerun: bool
+    _auto_rerun: bool
     _conda_avail: Optional[bool]
     _conda_env: Optional[str]
     _conda_envs_dirs: Optional[dict[str, str]]
@@ -49,9 +49,9 @@ class DavosConfig(metaclass=SingletonConfig):
     @active.setter
     def active(self, state: bool) -> None: ...
     @property
-    def allow_rerun(self) -> bool: ...
-    @allow_rerun.setter
-    def allow_rerun(self, value: bool) -> None: ...
+    def auto_rerun(self) -> bool: ...
+    @auto_rerun.setter
+    def auto_rerun(self, value: bool) -> None: ...
     @property
     def conda_avail(self) -> bool: ...
     @conda_avail.setter

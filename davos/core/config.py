@@ -60,7 +60,7 @@ class DavosConfig(metaclass=SingletonConfig):
         #          CONFIGURABLE FIELDS         #
         ########################################
         self._active = True
-        self._allow_rerun = False
+        self._auto_rerun = False
         self._conda_env = None
         self._confirm_install = False
         self._noninteractive = False
@@ -109,20 +109,20 @@ class DavosConfig(metaclass=SingletonConfig):
         return super().__repr__()
 
     @property
-    def allow_rerun(self):
-        return self._allow_rerun
+    def auto_rerun(self):
+        return self._auto_rerun
 
-    @allow_rerun.setter
-    def allow_rerun(self, value):
+    @auto_rerun.setter
+    def auto_rerun(self, value):
         if not isinstance(value, bool):
-            raise DavosConfigError('allow_rerun',
+            raise DavosConfigError('auto_rerun',
                                    "field may be 'True' or 'False'")
         elif self._environment == 'Colaboratory':
             raise DavosConfigError(
-                'allow_rerun',
-                'automatic rerunning not available in Colaboratory'
+                'auto_rerun',
+                'automatic rerunning of cells not available in Colaboratory'
             )
-        self._allow_rerun = value
+        self._auto_rerun = value
 
     @property
     def confirm_install(self):

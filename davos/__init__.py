@@ -29,7 +29,7 @@ def activate():
 def configure(
         *, 
         active=..., 
-        allow_rerun=..., 
+        auto_rerun=...,
         conda_env=..., 
         confirm_install=..., 
         noninteractive=...,

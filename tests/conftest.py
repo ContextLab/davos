@@ -381,7 +381,7 @@ class NotebookFile(pytest.File):
                 name_ast_obj = dec
                 args = []
                 kwargs = {}
-            mark_name = name_ast_obj.id.removeprefix('mark_')
+            mark_name = name_ast_obj.id.removeprefix('mark.')
             if mark_name != 'skipif':
                 # ignore mark_skipif decorator so condition is evaluated
                 # in notebook
@@ -445,7 +445,7 @@ class NotebookFile(pytest.File):
         # driver will wait for up to 5 minutes for each test to complete
         # and its result to become readable. Upper limit for *driver* 
         # timeout is intentionally high so individual *tests* can 
-        # specify pytest-style timeouts via the @mark_timeout() 
+        # specify pytest-style timeouts via the @mark.timeout()
         # decorator in the notebook
         self.driver.set_max_timeout(300)
 
@@ -468,7 +468,7 @@ class NotebookTest(pytest.Item):
         if outcome == 'PASSED':
             return None
         elif outcome == 'SKIPPED':
-            # test was skipped due to mark_skipif/mark_xfail conditions
+            # test was skipped due to mark.skipif/mark.xfail conditions
             # evaluating to True within the notebook context.
             # result_info[1] is the "reason" passed to the decorator
             raise NotebookTestSkipped(result_info[1])
@@ -531,7 +531,7 @@ def pytest_markeval_namespace(config: _pytest.config.Config):
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item: pytest.Item):
     """
-    handles @mark_skipif and @mark_xfail decorators whose conditions
+    handles @mark.skipif and @mark.xfail decorators whose conditions
     need to be evaluated inside the notebook
     """
     outcome: pluggy.callers._Result = yield

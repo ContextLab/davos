@@ -44,6 +44,8 @@ _E = TypeVar('_E', bound=BaseException)
 _E1 = TypeVar('_E1', bound=BaseException)
 _F = TypeVar('_F', bound=Callable[..., None])
 _InstallerKwargVals = Union[bool, int, str]
+_IpyVersions = Literal['5.5.0', '7.3.0', '7.15', '7.16', 'latest']
+_NbTypes = Literal['colab', 'jupyter']
 
 
 class _DecoratorData(TypedDict):
@@ -210,39 +212,94 @@ def is_installed(pkg_name: str) -> bool:
         return True
 
 
-def mark_skipif(condition: bool, *, reason: str) -> Callable[[_F], _F]:
-    # stand-in for pytest.mark.skipif
-    def decorator(func: _F) -> _F:
-        if condition:
-            if hasattr(func, '_skiptest'):
-                func._skiptest += f', {reason}'
-            else:
-                func._skiptest = f'{reason}'
+class mark:
+    """
+    class that serves as a namespace for test marker decorators.
+    Essentially mocks pytest.mark module to preserve similar syntax
+    (e.g., pytest.mark.skipif -> utils.mark.skipif)
+    """
+
+    _IPYTHON_VERSION: _IpyVersions = get_ipython().user_ns['IPYTHON_VERSION']
+    _NOTEBOOK_TYPE: _NbTypes = get_ipython().user_ns['NOTEBOOK_TYPE']
+
+    @staticmethod
+    def _set_skiptest_reason(func: _F, reason: str) -> None:
+        if hasattr(func, '_skiptest'):
+            func._skiptest += f', {reason}'
+        else:
+            func._skiptest = f'{reason}'
+
+    @classmethod
+    def colab(cls, func: _F) -> _F:
+        """mark a test that should run only on Google Colab"""
+        if cls._NOTEBOOK_TYPE != 'colab':
+            cls._set_skiptest_reason(func, "requires Google Colab")
         return func
 
-    return decorator
+    @classmethod
+    def ipython_post7(cls, func: _F) -> _F:
+        """mark a test that should run only if IPython>=7.0.0"""
+        if (
+                cls._IPYTHON_VERSION != 'latest' and
+                int(cls._IPYTHON_VERSION.split('.')[0]) < 7
+        ):
+            cls._set_skiptest_reason(func, "requires IPython>=7.0.0")
+        return func
 
+    @classmethod
+    def ipython_pre7(cls, func: _F) -> _F:
+        """mark a test that should run only if IPython<7.0.0"""
+        if (
+                cls._IPYTHON_VERSION == 'latest' or
+                int(cls._IPYTHON_VERSION.split('.')[0]) >= 7
+        ):
+            cls._set_skiptest_reason(func, "requires IPython<7.0.0")
+        return func
 
-def mark_timeout(timeout: int = 120) -> Callable[[_F], _F]:
-    # stand-in for pytest.mark.timeout (from pytest-timeout plugin)
-    def decorator(func: _F) -> _F:
-        def handler(signum: int, frame: Optional[types.FrameType]) -> NoReturn:
-            raise TestTimeoutError(
-                f"'{func.__name__}' timed out after {timeout} seconds"
-            )
+    @classmethod
+    def jupyter(cls, func: _F) -> _F:
+        """mark a test that should run only in Jupyter notebooks"""
+        if cls._NOTEBOOK_TYPE != 'jupyter':
+            cls._set_skiptest_reason(func, "requires Jupyter notebooks")
+        return func
 
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> None:
-            signal.signal(signal.SIGALRM, handler)
-            signal.alarm(timeout)
-            try:
-                return func(*args, **kwargs)
-            finally:
-                signal.alarm(0)
+    @classmethod
+    def skipif(cls, condition: bool, *, reason: str) -> Callable[[_F], _F]:
+        """
+        mark a test that should be skipped if the given condition
+        evaluates to True. Serves as a stand-in for pytest.mark.skipif
+        (note: for security reasons, only boolean conditions are
+        supported. String conditions are not evaluated)
+        """
+        def decorator(func: _F) -> _F:
+            if condition:
+                cls._set_skiptest_reason(func, reason)
+            return func
 
-        return wrapper
+        return decorator
 
-    return decorator
+    @staticmethod
+    def timeout(timeout: int = 120) -> Callable[[_F], _F]:
+        """
+        mark a test that should fail after a certain amount of time (in
+        seconds). Serves as a stand-in for pytest.mark.timeout (from the
+        pytest-timeout plugin)
+        """
+        def decorator(func: _F) -> _F:
+            def handler(signum: int, frame: Optional[types.FrameType]) -> NoReturn:
+                raise TestTimeoutError(
+                    f"'{func.__name__}' timed out after {timeout} seconds"
+                )
+            @functools.wraps(func)    # noqa: E306
+            def wrapper(*args: Any, **kwargs: Any) -> None:
+                signal.signal(signal.SIGALRM, handler)
+                signal.alarm(timeout)
+                try:
+                    return func(*args, **kwargs)
+                finally:
+                    signal.alarm(0)
+            return wrapper
+        return decorator
 
 
 def matches_expected_output(expected: str, result: str) -> bool:

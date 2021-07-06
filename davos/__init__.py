@@ -32,7 +32,8 @@ def configure(
         allow_rerun=..., 
         conda_env=..., 
         confirm_install=..., 
-        noninteractive=..., 
+        noninteractive=...,
+        pip_executable=...,
         suppress_stdout=...
 ):
     # ADD DOCSTRING

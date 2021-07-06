@@ -117,6 +117,11 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('allow_rerun',
                                    "field may be 'True' or 'False'")
+        elif self._environment == 'Colaboratory':
+            raise DavosConfigError(
+                'allow_rerun',
+                'automatic rerunning not available in Colaboratory'
+            )
         self._allow_rerun = value
 
     @property
@@ -157,9 +162,14 @@ class DavosConfig(metaclass=SingletonConfig):
     @noninteractive.setter
     def noninteractive(self, value):
         if not isinstance(value, bool):
-            raise DavosConfigError('confirm_install',
+            raise DavosConfigError('noninteractive',
                                    "field may be 'True' or 'False'")
-        if value and self._confirm_install:
+        elif self._environment == 'Colaboratory':
+            raise DavosConfigError(
+                'noninteractive',
+                "noninteractive mode not available in Colaboratory"
+            )
+        elif value and self._confirm_install:
             warnings.warn(
                 "noninteractive mode enabled, setting `confirm_install = False`"
             )

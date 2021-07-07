@@ -12,10 +12,6 @@ def _activate_helper(smuggle_func, parser_func):
     ipy_shell = config._ipython_shell
     input_xforms = ipy_shell.input_transformers_post
     if parser_func not in input_xforms:
-        # prevents transformer from being run multiple times when 
-        # IPython parses partial line to determine whether input is 
-        # complete
-        parser_func.has_side_effects = True
         input_xforms.append(parser_func)
 
     # insert "smuggle" into notebook namespace

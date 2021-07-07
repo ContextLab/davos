@@ -9,7 +9,8 @@ IPython/Jupyter Notebook).
 __all__ = [
     'capture_stdout', 
     'check_conda',
-    'Onion', 
+    'Onion',
+    'parse_line',
     'prompt_input', 
     'run_shell_command'
 ]
@@ -122,12 +123,14 @@ def check_conda():
     for w in conda_list_output.split():
         if '/' in w:
             env_name = w.split('/')[-1].rstrip(':')
+
             if (
                     envs_dirs_dict is not None and
-                    env_name in envs_dirs_dict.keys()
+                    env_name not in envs_dirs_dict.keys()
             ):
-                config._conda_env = env_name
-                return
+                continue
+            config._conda_env = env_name
+            return
 
     if envs_dirs_dict is not None:
         # if we somehow fail to parse the environment directory path 
@@ -437,6 +440,74 @@ class Onion:
         return stdout
 
 
+def parse_line(line):
+    # ADD DOCSTRING
+    match = smuggle_statement_regex.match(line)
+    if match is None:
+        return line
+
+    matched_groups = match.groupdict()
+    smuggle_chars = matched_groups['FULL_CMD']
+    before_chars, after_chars = line.split(smuggle_chars)
+    cmd_prefix, to_smuggle = smuggle_chars.split('smuggle ', maxsplit=1)
+    cmd_prefix = cmd_prefix.strip()
+    to_smuggle = to_smuggle.strip()
+
+    if cmd_prefix:
+        # cmd_prefix is `"from" package[.module[...]] `
+        is_from_statement = True
+        onion_chars = matched_groups['FROM_ONION'] or matched_groups['FROM_ONION_1']
+        has_semicolon_sep = matched_groups['FROM_SEMICOLON_SEP'] is not None
+        qualname_prefix = f"{''.join(cmd_prefix.split()[1:])}."
+        # remove parentheses around line continuations
+        to_smuggle = to_smuggle.replace(')', '').replace('(', '')
+        # remove inline comments
+        if '\n' in to_smuggle:
+            to_smuggle = ' '.join(l.split('#')[0] for l in to_smuggle.splitlines())
+        else:
+            to_smuggle = to_smuggle.split('#')[0]
+        # normalize whitespace
+        to_smuggle = ' '.join(to_smuggle.split()).strip(', ')
+    else:
+        # cmd_prefix is ''
+        is_from_statement = False
+        onion_chars = matched_groups['ONION']
+        has_semicolon_sep = matched_groups['SEMICOLON_SEP'] is not None
+        qualname_prefix = ''
+
+    kwargs_str = ''
+    if has_semicolon_sep:
+        after_chars = '; ' + parse_line(after_chars.lstrip('; '))
+    elif onion_chars is not None:
+        onion_chars = onion_chars.replace('"', "'")
+        to_smuggle = to_smuggle.replace(onion_chars, '').rstrip()
+        # `Onion.parse_onion()` returns a 3-tuple of:
+        #  - the installer name (str)
+        #  - the raw arguments to be passed to the installer (str)
+        #  - an {arg: value} mapping from parsed args & defaults (dict)
+        installer, args_str, installer_kwargs = Onion.parse_onion(onion_chars)
+        kwargs_str = (f', installer={installer}, '
+                      f'args_str={args_str}, '
+                      f'installer_kwargs={installer_kwargs}')
+
+    smuggle_funcs = []
+    names_aliases = to_smuggle.split(',')
+    for na in names_aliases:
+        if ' as ' in na:
+            name, alias = na.split(' as ')
+            name = f'"{qualname_prefix}{name}"'
+            alias = f'"{alias.strip()}"'
+        else:
+            name = f'"{qualname_prefix}{na}"'
+            alias = f'"{na.strip()}"' if is_from_statement else None
+
+        name = name.replace(' ', '')
+        smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
+
+    smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'
+    return before_chars + '; '.join(smuggle_funcs) + after_chars
+
+
 def prompt_input(prompt, default=None, interrupt=None):
     # ADD DOCSTRING
     # NOTE: interrupt applies only to shell interface, not Jupyter/Colab
@@ -624,72 +695,3 @@ def smuggle(
     # so rerunning cells is more efficient, but any change to version,
     # source, etc. is caught
     config.smuggled[pkg_name] = onion.cache_key
-
-
-# noinspection DuplicatedCode
-def parse_line(line):
-    # ADD DOCSTRING
-    match = smuggle_statement_regex.match(line)
-    if match is None:
-        return line
-
-    matched_groups = match.groupdict()
-    smuggle_chars = matched_groups['FULL_CMD']
-    before_chars, after_chars = line.split(smuggle_chars)
-    cmd_prefix, to_smuggle = smuggle_chars.split('smuggle ', maxsplit=1)
-    cmd_prefix = cmd_prefix.strip()
-    to_smuggle = to_smuggle.strip()
-
-    if cmd_prefix:
-        # cmd_prefix is `"from" package[.module[...]] `
-        is_from_statement = True
-        onion_chars = matched_groups['FROM_ONION'] or matched_groups['FROM_ONION_1']
-        has_semicolon_sep = matched_groups['FROM_SEMICOLON_SEP'] is not None
-        qualname_prefix = f"{''.join(cmd_prefix.split()[1:])}."
-        # remove parentheses around line continuations
-        to_smuggle = to_smuggle.replace(')', '').replace('(', '')
-        # remove inline comments
-        if '\n' in to_smuggle:
-            to_smuggle = ' '.join(l.split('#')[0] for l in to_smuggle.splitlines())
-        else:
-            to_smuggle = to_smuggle.split('#')[0]
-        # normalize whitespace
-        to_smuggle = ' '.join(to_smuggle.split()).strip(', ')
-    else:
-        # cmd_prefix is ''
-        is_from_statement = False
-        onion_chars = matched_groups['ONION']
-        has_semicolon_sep = matched_groups['SEMICOLON_SEP'] is not None
-        qualname_prefix = ''
-
-    kwargs_str = ''
-    if has_semicolon_sep:
-        after_chars = '; ' + parse_line(after_chars.lstrip('; '))
-    elif onion_chars is not None:
-        onion_chars = onion_chars.replace('"', "'")
-        to_smuggle = to_smuggle.replace(onion_chars, '').rstrip()
-        # `Onion.parse_onion()` returns a 3-tuple of:
-        #  - the installer name (str)
-        #  - the raw arguments to be passed to the installer (str)
-        #  - an {arg: value} mapping from parsed args & defaults (dict)
-        installer, args_str, installer_kwargs = Onion.parse_onion(onion_chars)
-        kwargs_str = (f', installer={installer}, '
-                      f'args_str={args_str}, '
-                      f'installer_kwargs={installer_kwargs}')
-
-    smuggle_funcs = []
-    names_aliases = to_smuggle.split(',')
-    for na in names_aliases:
-        if ' as ' in na:
-            name, alias = na.split(' as ')
-            name = f'"{qualname_prefix}{name}"'
-            alias = f'"{alias.strip()}"'
-        else:
-            name = f'"{qualname_prefix}{na}"'
-            alias = f'"{na.strip()}"' if is_from_statement else None
-
-        name = name.replace(' ', '')
-        smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
-
-    smuggle_funcs[0] = smuggle_funcs[0][:-1] + kwargs_str + ')'
-    return before_chars + '; '.join(smuggle_funcs) + after_chars

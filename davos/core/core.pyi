@@ -25,7 +25,8 @@ from typing import (
 __all__: list[
     Literal[
         'capture_stdout', 
-        'Onion', 
+        'Onion',
+        'parse_line',
         'prompt_input', 
         'run_shell_command', 
         'smuggle_statement_regex'
@@ -146,6 +147,7 @@ class Onion:
     def _conda_install_package(self) -> NoReturn: ...
     def _pip_install_package(self) -> str: ...
 
+def parse_line(line: str) -> str: ...
 def prompt_input(
         prompt: str,
         default: Optional[Literal['n', 'no', 'y', 'yes']] = ...,
@@ -159,4 +161,3 @@ def smuggle(
         args_str: str = ..., 
         installer_kwargs: Optional[PipInstallerKwargs] = ...
 ) -> None: ...
-def parse_line(line: str) -> str: ...

@@ -87,6 +87,16 @@ def generate_parser_func(line_parser):
             else:
                 # logical line contains single physical line
                 parsed_lines.append(f'{parsed_line}\n')
+
+        # .reset() clears pyline_assembler's .buf & .tokenizer for next
+        # cell. Returns ''.join(pyline_assembler.buf) if .buf list is
+        # not empty, otherwise None
+        if pyline_assembler.reset():
+            # Presence of an incomplete logical line after parsing the
+            # last physical line means there's a SyntaxError somewhere.
+            # Include remaining physical lines to let IPython/Python
+            # deal with raising the SyntaxError from the proper location
+            parsed_lines.extend(curr_buff)
         return parsed_lines
 
     # prevents transformer from being run multiple times when

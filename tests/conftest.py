@@ -509,17 +509,12 @@ def pytest_collect_file(
         path: py.path.local,
         parent: pytest.Collector
 ) -> Optional[NotebookFile]:
-    test_file_patterns = (NOTEBOOK_TYPE, 'shared', 'common')
     if NOTEBOOK_TYPE == 'colab':
         driver_cls = ColabDriver
     else:
         driver_cls = JupyterDriver
 
-    if (
-            path.basename.startswith('test') and
-            path.ext == ".ipynb" and
-            any(pat in path.basename for pat in test_file_patterns)
-    ):
+    if path.basename.startswith('test_') and path.ext == ".ipynb":
         return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)
     return None
 

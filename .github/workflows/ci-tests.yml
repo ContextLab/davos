@@ -59,7 +59,7 @@ jobs:
             ipython-version: latest
           - notebook-type: jupyter
             python-version: 3.9
-            ipython-version: 7.15
+            ipython-version: 7.15     # earliest version to support Python 3.9
           - notebook-type: jupyter
             python-version: 3.9
             ipython-version: latest
@@ -132,9 +132,9 @@ jobs:
           else
               pip install IPython==$IPYTHON_VERSION
           fi
-          pip install "ipykernel>=5.0.0" requests .
+          pip install "ipykernel>=5.0.0" requests scipy
           pip install .
-          
+
           # make environment available as a jupyter kernel
           python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
           conda deactivate

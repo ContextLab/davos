@@ -6,13 +6,13 @@ import html
 import inspect
 import os
 import re
-from contextlib import redirect_stdout
-
 import pkg_resources
 import signal
 import sys
 import types
 from collections.abc import Sequence
+from contextlib import redirect_stdout
+
 # use typing generics for compatibility with Python 3.6
 from typing import (
     Any,
@@ -51,7 +51,7 @@ _NbTypes = Literal['colab', 'jupyter']
 class _DecoratorData(TypedDict):
     name: str
     args: tuple
-    kwargs: dict[str, Any]
+    kwargs: Dict[str, Any]
 
 
 ########################################
@@ -94,7 +94,7 @@ def expected_parser_output(
         as_: Optional[str] = None, 
         args_str: Optional[str] = None, 
         **installer_kwargs: _InstallerKwargVals
-) -> str:
+) -> Union[List[str], str]:
     if as_ is not None:
         as_ = f'"{as_}"'
     expected = f'smuggle(name="{name}", as_={as_}'
@@ -105,7 +105,10 @@ def expected_parser_output(
         expected += (f', installer={installer}, '
                      f'args_str={args_str}, '
                      f'installer_kwargs={inst_kwargs}')
-    return expected + ')'
+    expected += ')'
+    if IPython.version_info[0] >= 7:
+        expected = [f'{expected}\n']
+    return expected
 
 
 def format_traceback(err: _E) -> str:
@@ -418,7 +421,7 @@ class raises:
         if exc_type is None:
             raise DavosAssertionError(f"DID NOT RAISE {self.expected_exceptions}")
         elif not issubclass(exc_type, self.expected_exceptions):
-            # causes exc_valuue to be raised
+            # causes exc_value to be raised
             return False
         self.excinfo._excinfo = (exc_type, exc_value, exc_tb)
         if self.match_expr is not None:

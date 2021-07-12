@@ -45,6 +45,7 @@ _E1 = TypeVar('_E1', bound=BaseException)
 _F = TypeVar('_F', bound=Callable[..., None])
 _InstallerKwargVals = Union[bool, int, str]
 _IpyVersions = Literal['5.5.0', '7.3.0', '7.15', '7.16', 'latest']
+_StrOrListStr = TypeVar('_StrOrListStr', str, List[str])
 _NbTypes = Literal['colab', 'jupyter']
 
 
@@ -305,8 +306,17 @@ class mark:
         return decorator
 
 
-def matches_expected_output(expected: str, result: str) -> bool:
+def matches_expected_output(
+        expected: _StrOrListStr,
+        result: _StrOrListStr
+) -> bool:
+
     all_match = True
+    # when IPython<=7, both expected & result strings will be [<str>\n]
+    if isinstance(expected, list):
+        expected = expected[0][:-1]
+    if isinstance(result, list):
+        result = result[0][:-1]
     expected_chunks = expected.split(';')
     result_chunks = result.split(';')
     assert len(expected_chunks) == len(result_chunks)

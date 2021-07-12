@@ -123,7 +123,6 @@ def check_conda():
     for w in conda_list_output.split():
         if '/' in w:
             env_name = w.split('/')[-1].rstrip(':')
-
             if (
                     envs_dirs_dict is not None and
                     env_name not in envs_dirs_dict.keys()
@@ -150,6 +149,7 @@ def check_conda():
 
 
 def get_previously_imported_pkgs(install_cmd_stdout, installer):
+    # ADD DOCSTRING
     if installer == 'conda':
         raise NotImplementedError(
             "conda-install stdout parsing not implemented yet"
@@ -261,6 +261,7 @@ class Onion:
         self.installer = installer
         if installer == 'pip':
             self.install_package = self._pip_install_package
+            self.build = None
         elif installer == 'conda':
             raise NotImplementedError(
                 "smuggling packages via conda is not yet supported"
@@ -271,7 +272,6 @@ class Onion:
                 f"Unsupported installer: '{installer}'. Currently supported "
                 "installers are:\n\t'pip'"  # and 'conda'"
             )
-        self.build = None
         self.args_str = args_str
         self.cache_key = f"{installer};{';'.join(args_str.split())}"
         if args_str == '':
@@ -297,11 +297,12 @@ class Onion:
             _before, _sep, _after = full_spec.rpartition('@')
             if '+' in _before:
                 # @<ref> was present and we split there. Get everything
-                # up to #egg=..., #subdirectory=..., or end of spec
-                ver_spec = _after.split('#')[0]
+                # up to #egg=..., #subdirectory=..., or end of spec, and
+                # add '@' back to spec
+                ver_spec = f'@{_after.split("#")[0]}'
                 # self.install_name is full spec with @<ref> removed
-                self.install_name = full_spec.replace(f'@{ver_spec}', '')
-                self.version_spec = f'=={ver_spec}'
+                self.install_name = full_spec.replace(ver_spec, '')
+                self.version_spec = ver_spec
             else:
                 # @ either not present or used only for setuptools extra
                 self.install_name = full_spec
@@ -373,6 +374,7 @@ class Onion:
             # line is just being rerun)
             return True
         elif '/' not in self.install_name:
+            # onion comment does not specify a VCS URL
             full_spec = self.install_name + self.version_spec.replace("'", "")
             try:
                 pkg_resources.get_distribution(full_spec)

@@ -37,10 +37,13 @@ def configure(
         suppress_stdout=...
 ):
     # ADD DOCSTRING
+    # TODO: perform some value checks upfront to raise relevant errors
+    #  before setting some fields and make setting values
+    #  order-independent (e.g., noninteractive & confirm_install)
     kwargs = locals()
     old_values = {}
     for name, new_value in kwargs.items():
-        if new_value is not ...:
+        if new_value is not Ellipsis:
             old_value = getattr(config, name)
             try:
                 setattr(config, name, new_value)

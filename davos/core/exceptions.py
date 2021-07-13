@@ -10,6 +10,8 @@ __all__ = [
 ]
 
 
+import IPython
+
 from argparse import ArgumentError
 from subprocess import CalledProcessError
 
@@ -66,7 +68,7 @@ class DavosParserError(SyntaxError, DavosError):
 
         # TODO: this may be a lot easier using sys.exc_info(),
         #  inspect.stack(), inspect.getframeinfo(), etc.
-        if target_text is None:
+        if target_text is None or IPython.version_info[0] >= 7:
             flot = (None, None, None, None)
         else:
             from davos import config

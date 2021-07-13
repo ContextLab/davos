@@ -60,7 +60,7 @@ class DavosConfig(metaclass=SingletonConfig):
         #          CONFIGURABLE FIELDS         #
         ########################################
         self._active = True
-        self._allow_rerun = False
+        self._auto_rerun = False
         self._conda_env = None
         self._confirm_install = False
         self._noninteractive = False
@@ -109,15 +109,20 @@ class DavosConfig(metaclass=SingletonConfig):
         return super().__repr__()
 
     @property
-    def allow_rerun(self):
-        return self._allow_rerun
+    def auto_rerun(self):
+        return self._auto_rerun
 
-    @allow_rerun.setter
-    def allow_rerun(self, value):
+    @auto_rerun.setter
+    def auto_rerun(self, value):
         if not isinstance(value, bool):
-            raise DavosConfigError('allow_rerun',
+            raise DavosConfigError('auto_rerun',
                                    "field may be 'True' or 'False'")
-        self._allow_rerun = value
+        elif self._environment == 'Colaboratory':
+            raise DavosConfigError(
+                'auto_rerun',
+                'automatic rerunning of cells not available in Colaboratory'
+            )
+        self._auto_rerun = value
 
     @property
     def confirm_install(self):
@@ -125,6 +130,9 @@ class DavosConfig(metaclass=SingletonConfig):
 
     @confirm_install.setter
     def confirm_install(self, value):
+        # TODO: add test to check that y/n input box is displayed in
+        #  plain Python & buttons are displayed in Jupyter notebook when
+        #  smuggling not-installed package when confirm_install==True
         if not isinstance(value, bool):
             raise DavosConfigError('confirm_install',
                                    "field may be 'True' or 'False'")
@@ -157,9 +165,14 @@ class DavosConfig(metaclass=SingletonConfig):
     @noninteractive.setter
     def noninteractive(self, value):
         if not isinstance(value, bool):
-            raise DavosConfigError('confirm_install',
+            raise DavosConfigError('noninteractive',
                                    "field may be 'True' or 'False'")
-        if value and self._confirm_install:
+        elif self._environment == 'Colaboratory':
+            raise DavosConfigError(
+                'noninteractive',
+                "noninteractive mode not available in Colaboratory"
+            )
+        elif value and self._confirm_install:
             warnings.warn(
                 "noninteractive mode enabled, setting `confirm_install = False`"
             )
@@ -231,14 +244,19 @@ def _block_greedy_ipython_completer():
 def _get_stdlib_modules():
     # ADD DOCSTRING
     stdlib_dir = pathlib.Path(pathlib.__file__).parent
-    stdlib_modules = set(p.stem for p in stdlib_dir.iterdir())
+    stdlib_modules = []
+    for p in stdlib_dir.iterdir():
+        if (
+                (p.is_dir() and p.joinpath('__init__.py').is_file()) or
+                p.suffix == '.py'
+        ):
+            stdlib_modules.append(p.stem)
     try:
-        stdlib_modules.remove('site-packages')
-    except KeyError:
+        builtins_dir = next(d for d in sys.path if d.endswith('lib-dynload'))
+    except StopIteration:
         pass
-    if sys.platform.startswith('linux'):
-        try:
-            stdlib_modules.remove('dist-packages')
-        except KeyError:
-            pass
-    return stdlib_modules
+    else:
+        for p in pathlib.Path(builtins_dir).glob('*.cpython*.so'):
+            stdlib_modules.append(p.name.split('.')[0])
+    stdlib_modules.extend(sys.builtin_module_names)
+    return set(stdlib_modules)

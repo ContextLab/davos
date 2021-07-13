@@ -4,3 +4,13 @@ requires = [
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+addopts = "--capture=no --strict-markers --verbose"
+markers = [
+    "colab: marks tests that should run only on Google Colab",
+    "jupyter: marks tests that should run only in Jupyter notebooks",
+    "ipython_pre7: marks tests that should run only if IPython<7.0.0",
+    "ipython_post7: marks tests that should run only if IPython>=7.0.0",
+    "timeout: marks tests that should fail after a certain amount of time"
+]

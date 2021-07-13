@@ -109,7 +109,7 @@ An [onion comment](#the-onion-comment) is also useful for smuggling a package wh
 used when installing it) is different from its _top-level module name_ (i.e., the name used when importing it). For 
 example:
 ```python
-from sklearn.decomposition import pca    # pip: scikit-learn
+from sklearn.decomposition smuggle pca    # pip: scikit-learn
 ```
 The [onion comment](#the-onion-comment) here (`# pip: scikit-learn`) tells `davos` that if "`sklearn`" does not exist 
 locally, the "`scikit-learn`" package should be installed.

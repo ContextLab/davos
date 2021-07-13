@@ -135,7 +135,7 @@ class NotebookDriver:
     def __init__(self, url: str) -> None:
         self.url = url
         options = Options()
-        options.headless = False
+        options.headless = True
         self.driver = webdriver.Firefox(
             options=options, executable_path=getenv('DRIVER_PATH')
         )
@@ -502,7 +502,7 @@ class NotebookTest(pytest.Item):
             style: Optional[_pytest._code.code._TracebackStyle] = None
     ) -> Union[str, _pytest._code.code.TerminalRepr]:
         if isinstance(excinfo.value, NotebookTestFailed):
-            return html.unescape(excinfo.value.tb_str)
+            return html.unescape(str(excinfo.value))
         return super().repr_failure(excinfo=excinfo, style=style)
 
 

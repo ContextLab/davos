@@ -366,27 +366,28 @@ class NotebookFile(pytest.File):
 
     @staticmethod
     def process_decorators(
-            decs_asts: list[Union[ast.Call, ast.Name]]
+            decs_asts: list[Union[ast.Attribute, ast.Call]]
     ) -> list[_pytest.mark.structures.MarkDecorator]:
         pytest_markers = []
         # reverse so multiple decorators are added from inside, out
         for dec in reversed(decs_asts):
             if isinstance(dec, ast.Call):
-                # noinspection PyTypeChecker
-                # (expects ast.expr, will always be ast.Name)
-                name_ast_obj: ast.Name = dec.func
+                # noinspection PyUnresolvedReferences
+                # (expects dec.func to be ast.expr, but will always be
+                # ast.Attribute here)
+                mark_name: str = dec.func.attr
+                if mark_name == 'skipif':
+                    # ignore mark.skipif decorator so condition is
+                    # evaluated in notebook namespace
+                    continue
                 args = [ast.literal_eval(arg) for arg in dec.args]
                 kwargs = {arg.arg: ast.literal_eval(arg.value) for arg in dec.keywords}
             else:
-                name_ast_obj = dec
+                mark_name = dec.attr
                 args = []
                 kwargs = {}
-            mark_name = name_ast_obj.id.removeprefix('mark.')
-            if mark_name != 'skipif':
-                # ignore mark_skipif decorator so condition is evaluated
-                # in notebook
-                marker = getattr(pytest.mark, mark_name)(*args, **kwargs)
-                pytest_markers.append(marker)
+            marker = getattr(pytest.mark, mark_name)(*args, **kwargs)
+            pytest_markers.append(marker)
         return pytest_markers
 
     def __init__(
@@ -425,7 +426,7 @@ class NotebookFile(pytest.File):
                     if test_ast.decorator_list:
                         # noinspection PyTypeChecker
                         # (expects list[ast.stmt], will always be
-                        # list[Union[ast.Call, ast.Name]])
+                        # list[Union[ast.Attribute, ast.Call]])
                         pytest_marks = self.process_decorators(test_ast.decorator_list)
                         for mark in pytest_marks:
                             test_obj.add_marker(mark)

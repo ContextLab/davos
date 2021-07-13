@@ -132,13 +132,7 @@ jobs:
           else
               pip install IPython==$IPYTHON_VERSION
           fi
-          pip install \
-              "ipykernel>=5.0.0" \
-              requests \
-              scipy \
-              fastdtw==0.3.4 \
-              tqdm==4.41.1 \
-              numba==0.51.2
+          pip install "ipykernel>=5.0.0" requests scipy fastdtw==0.3.4 tqdm==4.41.1
           pip install .
 
           # make environment available as a jupyter kernel

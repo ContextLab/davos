@@ -31,7 +31,7 @@ defaults:
 
 jobs:
   run-tests:
-    name: "Run CI tests (${{ matrix.notebook-type }}, Python==${{ matrix.python-version }}, IPython${{ matrix.ipython-version }})"
+    name: "Run CI tests (${{ matrix.notebook-type }}, Python ${{ matrix.python-version }}, IPython ${{ matrix.ipython-version }})"
     runs-on: ubuntu-latest
     # only run on pull requests between forks to avoid duplicate runs with 'push' event
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
@@ -132,7 +132,13 @@ jobs:
           else
               pip install IPython==$IPYTHON_VERSION
           fi
-          pip install "ipykernel>=5.0.0" requests scipy fastdtw==0.3.4 tqdm==4.41.1
+          pip install \
+              "ipykernel>=5.0.0" \
+              requests \
+              scipy \
+              fastdtw==0.3.4 \
+              tqdm==4.41.1 \
+              numba==0.51.2
           pip install .
 
           # make environment available as a jupyter kernel

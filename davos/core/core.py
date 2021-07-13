@@ -268,7 +268,7 @@ class Onion:
             )
         else:
             # here to handle user calling smuggle() *function* directly
-            raise InstallerError(
+            raise OnionParserError(
                 f"Unsupported installer: '{installer}'. Currently supported "
                 "installers are:\n\t'pip'"  # and 'conda'"
             )

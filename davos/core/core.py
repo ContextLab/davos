@@ -408,14 +408,10 @@ class Onion:
         )
 
     def _pip_install_package(self):
-        live_stdout = self.verbosity > -3
         try:
-            stdout = run_shell_command(self.install_cmd, live_stdout=live_stdout)
+            stdout = run_shell_command(self.install_cmd)
         except CalledProcessError as e:
-            err_msg = (f"the command '{e.cmd}' returned a non-zero "
-                       f"exit code: {e.returncode}. See above output "
-                       f"for details")
-            raise InstallerError(err_msg, e)
+            raise InstallerError(e)
         # handle packages installed in non-standard locations
         install_dir = self.installer_kwargs.get('target')
         if install_dir is not None and install_dir not in sys.path:
@@ -554,7 +550,7 @@ def prompt_input(prompt, default=None, interrupt=None):
 def run_shell_command(command, live_stdout=None):
     # ADD DOCSTRING
     if live_stdout is None:
-        live_stdout = not config._suppress_stdout
+        live_stdout = not config.suppress_stdout
     if live_stdout:
         command_context = capture_stdout
     else:

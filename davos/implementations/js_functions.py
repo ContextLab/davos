@@ -100,6 +100,9 @@ JS_FUNCTIONS = DotDict({
              *     user input.
              */
             const displayButtonPrompt = async function(buttonArgs, sendResult) {
+                if (typeof sendResult === 'undefined') {
+                    sendResult = false;
+                }
                 let clickedButtonCallback, clickedButtonResult, resolutionFunc;
                 const outputDisplayArea = element[0],
                     // store resolve function in outer scope so it can be 

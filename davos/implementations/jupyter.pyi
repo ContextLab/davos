@@ -1,0 +1,6 @@
+from typing import Literal, NoReturn, Union
+
+__all__ = list[Literal['prompt_rerun_buttons']]
+
+def prompt_rerun_buttons() -> Union[NoReturn, str]: ...
+def rerun_cells() -> NoReturn: ...

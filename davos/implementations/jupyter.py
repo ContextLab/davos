@@ -1,11 +1,11 @@
 # ADD DOCSTRING
 
 
-# __all__ = ['restart_and_rerun']
+__all__ = ['prompt_rerun_buttons']
 
 
-import builtins
 import sys
+import time
 from textwrap import dedent
 
 import ipykernel
@@ -17,6 +17,8 @@ from davos.implementations.js_functions import JS_FUNCTIONS
 
 
 def prompt_rerun_buttons():
+    # ADD DOCSTRING
+    # noinspection JSUnusedLocalSymbols,JSUnresolvedFunction
     button_args = dedent("""
         const buttonArgs = [
             {
@@ -26,7 +28,7 @@ def prompt_rerun_buttons():
             },
             {
                 text: 'Continue Running',
-                result: null,
+                result: 'continue',
             },
         ]
     """)
@@ -65,9 +67,6 @@ def prompt_rerun_buttons():
                 raise
 
     # noinspection PyTypeChecker
-    # (PyCharm type checker mismatches documentation)
-    # print(display_button_prompt_full)
-    # return
     display(Javascript(display_button_prompt_full))
 
     while True:
@@ -105,3 +104,26 @@ def prompt_rerun_buttons():
         # end of transmission
         raise EOFError
     return value
+
+
+def rerun_cells():
+    # ADD DOCSTRING
+    js_full = dedent(f"""
+        {JS_FUNCTIONS.jupyter.restartRunCellsAbove};
+        console.log('restartRunCellsAbove defined');
+        
+        restartRunCellsAbove();
+    """)
+
+    # flush output before creating display
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    # noinspection PyTypeChecker
+    display(Javascript(js_full))
+    # block execution for clarity -- kernel restart can sometimes take a
+    # few seconds to trigger, so prevent any queued code from running in
+    # the interim in case it has effects that persist across kernel
+    # sessions
+    while True:
+        time.sleep(10)

@@ -36,7 +36,7 @@ from davos.core.exceptions import (
 )
 from davos.core.parsers import pip_parser
 # noinspection PyUnresolvedReferences
-from davos.core.regexps import _pip_installed_pkgs_re, smuggle_statement_regex
+from davos.core.regexps import pip_installed_pkgs_regex, smuggle_statement_regex
 # noinspection PyUnresolvedReferences
 from davos.implementations import (
     _check_conda_avail_helper,
@@ -155,7 +155,7 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
             "conda-install stdout parsing not implemented yet"
         )
     else:
-        installed_pkg_regex = _pip_installed_pkgs_re
+        installed_pkg_regex = pip_installed_pkgs_regex
 
     matches = installed_pkg_regex.findall(install_cmd_stdout)
     if len(matches) == 0:
@@ -164,19 +164,20 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
     # flatten and split matches to separate packages
     matches_iter = itertools.chain(*(map(str.split, matches)))
     prev_imported_pkgs = []
+    # install command's stdout contains install names (e.g.,
+    # scikit-learn), but we need import names (e.g., sklearn).
     for dist_name in matches_iter:
+        # get the install name without the version
         pkg_name = dist_name.rsplit('-', maxsplit=1)[0]
+        # use the install name to get the package distribution object
+        dist = pkg_resources.get_distribution(pkg_name)
         try:
-            dist = pkg_resources.get_distribution(pkg_name)
-        except pkg_resources.DistributionNotFound:
-            # package either either new (was not previously installed)
-            # or an implicit namespace package that will show up in
-            # another package's top-level names
-            continue
-
-        try:
+            # check the distribution's metadata for a file containing
+            # top-level import names. Also includes names of namespace
+            # packages (e.g. mpl_toolkits from matplotlib), if any.
             toplevel_names = dist.get_metadata('top_level.txt').split()
         except FileNotFoundError:
+            # if file doesn't exist, the import name is the install name
             toplevel_names = (pkg_name,)
 
         for name in toplevel_names:
@@ -613,13 +614,17 @@ def smuggle(
 
     if install_pkg:
         installer_stdout = onion.install_package()
-        # check whether the smuggled package and/or any installed/updated
-        # dependencies were already imported during the current runtime
-        prev_imported_pkgs = get_previously_imported_pkgs(installer_stdout,
-                                                          onion.installer)
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module
         importlib.invalidate_caches()
+        # reload pkg_resources so that just-installed package will be
+        # recognized when querying local versions
+        importlib.reload(sys.modules['pkg_resources'])
+        # check whether the smuggled package and/or any
+        # installed/updated dependencies were already imported during
+        # the current runtime
+        prev_imported_pkgs = get_previously_imported_pkgs(installer_stdout,
+                                                          onion.installer)
         # if the smuggled package was previously imported, deal with
         # it last so it's reloaded after its dependencies are in place
         try:
@@ -691,10 +696,6 @@ def smuggle(
                 raw=True
             )
         smuggled_obj = import_name(name)
-        # finally, reload pkg_resources so that just-installed package
-        # will be recognized when querying local versions for later
-        # checks
-        importlib.reload(sys.modules['pkg_resources'])
 
     # add the object name/alias to the notebook's global namespace
     if as_ is None:

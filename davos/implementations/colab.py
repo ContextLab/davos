@@ -1,16 +1,16 @@
 # ADD DOCSTRING
 
 
-__all__ = ['auto_restart_rerun_cells', 'prompt_rerun_buttons']
+__all__ = ['auto_restart_rerun', 'prompt_rerun_buttons']
 
 
 from IPython.core.display import _display_mimetype
 
 
-def auto_restart_rerun_cells(pkgs):
+def auto_restart_rerun(pkgs):
     raise NotImplementedError(
         "automatic rerunning of cells not available in Colaboratory (this "
-        "function should not be reachable through normal use)"
+        "function should not be reachable through normal use)."
     )
 
 

@@ -1,7 +1,7 @@
 # ADD DOCSTRING
 
 
-__all__ = ['auto_restart_rerun_cells', 'prompt_restart_rerun_buttons']
+__all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']
 
 
 import sys
@@ -17,7 +17,7 @@ from davos import config
 from davos.implementations.js_functions import JS_FUNCTIONS
 
 
-def auto_restart_rerun_cells(pkgs):
+def auto_restart_rerun(pkgs):
     # ADD DOCSTRING
     msg = (
         "Restarting kernel and rerunning cells (required to smuggle "

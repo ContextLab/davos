@@ -1,10 +1,10 @@
+# ADD DOCSTRING
+
+
+__all__ = ['pip_installed_pkgs_regex', 'smuggle_statement_regex']
+
+
 import re
-
-
-__all__ = ['smuggle_statement_regex']
-
-
-_pip_installed_pkgs_re = re.compile("^Successfully installed (.*)$", re.MULTILINE)
 
 
 _name_re = r'[a-zA-Z]\w*'
@@ -16,6 +16,8 @@ _smuggle_subexprs = {
     'onion_re': r'\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)',
     'comment_re': r'(?m:\#+.*$)'
 }
+
+pip_installed_pkgs_regex = re.compile("^Successfully installed (.*)$", re.MULTILINE)
 
 
 smuggle_statement_regex = re.compile((
@@ -110,7 +112,7 @@ smuggle_statement_regex = re.compile((
 ).format_map(_smuggle_subexprs))
 
 # Condensed, fully substituted regex:
-# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as 
+# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as
 # +[a-zA-Z]\w*)?(?: *, *[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as +[a-zA-
 # Z]\w*)?)*(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?(SEMICOLON_SEP
 # )|(?: *(?=\#+ *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))(?P<ONION

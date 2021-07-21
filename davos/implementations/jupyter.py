@@ -1,7 +1,7 @@
 # ADD DOCSTRING
 
 
-__all__ = ['prompt_rerun_buttons']
+__all__ = ['auto_restart_rerun_cells', 'prompt_restart_rerun_buttons']
 
 
 import sys
@@ -13,11 +13,51 @@ import zmq
 from IPython.display import display, Javascript
 from ipython_genutils import py3compat
 
+from davos import config
 from davos.implementations.js_functions import JS_FUNCTIONS
 
 
-def prompt_rerun_buttons():
+def auto_restart_rerun_cells(pkgs):
     # ADD DOCSTRING
+    msg = (
+        "Restarting kernel and rerunning cells (required to smuggle "
+        f"{', '.join(pkgs)})..."
+    )
+
+    js_full = dedent(f"""
+        {JS_FUNCTIONS.jupyter.restartRunCellsAbove};
+        console.log('restartRunCellsAbove defined');
+
+        console.log(`{msg}`);
+        restartRunCellsAbove();
+    """)
+
+    if not config.suppress_stdout:
+        print(f"\033[0;31;1m{msg}\033[0m")
+
+    # flush output before creating display
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    # noinspection PyTypeChecker
+    display(Javascript(js_full))
+    # block execution for clarity -- kernel restart can sometimes take a
+    # few seconds to trigger, so prevent any queued code from running in
+    # the interim in case it has effects that persist across kernel
+    # sessions
+    while True:
+        time.sleep(10)
+
+
+def prompt_restart_rerun_buttons(pkgs):
+    # ADD DOCSTRING
+    msg = (
+        "WARNING: The following packages were previously imported by the "
+        "interpreter and could not be reloaded because their C extensions "
+        f"have changed:\n\t[{', '.join(pkgs)}]\nRestart the kernel to use "
+        "the newly installed version."
+    )
+
     # noinspection JSUnusedLocalSymbols,JSUnresolvedFunction
     button_args = dedent("""
         const buttonArgs = [
@@ -40,7 +80,8 @@ def prompt_rerun_buttons():
         console.log('displayButtonPrompt defined');
         
         {button_args};
-        displayButtonPrompt(buttonArgs, true)
+        console.warn(`{msg}`);
+        displayButtonPrompt(buttonArgs, true);
     """)
 
     # noinspection PyUnresolvedReferences
@@ -48,7 +89,9 @@ def prompt_rerun_buttons():
     kernel = get_ipython().kernel
     stdin_sock = kernel.stdin_socket
 
-    # flush output before creating display
+    print(f"\033[0;31;1m{msg}\033[0m")
+
+    # flush output before creating button display
     sys.stdout.flush()
     sys.stderr.flush()
 
@@ -104,26 +147,3 @@ def prompt_rerun_buttons():
         # end of transmission
         raise EOFError
     return value
-
-
-def rerun_cells():
-    # ADD DOCSTRING
-    js_full = dedent(f"""
-        {JS_FUNCTIONS.jupyter.restartRunCellsAbove};
-        console.log('restartRunCellsAbove defined');
-        
-        restartRunCellsAbove();
-    """)
-
-    # flush output before creating display
-    sys.stdout.flush()
-    sys.stderr.flush()
-
-    # noinspection PyTypeChecker
-    display(Javascript(js_full))
-    # block execution for clarity -- kernel restart can sometimes take a
-    # few seconds to trigger, so prevent any queued code from running in
-    # the interim in case it has effects that persist across kernel
-    # sessions
-    while True:
-        time.sleep(10)

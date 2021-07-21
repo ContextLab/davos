@@ -7,11 +7,11 @@ IPython/Jupyter Notebook).
 
 
 __all__ = [
-    'capture_stdout', 
+    'capture_stdout',
     'check_conda',
     'Onion',
     'parse_line',
-    'prompt_input', 
+    'prompt_input',
     'run_shell_command'
 ]
 
@@ -30,8 +30,8 @@ from packaging.requirements import InvalidRequirement
 from davos import config
 from davos.core.exceptions import (
     DavosError,
-    InstallerError, 
-    OnionParserError, 
+    InstallerError,
+    OnionParserError,
     ParserNotImplementedError
 )
 from davos.core.parsers import pip_parser
@@ -39,7 +39,7 @@ from davos.core.parsers import pip_parser
 from davos.core.regexps import _pip_installed_pkgs_re, smuggle_statement_regex
 # noinspection PyUnresolvedReferences
 from davos.implementations import (
-    _check_conda_avail_helper, 
+    _check_conda_avail_helper,
     _run_shell_command_helper
 )
 
@@ -95,9 +95,9 @@ def check_conda():
         return
 
     config._conda_avail = True
-    # try to create mapping of environment names to paths to validate 
-    # environments used in onion comments or to set config.conda_env. 
-    # Want both names and paths so we can check both `-n`/`--name` & 
+    # try to create mapping of environment names to paths to validate
+    # environments used in onion comments or to set config.conda_env.
+    # Want both names and paths so we can check both `-n`/`--name` &
     # `-p`/`--prefix` when parsing onion comments
     envs_dict_command = "conda info --envs | grep -E '^\w' | sed -E 's/ +\*? +/ /g'"
     # noinspection PyBroadException
@@ -107,18 +107,18 @@ def check_conda():
         # noinspection PyTypeChecker
         envs_dirs_dict = dict(map(str.split, conda_info_output.splitlines()))
     except Exception:
-        # if no environments are found or output can't be parsed for 
-        # some reason, just count any conda env provided as valid. This 
-        # doesn't cause any major problems, we just can't catch errors 
-        # as early and defer to the conda executable to throw an error 
-        # when the user actually goes to install a package into an 
+        # if no environments are found or output can't be parsed for
+        # some reason, just count any conda env provided as valid. This
+        # doesn't cause any major problems, we just can't catch errors
+        # as early and defer to the conda executable to throw an error
+        # when the user actually goes to install a package into an
         # environment that doesn't exist.
         # (just set to None so it can be referenced down below)
         envs_dirs_dict = None
 
     config._conda_envs_dirs = envs_dirs_dict
-    # format of first line of output seems to reliably be: `# packages 
-    # in environment at /path/to/environment/dir:` but can't hurt to 
+    # format of first line of output seems to reliably be: `# packages
+    # in environment at /path/to/environment/dir:` but can't hurt to
     # parse more conservatively since output is so short
     for w in conda_list_output.split():
         if '/' in w:
@@ -132,10 +132,10 @@ def check_conda():
             return
 
     if envs_dirs_dict is not None:
-        # if we somehow fail to parse the environment directory path 
-        # from the output, but we DID successfully create the 
-        # environment mapping, something weird is going on and it's 
-        # worth throwing an error with some info now. Otherwise, defer 
+        # if we somehow fail to parse the environment directory path
+        # from the output, but we DID successfully create the
+        # environment mapping, something weird is going on and it's
+        # worth throwing an error with some info now. Otherwise, defer
         # potential errors to conda executable
         raise DavosError(
             "Failed to programmatically determine path to conda environment "
@@ -169,8 +169,8 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
         try:
             dist = pkg_resources.get_distribution(pkg_name)
         except pkg_resources.DistributionNotFound:
-            # package either either new (was not previously installed) 
-            # or an implicit namespace package that will show up in 
+            # package either either new (was not previously installed)
+            # or an implicit namespace package that will show up in
             # another package's top-level names
             continue
 
@@ -188,8 +188,8 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
 
 def import_name(name):
     """
-    Import and return a module, submodule, class, function, or other 
-    object given its qualified name. 
+    Import and return a module, submodule, class, function, or other
+    object given its qualified name.
 
     Parameters
     ----------
@@ -204,8 +204,8 @@ def import_name(name):
     Notes
     -----
     This is a near-exact reimplementation of
-    `IPython.utils.importstring.import_item`. The function is 
-    reimplemented here to make it available in pure Python environments 
+    `IPython.utils.importstring.import_item`. The function is
+    reimplemented here to make it available in pure Python environments
     where `IPython` may not be installed.
     """
     parts = name.rsplit('.', maxsplit=1)
@@ -380,8 +380,8 @@ class Onion:
                 pkg_resources.get_distribution(full_spec)
             except pkg_resources.DistributionNotFound:
                 # noinspection PyUnresolvedReferences
-                # suppressed due to issue with importlib stubs in 
-                # typeshed repo
+                # (suppressed due to issue with importlib stubs in
+                # typeshed repo)
                 module_spec = importlib.util.find_spec(self.import_name)
                 if module_spec is None:
                     # requested package is not installed
@@ -571,10 +571,10 @@ def run_shell_command(command, live_stdout=None):
 
 
 def smuggle(
-        name, 
-        as_=None, 
-        installer='pip', 
-        args_str='', 
+        name,
+        as_=None,
+        installer='pip',
+        args_str='',
         installer_kwargs=None
 ):
     # ADD DOCSTRING
@@ -615,7 +615,7 @@ def smuggle(
         installer_stdout = onion.install_package()
         # check whether the smuggled package and/or any installed/updated
         # dependencies were already imported during the current runtime
-        prev_imported_pkgs = get_previously_imported_pkgs(installer_stdout, 
+        prev_imported_pkgs = get_previously_imported_pkgs(installer_stdout,
                                                           onion.installer)
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module
@@ -666,7 +666,19 @@ def smuggle(
         if any(failed_reloads):
             # packages with C extensions (e.g., numpy, pandas) cannot be
             # reloaded within an interpreter session. If the package was
-            # previously imported in the current runtime (even if not by
+            # previously imported (even if not by the user), the kernel
+            # will most likely need to be restarted for changes to take
+            # effect
+            if config.auto_rerun:
+                # TODO: write me -- trigger JS function to restart & rerun
+                pass
+            elif config.noninteractive: ...
+                # TODO: write me -- raise SmugglerError
+            else: ...
+                # TODO: write me -- call implementation-specific
+                #  display_reload_warning function
+            #
+            # runtime (even if not by
             # user), warn about needing to reset runtime for changes to
             # take effect with "RESTART RUNTIME" button in output
             # (doesn't raise an exception, remaining code in cell still
@@ -693,3 +705,7 @@ def smuggle(
     # so rerunning cells is more efficient, but any change to version,
     # source, etc. is caught
     config.smuggled[pkg_name] = onion.cache_key
+
+
+
+

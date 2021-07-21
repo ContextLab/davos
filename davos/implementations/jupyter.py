@@ -63,12 +63,11 @@ def prompt_restart_rerun_buttons(pkgs):
         const buttonArgs = [
             {
                 text: 'Restart Kernel and Rerun Cells',
-                result: 'restart',
                 onClick: () => {restartRunCellsAbove();},
             },
             {
                 text: 'Continue Running',
-                result: 'continue',
+                result: null,
             },
         ]
     """)

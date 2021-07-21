@@ -32,15 +32,20 @@ from davos.core.exceptions import (
     DavosError,
     InstallerError,
     OnionParserError,
-    ParserNotImplementedError
+    ParserNotImplementedError,
+    SmugglerError
 )
 from davos.core.parsers import pip_parser
-# noinspection PyUnresolvedReferences
-from davos.core.regexps import pip_installed_pkgs_regex, smuggle_statement_regex
+from davos.core.regexps import (
+    pip_installed_pkgs_regex,
+    smuggle_statement_regex
+)
 # noinspection PyUnresolvedReferences
 from davos.implementations import (
     _check_conda_avail_helper,
-    _run_shell_command_helper
+    _run_shell_command_helper,
+    auto_restart_rerun,
+    prompt_restart_rerun_buttons
 )
 
 
@@ -99,7 +104,7 @@ def check_conda():
     # environments used in onion comments or to set config.conda_env.
     # Want both names and paths so we can check both `-n`/`--name` &
     # `-p`/`--prefix` when parsing onion comments
-    envs_dict_command = "conda info --envs | grep -E '^\w' | sed -E 's/ +\*? +/ /g'"
+    envs_dict_command = r"conda info --envs | grep -E '^\w' | sed -E 's/ +\*? +/ /g'"
     # noinspection PyBroadException
     try:
         conda_info_output = run_shell_command(envs_dict_command,
@@ -152,7 +157,7 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
     # ADD DOCSTRING
     if installer == 'conda':
         raise NotImplementedError(
-            "conda-install stdout parsing not implemented yet"
+            "conda-install stdout parsing is not yet implemented"
         )
     else:
         installed_pkg_regex = pip_installed_pkgs_regex
@@ -218,8 +223,7 @@ def import_name(name):
             obj = getattr(module, obj_name)
         except AttributeError as e:
             raise ImportError(
-                f'No object or submodule "{obj_name}" found in module '
-                f'"{mod_name}"'
+                f'No module or object "{obj_name}" found in "{mod_name}"'
             ) from e
         return obj
     else:
@@ -675,32 +679,35 @@ def smuggle(
             # will most likely need to be restarted for changes to take
             # effect
             if config.auto_rerun:
-                # TODO: write me -- trigger JS function to restart & rerun
-                pass
-            elif config.noninteractive: ...
-                # TODO: write me -- raise SmugglerError
-            else: ...
-                # TODO: write me -- call implementation-specific
-                #  display_reload_warning function
-            #
-            # runtime (even if not by
-            # user), warn about needing to reset runtime for changes to
-            # take effect with "RESTART RUNTIME" button in output
-            # (doesn't raise an exception, remaining code in cell still
-            # runs)
-            _display_mimetype(
-                "application/vnd.colab-display-data+json",
-                (
-                    {'pip_warning': {'packages': ', '.join(failed_reloads)}},
-                ),
-                raw=True
-            )
+                auto_restart_rerun(failed_reloads)
+            elif config.noninteractive:
+                # if not auto_rerun, only remaining non-interactive
+                # option is to raise error
+                msg = (
+                    "The following packages were previously imported by the "
+                    "interpreter and could not be reloaded because their C "
+                    "extensions have changed:\n\t[{', '.join(pkgs)}]\nRestart "
+                    "the kernel to use the newly installed version."
+                )
+                if config.environment != 'Colaboratory':
+                    msg = (
+                        f"{msg}\nTo make this happen automatically, set "
+                        "'davos.config.auto_rerun = True'."
+                    )
+                raise SmugglerError(msg)
+            else:
+                prompt_restart_rerun_buttons(failed_reloads)
+
         smuggled_obj = import_name(name)
 
     # add the object name/alias to the notebook's global namespace
     if as_ is None:
+        # noinspection PyUnboundLocalVariable
+        # (false-positive warning, PyCharm doesn't parse logic fully)
         config.ipython_shell.user_ns[name] = smuggled_obj
     else:
+        # noinspection PyUnboundLocalVariable
+        # (false-positive warning, PyCharm doesn't parse logic fully)
         config.ipython_shell.user_ns[as_] = smuggled_obj
     # cache the smuggled (top-level) package by its full onion comment
     # so rerunning cells is more efficient, but any change to version,

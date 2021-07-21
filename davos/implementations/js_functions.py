@@ -32,7 +32,7 @@ class DotDict(dict):
 # (accept JS functions defined but not called in language injection)
 JS_FUNCTIONS = DotDict({
     'jupyter': {
-        'restartRunCellsAbove': dedent("""\
+        'restartRunCellsAbove': dedent("""
             const restartRunCellsAbove = function() {
                 const outputArea = this,
                     notebook = Jupyter.notebook,
@@ -61,13 +61,14 @@ JS_FUNCTIONS = DotDict({
                 // pass queueCellsAndResetSelection as callback to run after 
                 // notebook kernel restarts and is available
                 notebook.kernel.restart(queueCellsAndResetSelection);
+            
             // when passed to Ipython.display.display(Ipython.display.Javascript()), 
             // "this" will be the [class=]"output" element of the cell from 
             // which it's displayed
             }.bind(this)
-            """),
+        """),
         # TODO: don't forget to remove event listeners from all buttons
-        'displayButtonPrompt': dedent("""\
+        'displayButtonPrompt': dedent("""
             /**
              * Display one or more buttons on the notebook frontend for user 
              * selection and (together with kernel-side Python function) block 
@@ -154,10 +155,11 @@ JS_FUNCTIONS = DotDict({
                         Jupyter.notebook.kernel.send_input_reply(clickedButtonResult);
                     }
                 })
+            
             // when passed to Ipython.display.display(Ipython.display.Javascript()), 
             // "this" will be the [class=]"output" element of the cell from 
             // which it's displayed
-            }.bind(this);
+            }.bind(this)
         """)    # noqa: E124
     }
 })

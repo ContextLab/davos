@@ -35,6 +35,7 @@ class DavosConfig(metaclass=SingletonConfig):
         ########################################
         try:
             # noinspection PyUnresolvedReferences
+            # (function exists globally when imported into IPython context)
             self._ipython_shell = get_ipython()
         except NameError:
             # see _block_greedy_ipython_completer() docstring
@@ -73,12 +74,12 @@ class DavosConfig(metaclass=SingletonConfig):
         # pip is assumed to be installed -- been included by default
         # with Python binary installers since 3.4
         if (
-                self._environment != 'Colaboratory' and 
+                self._environment != 'Colaboratory' and
                 pathlib.Path(f'{sys.exec_prefix}/bin/pip').is_file()
         ):
             self._pip_executable = f'{sys.exec_prefix}/bin/pip'
         else:
-            # pip exe wasn't in expected location (or it's colab, where 
+            # pip exe wasn't in expected location (or it's colab, where
             # things are all over the place)
             try:
                 pip_exe = check_output(['which', 'pip'], encoding='utf-8').strip()
@@ -221,17 +222,17 @@ class DavosConfig(metaclass=SingletonConfig):
 
 def _block_greedy_ipython_completer():
     # ADD DOCSTRING - can borrow from https://github.com/ContextLab/hypertools/blob/e7b7446/hypertools/plot/backend.py#L374
-    # extract 20 most recent entries. Completer module usually appears 
-    # ~12 deep after davos & importlib, so add small buffer to be safe 
+    # extract 20 most recent entries. Completer module usually appears
+    # ~12 deep after davos & importlib, so add small buffer to be safe
     # but start searching from oldest.
     stack_trace = traceback.extract_stack(limit=20)
     # drop most recent 3 frames, which are always internal davos calls
     for frame in stack_trace[:-3]:
         if frame.filename.endswith('IPython/core/completerlib.py'):
-            # if stack contains calls to functions in completer module, 
-            # davos was imported for greed TAB-completion. Remove 
-            # davos.core & davos.core.config from sys.modules so they're 
-            # reloaded when imported for real and raise generic 
+            # if stack contains calls to functions in completer module,
+            # davos was imported for greed TAB-completion. Remove
+            # davos.core & davos.core.config from sys.modules so they're
+            # reloaded when imported for real and raise generic
             # exception to make completer function return early.
             del sys.modules['davos.core']
             del sys.modules['davos.core.config']

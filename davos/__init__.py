@@ -3,13 +3,14 @@ from davos.core.config import DavosConfig
 
 
 __all__ = [
-    'activate', 
-    'config', 
-    'configure', 
-    'deactivate', 
-    'is_active', 
+    'activate',
+    'config',
+    'configure',
+    'deactivate',
+    'is_active',
     'smuggle'
 ]
+
 __version__ = pkg_resources.get_distribution('davos').version
 
 
@@ -27,11 +28,11 @@ def activate():
 
 
 def configure(
-        *, 
-        active=..., 
+        *,
+        active=...,
         auto_rerun=...,
-        conda_env=..., 
-        confirm_install=..., 
+        conda_env=...,
+        confirm_install=...,
         noninteractive=...,
         pip_executable=...,
         suppress_stdout=...

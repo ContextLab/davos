@@ -184,7 +184,7 @@ class NotebookDriver:
         result_element = self.driver.find_element_by_id(f"{func_name}_result")
         result: list[str] = result_element.text.split(maxsplit=2)[1:]
         if len(result) == 0:
-            # managed to read element text in the moment between when it 
+            # managed to read element text in the moment between when it
             # was created and when it was populated
             time.sleep(3)
             result_element = self.driver.find_element_by_id(f"{func_name}_result")
@@ -192,7 +192,7 @@ class NotebookDriver:
         return result
 
     def get_test_runner_cell(self) -> WebElement:
-        # TODO: make this more robust --  maybe loop in reverse over 
+        # TODO: make this more robust --  maybe loop in reverse over
         #  cells and find the one whose text == "run_cell()"
         return self.driver.find_elements_by_class_name("cell")[-1]
 
@@ -252,7 +252,7 @@ class ColabDriver(NotebookDriver):
         if self.driver.current_url != self.url:
             # handle additional "verify it's you" page
             self.click(
-                "#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div"
+                "#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(1) > div"
             )
             time.sleep(3)
             recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
@@ -268,8 +268,8 @@ class ColabDriver(NotebookDriver):
         keyboard_shortcut.perform()
         if not pre_approved:
             # approve notebook not authored by Google
-            # (button takes a second to become clickable, seems to be 
-            # obscured by other element, raises 
+            # (button takes a second to become clickable, seems to be
+            # obscured by other element, raises
             # ElementClickInterceptedException)
             time.sleep(3)
             try:
@@ -328,7 +328,7 @@ class JupyterDriver(NotebookDriver):
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url)
         self.clear_all_outputs()
-    
+
     def clear_all_outputs(self):
         # takes a moment for Jupyter.notebook JS object to be defined
         time.sleep(5)
@@ -444,8 +444,8 @@ class NotebookFile(pytest.File):
         self.driver.run_all_cells()
         self.driver.wait_for_test_start()
         # driver will wait for up to 5 minutes for each test to complete
-        # and its result to become readable. Upper limit for *driver* 
-        # timeout is intentionally high so individual *tests* can 
+        # and its result to become readable. Upper limit for *driver*
+        # timeout is intentionally high so individual *tests* can
         # specify pytest-style timeouts via the @mark.timeout()
         # decorator in the notebook
         self.driver.set_max_timeout(300)

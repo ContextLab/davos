@@ -427,7 +427,7 @@ In practice, onion comments are identified as matches for the
 - If multiple _separate_ `smuggle` statements appear on a single line separated by semicolons, an onion comment 
   may be used to modify the **last** `smuggle` statement:
   ```python
-  smuggle IPython; smuggle ipywidgets; smuggle ipykernel    # pip: ipykernel~=6.0 --pre
+  smuggle gensim; smuggle spacy; smuggle nltk    # pip: nltk~=3.5 --pre
   ```
 - For multiline `smuggle` statements, an onion comment may be placed on either the first or last line:
   ```python

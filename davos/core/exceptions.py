@@ -13,7 +13,9 @@ __all__ = [
 import IPython
 
 from argparse import ArgumentError
+from shutil import get_terminal_size
 from subprocess import CalledProcessError
+from textwrap import fill, indent
 
 
 class DavosError(Exception):
@@ -150,8 +152,7 @@ class InstallerError(SmugglerError, CalledProcessError):
     (e.g., failed to connect to internet, resolve environment, find
     package with given name, etc.)
     """
-    def __init__(self, msg, *args, output=None, stderr=None,
-                 show_stdout=None):
+    def __init__(self, *args, output=None, stderr=None, show_output=None):
         cpe_or_retcode = args[0]
         if isinstance(cpe_or_retcode, CalledProcessError):
             returncode = cpe_or_retcode.returncode
@@ -162,27 +163,30 @@ class InstallerError(SmugglerError, CalledProcessError):
             try:
                 returncode, cmd = args
             except ValueError:
-                # TODO: raise this from the line of the constructor's
-                #  signature
                 raise TypeError(
                     "InstallerError requires, at minimum, either a "
                     "'subprocess.CalledProcessError' object or a return code "
                     "[int] and cmd [str]"
-                ) from None
+                )
         super().__init__(returncode=returncode, cmd=cmd, output=output,
                          stderr=stderr)
-        self.msg = msg
-        if show_stdout is None:
+        if show_output is None:
             from davos import config
-            if config.suppress_stdout and output is not None:
-                show_stdout = True
-            else:
-                show_stdout = False
-        if show_stdout:
-            # TODO: change this so the command's stdout is inserted as
-            #  a FrameSummary object in the stack trace at the line
-            #  where davos.run_shell_command was called
-            self.args = (*self.args, output)
+            # if stdout from installer command that raised error was
+            # suppressed, include it in the error message
+            self.show_output = config.suppress_stdout
+        else:
+            self.show_output = show_output
 
     def __str__(self):
-        return self.msg + '\n\t' + super().__str__()
+        msg = super().__str__()
+        if self.show_output and (self.output or self.stderr):
+            msg = f"{msg} See below for details."
+            textwidth = min(get_terminal_size().columns, 85)
+            if self.output:
+                text = fill(self.output, textwidth, replace_whitespace=False)
+                msg = f"{msg}\n\nstdout:\n{indent(text, '    ')}"
+            if self.stderr:
+                text = fill(self.stderr, textwidth, replace_whitespace=False)
+                msg = f"{msg}\n\nstderr:\n{indent(text, '    ')}"
+        return msg

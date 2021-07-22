@@ -1,9 +1,8 @@
 from re import Pattern
 from typing import Literal, TypedDict
 
-__all__: list[Literal['smuggle_statement_regex']]
+__all__: list[Literal['pip_installed_pkgs_regex', 'smuggle_statement_regex']]
 
-_pip_installed_pkgs_re: Pattern[str]
 _name_re: Literal[r'[a-zA-Z]\w*']
 
 # noinspection PyPep8Naming
@@ -14,4 +13,5 @@ class _smuggle_subexprs(TypedDict):
     onion_re: Literal[r'\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)']
     qualname_re: Literal[r'[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*']
 
+pip_installed_pkgs_regex: Pattern[str]
 smuggle_statement_regex: Pattern[str]

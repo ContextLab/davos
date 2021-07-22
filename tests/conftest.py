@@ -141,6 +141,43 @@ class NotebookDriver:
         )
         self.driver.get(url)
 
+    def capture_error_artifacts(
+            self,
+            page_source: bool = True,
+            screenshot: bool = True
+    ) -> Optional[tuple[Optional[Path]]]:
+        if not (page_source or screenshot):
+            return None
+        artifacts_dir = Path(getenv('ARTIFACTS_DIR')).resolve()
+        if not artifacts_dir.is_dir():
+            artifacts_dir.mkdir()
+            # set_output_cmd = f"::set-output name=artifacts_exist::true"
+            # print(set_output_cmd)
+        artifact_n = 1
+        while True:
+            page_src_fname = f'page_source_at_error_{artifact_n}.html'
+            page_src_fpath = artifacts_dir.joinpath(page_src_fname)
+            screenshot_fname = f'screenshot_at_error_{artifact_n}.png'
+            screenshot_fpath = artifacts_dir.joinpath(screenshot_fname)
+            if page_src_fpath.is_file() or screenshot_fpath.is_file():
+                artifact_n += 1
+                continue
+            break
+        centered_msg = f"ARTIFACT {artifact_n} CREATED HERE".center(100, ' ')
+        print(f"\n\n{'='*100}\n{centered_msg}\n{'='*100}\n\n")
+        return_val = []
+        if page_source:
+            page_src_fpath.write_text(self.driver.page_source)
+            return_val.append(page_src_fpath)
+        if screenshot:
+            success = self.driver.save_screenshot(str(screenshot_fpath))
+            # False if writing file raised IOError, else True
+            if success:
+                return_val.append(screenshot_fpath)
+            else:
+                return_val.append(None)
+        return tuple(return_val)
+
     # noinspection PyCompatibility
     def click(
             self,
@@ -184,7 +221,7 @@ class NotebookDriver:
         result_element = self.driver.find_element_by_id(f"{func_name}_result")
         result: list[str] = result_element.text.split(maxsplit=2)[1:]
         if len(result) == 0:
-            # managed to read element text in the moment between when it 
+            # managed to read element text in the moment between when it
             # was created and when it was populated
             time.sleep(3)
             result_element = self.driver.find_element_by_id(f"{func_name}_result")
@@ -192,7 +229,7 @@ class NotebookDriver:
         return result
 
     def get_test_runner_cell(self) -> WebElement:
-        # TODO: make this more robust --  maybe loop in reverse over 
+        # TODO: make this more robust --  maybe loop in reverse over
         #  cells and find the one whose text == "run_cell()"
         return self.driver.find_elements_by_class_name("cell")[-1]
 
@@ -207,8 +244,15 @@ class ColabDriver(NotebookDriver):
     def __init__(self, notebook_path: Union[Path, str]) -> None:
         url = f"https://colab.research.google.com/github/{GITHUB_USERNAME}/davos/blob/{GITHUB_REF}/{notebook_path}"
         super().__init__(url=url)
-        self.sign_in_google()
-        self.factory_reset_runtime()
+        try:
+            self.sign_in_google()
+            self.factory_reset_runtime()
+        except WebDriverException as e:
+            self.capture_error_artifacts()
+            pytest.exit(
+                "Failed to either sign into Google account or reset notebook "
+                "runtime. Error artifacts will be uploaded"
+            )
 
     def clear_all_outputs(self):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")
@@ -252,10 +296,14 @@ class ColabDriver(NotebookDriver):
         if self.driver.current_url != self.url:
             # handle additional "verify it's you" page
             self.click(
-                "#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(2) > div"
+                "#view_container > div > div > div.pwWryf.bxPAYd > div > "
+                "div.WEQkZc > div > form > span > section > div > div > div > "
+                "ul > li:nth-child(1) > div"
             )
             time.sleep(3)
-            recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
+            recovery_email_input_box = self.driver.find_element_by_id(
+                'knowledge-preregistered-email-response'
+            )
             recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
             self.click("button[jsname='LgbsSe']")
             time.sleep(3)
@@ -268,24 +316,11 @@ class ColabDriver(NotebookDriver):
         keyboard_shortcut.perform()
         if not pre_approved:
             # approve notebook not authored by Google
-            # (button takes a second to become clickable, seems to be 
-            # obscured by other element, raises 
+            # (button takes a second to become clickable, seems to be
+            # obscured by other element, raises
             # ElementClickInterceptedException)
             time.sleep(3)
-            try:
-                self.driver.find_element_by_id("ok").click()
-            except WebDriverException as e:
-                # write source of current page to file
-                page_src_path = Path('page_at_error.html').resolve()
-                page_src_path.write_text(self.driver.page_source)
-                # export path to file as environment variable
-                with open(getenv('GITHUB_ENV'), 'a') as f:
-                    f.write(f"\nERROR_PAGE_SOURCE={page_src_path}")
-                # raise exception and show URL
-                raise WebDriverException(
-                    f"Error on page: {self.driver.current_url}. Page source "
-                    f"in {page_src_path} will be uploaded as build artifact"
-                ) from e
+            self.driver.find_element_by_id("ok").click()
 
     def wait_for_test_start(self) -> None:
         test_runner_cell = self.get_test_runner_cell()
@@ -328,7 +363,7 @@ class JupyterDriver(NotebookDriver):
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url)
         self.clear_all_outputs()
-    
+
     def clear_all_outputs(self):
         # takes a moment for Jupyter.notebook JS object to be defined
         time.sleep(5)
@@ -444,8 +479,8 @@ class NotebookFile(pytest.File):
         self.driver.run_all_cells()
         self.driver.wait_for_test_start()
         # driver will wait for up to 5 minutes for each test to complete
-        # and its result to become readable. Upper limit for *driver* 
-        # timeout is intentionally high so individual *tests* can 
+        # and its result to become readable. Upper limit for *driver*
+        # timeout is intentionally high so individual *tests* can
         # specify pytest-style timeouts via the @mark.timeout()
         # decorator in the notebook
         self.driver.set_max_timeout(300)

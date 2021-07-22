@@ -1,35 +1,34 @@
 from collections.abc import Callable
 from io import StringIO
 from types import (
-    BuiltinFunctionType, 
-    FunctionType, 
-    ModuleType, 
+    BuiltinFunctionType,
+    FunctionType,
+    ModuleType,
     TracebackType
 )
 from typing import (
     Any,
     AnyStr,
-    Generic, 
+    Generic,
     Literal,
-    NoReturn, 
-    Optional, 
-    overload, 
-    TextIO, 
+    NoReturn,
+    Optional,
+    overload,
+    TextIO,
     Tuple,
-    Type, 
-    TypedDict, 
-    TypeVar, 
+    Type,
+    TypedDict,
+    TypeVar,
     Union
 )
 
 __all__: list[
     Literal[
-        'capture_stdout', 
+        'capture_stdout',
         'Onion',
         'parse_line',
-        'prompt_input', 
-        'run_shell_command', 
-        'smuggle_statement_regex'
+        'prompt_input',
+        'run_shell_command',
     ]
 ]
 
@@ -42,7 +41,7 @@ class _SingleStream(tuple[_StringOrFileIO]):
 
 class _MultiStream(Tuple[_StringOrFileIO, ...]):
     def __len__(self) -> int: ...
-    
+
 class PipInstallerKwargs(TypedDict, total=False):
     abi: str
     cache_dir: str
@@ -114,7 +113,7 @@ class capture_stdout(Generic[_S]):
 
 def check_conda() -> None: ...
 def get_previously_imported_pkgs(
-        install_cmd_stdout: str, 
+        install_cmd_stdout: str,
         installer: Literal['conda', 'pip']
 ) -> list[str]: ...
 def import_name(name: str) -> Union[ModuleType, FunctionType, BuiltinFunctionType, Any]: ...
@@ -155,9 +154,9 @@ def prompt_input(
 ) -> bool: ...
 def run_shell_command(command: str, live_stdout: Optional[bool] = ...) -> str: ...
 def smuggle(
-        name: str, 
-        as_: Optional[str] = ..., 
-        installer: Literal['conda', 'pip'] = ..., 
-        args_str: str = ..., 
+        name: str,
+        as_: Optional[str] = ...,
+        installer: Literal['conda', 'pip'] = ...,
+        args_str: str = ...,
         installer_kwargs: Optional[PipInstallerKwargs] = ...
 ) -> None: ...

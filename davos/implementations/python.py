@@ -1,7 +1,11 @@
 # ADD DOCSTRING
 
 
-# TODO: add __all__
+__all__ = [
+    'auto_restart_rerun',
+    'generate_parser_func',
+    'prompt_restart_rerun_buttons'
+]
 
 
 import locale
@@ -13,21 +17,22 @@ from io import StringIO
 from subprocess import CalledProcessError, PIPE, Popen
 
 
-def _activate_helper(smuggle_func, parser_func): 
-    # TODO: implement me
-    ...
+def _activate_helper(smuggle_func, parser_func):
+    raise NotImplementedError(
+        "davos does not yet support non-interactive Python environments"
+    )
 
 
 def _check_conda_avail_helper():
     """
-    Pure Python implementation of helper function for 
-    `davos.core.core.check_conda`. Checks whether conda executable is 
+    Pure Python implementation of helper function for
+    `davos.core.core.check_conda`. Checks whether conda executable is
     available for use
     """
     try:
         with redirect_stdout(StringIO()) as conda_list_output:
-            # using `conda list` instead of a more straightforward 
-            # command so stdout is formatted the same as the IPython 
+            # using `conda list` instead of a more straightforward
+            # command so stdout is formatted the same as the IPython
             # implementation (which must use `conda list`)
             _run_shell_command_helper('conda list Python')
     except CalledProcessError:
@@ -36,8 +41,9 @@ def _check_conda_avail_helper():
 
 
 def _deactivate_helper(smuggle_func, parser_func):
-    # TODO: implement me
-    ...
+    raise NotImplementedError(
+        "davos does not yet support non-interactive Python environments"
+    )
 
 
 def _run_shell_command_helper(command):
@@ -61,11 +67,21 @@ def _run_shell_command_helper(command):
         raise
 
 
-def generate_parser_func(line_parser):
-    # ADD DOCSTRING
-    # TODO: implement me
-    def full_parser(lines):
-        # TODO: implement me
-        return lines
+def auto_restart_rerun(pkgs):
+    raise NotImplementedError(
+        "automatic rerunning not available in non-interactive Python (this "
+        "function should not be reachable through normal use)."
+    )
 
-    return full_parser
+
+def generate_parser_func(line_parser):
+    raise NotImplementedError(
+        "davos does not yet support non-interactive Python environments"
+    )
+
+
+def prompt_restart_rerun_buttons(pkgs):
+    raise NotImplementedError(
+        "button-based user input prompts are not available in non-interactive "
+        "Python (this function should not be reachable through normal use)."
+    )

@@ -1,4 +1,4 @@
-from typing import Literal, NoReturn
+from typing import Literal, NoReturn, Union
 
 __all__ = list[Literal['auto_restart_rerun', 'prompt_restart_rerun_buttons']]
 

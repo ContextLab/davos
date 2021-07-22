@@ -3,20 +3,26 @@ from typing import Any, Literal, NoReturn, Optional, Protocol, Union
 from davos.core.config import DavosConfig, IpythonShell
 from davos.core.core import PipInstallerKwargs
 from davos.implementations.ipython_post7 import IPyPost7FullParserFunc
-from davos.implementations.python import PyFullParserFunc
 
-__all__ = list[Literal['full_parser']]
+__all__ = list[
+    Literal[
+        'auto_restart_rerun',
+        'full_parser',
+        'generate_parser_func',
+        'prompt_restart_rerun_buttons'
+    ]
+]
 
 LineParserFunc = Callable[[str], str]
-FullParserFunc = Union[IPyPost7FullParserFunc, LineParserFunc, PyFullParserFunc]
+FullParserFunc = Union[IPyPost7FullParserFunc, LineParserFunc]
 
 class SmuggleFunc(Protocol):
     def __call__(
-            self, 
-            name: str, 
-            as_: Optional[str] = ..., 
-            installer: Literal['conda', 'pip'] = ..., 
-            args_str: str = ..., 
+            self,
+            name: str,
+            as_: Optional[str] = ...,
+            installer: Literal['conda', 'pip'] = ...,
+            args_str: str = ...,
             installer_kwargs: Optional[PipInstallerKwargs] = ...
     ) -> None: ...
 
@@ -25,14 +31,16 @@ _check_conda_avail_helper: Callable[[], Optional[str]]
 _deactivate_helper: Callable[[SmuggleFunc, FullParserFunc], None]
 _run_shell_command_helper: Callable[[str], None]
 _set_custom_showsyntaxerror: Callable[[], None]
-generate_parser_func: Callable[[LineParserFunc], FullParserFunc]
+auto_restart_rerun: Callable[[list[str]], NoReturn]
 full_parser: FullParserFunc
+generate_parser_func: Callable[[LineParserFunc], FullParserFunc]
+prompt_restart_rerun_buttons: Callable[[list[str]], None]
 
 class ShowSyntaxErrorDavos(Protocol):
     def __call__(
-            self, 
-            ipy_shell: IpythonShell, 
-            filename: Optional[str] = ..., 
+            self,
+            ipy_shell: IpythonShell,
+            filename: Optional[str] = ...,
             running_compiled_code: bool = ...
     ) -> None: ...
 

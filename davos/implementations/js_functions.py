@@ -4,6 +4,9 @@
 __all__ = ['DotDict', 'JS_FUNCTIONS']
 
 
+from textwrap import dedent
+
+
 class DotDict(dict):
     # ADD DOCSTRING
     # simple helper that allows a dict to be accessed like a JS object
@@ -11,6 +14,7 @@ class DotDict(dict):
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
 
+    # noinspection PyMissingConstructor
     def __init__(self, d):
         # ADD DOCSTRING
         for k, v in d.items():
@@ -19,9 +23,16 @@ class DotDict(dict):
             self[k] = v
 
 
+# noinspection ThisExpressionReferencesGlobalObjectJS
+# (expressions are passed to
+# IPython.display.display(IPython.display.Javascript()), wherein `this`
+# refers to the top-level output element for the cell from which it was
+# invoked)
+# noinspection JSUnusedLocalSymbols
+# (accept JS functions defined but not called in language injection)
 JS_FUNCTIONS = DotDict({
     'jupyter': {
-        'restartRunCellsAbove': """\
+        'restartRunCellsAbove': dedent("""
             const restartRunCellsAbove = function() {
                 const outputArea = this,
                     notebook = Jupyter.notebook,
@@ -34,6 +45,12 @@ JS_FUNCTIONS = DotDict({
                     runningCellIndex = allCells.index(runningCell);
 
                 const queueCellsAndResetSelection = function() {
+                    /*
+                     * Queue all cells above plus currently running cell. 
+                     * Queueing cells unsets currently highlighted selected 
+                     * cells, so re-select highlighted cell or group of cells/
+                     */
+                    // noinspection JSCheckFunctionSignatures
                     notebook.execute_cell_range(0, runningCellIndex + 1);
                     notebook.select(anchorCellIndex);
                     if (selectedCellIndex !== anchorCellIndex) {
@@ -41,43 +58,57 @@ JS_FUNCTIONS = DotDict({
                         notebook.select(selectedCellIndex, false);
                     }
                 }
-
+                // pass queueCellsAndResetSelection as callback to run after 
+                // notebook kernel restarts and is available
                 notebook.kernel.restart(queueCellsAndResetSelection);
+            
+            // when passed to Ipython.display.display(Ipython.display.Javascript()), 
+            // "this" will be the [class=]"output" element of the cell from 
+            // which it's displayed
             }.bind(this)
-        """,
+        """),
         # TODO: don't forget to remove event listeners from all buttons
-        'displayButtonPrompt': """\
+        'displayButtonPrompt': dedent("""
             /**
-             * Display one or more buttons for user selection and block until one is clicked
-             * @param {Object[]} buttonArgs - Array of objects containing data for each 
-             *     button/option to be displayed.
-             * @param {String} [buttonArgs[].text=""] - Text label for the given button. 
-             *     Defaults to an empty string.
-             * @param {(BigInt|Boolean|null|Number|Object|String|undefined)} [buttonArgs[].result] - 
-             *     Value assigned to the "result" trait of the ipywidgets object whose 
-             *     model_id attribute is widgetModelId (if provided), if the given button is 
-             *     clicked. Used to forward user input information to Python. JS types are 
-             *     converted ty Python types, within reason (Boolean -> bool, Object -> dict, 
-             *     null/undefined -> None, etc.). If omitted, the return value of onClick 
-             *     will be used instead.
-             * @param {Function} [buttonArgs[].onClick] - Callback run when the given button is 
-             *     clicked, before the result value is set on the ipywidgets object and 
-             *     Python execution resumes. Omit the result property to use the return value 
-             *     of this function as a dynamically computed result value. 
-             *     Defaults to a noop.
-             * @param {String} [buttonArgs[].id] - Optional id for the given button element.
-             * @param {String} [widgetModelId] - The ID of the ipywidgets WidgetModel object 
-             *     whose "result" property will be assigned the result value for the clicked 
-             *     button.
+             * Display one or more buttons on the notebook frontend for user 
+             * selection and (together with kernel-side Python function) block 
+             * until one is clicked. Optionally send a per-button "result" 
+             * value to the IPython kernel's stdin socket to capture user 
+             * selection in a Python variable.
+             * 
+             * @param {Object[]} buttonArgs - Array of objects containing data 
+             *     for each button to be displayed.
+             * @param {String} [buttonArgs[].text=""] - Text label for the 
+             *     given button. Defaults to an empty string.
+             * @param {BigInt|Boolean|null|Number|Object|String|undefined} [buttonArgs[].result] - 
+             *     Value sent to the notebook kernel's stdin socket if the 
+             *     given button is clicked and sendResult is true. Used to 
+             *     forward user input information to Python. JS types are 
+             *     converted ty Python types, within reason (Boolean -> bool, 
+             *     Object -> dict, Array -> list, null -> None, 
+             *     undefined -> '', etc.). If omitted, the return value of 
+             *     onClick will be used instead.
+             * @param {Function} [buttonArgs[].onClick] - Callback executed 
+             *     when the given button is clicked, before the result value is 
+             *     sent to the IPython kernel and Python execution resumes. 
+             *     Omit the result property to use this function's return value 
+             *     as a dynamically computed result value. Defaults to a noop.
+             * @param {String} [buttonArgs[].id] - Optional id for the given 
+             *     button element.
+             * @param {Boolean} [sendResult=false] - Whether to send the result 
+             *     value to  the IPython kernel's stdin socket as simulated 
+             *     user input.
              */
-            const displayButtonPrompt = async function(buttonArgs, widgetModelId) {
-                let onClick, clickedButtonCallback, clickedButtonResult, resolutionFunc;
-                const outputArea = this,
-                    outputDisplayArea = element[0],
-                    // store resolve function in outer scope so it can be called from an 
-                    // event listener
+            const displayButtonPrompt = async function(buttonArgs, sendResult) {
+                if (typeof sendResult === 'undefined') {
+                    sendResult = false;
+                }
+                let clickedButtonCallback, clickedButtonResult, resolutionFunc;
+                const outputDisplayArea = element[0],
+                    // store resolve function in outer scope so it can be 
+                    // called from an event listener
                     callbackPromise = new Promise((resolve) => resolutionFunc = resolve );
-                
+            
                 buttonArgs.forEach(function (buttonObj, ix) {
                     let buttonElement = document.createElement('BUTTON');
                     buttonElement.style.marginLeft = '1rem';
@@ -86,42 +117,52 @@ JS_FUNCTIONS = DotDict({
                         buttonElement.id = buttonObj.id;
                     }
                     if (typeof buttonObj.text === 'undefined') {
-                        buttonElement.textContent = '';
+                        buttonElement.textContent = `Button ${ix}`;
                     } else {
                         buttonElement.textContent = buttonObj.text;
                     }
                     if (typeof buttonObj.onClick === 'undefined') {
-                        onClick = () => {};
-                    } else {
-                        onClick = buttonObj.onClick;
+                        // mutating object passed as argument isn't ideal, but 
+                        // it's an easy way to make scoping in event listener 
+                        // execution work, and should be pretty harmless since 
+                        // this is internal use only
+                        buttonObj.onClick = () => {};
                     }
                     buttonElement.addEventListener('click', () => {
-                        // store clicked button's callback & result, resolve awaited promise
-                        clickedButtonCallback = onClick;
+                        // store clicked button's callback & result
+                        clickedButtonCallback = buttonObj.onClick;
                         clickedButtonResult = buttonObj.result;
+                        // resolve callbackPromise when any button is clicked
                         resolutionFunc();
                     });
                     outputDisplayArea.appendChild(buttonElement);
                 })
-                // attach handler to run when promise is fulfilled, pause until button is clicked
+                
+                // attach handler to run when promise is fulfilled, await 
+                // callbackPromise resolution (any button clicked)
                 await callbackPromise.then(() => {
-                    // TODO: make sure this doesn't remove the widget model before we need it below
+                    // remove element in output area containing buttons
                     outputDisplayArea.remove();
+                    // execute clicked button's callback, store return value 
+                    // (if any)
                     const CbReturnVal = clickedButtonCallback();
                     
-                    if (typeof widgetModelId !== 'undefined') {
+                    if (sendResult === true) {
                         if (typeof clickedButtonResult === 'undefined') {
+                            // if result should be sent to IPython kernel and 
+                            // button's 'result' property was not specified, 
+                            // use return value of button's onClick callback
                             clickedButtonResult = CbReturnVal;
                         }
-                        const widgetManager = Jupyter.WidgetManager._managers[0],
-                            widgetModel = widgetManager.get_model(widgetModelId);
-                        widgetModel.then((model) => {
-                            model.set('result', clickedButtonResult);
-                            model.save_changes();
-                        })
+                        // send result value to IPython kernel's stdin 
+                        Jupyter.notebook.kernel.send_input_reply(clickedButtonResult);
                     }
                 })
+            
+            // when passed to Ipython.display.display(Ipython.display.Javascript()), 
+            // "this" will be the [class=]"output" element of the cell from 
+            // which it's displayed
             }.bind(this)
-        """
+        """)    # noqa: E124
     }
 })

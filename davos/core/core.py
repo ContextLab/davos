@@ -601,22 +601,23 @@ def smuggle(
             # already present.
             smuggled_obj = import_name(name)
         except ModuleNotFoundError as e:
-            # TODO: check for --yes (conda) and bypass if passed
-            if config._confirm_install:
-                msg = (f"package '{pkg_name}' will be installed with the "
-                       f"following command:\n\t`{onion.install_cmd}`\n"
-                       f"Proceed?")
-                install_pkg = prompt_input(msg, default='y')
-                if not install_pkg:
-                    raise e
-            else:
-                install_pkg = True
+            install_pkg = True
         else:
             install_pkg = False
     else:
         install_pkg = True
 
     if install_pkg:
+        # TODO: check for --yes (conda) and bypass if passed
+        if config.confirm_install:
+            msg = (f"package '{pkg_name}' will be installed with the "
+                   f"following command:\n\t`{onion.install_cmd}`\n"
+                   f"Proceed?")
+            confirmed = prompt_input(msg, default='y')
+            if not confirmed:
+                raise SmugglerError(
+                    f"package '{pkg_name}' not installed"
+                ) from None
         installer_stdout = onion.install_package()
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module

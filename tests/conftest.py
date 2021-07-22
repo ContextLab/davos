@@ -249,7 +249,10 @@ class ColabDriver(NotebookDriver):
             self.factory_reset_runtime()
         except WebDriverException as e:
             self.capture_error_artifacts()
-            pytest.exit()
+            pytest.exit(
+                "Failed to either sign into Google account or reset notebook "
+                "runtime. Error artifacts will be uploaded"
+            )
 
     def clear_all_outputs(self):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")

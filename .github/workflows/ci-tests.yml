@@ -14,8 +14,8 @@ on:
       - '.gitattributes'
       - 'LICENSE'
       - 'README.md'
-  workflow_dispatch: 
-    inputs: 
+  workflow_dispatch:
+    inputs:
       debug_enabled:
         description: 'Pause before tests for tmate debugging'
         required: false
@@ -66,14 +66,16 @@ jobs:
           - notebook-type: colab
             python-version: 3.7       # I/Python versions are arbitrary for Colab-based
             ipython-version: 5.5.0    # tests. Chosen to denote versions Colab uses
+            experimental: true
     env:
-      NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
-      PYTHON_VERSION: ${{ matrix.python-version }}
-      IPYTHON_VERSION: ${{ matrix.ipython-version }}
+      ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
       GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
       GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
-      RECOVERY_GMAIL_ADDRESS: ${{ secrets.DAVOS_RECOVERY_GMAIL_ADDRESS }}
       HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      IPYTHON_VERSION: ${{ matrix.ipython-version }}
+      NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+      RECOVERY_GMAIL_ADDRESS: ${{ secrets.DAVOS_RECOVERY_GMAIL_ADDRESS }}
     steps:
       - uses: actions/checkout@v2
 
@@ -88,28 +90,28 @@ jobs:
         run: |
           # install Python 3.9 (used to run notebooks via selenium, not the tests themselves)
           conda install python=3.9
-          
+
           # install Firefox browser
           sudo apt-get install firefox
-          
+
           # install python packages
           pip install pytest==6.2 "selenium>=3.141" geckodriver-autoinstaller
-          
+
           # install geckodriver
           driver_path=$(python -c '
-          
+
           import shutil
           from pathlib import Path
-          
+
           import geckodriver_autoinstaller
-          
+
           driver_src = Path(geckodriver_autoinstaller.install(cwd=True))
           driver_dest = driver_src.rename(driver_src.parents[1].joinpath(driver_src.name))
           driver_src.parent.rmdir()
           print(driver_dest)
-          
+
           ')
-          
+
           # export path to driver as environment variable
           echo "DRIVER_PATH=$driver_path" >> $GITHUB_ENV
 
@@ -118,9 +120,9 @@ jobs:
         run: |
           # install jupyter notebooks application in base environment
           pip install notebook "ipykernel==5.0.0"
-          
+
           # create kernel environment
-          conda create -n kernel-env python=$PYTHON_VERSION          
+          conda create -n kernel-env python=$PYTHON_VERSION
 
           # install davos & various test requirements in kernel environment
           conda activate kernel-env
@@ -138,7 +140,7 @@ jobs:
           # make environment available as a jupyter kernel
           python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
           conda deactivate
-          
+
       - name: launch Jupyter server
         if: matrix.notebook-type == 'jupyter'
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &
@@ -151,7 +153,16 @@ jobs:
         uses: mxschmitt/action-tmate@v3
 
       - name: run pytest
+        id: run-pytest
+        continue-on-error: ${{ matrix.experimental }}
         run: pytest -sv tests/
+
+      - name: upload selenium error artifacts
+        if: matrix.experimental && steps.run-pytest.outputs.artifacts_exist
+        uses: actions/upload-artifact@v2
+        with:
+          path: ${{ env.ARTIFACTS_DIR }}
+
 
       - name: upload selenium error artifact
         if: env.ERROR_PAGE_SOURCE != ''

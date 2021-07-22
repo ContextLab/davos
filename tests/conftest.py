@@ -148,8 +148,11 @@ class NotebookDriver:
     ) -> Optional[tuple[Optional[Path]]]:
         if not (page_source or screenshot):
             return None
-        artifacts_dir = Path(getenv('GITHUB_WORKSPACE')).joinpath('artifacts')
-        artifacts_dir.mkdir(exist_ok=True)
+        artifacts_dir = Path(getenv('ARTIFACTS_DIR')).resolve()
+        if not artifacts_dir.is_dir():
+            artifacts_dir.mkdir()
+            set_output_cmd = f"::set-output name=artifacts_exist::true"
+            print(set_output_cmd)
         artifact_n = 1
         while True:
             page_src_fname = f'page_source_at_error_{artifact_n}.html'
@@ -160,6 +163,8 @@ class NotebookDriver:
                 artifact_n += 1
                 continue
             break
+        centered_msg = f"ARTIFACT {artifact_n} CREATED HERE".center(100, ' ')
+        print(f"\n\n{'='*100}\n{centered_msg}\n{'='*100}\n\n")
         return_val = []
         if page_source:
             page_src_fpath.write_text(self.driver.page_source)
@@ -239,8 +244,12 @@ class ColabDriver(NotebookDriver):
     def __init__(self, notebook_path: Union[Path, str]) -> None:
         url = f"https://colab.research.google.com/github/{GITHUB_USERNAME}/davos/blob/{GITHUB_REF}/{notebook_path}"
         super().__init__(url=url)
-        self.sign_in_google()
-        self.factory_reset_runtime()
+        try:
+            self.sign_in_google()
+            self.factory_reset_runtime()
+        except WebDriverException as e:
+            self.capture_error_artifacts()
+            pytest.exit.Exception(e)
 
     def clear_all_outputs(self):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")
@@ -284,10 +293,14 @@ class ColabDriver(NotebookDriver):
         if self.driver.current_url != self.url:
             # handle additional "verify it's you" page
             self.click(
-                "#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div > ul > li:nth-child(1) > div"
+                "#view_container > div > div > div.pwWryf.bxPAYd > div > "
+                "div.WEQkZc > div > form > span > section > div > div > div > "
+                "ul > li:nth-child(1) > div"
             )
             time.sleep(3)
-            recovery_email_input_box = self.driver.find_element_by_id('knowledge-preregistered-email-response')
+            recovery_email_input_box = self.driver.find_element_by_id(
+                'knowledge-preregistered-email-response'
+            )
             recovery_email_input_box.send_keys(getenv('RECOVERY_GMAIL_ADDRESS'))
             self.click("button[jsname='LgbsSe']")
             time.sleep(3)
@@ -304,20 +317,7 @@ class ColabDriver(NotebookDriver):
             # obscured by other element, raises
             # ElementClickInterceptedException)
             time.sleep(3)
-            try:
-                self.driver.find_element_by_id("ok").click()
-            except WebDriverException as e:
-                # write source of current page to file
-                page_src_path = Path('page_at_error.html').resolve()
-                page_src_path.write_text(self.driver.page_source)
-                # export path to file as environment variable
-                with open(getenv('GITHUB_ENV'), 'a') as f:
-                    f.write(f"\nERROR_PAGE_SOURCE={page_src_path}")
-                # raise exception and show URL
-                raise WebDriverException(
-                    f"Error on page: {self.driver.current_url}. Page source "
-                    f"in {page_src_path} will be uploaded as build artifact"
-                ) from e
+            self.driver.find_element_by_id("ok").click()
 
     def wait_for_test_start(self) -> None:
         test_runner_cell = self.get_test_runner_cell()

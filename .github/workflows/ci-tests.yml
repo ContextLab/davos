@@ -158,15 +158,7 @@ jobs:
         run: pytest -sv tests/
 
       - name: upload selenium error artifacts
-        if: matrix.experimental && steps.run-pytest.outputs.artifacts_exist
+        if: matrix.experimental && steps.run-pytest.outputs.artifacts_exist == 'true'
         uses: actions/upload-artifact@v2
         with:
           path: ${{ env.ARTIFACTS_DIR }}
-
-
-      - name: upload selenium error artifact
-        if: env.ERROR_PAGE_SOURCE != ''
-        uses: actions/upload-artifact@v2
-        with:
-          name: error-page-source
-          path: ${{ env.ERROR_PAGE_SOURCE }}

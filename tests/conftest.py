@@ -141,6 +141,38 @@ class NotebookDriver:
         )
         self.driver.get(url)
 
+    def capture_error_artifacts(
+            self,
+            page_source: bool = True,
+            screenshot: bool = True
+    ) -> Optional[tuple[Optional[Path]]]:
+        if not (page_source or screenshot):
+            return None
+        artifacts_dir = Path(getenv('GITHUB_WORKSPACE')).joinpath('artifacts')
+        artifacts_dir.mkdir(exist_ok=True)
+        artifact_n = 1
+        while True:
+            page_src_fname = f'page_source_at_error_{artifact_n}.html'
+            page_src_fpath = artifacts_dir.joinpath(page_src_fname)
+            screenshot_fname = f'screenshot_at_error_{artifact_n}.png'
+            screenshot_fpath = artifacts_dir.joinpath(screenshot_fname)
+            if page_src_fpath.is_file() or screenshot_fpath.is_file():
+                artifact_n += 1
+                continue
+            break
+        return_val = []
+        if page_source:
+            page_src_fpath.write_text(self.driver.page_source)
+            return_val.append(page_src_fpath)
+        if screenshot:
+            success = self.driver.save_screenshot(str(screenshot_fpath))
+            # False if writing file raised IOError, else True
+            if success:
+                return_val.append(screenshot_fpath)
+            else:
+                return_val.append(None)
+        return tuple(return_val)
+
     # noinspection PyCompatibility
     def click(
             self,

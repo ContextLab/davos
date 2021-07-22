@@ -158,7 +158,8 @@ jobs:
         run: pytest -sv tests/
 
       - name: upload selenium error artifacts
-        if: matrix.experimental && steps.run-pytest.outputs.artifacts_exist == 'true'
+        if: matrix.experimental
         uses: actions/upload-artifact@v2
         with:
           path: ${{ env.ARTIFACTS_DIR }}
+          if-no-files-found: ignore

@@ -151,8 +151,8 @@ class NotebookDriver:
         artifacts_dir = Path(getenv('ARTIFACTS_DIR')).resolve()
         if not artifacts_dir.is_dir():
             artifacts_dir.mkdir()
-            set_output_cmd = f"::set-output name=artifacts_exist::true"
-            print(set_output_cmd)
+            # set_output_cmd = f"::set-output name=artifacts_exist::true"
+            # print(set_output_cmd)
         artifact_n = 1
         while True:
             page_src_fname = f'page_source_at_error_{artifact_n}.html'
@@ -249,7 +249,7 @@ class ColabDriver(NotebookDriver):
             self.factory_reset_runtime()
         except WebDriverException as e:
             self.capture_error_artifacts()
-            pytest.exit.Exception(e)
+            pytest.exit()
 
     def clear_all_outputs(self):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")

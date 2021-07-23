@@ -1,4 +1,8 @@
-# ADD DOCSTRING
+"""
+This module contains reimplementations of the command line parsers for
+installer programs supported by `davos`, slightly modified to parse
+arguments supplied via an Onion comment.
+"""
 
 
 __all__ = ['EditableAction', 'OnionParser', 'pip_parser', 'SubtractAction']
@@ -30,12 +34,21 @@ class OnionParser(ArgumentParser):
           numpy && rm -rf /` fails due to the OnionParser, but would
           otherwise execute successfully)
         - detecting errors quickly, before spawning a subprocesses
-        - allowing `davos` to
+        - allowing `davos` to adopt per-smuggle-command behaviors based
+          on user-provided arguments (e.g., `--force-reinstall`,
+          `-I/--ignore-installed`, `--no-input`, `-v/--verbose`, etc.)
 
     See Also
     --------
     `argparse.ArgumentParser` :
         https://docs.python.org/3/library/argparse.html#argumentparser-objects
+
+    Notes
+    -----
+    Currently supported arguments are based on `pip` v21.1.3, regardless
+    of the user's local `pip` version. However, the vast majority of
+    arguments are consistent across versions.
+
     """
 
     def parse_args(self, args, namespace=None):
@@ -87,12 +100,18 @@ class OnionParser(ArgumentParser):
         Raise an OnionArgumentError with a given message
 
         This is needed to override `argparse.ArgumentParser.error()`.
-        `argparse` is  which exits the program when called because it
-        # TODO: finish me
+        `argparse` is  which exits the program when called (in response
+        to an exception being raised) because it is generally intended
+        for command line interfaces. The generally idea is to affect the
+        stack trace displayed for the user as little as possible, while
+        also ensuring all exceptions raised inherit from `SyntaxError`
+        so they can be successfully raised during the notebook cell
+        pre-execution step.
 
         Parameters
         ----------
-        message
+        message : str
+            The error message to be displayed for the raised exception.
         """
         if sys.exc_info()[1] is not None:
             raise
@@ -141,7 +160,7 @@ class EditableAction(Action):
         Parameters
         ----------
         option_strings : list of str
-            A list of command-line option strings which should be
+            A list of command line option strings which should be
             associated with this action.
         dest : str
             The name of the attribute to hold the created object(s).

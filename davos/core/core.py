@@ -51,24 +51,26 @@ from davos.implementations import (
 
 class capture_stdout:
     """
-    Context manager similar to `contextlib.redirect_stdout`, but
-    different in that it:
+    Context manager for sending stdout to multiple streams at once.
+
+    Similar to `contextlib.redirect_stdout`, but different in that it:
       - temporarily writes stdout to other streams *in addition to*
         rather than *instead of* `sys.stdout`
       - accepts any number of streams and sends stdout to each
       - can optionally keep streams open after exiting context by
         passing `closing=False`
-
-    Parameters
-    ----------
-    *streams : `*io.IOBase`
-        stream(s) to receive data sent to `sys.stdout`
-
-    closing : `bool`, optional
-        if [default: `True`], close streams upon exiting the context
-        block.
     """
+
     def __init__(self, *streams, closing=True):
+        """
+        Parameters
+        ----------
+        streams : io.IOBase
+            stream(s) to receive data sent to `sys.stdout`
+        closing : bool, optional
+            if `True` (default), close streams upon exiting the context
+            block.
+        """
         self.streams = streams
         self.closing = closing
         self.sys_stdout_write = sys.stdout.write
@@ -199,12 +201,12 @@ def import_name(name):
 
     Parameters
     ----------
-    name : `str`
+    name : str
         The fully qualified name of the object to import
 
     Returns
     -------
-    `object`
+    object
         The imported object
 
     Notes
@@ -714,7 +716,3 @@ def smuggle(
     # so rerunning cells is more efficient, but any change to version,
     # source, etc. is caught
     config.smuggled[pkg_name] = onion.cache_key
-
-
-
-

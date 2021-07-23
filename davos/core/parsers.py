@@ -17,8 +17,36 @@ from davos.core.exceptions import OnionArgumentError
 
 
 class OnionParser(ArgumentParser):
-    # ADD DOCSTRING
+    """
+    `argparse.ArgumentParser` subclass for parsing Onion comments
+
+
+
+    See Also
+    --------
+    `argparse.ArgumentParser` :
+        https://docs.python.org/3/library/argparse.html#argumentparser-objects
+    """
+
     def parse_args(self, args, namespace=None):
+        """
+        Parse installer options as command line arguments
+
+        Parameters
+        ----------
+        args : list of str
+            Command line arguments for the installer program specified
+            in an Onion comment, split into a list of strings.
+        namespace : object, optional
+            An object whose namespace should be populated with the
+            parsed arguments. If `None` (default), creates a new, empty
+            `argparse.Namespace` object.
+
+        Returns
+        -------
+        object
+            The populated object passed as `namespace`
+        """
         self._args = ' '.join(args)
         try:
             ns, extras = super().parse_known_args(args=args,
@@ -65,7 +93,30 @@ class OnionParser(ArgumentParser):
 
 
 class EditableAction(Action):
-    # ADD DOCSTRING
+    """
+    `argparse.Action` subclass for pip parser's `-e/--editable <path/url>`
+    argument.
+
+    The `-e/--editable` argument is implemented in a slightly unusual
+    way in order to allow the OnionParser to mimic the behavior of the
+    real `pip install` command's far more complex parser. The argument
+    is optional (default: `False`), and is mutually exclusive with the
+    positional `spec` argument. If provided, it accepts/requires a
+    single value (metavar: `'<path/url>'`). However, rather than storing
+    the value in the `argparse.Namespace` object's "editable" attribute,
+    the EditableAction stores `editable=True` and assigns the passed
+    value to "`spec`". This way:
+        1. As with the real `pip install` command, the project path/url
+           for an editable install must immediately follow the
+           `-e/--editable` argument (i.e., `/some/file/path -e` is
+           invalid)
+        2. The parser accepts only a single regular or editable package
+           spec (since an Onion comment can only ever refer to a single
+           package).
+        3. After parsing, argument values and types are consistent and
+           easier to handle: `spec` will always be the package spec and
+           `editable` will always be a `bool`.
+    """
     def __init__(
             self,
             option_strings,
@@ -74,10 +125,32 @@ class EditableAction(Action):
             metavar=None,
             help=None
     ):
-        # ADD DOCSTRING
-        # NOTE: `argparse.Action` subclass constructors must contain
-        #  `dest` as a positional arg, but `self.dest` will always be
-        #  `'editable'` for this particular class
+        """
+        Constructor. All parameters are forwarded to argparse.Argument()
+
+        Parameters
+        ----------
+        option_strings : list of str
+            A list of command-line option strings which should be
+            associated with this action.
+        dest : str
+            The name of the attribute to hold the created object(s).
+        default : multiple types, optional
+            The value to be produced if the option is not specified
+            (default: `None`).
+        metavar : str, optional
+            The name to be used for the option's argument with the help
+            string. If `None` (default), the `dest` value will be used
+            as the name.
+        help : str, optional
+            The help string describing the argument.
+
+        Notes
+        -----
+        `argparse.Action` subclass constructors must take `dest` as a
+        positional argument, but `self.dest` will always be `'editable'`
+        for EditableAction instances.
+        """
         super().__init__(option_strings, dest, default=default,
                          metavar=metavar, help=help)
 
@@ -96,7 +169,6 @@ class SubtractAction(Action):
             required=False,
             help=None
     ):
-        # ADD DOCSTRING
         super().__init__(option_strings=option_strings, dest=dest, nargs=0,
                          default=default, required=required, help=help)
 

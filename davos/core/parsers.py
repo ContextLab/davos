@@ -20,7 +20,17 @@ class OnionParser(ArgumentParser):
     """
     `argparse.ArgumentParser` subclass for parsing Onion comments
 
-
+    This class is essentially used to reimplement the installer
+    programs' existing command line parsers with some slight tweaks
+    specific to parsing Onion comments during the notebook's pre-cell
+    execution phase. Since the arguments are eventually passed to the
+    actual installer's parser, this is, admittedly, slightly redundant.
+    However, it affords a number of advantages, such as:
+        - protecting against shell injections (e.g., `# pip: --upgrade
+          numpy && rm -rf /` fails due to the OnionParser, but would
+          otherwise execute successfully)
+        - detecting errors quickly, before spawning a subprocesses
+        - allowing `davos` to
 
     See Also
     --------
@@ -506,6 +516,11 @@ pip_general_opts.add_argument(
     '--log',
     metavar='<path>',
     help="Path to a verbose appending log."
+)
+pip_general_opts.add_argument(
+    '--no-input',
+    action='store_true',
+    help="Disable prompting for input."
 )
 pip_general_opts.add_argument(
     '--retries',

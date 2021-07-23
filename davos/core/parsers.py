@@ -4,6 +4,7 @@
 __all__ = ['EditableAction', 'OnionParser', 'pip_parser', 'SubtractAction']
 
 
+import sys
 from argparse import (
     Action,
     ArgumentError,
@@ -20,28 +21,47 @@ class OnionParser(ArgumentParser):
     def parse_args(self, args, namespace=None):
         self._args = ' '.join(args)
         try:
-            try:
-                ns, extras = super().parse_known_args(args=args,
-                                                      namespace=namespace)
-            except ArgumentError as e:
+            ns, extras = super().parse_known_args(args=args,
+                                                  namespace=namespace)
+        except (ArgumentError, ArgumentTypeError) as e:
+            if isinstance(e, OnionArgumentError):
+                raise
+            elif isinstance(e, ArgumentError):
                 raise OnionArgumentError(msg=e.message,
                                          argument=e.argument_name,
-                                         onion_txt=self._args) from e
-            except (ArgumentTypeError, ValueError) as e:
-                raise OnionArgumentError(msg=e.args[0], onion_txt=self._args)
+                                         onion_txt=self._args) from None
             else:
-                if extras:
-                    msg = f"Unrecognized arguments: {' '.join(extras)}"
-                    raise OnionArgumentError(msg=msg, argument=extras[0],
-                                             onion_txt=self._args)
-                return ns
+                raise OnionArgumentError(msg=e.args[0],
+                                         onion_txt=self._args) from None
+        else:
+            if extras:
+                msg = f"Unrecognized arguments: {' '.join(extras)}"
+                raise OnionArgumentError(msg=msg,
+                                         argument=extras[0],
+                                         onion_txt=self._args)
+            return ns
         finally:
             # noinspection PyAttributeOutsideInit
             self._args = None
 
     def error(self, message):
-        # ADD DOCSTRING
-        raise OnionArgumentError(msg=message, onion_txt=self._args)
+        """
+        Raise an OnionArgumentError with a given message
+
+        This is needed to override `argparse.ArgumentParser.error()`.
+        `argparse` is  which exits the program when called because it
+        # TODO: finish me
+
+        Parameters
+        ----------
+        message
+        """
+        if sys.exc_info()[1] is not None:
+            raise
+        else:
+            if message == 'one of the arguments -e/--editable is required':
+                message = 'Onion comment must specify a package name'
+            raise OnionArgumentError(msg=message, onion_txt=self._args)
 
 
 class EditableAction(Action):

@@ -1,4 +1,10 @@
-# ADD DOCSTRING
+"""
+This modules defines the global `davos` config object. The `davos`
+config consists of public fields that may be set by the user to affect
+`davos`' behavior, as well as private (internal use only) fields that
+store information about the context into which the package was imported
+and available functionality.
+"""
 
 
 __all__ = ['DavosConfig']
@@ -15,6 +21,8 @@ from davos.core.exceptions import DavosConfigError, DavosError
 
 
 class SingletonConfig(type):
+    """Metaclass that enforces singleton behavor for `DavosConfig`"""
+
     __instance = None
 
     def __call__(cls, *args, **kwargs):
@@ -24,11 +32,62 @@ class SingletonConfig(type):
 
 
 class DavosConfig(metaclass=SingletonConfig):
-    # ADD DOCSTRING
+    """
+    The global `davos` config object
+
+    Defines the following fields:
+        **User-configurable fields**:
+            active : bool
+                Whether the `davos` parser should be run on subsequent
+                input (cells, in Jupyter/Colab notebooks, lines in pure
+                Python; default: `True`)
+            auto_rerun : bool
+                If `True` (default: `False`), automatically restart the
+                interpreter sesssion and rerun previously executed code
+                upon smuggling a package that cannot be dynamically
+                reloaded (Note: currently implemented for Jupyter
+                notebooks only)
+            conda_env: str or None
+                The name of the resident conda environemnt of the
+                current Python interpreter, if running within a `conda`
+                environment. Otherwise, `None`.
+            confirm_install : bool
+                If `True` (default: `False`), prompt for user input
+                before installing any smuggled packages not already
+                available locally.
+            nonineractive : bool
+                If `True` (default: `False`) run `davos` in
+                non-interactive mode. All user input and confirmation
+                will be disabled. **Note**: In Jupyter environments, the
+                value of `auto_rerun` will determine whether `davos`
+                restarts the kernel or throws an error when a smuggled
+                package cannot be dynamically reloaded.
+            suppress_stdout: bool
+                If `True` (default: `False`), suppress all unnecessary
+                output issued by the program. This is often useful when
+                smuggling packages that need to install many
+                dependencies and therefore generate extensive output.
+        **Static fields**:
+            conda_avail : bool
+                Whether or not `conda` is installed and the `conda`
+                executable is accessible from the Python interpreter
+            conda_envs_dirs : dict or None
+                If `conda_avail` is `True`, a mapping of conda
+                environment names to their environment directories.
+                Otherwise, `False`.
+            smuggled : dict
+                A cache of packages previously smuggled during the
+                current interpreter session, implemented as a dict whose
+                keys are package names and whose values are the
+                arguments supplied via the corresponding Onion comment.
+                The cache is implemented as such so that altering any
+                arguments passed to the installer will prompt a
+                re-installation.
+    """
+
     # noinspection PyFinal
-    # suppressing due to PyCharm bug where inspection doesn't
-    # differentiate between declarations here and in stub file (which it
-    # should, according to PEP 591)
+    # (PyCharm doesn't differentiate between declarations here and in
+    # stub file, which it should, according to PEP 591)
     def __init__(self):
         ########################################
         #           READ-ONLY FIELDS           #
@@ -131,9 +190,6 @@ class DavosConfig(metaclass=SingletonConfig):
 
     @confirm_install.setter
     def confirm_install(self, value):
-        # TODO: add test to check that y/n input box is displayed in
-        #  plain Python & buttons are displayed in Jupyter notebook when
-        #  smuggling not-installed package when confirm_install==True
         if not isinstance(value, bool):
             raise DavosConfigError('confirm_install',
                                    "field may be 'True' or 'False'")
@@ -221,29 +277,73 @@ class DavosConfig(metaclass=SingletonConfig):
 
 
 def _block_greedy_ipython_completer():
-    # ADD DOCSTRING - can borrow from https://github.com/ContextLab/hypertools/blob/e7b7446/hypertools/plot/backend.py#L374
+    """
+    Handles IPython edge case where `davos` is preemptively imported
+
+    IPython (really, Jedi) uses "greedy" TAB-completiion to determine
+    auto-complete suggestions, meaning code is actually executed (note:
+    there's a config option to disable this, but it's enabled by
+    default). So if the user presses the TAB button while typing an
+    `import` statement, the module will actually be imported into a
+    Python subprocess in order to parse the to-be-imported package's
+    namespace [1]. And once imported, the package will be cached in
+    `sys.modules` so any initialization code not be run during
+    subsequent imports. For `davos`, this causes config fields to be
+    improperly set for a Python environment, rather than IPython.
+
+    To account for this, we parse the stack trace for any calls
+    originating from IPython's autocomple module
+    (`IPython/core/completerlib.py`), and if any are found, we remove
+    the relevant `davos` modules from `sys.modules` so they're reloaded
+    when *actually* imported from the notebook, then raise a generic
+    exception (handled in [1]) which causes the autocompletion run to
+    exit.
+
+    Notes
+    -----
+    [1] https://github.com/ipython/ipython/blob/2b4bc75ac735a2541125b3baf299504e5513994a/IPython/core/completerlib.py#L158
+    """
     # extract 20 most recent entries. Completer module usually appears
-    # ~12 deep after davos & importlib, so add small buffer to be safe
-    # but start searching from oldest.
+    # ~12 entries deep, after davos & importlib, so add small buffer to
+    # be safe and start searching from oldest.
     stack_trace = traceback.extract_stack(limit=20)
-    # drop most recent 3 frames, which are always internal davos calls
+    # drop most recent 3 frames, which will always be nternal davos
+    # calls due to package layout
     for frame in stack_trace[:-3]:
         if frame.filename.endswith('IPython/core/completerlib.py'):
             # if stack contains calls to functions in completer module,
-            # davos was imported for greed TAB-completion. Remove
-            # davos.core & davos.core.config from sys.modules so they're
-            # reloaded when imported for real and raise generic
+            # remove davos.core & davos.core.config from sys.modules so
+            # they're reloaded when imported for real and raise generic
             # exception to make completer function return early.
             del sys.modules['davos.core']
             del sys.modules['davos.core.config']
             raise Exception
     else:
-        # davos is being imported into a non-interactive environment
+        # davos is actually intentionally being imported into a
+        # non-interactive environment
         return
 
 
 def _get_stdlib_modules():
-    # ADD DOCSTRING
+    """
+    Get names of standard library modules
+
+    For efficiency, get standard library module names upfront. This
+    allows us to skip file system checks for any smuggled stdlib
+    modules.
+
+    Returns
+    -------
+    set of str
+        names of standard library modules for the user's Python
+        implementation
+
+    Notes
+    -----
+    There's actually a standard library implementation of this, but it's
+    not implemented for Python<3.10:
+    https://docs.python.org/3.10/library/sys.html#sys.stdlib_module_names
+    """
     stdlib_dir = pathlib.Path(pathlib.__file__).parent
     stdlib_modules = []
     for p in stdlib_dir.iterdir():

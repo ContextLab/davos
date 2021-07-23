@@ -1,5 +1,5 @@
 """
-This module contains reimplementations of the command line parsers for
+This module defines reimplementations of the command line parsers for
 installer programs supported by `davos`, slightly modified to parse
 arguments supplied via an Onion comment.
 """

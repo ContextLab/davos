@@ -528,7 +528,7 @@ class Onion:
         try:
             stdout = run_shell_command(self.install_cmd)
         except CalledProcessError as e:
-            raise InstallerError(e)
+            raise InstallerError.from_error(e)
         # handle packages installed in non-standard locations
         install_dir = self.installer_kwargs.get('target')
         if install_dir is not None and install_dir not in sys.path:

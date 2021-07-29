@@ -103,7 +103,7 @@ class OnionParserError(DavosParserError):
 
 
 class OnionArgumentError(ArgumentError, OnionParserError):
-    def __init__(self, msg=None, argument=None, onion_txt=None, *args):
+    def __init__(self, msg, argument=None, onion_txt=None, *args):
         if (
                 msg is not None and
                 argument is None and

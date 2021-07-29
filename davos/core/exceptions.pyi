@@ -48,26 +48,16 @@ class SmugglerError(DavosError): ...
 
 class InstallerError(SmugglerError, CalledProcessError):
     show_output: Optional[bool]
-    @overload
-    def __init__(
-            self,
-            __cpe: CalledProcessError,
-            output: Optional[str] = ...,
-            stderr: Optional[str] = ...,
+    @classmethod
+    def from_error(
+            cls,
+            cpe: CalledProcessError,
             show_output: Optional[bool] = ...
-    ) -> None: ...
-    @overload
+    ) -> InstallerError: ...
     def __init__(
             self,
-            __returncode: int,
-            __cmd: str,
-            output: Optional[str] = ...,
-            stderr: Optional[str] = ...,
-            show_output: Optional[bool] = ...
-    ) -> None: ...
-    def __init__(
-            self,
-            *args: Union[CalledProcessError, tuple[int, str]],
+            returncode: int,
+            cmd: str,
             output: Optional[str] = ...,
             stderr: Optional[str] = ...,
             show_output: Optional[bool] = ...

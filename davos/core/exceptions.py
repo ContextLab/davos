@@ -152,22 +152,28 @@ class InstallerError(SmugglerError, CalledProcessError):
     (e.g., failed to connect to internet, resolve environment, find
     package with given name, etc.)
     """
-    def __init__(self, *args, output=None, stderr=None, show_output=None):
-        cpe_or_retcode = args[0]
-        if isinstance(cpe_or_retcode, CalledProcessError):
-            returncode = cpe_or_retcode.returncode
-            cmd = cpe_or_retcode.cmd
-            output = output or cpe_or_retcode.output
-            stderr = stderr or cpe_or_retcode.stderr
-        else:
-            try:
-                returncode, cmd = args
-            except ValueError:
-                raise TypeError(
-                    "InstallerError requires, at minimum, either a "
-                    "'subprocess.CalledProcessError' object or a return code "
-                    "[int] and cmd [str]"
-                )
+
+    @classmethod
+    def from_error(cls, cpe, show_output=None):
+        if not isinstance(cpe, CalledProcessError):
+            raise TypeError(
+                "InstallerError.from_error() requires a "
+                f"'subprocess.CalledProcessError' instance, not a {type(cpe)}"
+            )
+        return cls(returncode=cpe.returncode,
+                   cmd=cpe.cmd,
+                   output=cpe.output,
+                   stderr=cpe.stderr,
+                   show_output=show_output)
+
+    def __init__(
+            self,
+            returncode,
+            cmd,
+            output=None,
+            stderr=None,
+            show_output=None
+    ):
         super().__init__(returncode=returncode, cmd=cmd, output=output,
                          stderr=stderr)
         if show_output is None:

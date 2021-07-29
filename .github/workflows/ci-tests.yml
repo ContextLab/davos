@@ -66,7 +66,6 @@ jobs:
           - notebook-type: colab
             python-version: 3.7       # I/Python versions are arbitrary for Colab-based
             ipython-version: 5.5.0    # tests. Chosen to denote versions Colab uses
-            experimental: true
     env:
       ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
       GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
@@ -154,11 +153,11 @@ jobs:
 
       - name: run pytest
         id: run-pytest
-        continue-on-error: ${{ matrix.experimental }}
+        continue-on-error: ${{ matrix.notebook-type == 'colab' }}
         run: pytest -sv tests/
 
       - name: upload selenium error artifacts
-        if: matrix.experimental
+        if: matrix.notebook-type == 'colab'
         uses: actions/upload-artifact@v2
         with:
           path: ${{ env.ARTIFACTS_DIR }}

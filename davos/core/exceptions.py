@@ -19,13 +19,23 @@ from textwrap import fill, indent
 
 
 class DavosError(Exception):
+    """Base class for all `davos` library exceptions."""
+
     pass
 
 
 class DavosConfigError(DavosError):
-    """general class for errors related to the Davos Config object"""
+    """Class for errors related to the `davos.config` object."""
+
     def __init__(self, field, msg):
-        # ADD DOCSTRING
+        """
+        Parameters
+        ----------
+        field : str
+            The config field about which the exception should be raised
+        msg : str
+            The specific error message
+        """
         self.field = field
         self.msg = msg
         super().__init__(f"'davos.config.{field}': {msg}")
@@ -33,43 +43,51 @@ class DavosConfigError(DavosError):
 
 class DavosParserError(SyntaxError, DavosError):
     """
-    Base class for errors raised during the parsing step.
+    Base class for errors raised during the pre-execution parsing phase.
 
+    Any `davos` exception classes related to user input-parsing step
+    must inherit from this class in order to work in IPython
+    environments.
+
+    Notes
+    -----
     Since the raw cell contents haven't been passed to the Python
     compiler yet, IPython doesn't allow input transformers to raise any
     exceptions other than `SyntaxError` during the input transformation
     phase.  All others will cause the cell to hang indefinitely, meaning
-    all `davos` library exception classes must inherit from
-    `SyntaxError` in order to work.
-
-    Additionally, when the IPython parser catches a `SyntaxError` raised
-    by an input transformer, it displays it using a custom output
-    formatting class in order to handle `SyntaxError`-specific traceback
-    formatting (line number & position of the offending code, etc.). So
-    since there's no way for the `davos` parser to get around that
-    display format and show exceptions with their "normal" formatting,
-    we may as well use those fields to provide some helpful info rather
-    than just leaving them blank.
+    all `davos` library exception classes related to the parsing phrase
+    must inherit from `SyntaxError` in order to work.
     """
+
     def __init__(
             self,
             msg=None,
             target_text=None,
-            target_offset=0,
+            target_offset=1,
             *args
     ):
-        # ADD DOCSTRING
-        #  - `target_text` is text we're searching for which caused
-        #     error
-        #  - `target_offset` is additional offset from start of
-        #    `target_text` for placing caret (allows us to use longer,
-        #    more specific phrase for `target_text` when needed)
-        #  - `flot` is a 4-tuple of (**f**ilename, **l**ineno,
-        #    **o**ffset, **t**ext) passed to the SyntaxError
-        #    constructor.
-
-        # TODO: this may be a lot easier using sys.exc_info(),
-        #  inspect.stack(), inspect.getframeinfo(), etc.
+        """
+        Parameters
+        ----------
+        msg : str, optional
+            The error message to be displayed.
+        target_text : str, optional
+            The text of the code responsible for the error, to be
+            displayed in Python's `SyntaxError`-specific traceback
+            format. Typically, this is the full text of the line on
+            which the error occurred, with whitespace stripped. If
+            `None` (default), no text is shown and `target_offset` has
+            no effect.
+        target_offset : int, optional
+            The (*1-indexed*) column offset from the beginning of
+            `target_text` where the error occurred. Defaults to `1` (the
+            first character in `target_text`).
+        *args : tuple, optional
+            Additional arguments forwarded to the `SyntaxError`
+            constructor.
+        """
+        # note: flot is a 4-tuple of (filename, lineno, offset, text)
+        # passed to the SyntaxError constructor.
         if target_text is None or IPython.version_info[0] >= 7:
             flot = (None, None, None, None)
         else:
@@ -98,12 +116,43 @@ class DavosParserError(SyntaxError, DavosError):
 
 
 class OnionParserError(DavosParserError):
-    """general class for errors related to the Onion structure/object"""
+    """Class for errors related to parsing the onion comment syntax."""
+
     pass
 
 
 class OnionArgumentError(ArgumentError, OnionParserError):
+    """
+    Class for errors related to arguments provided via an onion comment.
+
+    This exception class inherits from both `OnionParserError` and
+    `argparse.ArgumentError`. It functions as an onion comment-specific
+    analog of `argparse.ArgumentError`, whose key distinction is that
+    it can be raised during IPython's pre-execution phase (due to
+    inheriting from `DavosParserError`). Instances of this exception can
+    be expected to support attributes defined on both parents.
+    """
+
     def __init__(self, msg, argument=None, onion_txt=None, *args):
+        """
+        Parameters
+        ----------
+        msg : str
+            The error message to be displayed.
+        argument : str, optional
+            The argument responsible for the error. if `None` (default),
+            determines the argument name from `msg`, which will be the
+            error message from an `argparse.ArgumentError` instance.
+        onion_txt : str, optional
+            The text of the installer arguments from onion comment in
+            which the error occurred (i.e., the full onion comment with
+            `# <installer>:` removed). If `None` (default), the error
+            will not be displayed in Python's `SyntaxError`-specific
+            traceback format.
+        args : tuple, optional
+            Additional arguments forwarded to the `DavosParserError`
+            constructor.
+        """
         if (
                 msg is not None and
                 argument is None and
@@ -135,26 +184,56 @@ class OnionArgumentError(ArgumentError, OnionParserError):
 
 class ParserNotImplementedError(OnionParserError, NotImplementedError):
     """
-    A version of NotImplementedError that can be raised during IPython
-    input transformation step because it inherits from SyntaxError
+    Class for errors related to yet-to-be-implemented onion parsers.
+
+    This exception is an onion comment-specific subclass of the built-in
+    `NotImplementedError` that also inherits from `OnionParserError`,
+    allowing it to be raised during IPython's pre-execution phase (due
+    to inheriting from `DavosParserError`). This error is specifically
+    raised when a user specifies an installer program (via an onion
+    comment) whose command line parser has not yet been added to `davos`
     """
+
     pass
 
 
 class SmugglerError(DavosError):
-    """class for errors raised during the smuggle step"""
+    """Base class for errors raised during the smuggle phase"""
+
     pass
 
 
 class InstallerError(SmugglerError, CalledProcessError):
     """
-    class for problems encountered by the installer (pip/conda) itself
-    (e.g., failed to connect to internet, resolve environment, find
-    package with given name, etc.)
+    Class for errors related to the installer program
+
+    This exception is raised when the installer program itself (rather
+    than `davos`) encounters an error (e.g., failure to connect to
+    upstream package repository, find package with a given name, resolve
+    local environment, etc.).
     """
 
     @classmethod
     def from_error(cls, cpe, show_output=None):
+        """
+        Create a class instance from a `subprocess.CalledProcessError`
+
+        Parameters
+        ----------
+        cpe : subprocess.CalledProcessError
+            The exception from which to create the `InstallerError`
+        show_output : bool, optional
+            Whether or not to include the failed command's stdout and/or
+            stderr in the error message. If `None` (default),
+            stdout/stderr will be displayed if the `suppress_stdout`
+            field of `davos.config` is currently set to `True` (i.e.,
+            stdout would have been suppressed during execution).
+
+        Returns
+        -------
+        InstallerError
+            The exception instance.
+        """
         if not isinstance(cpe, CalledProcessError):
             raise TypeError(
                 "InstallerError.from_error() requires a "
@@ -174,6 +253,24 @@ class InstallerError(SmugglerError, CalledProcessError):
             stderr=None,
             show_output=None
     ):
+        """
+        Parameters
+        ----------
+        returncode : int
+            Return code for the failed command.
+        cmd : str
+            Text of the failed command.
+        output : str, optional
+            stdout generated from executing `cmd`.
+        stderr : str, optional
+            stderr generated from executing `cmd`.
+        show_output : bool, optional
+            Whether or not to include the failed command's stdout and/or
+            stderr in the error message. If `None` (default),
+            stdout/stderr will be displayed if the `suppress_stdout`
+            field of `davos.config` is currently set to `True` (i.e.,
+            stdout would have been suppressed during execution).
+        """
         super().__init__(returncode=returncode, cmd=cmd, output=output,
                          stderr=stderr)
         if show_output is None:

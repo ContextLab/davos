@@ -1,5 +1,5 @@
 """
-This modules defines the global `davos` config object. The `davos`
+This modules defines the global `davos.config` object. The `davos`
 config consists of public fields that may be set by the user to affect
 `davos`' behavior, as well as private (internal use only) fields that
 store information about the context into which the package was imported

@@ -22,7 +22,7 @@ from davos.core.exceptions import OnionArgumentError
 
 class OnionParser(ArgumentParser):
     """
-    `argparse.ArgumentParser` subclass for parsing Onion comments
+    `argparse.ArgumentParser` subclass for parsing Onion comments.
 
     This class is essentially used to reimplement the installer
     programs' existing command line parsers with some slight tweaks
@@ -38,22 +38,21 @@ class OnionParser(ArgumentParser):
           on user-provided arguments (e.g., `--force-reinstall`,
           `-I/--ignore-installed`, `--no-input`, `-v/--verbose`, etc.)
 
-    See Also
-    --------
-    `argparse.ArgumentParser` :
-        https://docs.python.org/3/library/argparse.html#argumentparser-objects
-
     Notes
     -----
     Currently supported arguments are based on `pip` v21.1.3, regardless
     of the user's local `pip` version. However, the vast majority of
     arguments are consistent across versions.
 
+    See Also
+    --------
+    `argparse.ArgumentParser` :
+        https://docs.python.org/3/library/argparse.html#argumentparser-objects
     """
 
     def parse_args(self, args, namespace=None):
         """
-        Parse installer options as command line arguments
+        Parse installer options as command line arguments.
 
         Parameters
         ----------
@@ -97,7 +96,7 @@ class OnionParser(ArgumentParser):
 
     def error(self, message):
         """
-        Raise an OnionArgumentError with a given message
+        Raise an OnionArgumentError with a given message.
 
         This is needed to override `argparse.ArgumentParser.error()`.
         `argparse` is  which exits the program when called (in response
@@ -123,8 +122,7 @@ class OnionParser(ArgumentParser):
 
 class EditableAction(Action):
     """
-    `argparse.Action` subclass for pip parser's `-e/--editable <path/url>`
-    argument.
+    `argparse.Action` subclass for pip's `-e/--editable <path/url>` arg.
 
     The `-e/--editable` argument is implemented in a slightly unusual
     way in order to allow the OnionParser to mimic the behavior of the
@@ -146,6 +144,7 @@ class EditableAction(Action):
            easier to handle: `spec` will always be the package spec and
            `editable` will always be a `bool`.
     """
+
     def __init__(
             self,
             option_strings,
@@ -155,13 +154,11 @@ class EditableAction(Action):
             help=None
     ):
         """
-        Constructor. All parameters are forwarded to argparse.Argument()
-
         Parameters
         ----------
-        option_strings : list of str
-            A list of command line option strings which should be
-            associated with this action.
+        option_strings : sequence of str
+            Command line option strings which should be associated with
+            this action.
         dest : str
             The name of the attribute to hold the created object(s).
         default : multiple types, optional
@@ -189,7 +186,23 @@ class EditableAction(Action):
 
 
 class SubtractAction(Action):
-    # ADD DOCSTRING
+    """
+    `argparse.Action` subclass for subtracting from an attribute.
+
+    This action functions as the inverse of the `argparse` module's
+    built-in `'count'` action (`argparse._CountAction`). For each
+    occurrence of a given keyword argument, it *subtracts* 1 from the
+    specified namespace attribute (`dest`). Generally, it can be used to
+    implement an argument whose presence negates that of a different
+    argument. For example, the `pip install` command accepts both
+    `-v`/`--verbose` and `-q`/`--quiet` options, which have opposite
+    effects on the stdout generated during installation, and both of
+    which may be passed multiple times. Assigning the `'count'` action
+    to `-v`/`--verbose`, the `SubtractAction` to `-q`/`--quiet`, and a
+    common `dest` to both of the two allows the ultimate verbosity to be
+    the net value of the two.
+    """
+
     def __init__(
             self,
             option_strings,
@@ -198,6 +211,23 @@ class SubtractAction(Action):
             required=False,
             help=None
     ):
+        """
+        Parameters
+        ----------
+        option_strings : sequence of str
+            Command-line option strings which should be associated with
+            this action.
+        dest : str
+            The name of the attribute to subtract from.
+        default : multiple types, optional
+            The value to be produced if the option is not specified
+            (default: `None`).
+        required : bool, optional
+            Whether the option must be specified at the command line
+            (default: `False`).
+        help : str, optional
+            The help string describing the argument.
+        """
         super().__init__(option_strings=option_strings, dest=dest, nargs=0,
                          default=default, required=required, help=help)
 

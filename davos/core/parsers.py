@@ -38,16 +38,16 @@ class OnionParser(ArgumentParser):
           on user-provided arguments (e.g., `--force-reinstall`,
           `-I/--ignore-installed`, `--no-input`, `-v/--verbose`, etc.)
 
+    See Also
+    --------
+    argparse.ArgumentParser :
+        https://docs.python.org/3/library/argparse.html#argumentparser-objects
+
     Notes
     -----
     Currently supported arguments are based on `pip` v21.1.3, regardless
     of the user's local `pip` version. However, the vast majority of
     arguments are consistent across versions.
-
-    See Also
-    --------
-    `argparse.ArgumentParser` :
-        https://docs.python.org/3/library/argparse.html#argumentparser-objects
     """
 
     def parse_args(self, args, namespace=None):

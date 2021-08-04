@@ -1,7 +1,36 @@
-# ADD DOCSTRING
+"""
+This module dynamically imports and defines functions based on the
+environment into which `davos` is imported.
 
-# TODO: THIS MODULE SHOULD CONTAIN THE CORRECT IMPLEMENTATION FOR EACH
-#  INTERCHANGEABLE FUNCTION SO THAT OTHER FILES CAN IMPORT FROM HERE
+Some `davos` functionality requires (often quite drastically) different
+implementations depending on certain properties of the importing
+environment (e.g., "regular" Python vs IPython, the IPython notebook
+front-end, etc.). To deal with this, environment-dependent parts of core
+features and behaviors (in the `davos.core` subpackage) are isolated and
+abstracted as "helper functions". Multiple, interchangeable
+implementations of each helper function are organized into
+per-environment modules within the `davos.implementations` subpackage.
+At runtime, this module selectively imports a single version of each
+helper function based on the global Python environment. `davos.core`
+modules can then access the correct implementation of each helper
+function regardless of the environment by importing it from the
+top-level `davos.implementations` module. This also allows individual
+`davos.implementations` modules to import packages that aren't
+guaranteed to be installed outside certain environments (e.g., `google`,
+`ipykernel`) without requiring them as dependencies of the overall
+`davos` package.
+
+The importing environment is determined by the value of the
+`environment` field of the global `DavosConfig` instance, so it's
+important that:
+    1. the global `davos.config` object is instantiated before this
+       module is imported
+    2. the top-level namespace of `davos.core.config` does not import
+       this module or any others that do so, recursively.
+    3. any modules imported by this module that in turn rely on
+       implementation-specific functions are loaded *after* those
+       functions are defined, here.
+"""
 
 
 __all__ = [
@@ -37,9 +66,7 @@ else:
         _showsyntaxerror_davos
     )
 
-
     _set_custom_showsyntaxerror()
-
 
     if import_environment == 'IPython>=7.0':
         from davos.implementations.ipython_post7 import (
@@ -148,7 +175,7 @@ def _conda_env_fset(conf, new_env):
             raise DavosConfigError(
                 "conda_env",
                 f"unrecognized environment name: '{new_env}'. Local "
-                f"environments are:\n\t{local_envs}"
+                f"environments are:\n\t'{local_envs}'"
             )
 
         conf._conda_env = new_env

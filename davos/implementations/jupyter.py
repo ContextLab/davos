@@ -1,4 +1,7 @@
-# ADD DOCSTRING
+"""
+This modules contains implementations of helper functions specific to
+Jupyter notebooks.
+"""
 
 
 __all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']

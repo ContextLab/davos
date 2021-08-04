@@ -1,3 +1,8 @@
+"""
+This module defines the set of `davos`-related exception classes.
+"""
+
+
 __all__ = [
     'DavosError',
     'DavosConfigError',

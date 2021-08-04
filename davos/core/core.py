@@ -102,7 +102,7 @@ def check_conda():
 
     Called lazily to set values for `conda_avail`, `conda_env`, and
     `conda_envs_dirs` config fields. Checks whether the conda executable
-    is available by running `conda list IPython` (via implementation-
+    is available by running `conda list IPython` (via environment-
     dependent `_check_conda_avail_helper()` function). If successful,
     parses command output for name of active conda environment. Also
     parses {env_name: env_path} mapping of all available environments
@@ -205,6 +205,11 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
         Names of packages installed/upgraded when installed the smuggled
         package that were previously imported by the current interpreter
 
+    See Also
+    --------
+    google.colab._pip._previously_imported_packages :
+        https://github.com/googlecolab/colabtools/blob/2211417/google/colab/_pip.py#L93
+
     Notes
     -----
     Functionally, this is a reimplementation of `colabtools`'s
@@ -212,11 +217,6 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
     has some minor tweaks that make it more efficient, but is mostly
     meant to be available when `colabtools` may not be installed (i.e.,
     outside of Colaboratory).
-
-    See Also
-    --------
-    `google.colab._pip._previously_imported_packages` :
-        https://github.com/googlecolab/colabtools/blob/2211417/google/colab/_pip.py#L93
     """
     if installer == 'conda':
         raise NotImplementedError(
@@ -273,17 +273,17 @@ def import_name(name):
     object
         The imported object
 
+    See Also
+    --------
+    IPython.utils.importstring.import_item :
+        https://github.com/ipython/ipython/blob/b3355a9/IPython/utils/importstring.py#L10
+
     Notes
     -----
     This is a near-exact reimplementation of
     `IPython.utils.importstring.import_item`. This version exists to
     make it available in pure Python environments where `IPython` may
     not be installed.
-
-    See Also
-    --------
-    `IPython.utils.importstring.import_item :
-        https://github.com/ipython/ipython/blob/b3355a9/IPython/utils/importstring.py#L10
     """
     parts = name.rsplit('.', maxsplit=1)
     if len(parts) == 2:
@@ -574,6 +574,14 @@ def parse_line(line):
         The input line, with any `smuggle` statements and onion comments
         replaced with calls to the `smuggle()` function.
 
+    See Also
+    --------
+    regexps.smuggle_statement_regex : Regexp for `smuggle` statements
+    implementations.ipython_pre7.generate_parser_func :
+        Generates full parser wrapper function for `IPython<7.0`
+    implementations.ipython_post7.generate_parser_func :
+        Generates full parser wrapper function for `IPython<7.0`
+
     Notes
     -----
     This function transforms "logical" lines rather than "physical"
@@ -583,14 +591,6 @@ def parse_line(line):
     `parse_line()`. This function is wrapped by an implementation-
     specific parser function and called for each (logical) line to be
     parsed.
-
-    See Also
-    --------
-    `regexps.smuggle_statement_regex` : Regexp for `smuggle` statements
-    `implementations.ipython_pre7.generate_parser_func` :
-        Generates full parser wrapper function for `IPython<7.0`
-    `implementations.ipython_post7.generate_parser_func` :
-        Generates full parser wrapper function for `IPython<7.0`
     """
     match = smuggle_statement_regex.match(line)
     if match is None:
@@ -747,17 +747,17 @@ def run_shell_command(command, live_stdout=None):
 
     Raises
     ------
-    `subprocess.CalledProcessError`
+    subprocess.CalledProcessError
         If the command returns a non-zero exit status
 
     See Also
     --------
-    `capture_stdout` : context manager used when displaying live stdout
-    `contextlib.redirect_stdout` :
+    capture_stdout : context manager used when displaying live stdout
+    contextlib.redirect_stdout :
         context manager used when not displaying live stdout
-    `implementations.ipython_common._run_shell_command_helper` :
+    implementations.ipython_common._run_shell_command_helper :
         Helper function to run shell command in IPython environments
-    `implementations.python._run_shell_command_helper` :
+    implementations.python._run_shell_command_helper :
         Helper function to run shell command in "plain"
         (non-interactive) Python environments
     """

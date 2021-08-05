@@ -733,7 +733,8 @@ def run_shell_command(command, live_stdout=None):
     Parameters
     ----------
     command : str
-        The shell command to run.
+        The shell command to run. May not end in "*&*", as background
+        processes are not supported.
     live_stdout : bool, optional
         Whether to display streaming stdout from `command` execution in
         real time *in addition to* capturing and returning it. If `None`
@@ -758,9 +759,18 @@ def run_shell_command(command, live_stdout=None):
     implementations.ipython_common._run_shell_command_helper :
         Helper function to run shell command in IPython environments
     implementations.python._run_shell_command_helper :
-        Helper function to run shell command in "plain"
+        Helper function to run shell command in "pure"
         (non-interactive) Python environments
+
+    Notes
+    -----
+    `IPython` does not allow shell commands to run background processes.
+    `davos` extends this policy to all environments for consistency (and
+    lack of reason not to).
     """
+    if command.rstrip().endswith('&'):
+        raise OSError("Background processes are not supported.")
+
     if live_stdout is None:
         live_stdout = not config.suppress_stdout
     if live_stdout:

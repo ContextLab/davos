@@ -43,7 +43,7 @@ def prompt_restart_rerun_buttons(pkgs):
     Colab-specific implementation of `prompt_restart_rerun_buttons`.
 
     Issues a warning that the notebook runtime must be restarted in
-    order to use the just-smuggled version of one or more packages, and
+    order to use the just-smuggled version of one or more `pkgs`, and
     displays a button the user can click to do so. Uses one of Colab's
     existing MIME types, since it's one of the few things explicitly
     allowed to send messages between the frontend and kernel.

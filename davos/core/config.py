@@ -33,10 +33,10 @@ class SingletonConfig(type):
 
 class DavosConfig(metaclass=SingletonConfig):
     """
-    The global `davos` config object
+    The global `davos` config object.
 
     Defines the following fields:
-        **User-configurable fields**:
+        **Configurable fields**:
             active : bool
                 Whether the `davos` parser should be run on subsequent
                 input (cells, in Jupyter/Colab notebooks, lines in pure
@@ -62,12 +62,16 @@ class DavosConfig(metaclass=SingletonConfig):
                 value of `auto_rerun` will determine whether `davos`
                 restarts the kernel or throws an error when a smuggled
                 package cannot be dynamically reloaded.
+            pip_executable : str of pathlib.Path
+                The path to the `pip` executable that should be used.
+                Must be a path to a real file. Defaults to automatically
+                discovered executable, if available.
             suppress_stdout: bool
                 If `True` (default: `False`), suppress all unnecessary
                 output issued by the program. This is often useful when
                 smuggling packages that need to install many
                 dependencies and therefore generate extensive output.
-        **Static fields**:
+        **Read-only fields**:
             conda_avail : bool
                 Whether or not `conda` is installed and the `conda`
                 executable is accessible from the Python interpreter

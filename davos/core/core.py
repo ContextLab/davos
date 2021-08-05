@@ -860,7 +860,7 @@ def smuggle(
 
     if install_pkg:
         # TODO: check for --yes (conda) and bypass if passed
-        if config.confirm_install and not installer_kwargs.get('no-input'):
+        if config.confirm_install and not installer_kwargs.get('no_input'):
             msg = (f"package '{pkg_name}' will be installed with the "
                    f"following command:\n\t`{onion.install_cmd}`\n"
                    f"Proceed?")
@@ -932,7 +932,7 @@ def smuggle(
             # effect
             if config.auto_rerun:
                 auto_restart_rerun(failed_reloads)
-            elif config.noninteractive or installer_kwargs.get('no-input'):
+            elif config.noninteractive or installer_kwargs.get('no_input'):
                 # if not auto_rerun, only remaining non-interactive
                 # option is to raise error
                 msg = (

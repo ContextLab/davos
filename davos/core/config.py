@@ -282,30 +282,47 @@ class DavosConfig(metaclass=SingletonConfig):
 
 def _block_greedy_ipython_completer():
     """
-    Handles IPython edge case where `davos` is preemptively imported
+    Prevent `IPython` autocomplete from preemptively importing `davos`.
 
-    IPython (really, Jedi) uses "greedy" TAB-completiion to determine
-    auto-complete suggestions, meaning code is actually executed (note:
-    there's a config option to disable this, but it's enabled by
-    default). So if the user presses the TAB button while typing an
-    `import` statement, the module will actually be imported into a
-    Python subprocess in order to parse the to-be-imported package's
-    namespace [1]. And once imported, the package will be cached in
-    `sys.modules` so any initialization code not be run during
-    subsequent imports. For `davos`, this causes config fields to be
-    improperly set for a Python environment, rather than IPython.
+    `IPython` uses "greedy" TAB-completion, meaning that in some cases,
+    it will proactivly execute code in order to provide autocomplete
+    suggestions. For instance, if the user presses the TAB key while
+    typing an `import` statement, `IPython` will actually import the
+    module internally to generate suggestions from the names available
+    in its namespace. And because Python caches the module in
+    `sys.modules` during this initial "hidden" `import`, any top-level
+    (initialization) code it contains is skipped for all subsequent
+    imports.
 
-    To account for this, we parse the stack trace for any calls
-    originating from IPython's autocomple module
-    (`IPython/core/completerlib.py`), and if any are found, we remove
+    This is particularly problematic for packages that set
+    `IPython`- or notebook-specific options or behavors on import (like
+    `davos`) because the autocomplete mechanism imports them *outside*
+    the `IPython` environment. To prevent this, `davos` parses the stack
+    trace for any calls originating from IPython's autocomple module
+    (`IPython.core.completerlib`) and, if any are found, removes
     the relevant `davos` modules from `sys.modules` so they're reloaded
-    when *actually* imported from the notebook, then raise a generic
-    exception (handled in [1]) which causes the autocompletion run to
-    exit.
+    when *actually* imported from the notebook. It then raises a generic
+    exception that triggers the autocomple process to exit.
+
+    See Also
+    --------
+    IPython.core.completerlib.try_import :
+        runs import statements to generate autocomplete suggestions
 
     Notes
     -----
-    [1] https://github.com/ipython/ipython/blob/2b4bc75ac735a2541125b3baf299504e5513994a/IPython/core/completerlib.py#L158
+    `IPython`'s greedy completion behavior is enabled by default and can
+    be disabled by running the following "magic" commands:
+    ```python
+    %config IPCompleter.greedy = False
+    %config IPCompleter.use_jedi = False
+    ```
+    or the setting the following options in the `IPython` config
+    file:
+    ```python
+    c.IPCompleter.greedy = False
+    c.IPCompleter.use_jedi = False
+    ```
     """
     # extract 20 most recent entries. Completer module usually appears
     # ~12 entries deep, after davos & importlib, so add small buffer to
@@ -322,10 +339,6 @@ def _block_greedy_ipython_completer():
             del sys.modules['davos.core']
             del sys.modules['davos.core.config']
             raise Exception
-    else:
-        # davos is actually intentionally being imported into a
-        # non-interactive environment
-        return
 
 
 def _get_stdlib_modules():

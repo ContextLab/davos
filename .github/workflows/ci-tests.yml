@@ -70,7 +70,6 @@ jobs:
       ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
       GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
       GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
-      HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       IPYTHON_VERSION: ${{ matrix.ipython-version }}
       NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
       PYTHON_VERSION: ${{ matrix.python-version }}
@@ -78,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: $HEAD_SHA
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: install miniconda
         uses: conda-incubator/setup-miniconda@v2

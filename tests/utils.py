@@ -82,7 +82,7 @@ class TestTimeoutError(DavosAssertionError):
 #           HELPER FUNCTIONS           #
 ########################################
 def expected_onion_parser_output(
-        args_str: str, 
+        args_str: str,
         **installer_kwargs: Union[bool, int, str]
 ) -> Tuple[str, str, Dict[str, _InstallerKwargVals]]:
     installer_kwargs_ = {'editable': False, 'spec': args_str}
@@ -91,9 +91,9 @@ def expected_onion_parser_output(
 
 
 def expected_parser_output(
-        name: str, 
-        as_: Optional[str] = None, 
-        args_str: Optional[str] = None, 
+        name: str,
+        as_: Optional[str] = None,
+        args_str: Optional[str] = None,
         **installer_kwargs: _InstallerKwargVals
 ) -> Union[List[str], str]:
     if as_ is not None:
@@ -129,47 +129,42 @@ def install_davos(
 ) -> NoReturn: ...
 @overload
 def install_davos(
-        source: Literal['github'], 
-        ref: Optional[str], 
+        source: Literal['github'],
+        ref: Optional[str],
         fork: Optional[str]
 ) -> None: ...
 @overload
 def install_davos(
-        source: Literal['pip', 'pypi', 'testpypi'], 
-        ref: Optional[str], 
+        source: Literal['pip', 'pypi', 'testpypi'],
+        ref: Optional[str],
         fork: None
 ) -> None: ...
 def install_davos(
-        source: Literal['conda', 'github', 'pip', 'pypi', 'testpypi'] = 'github', 
-        ref: Optional[str] = None, 
+        source: Literal['conda', 'github', 'pip', 'pypi', 'testpypi'] = 'github',
+        ref: Optional[str] = None,
         fork: Optional[str] = None
 ) -> None:
     """
-    Install a particular version or revision of davos from 
-    the specified remote source
+    Install a version or revision of davos from the specified source.
 
     Parameters
     ----------
-    source : {'github', 'pip', 'pypi', 'testpypi', 'conda'}, 
-             default: 'github'
-        The remote source from which to install davos. GitHub 
-        is generally used for CI tests, pip/pypi for full 
-        releases, and testpypi for test releases
-
+    source : {'github', 'pip', 'pypi', 'testpypi', 'conda'}, optional
+        The remote source from which to install `davos`. `'github'`
+        (default) is generally used for CI tests, `'pip'`/`'pypi'` for
+        full releases, and `'testpypi'` for test releases.
     ref : str, optional
-        The version or revision of davos to install. If 
-        source is 'github', this can be a branch, commit hash, 
-        or tag. Otherwise, this may be a valid version string 
-        to install from the given source. Defaults to most 
-        recent revision on the default branch of the specified 
-        fork (GitHub) or the latest release version (others).
-
+        The version or revision of `davos` to install. If `source` is
+        `'github'`, this can be a branch, commit hash, or tag.
+        Otherwise, this may be a valid version string to install from
+        the given source. Defaults to most recent revision on the
+        default branch of the specified `fork` (GitHub) or the latest
+        release version (other sources).
     fork : str, optional
-        Optionally, the fork (GitHub username) to install from. 
-        Defaults to the base repository (ContextLab). If source 
-        is not 'github', this has no effect.
-
-    """    
+        Optionally, the fork (GitHub username) to install from. Defaults
+        to the base repository (ContextLab). If `source` is not
+        `'github'`, this has no effect.
+    """
     source = source.lower()
     if source == 'github':
         if fork is None:
@@ -336,11 +331,12 @@ def matches_expected_output(
 
 
 class ExceptionInfo(Generic[_E]):
-    _common_err_msg = ".{} can only be used after the context manager exits"
     """
     Simplified stand-in for _pytest._code.code.ExceptionInfo. Mocks
     some basic functionality useful in 'raises' context manager.
     """
+    _common_err_msg = ".{} can only be used after the context manager exits"
+
     def __init__(
             self,
             excinfo: Optional[Tuple[Type[_E], _E, types.TracebackType]]
@@ -378,10 +374,13 @@ class ExceptionInfo(Generic[_E]):
 
 
 class raises:
+    """
+    Port of `pytest.raises` context manager for notebook-based tests.
+    """
     def __init__(
-            self, 
-            expected_exception: Union[Type[_E], Tuple[Type[_E]]], 
-            *, 
+            self,
+            expected_exception: Union[Type[_E], Tuple[Type[_E]]],
+            *,
             match: Optional[Union[str, Pattern[str]]] = None
     ) -> None:
         if issubclass(expected_exception, BaseException):
@@ -396,7 +395,7 @@ class raises:
         self.expected_exceptions: Tuple[Type[_E]] = expected_exception
         self.match_expr = match
         self.excinfo: Optional[ExceptionInfo[_E]] = None
-    
+
     def __enter__(self) -> ExceptionInfo[_E]:
         self.excinfo = ExceptionInfo(None)
         return self.excinfo

@@ -31,7 +31,8 @@ from davos.core.exceptions import (
     InstallerError,
     OnionParserError,
     ParserNotImplementedError,
-    SmugglerError
+    SmugglerError,
+    TheNightIsDarkAndFullOfTerrors
 )
 from davos.core.parsers import pip_parser
 from davos.core.regexps import (
@@ -838,6 +839,10 @@ def smuggle(
         installer_kwargs = {}
 
     pkg_name = name.split('.')[0]
+
+    if pkg_name == 'davos':
+        raise TheNightIsDarkAndFullOfTerrors("Don't do that.")
+
     onion = Onion(pkg_name, installer=installer,
                   args_str=args_str, **installer_kwargs)
 

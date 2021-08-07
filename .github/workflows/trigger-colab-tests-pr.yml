@@ -22,7 +22,7 @@ jobs:
       github.event.issue.pull_request
       && github.repository_owner == 'ContextLab'
       && github.event.issue.user.login != 'ContextLab'
-      && github.event.comment.user.login == 'paxtonfitzpatrick'
+      && (github.event.comment.user.login == 'paxtonfitzpatrick' || github.event.comment.user.login == 'jeremymanning')
       && startsWith(github.event.comment.body, '@github-actions ')
     steps:
       - name: Check Whether Comment Triggers Workflow
@@ -30,15 +30,24 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
+            console.log(`Possible dispatch comment by ${context.payload.comment.user.login} on pull PR #${context.issue.number}`)
+
             // keywords that trigger Colab CI tests
             const approveStrings = ['approve', 'run', 'yes', '👍'],
             // comment body with @github-actions bot tag removed
                 commentBody = context.payload.comment.body.replace(/@github-actions\s+/, '');
 
+            console.log(`parsing possible dispatch trigger comment:
+                ${context.payload.comment.body}
+            for dispatch keywords:
+                ${approveStrings}`)
+
             // if the comment contains any of the keyword strings
             if (approveStrings.some(str => commentBody.includes(str))) {
+                console.log('comment contains dispatch keyword');
                 try {
                 // request pull_request event from rest API
+                    console.log('getting data for pull request...');
                     const response = await github.pulls.get({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
@@ -46,20 +55,25 @@ jobs:
                     });
                     const pullRequest = response.data;
                     // set outputs for use in next step
+                    console.log('setting outputs...')
                     core.setOutput('head_fork', pullRequest.head.user.login);
                     core.setOutput('head_sha', pullRequest.head.sha);
                     core.setOutput('trigger_tests', 'true');
+                    console.log(`head_fork: ${pullRequest.head.user.login}`);
+                    console.log(`head_sha: ${pullRequest.head.sha}`);
                 } catch(error) {
                     core.setFailed(`Failed to get pull_request event from issue_comment: ${error}`);
                 }
                 // react to comment with thumbs-up to confirm
-                github.reactions.createForIssueComment({
+                console.log('adding reaction to triggering comment...');
+                await github.reactions.createForIssueComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     comment_id: context.payload.comment.id,
-                    content: '+1'
+                    content: 'rocket'
                 });
             } else {
+                console.log('comment does not trigger tests');
                 core.setOutput('trigger_tests', 'false');
             }
 
@@ -71,7 +85,7 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            github.actions.createWorkflowDispatch({
+            await github.actions.createWorkflowDispatch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 workflow_id: 'ci-tests-colab.yml',

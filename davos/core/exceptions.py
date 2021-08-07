@@ -208,6 +208,12 @@ class SmugglerError(DavosError):
     pass
 
 
+class TheNightIsDarkAndFullOfTerrors(SmugglerError):
+    """A little Easter egg for if someone tries to `smuggle davos`"""
+
+    pass
+
+
 class InstallerError(SmugglerError, CalledProcessError):
     """
     Class for errors related to the installer program

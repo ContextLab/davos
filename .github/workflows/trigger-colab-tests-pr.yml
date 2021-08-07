@@ -39,11 +39,12 @@ jobs:
             if (approveStrings.some(str => commentBody.includes(str))) {
                 try {
                 // request pull_request event from rest API
-                    const pullRequest = await github.pulls.get({
+                    const response = await github.pulls.get({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
                         pull_number: context.issue.number
-                    }).data;
+                    });
+                    const pullRequest = response.data;
                     // set outputs for use in next step
                     core.setOutput('head_fork', pullRequest.head.user.login);
                     core.setOutput('head_sha', pullRequest.head.sha);

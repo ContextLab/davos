@@ -5,6 +5,7 @@ import html
 import json
 import re
 import time
+import traceback
 from collections.abc import Iterable, Iterator
 from os import getenv
 from pathlib import Path
@@ -92,7 +93,7 @@ class _NotebookJson(TypedDict):
 ########################################################################
 
 
-GITHUB_USERNAME: str = getenv("GITHUB_REPOSITORY").split('/')[0]
+GITHUB_USERNAME: str = getenv("HEAD_FORK")
 GITHUB_REF: str = getenv("HEAD_SHA")
 REPO_ROOT: Path = Path(getenv("GITHUB_WORKSPACE")).resolve(strict=True)
 # noinspection PyTypeChecker
@@ -247,8 +248,9 @@ class ColabDriver(NotebookDriver):
         try:
             self.sign_in_google()
             self.factory_reset_runtime()
-        except WebDriverException as e:
+        except WebDriverException:
             self.capture_error_artifacts()
+            traceback.print_exc()
             pytest.exit(
                 "Failed to either sign into Google account or reset notebook "
                 "runtime. Error artifacts will be uploaded"

@@ -92,16 +92,26 @@ jobs:
                 inputs.fork: ${process.env.HEAD_FORK},
                 inputs.commit: ${process.env.HEAD_SHA}
             `);
-            const dispatchResponse = await github.actions.createWorkflowDispatch({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflow_id: 'ci-tests-colab.yml',
-                ref: context.ref,
-                inputs: {
-                    fork: process.env.HEAD_FORK,
-                    commit: process.env.HEAD_SHA,
-                    debug_enabled: 'false'
-                }
-            });
+            const dispatchResponse = await github.request(`POST /repos/${context.repo.owner}/${context.repo.repo}/actions/workflows/ci-tests-colab.yml/dispatches`, {
+                                                                ref: context.ref,
+                                                                inputs: {
+                                                                    fork: process.env.HEAD_FORK,
+                                                                    commit: process.env.HEAD_SHA,
+                                                                    debug_enabled: 'false'
+                                                                }
+                                                          })
+
+            // const dispatchResponse = await github.actions.createWorkflowDispatch({
+            //     owner: context.repo.owner,
+            //     repo: context.repo.repo,
+            //     workflow_id: 'ci-tests-colab.yml',
+            //     ref: context.ref,
+            //     inputs: {
+            //         fork: process.env.HEAD_FORK,
+            //         commit: process.env.HEAD_SHA,
+            //         debug_enabled: 'false'
+            //     }
+            // });
             console.log('triggered Colab CI tests');
             console.log(dispatchResponse);
+            console.log(`API response status: ${dispatchResponse.status}`);

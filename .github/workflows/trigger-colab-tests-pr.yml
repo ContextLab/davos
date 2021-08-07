@@ -38,13 +38,14 @@ jobs:
             // if the comment contains any of the keyword strings
             if (approveStrings.some(str => commentBody.includes(str))) {
                 // set outputs for use in next step
-                core.setOutput('trigger_tests', 'true');
+                //core.setOutput('trigger_tests', 'true');
                 core.setOutput('head_fork', context.payload.issue.user.login);
                 try {
-                    core.setOutput('head_sha', context.payload.issue.pull_request.pull_request.head.sha);
+                    core.setOutput('head_sha', context.payload.issue.pull_request.head.sha);
+                    core.setOutput('trigger_tests', 'true');
                 } catch (error) {
                     console.log(context.payload.issue.pull_request);
-                    throw error;
+                    core.setOutput('trigger_tests', 'false');
                 }
                 // react to comment with thumbs-up to confirm
                 github.reactions.createforIssueComment({

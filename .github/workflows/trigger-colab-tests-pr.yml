@@ -44,11 +44,12 @@ jobs:
                     core.setOutput('head_sha', context.payload.issue.pull_request.head.sha);
                     core.setOutput('trigger_tests', 'true');
                 } catch (error) {
+                    console.log(error);
                     console.log(context.payload.issue.pull_request);
                     core.setOutput('trigger_tests', 'false');
                 }
                 // react to comment with thumbs-up to confirm
-                github.reactions.createforIssueComment({
+                github.reactions.createForIssueComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     comment_id: context.payload.comment.id,

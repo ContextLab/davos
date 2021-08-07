@@ -40,7 +40,12 @@ jobs:
                 // set outputs for use in next step
                 core.setOutput('trigger_tests', 'true');
                 core.setOutput('head_fork', context.payload.issue.user.login);
-                core.setOutput('head_sha', context.payload.issue.pull_request.head.sha);
+                try {
+                    core.setOutput('head_sha', context.payload.pull_request.head.sha);
+                } catch (error) {
+                    console.log(context);
+                    throw error;
+                }
                 // react to comment with thumbs-up to confirm
                 github.reactions.createforIssueComment({
                     owner: context.repo.owner,

@@ -84,6 +84,7 @@ jobs:
           HEAD_SHA: ${{ steps.check-comment.outputs.head_sha }}
         uses: actions/github-script@v4
         with:
+          github-token: ${{ secrets.API_PAT }}
           script: |
             console.log(`dispatching Colab CI test workflow...
                 owner: ${context.repo.owner},

@@ -29,7 +29,10 @@ jobs:
                 headCommitUrl = `https://github.com/${headFork}/davos/tree/${headSha}`,
                 commentBody = `@paxtonfitzpatrick Run Colab CI tests on [${headFork}/davos@${headShaShort}](${headCommitUrl})?`;
 
-            github.issues.createComment({
+            console.log(`pull request opened from ${headFork}/davos to ContextLab/davos (#${context.issue.number})`);
+            console.log('posting comment from bot');
+
+            await github.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,

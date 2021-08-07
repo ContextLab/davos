@@ -20,8 +20,8 @@ jobs:
     #   - the github-actions bot was tagged at the beginning of the comment
     if: >
       github.event.issue.pull_request
-      && github.repository == 'ContextLab/davos'
-      && github.event.issue.pull_request.head.repo.full_name != 'ContextLab/davos'
+      && github.repository_owner == 'ContextLab'
+      && github.event.issue.user.login != 'ContextLab'
       && github.event.comment.user.login == 'paxtonfitzpatrick'
       && startsWith(github.event.comment.body, '@github-actions ')
     steps:
@@ -37,16 +37,21 @@ jobs:
 
             // if the comment contains any of the keyword strings
             if (approveStrings.some(str => commentBody.includes(str))) {
-                // set outputs for use in next step
-                //core.setOutput('trigger_tests', 'true');
-                core.setOutput('head_fork', context.payload.issue.user.login);
                 try {
-                    core.setOutput('head_sha', context.payload.issue.pull_request.head.sha);
+                // request pull_request event from rest API
+                    const response = await github.pulls.get({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: context.issue.number
+                    });
+                    const pullRequest = JSON.parse(response.data);
+                    // set outputs for use in next step
+                    core.setOutput('head_fork', pullRequest.head.user.login);
+                    core.setOutput('head_sha', pullRequest.head.sha);
                     core.setOutput('trigger_tests', 'true');
-                } catch (error) {
-                    console.log(error);
-                    console.log(context.payload.issue.pull_request);
-                    core.setOutput('trigger_tests', 'false');
+                } catch(error) {
+                    core.setFailed('failed to get pull_request from issue_comment');
+                    throw error;
                 }
                 // react to comment with thumbs-up to confirm
                 github.reactions.createForIssueComment({

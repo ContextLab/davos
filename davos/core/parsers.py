@@ -1,9 +1,14 @@
-# ADD DOCSTRING
+"""
+This module defines reimplementations of the command line parsers for
+installer programs supported by `davos`, slightly modified to parse
+arguments supplied via an Onion comment.
+"""
 
 
 __all__ = ['EditableAction', 'OnionParser', 'pip_parser', 'SubtractAction']
 
 
+import sys
 from argparse import (
     Action,
     ArgumentError,
@@ -16,36 +21,130 @@ from davos.core.exceptions import OnionArgumentError
 
 
 class OnionParser(ArgumentParser):
-    # ADD DOCSTRING
+    """
+    `argparse.ArgumentParser` subclass for parsing Onion comments.
+
+    This class is essentially used to reimplement the installer
+    programs' existing command line parsers with some slight tweaks
+    specific to parsing Onion comments during the notebook's pre-cell
+    execution phase. Since the arguments are eventually passed to the
+    actual installer's parser, this is, admittedly, slightly redundant.
+    However, it affords a number of advantages, such as:
+        - protecting against shell injections (e.g., `# pip: --upgrade
+          numpy && rm -rf /` fails due to the OnionParser, but would
+          otherwise execute successfully)
+        - detecting errors quickly, before spawning a subprocesses
+        - allowing `davos` to adopt per-smuggle-command behaviors based
+          on user-provided arguments (e.g., `--force-reinstall`,
+          `-I/--ignore-installed`, `--no-input`, `-v/--verbose`, etc.)
+
+    See Also
+    --------
+    argparse.ArgumentParser :
+        https://docs.python.org/3/library/argparse.html#argumentparser-objects
+
+    Notes
+    -----
+    Currently supported arguments are based on `pip` v21.1.3, regardless
+    of the user's local `pip` version. However, the vast majority of
+    arguments are consistent across versions.
+    """
+
     def parse_args(self, args, namespace=None):
+        """
+        Parse installer options as command line arguments.
+
+        Parameters
+        ----------
+        args : list of str
+            Command line arguments for the installer program specified
+            in an Onion comment, split into a list of strings.
+        namespace : object, optional
+            An object whose namespace should be populated with the
+            parsed arguments. If `None` (default), creates a new, empty
+            `argparse.Namespace` object.
+
+        Returns
+        -------
+        object
+            The populated object passed as `namespace`
+        """
         self._args = ' '.join(args)
         try:
-            try:
-                ns, extras = super().parse_known_args(args=args,
-                                                      namespace=namespace)
-            except ArgumentError as e:
+            ns, extras = super().parse_known_args(args=args,
+                                                  namespace=namespace)
+        except (ArgumentError, ArgumentTypeError) as e:
+            if isinstance(e, OnionArgumentError):
+                raise
+            elif isinstance(e, ArgumentError):
                 raise OnionArgumentError(msg=e.message,
                                          argument=e.argument_name,
-                                         onion_txt=self._args) from e
-            except (ArgumentTypeError, ValueError) as e:
-                raise OnionArgumentError(msg=e.args[0], onion_txt=self._args)
+                                         onion_txt=self._args) from None
             else:
-                if extras:
-                    msg = f"Unrecognized arguments: {' '.join(extras)}"
-                    raise OnionArgumentError(msg=msg, argument=extras[0],
-                                             onion_txt=self._args)
-                return ns
+                raise OnionArgumentError(msg=e.args[0],
+                                         onion_txt=self._args) from None
+        else:
+            if extras:
+                msg = f"Unrecognized arguments: {' '.join(extras)}"
+                raise OnionArgumentError(msg=msg,
+                                         argument=extras[0],
+                                         onion_txt=self._args)
+            return ns
         finally:
             # noinspection PyAttributeOutsideInit
             self._args = None
 
     def error(self, message):
-        # ADD DOCSTRING
-        raise OnionArgumentError(msg=message, onion_txt=self._args)
+        """
+        Raise an OnionArgumentError with a given message.
+
+        This is needed to override `argparse.ArgumentParser.error()`.
+        `argparse` is  which exits the program when called (in response
+        to an exception being raised) because it is generally intended
+        for command line interfaces. The generally idea is to affect the
+        stack trace displayed for the user as little as possible, while
+        also ensuring all exceptions raised inherit from `SyntaxError`
+        so they can be successfully raised during the notebook cell
+        pre-execution step.
+
+        Parameters
+        ----------
+        message : str
+            The error message to be displayed for the raised exception.
+        """
+        if sys.exc_info()[1] is not None:
+            raise
+        else:
+            if message == 'one of the arguments -e/--editable is required':
+                message = 'Onion comment must specify a package name'
+            raise OnionArgumentError(msg=message, onion_txt=self._args)
 
 
 class EditableAction(Action):
-    # ADD DOCSTRING
+    """
+    `argparse.Action` subclass for pip's `-e/--editable <path/url>` arg.
+
+    The `-e/--editable` argument is implemented in a slightly unusual
+    way in order to allow the OnionParser to mimic the behavior of the
+    real `pip install` command's far more complex parser. The argument
+    is optional (default: `False`), and is mutually exclusive with the
+    positional `spec` argument. If provided, it accepts/requires a
+    single value (metavar: `'<path/url>'`). However, rather than storing
+    the value in the `argparse.Namespace` object's "editable" attribute,
+    the EditableAction stores `editable=True` and assigns the passed
+    value to "`spec`". This way:
+        1. As with the real `pip install` command, the project path/url
+           for an editable install must immediately follow the
+           `-e/--editable` argument (i.e., `/some/file/path -e` is
+           invalid)
+        2. The parser accepts only a single regular or editable package
+           spec (since an Onion comment can only ever refer to a single
+           package).
+        3. After parsing, argument values and types are consistent and
+           easier to handle: `spec` will always be the package spec and
+           `editable` will always be a `bool`.
+    """
+
     def __init__(
             self,
             option_strings,
@@ -54,10 +153,30 @@ class EditableAction(Action):
             metavar=None,
             help=None
     ):
-        # ADD DOCSTRING
-        # NOTE: `argparse.Action` subclass constructors must contain
-        #  `dest` as a positional arg, but `self.dest` will always be
-        #  `'editable'` for this particular class
+        """
+        Parameters
+        ----------
+        option_strings : sequence of str
+            Command line option strings which should be associated with
+            this action.
+        dest : str
+            The name of the attribute to hold the created object(s).
+        default : multiple types, optional
+            The value to be produced if the option is not specified
+            (default: `None`).
+        metavar : str, optional
+            The name to be used for the option's argument with the help
+            string. If `None` (default), the `dest` value will be used
+            as the name.
+        help : str, optional
+            The help string describing the argument.
+
+        Notes
+        -----
+        `argparse.Action` subclass constructors must take `dest` as a
+        positional argument, but `self.dest` will always be `'editable'`
+        for EditableAction instances.
+        """
         super().__init__(option_strings, dest, default=default,
                          metavar=metavar, help=help)
 
@@ -67,7 +186,23 @@ class EditableAction(Action):
 
 
 class SubtractAction(Action):
-    # ADD DOCSTRING
+    """
+    `argparse.Action` subclass for subtracting from an attribute.
+
+    This action functions as the inverse of the `argparse` module's
+    built-in `'count'` action (`argparse._CountAction`). For each
+    occurrence of a given keyword argument, it *subtracts* 1 from the
+    specified namespace attribute (`dest`). Generally, it can be used to
+    implement an argument whose presence negates that of a different
+    argument. For example, the `pip install` command accepts both
+    `-v`/`--verbose` and `-q`/`--quiet` options, which have opposite
+    effects on the stdout generated during installation, and both of
+    which may be passed multiple times. Assigning the `'count'` action
+    to `-v`/`--verbose`, the `SubtractAction` to `-q`/`--quiet`, and a
+    common `dest` to both of the two allows the ultimate verbosity to be
+    the net value of the two.
+    """
+
     def __init__(
             self,
             option_strings,
@@ -76,7 +211,23 @@ class SubtractAction(Action):
             required=False,
             help=None
     ):
-        # ADD DOCSTRING
+        """
+        Parameters
+        ----------
+        option_strings : sequence of str
+            Command-line option strings which should be associated with
+            this action.
+        dest : str
+            The name of the attribute to subtract from.
+        default : multiple types, optional
+            The value to be produced if the option is not specified
+            (default: `None`).
+        required : bool, optional
+            Whether the option must be specified at the command line
+            (default: `False`).
+        help : str, optional
+            The help string describing the argument.
+        """
         super().__init__(option_strings=option_strings, dest=dest, nargs=0,
                          default=default, required=required, help=help)
 
@@ -414,6 +565,11 @@ pip_general_opts.add_argument(
     '--log',
     metavar='<path>',
     help="Path to a verbose appending log."
+)
+pip_general_opts.add_argument(
+    '--no-input',
+    action='store_true',
+    help="Disable prompting for input."
 )
 pip_general_opts.add_argument(
     '--retries',

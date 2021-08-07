@@ -1,4 +1,37 @@
-# ADD DOCSTRING
+"""
+This modules contains JavaScript code for various `davos` features that
+require manipulating the notebook JS object in the browser.
+
+**Note**: currently, these features are implemented for Jupyter
+notebooks only, as Colaboratory heavily restricts communication between
+the Python kernel and notebook frontend. However, within Jupyter, they
+are implemented for all `IPython` versions supported by `davos`.
+
+JavaScript functions in this module are organized in a `DotDict`
+instance (see class docstring below) whose keys are function names and
+whose values are function definitions.  Two functions are currently
+implemented:
+
+`JS_FUNCTIONS.jupyter.restartRunCellsAbove`
+    Restarts the notebook kernel and queues all cells above for
+    execution, including the current (highlighted) cell. In `davos`,
+    this is generally useful when a smuggled package that was previously
+    imported cannot be reloaded by the current interpreter.
+
+`JS_FUNCTIONS.jupyter.displayButtonPrompt`
+    Displays any number of buttons in the output area of the current
+    cell for user selection and (together with
+    `davos.implementations.jupyter.prompt_restart_rerun_buttons`) blocks
+    further code execution until one is clicked. Each button can
+    optionally trigger a JavaScript-based callback when clicked, and/or
+    send a "result" value from the notebook frontend to the Python
+    kernel, which is automatically converted from a JavaScript type to a
+    Python type. Buttons can also specify text labels and unique `id`s
+    for their HTML elements. All button elements are removed when one is
+    clicked, which prevents multiple user selections, removes their
+    event listeners, and makes their `id`s available for reuse. See
+    function JSDoc for type info and more details.
+"""
 
 
 __all__ = ['DotDict', 'JS_FUNCTIONS']
@@ -8,15 +41,21 @@ from textwrap import dedent
 
 
 class DotDict(dict):
-    # ADD DOCSTRING
-    # simple helper that allows a dict to be accessed like a JS object
+    """Simple `dict` subclass that can be accessed like a JS object"""
+
     __delattr__ = dict.__delitem__
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
 
     # noinspection PyMissingConstructor
     def __init__(self, d):
-        # ADD DOCSTRING
+        """
+        Parameters
+        ----------
+        d : `collections.Mapping`
+            A `dict`-like object to be converted to a `DotDict`,
+            recursively.
+        """
         for k, v in d.items():
             if isinstance(v, dict):
                 v = DotDict(v)
@@ -67,7 +106,6 @@ JS_FUNCTIONS = DotDict({
             // which it's displayed
             }.bind(this)
         """),
-        # TODO: don't forget to remove event listeners from all buttons
         'displayButtonPrompt': dedent("""
             /**
              * Display one or more buttons on the notebook frontend for user 

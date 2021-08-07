@@ -1,4 +1,7 @@
-# ADD DOCSTRING
+"""
+This module contains regular expressions used heavily by `davos`,
+pre-compiled as `re.Pattern` objects.
+"""
 
 
 __all__ = ['pip_installed_pkgs_regex', 'smuggle_statement_regex']

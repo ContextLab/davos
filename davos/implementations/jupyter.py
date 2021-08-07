@@ -1,4 +1,7 @@
-# ADD DOCSTRING
+"""
+This modules contains implementations of helper functions specific to
+Jupyter notebooks.
+"""
 
 
 __all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']
@@ -18,7 +21,47 @@ from davos.implementations.js_functions import JS_FUNCTIONS
 
 
 def auto_restart_rerun(pkgs):
-    # ADD DOCSTRING
+    """
+    Jupyter-specific implementation of `auto_restart_rerun`.
+
+    Automatically restarts the notebook kernel and reruns all cells
+    above, *including the current cell*. Called when one or more
+    smuggled `pkgs` that were previously imported cannot be reloaded by
+    the current interpreter, and `davos.config.auto_rerun` is set to
+    `True`. Displays a message in the cell output area with the
+    package(s) that required the kernel restart, calls
+    `JS_FUNCTIONS.jupyter.restartRunCellsAbove`, and then blocks until
+    the kernel is restarted.
+
+    Parameters
+    ----------
+    pkgs : list of str
+        Packages that could not be reloaded without restarting the
+        kernel.
+
+    See Also
+    --------
+    JS_FUNCTIONS.jupyter.restartRunCellsAbove :
+        JavaScript function that restarts kernel and reruns cells above
+
+    Notes
+    -----
+    1. The message displayed before restarting the kernel can be
+       silenced by setting `davos.config.suppress_stdout` to `True`.
+    2. After calling `JS_FUNCTIONS.jupyter.restartRunCellsAbove`, this
+       function sleeps until until the kernel restarts to prevent any
+       further code in the current cell or other queued cells from
+       executing. Restarting the kernel is often not instantaneous;
+       there's generally a 1-2s delay while the kernel sends & receives
+       various shutdown messages, but it can take significantly
+       longer on a slow machine, with older Python/Jupyter/ipykernel
+       versions, if a large amount of data was loaded into memory, if
+       multiple notebook kernels are running at once, etc. If this
+       function returned immediately, it's likely subsequent lines of
+       code would be run before the kernel disconnected. This can cause
+       problems if those lines of code use the package(s) that prompted
+       the restart, or have effects that persist across kernel sessions.
+    """
     msg = (
         "Restarting kernel and rerunning cells (required to smuggle "
         f"{', '.join(pkgs)})..."
@@ -50,10 +93,49 @@ def auto_restart_rerun(pkgs):
 
 
 def prompt_restart_rerun_buttons(pkgs):
-    # ADD DOCSTRING
+    """
+    Jupyter-specific implementation of `prompt_restart_rerun_buttons`.
+
+    Displays a warning that the notebook kernel must be restarted in
+    order to use the just-smuggled version of one or more previously
+    imported `pkgs`, and displays a pair of buttons (via
+    `JS_FUNCTIONS.jupyter.displayButtonPrompt`) that prompt the user to
+    either (a) restart the kernel and rerun all cells up to the current
+    point, or (b) ignore the warning and continue running. Then, polls
+    the kernel's stdin socket until it receives a reply from the
+    notebook frontend, or the kernel is restarted.
+
+    Parameters
+    ----------
+    pkgs : list of str
+        Packages that could not be reloaded without restarting the
+        kernel.
+
+    Returns
+    -------
+    None
+        If the user clicks the "Continue Running" button, returns
+        `None`. Otherwise, restarts the kernel and therefore never
+        returns.
+
+    See Also
+    --------
+    JS_FUNCTIONS.jupyter.displayButtonPrompt :
+        JavaScript function for prompting user input with buttons.
+    ipykernel.kernelbase.Kernel._input_request :
+        Kernel method that replaces the built-in `input` in notebooks.
+
+    Notes
+    -----
+    1. This method of blocking and waiting for user input is based on
+       `ipykernel`'s replacement for the built-in `input` function used
+       in notebook environments.
+
+    """
+    # TODO: remove warning message when button is clicked
     msg = (
         "WARNING: The following packages were previously imported by the "
-        "interpreter and could not be reloaded because their C extensions "
+        "interpreter and could not be reloaded because their compiled modules "
         f"have changed:\n\t[{', '.join(pkgs)}]\nRestart the kernel to use "
         "the newly installed version."
     )
@@ -113,28 +195,29 @@ def prompt_restart_rerun_buttons(pkgs):
 
     while True:
         try:
-            # zmq.select args:
-            #   - sockets/FDs to be polled for read events
-            #   - sockets/FDs to be polled for write events
-            #   - sockets/FDs to be polled for error events
+            # zmq.select (zmq.sugar.poll.select) args:
+            #   - list of sockets/FDs to be polled for read events
+            #   - list of sockets/FDs to be polled for write events
+            #   - list of sockets/FDs to be polled for error events
             #   - timeout (in seconds; None implies no timeout)
-            # https://github.com/zeromq/pyzmq/blob/c02e8a1094be8d817020af221a283176ff22eed5/zmq/sugar/poll.py#L108
-            # ('main' branch as of 7/21/2021)
             rlist, _, xlist = zmq.select([stdin_sock], [], [stdin_sock], 0.01)
             if rlist or xlist:
                 ident, reply = kernel.session.recv(stdin_sock)
                 if ident is not None or reply is not None:
                     break
-        except KeyboardInterrupt:
-            # re-raise KeyboardInterrupt with simplified traceback
-            # (excludes some convoluted calls to internal IPython/zmq
-            # machinery)
-            raise KeyboardInterrupt("Interrupted by user") from None
+        except Exception as e:
+            if isinstance(e, KeyboardInterrupt):
+                # re-raise KeyboardInterrupt with simplified traceback
+                # (excludes some convoluted calls to internal
+                # IPython/zmq machinery)
+                raise KeyboardInterrupt("Interrupted by user") from None
+            else:
+                kernel.log.warning("Invalid Message:", exc_info=True)
 
     # noinspection PyBroadException
     try:
         value = py3compat.unicode_to_str(reply['content']['value'])
-    except Exception:
+    except:
         if ipykernel.version_info[0] >= 6:
             _parent_header = kernel._parent_ident['shell']
         else:

@@ -468,4 +468,3 @@ def run_tests() -> None:
                  f"{test_name}{whitespace}{status}</div>")
         # noinspection PyTypeChecker
         display_html(html_, raw=True)
-

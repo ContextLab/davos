@@ -26,7 +26,7 @@ defaults:
 
 jobs:
   run-tests:
-    name: "Run CI tests (${{ matrix.notebook-type }}, Python ${{ matrix.python-version }}, IPython ${{ matrix.ipython-version }})"
+    name: "Run Jupyter CI tests (Python ${{ matrix.python-version }}, IPython ${{ matrix.ipython-version }})"
     runs-on: ubuntu-latest
     # only run on pull requests between forks to avoid duplicate runs with 'push' event
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository

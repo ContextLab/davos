@@ -34,7 +34,7 @@ defaults:
 
 jobs:
   run-tests:
-    name: "Run CI tests (colab, Python 3.7, IPython 5.5.0)"
+    name: "Run Colab CI Tests (Python 3.7, IPython 5.5.0)"
     runs-on: ubuntu-latest
     # run if triggered by any of the following:
     #   - a workflow_dispatch event (manual or from trigger-colab-tests-pr workflow)

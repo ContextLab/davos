@@ -25,6 +25,7 @@ import pytest
 from selenium import webdriver
 from selenium.common.exceptions import (
     ElementNotInteractableException,
+    JavascriptException,
     TimeoutException,
     WebDriverException
 )
@@ -122,6 +123,22 @@ class element_has_class:
         if self.cls_name in element.get_attribute('class').split():
             return element
         return False
+
+
+# noinspection PyPep8Naming
+class js_object_is_available:
+    """wait until JavaScript object is loaded, defined, and not null"""
+    def __init__(self, obj: str):
+        self.obj = obj
+
+    def __call__(self, driver: webdriver.Firefox) -> bool:
+        try:
+            # intentionally conflating null and undefined with !=
+            is_ready = driver.execute_script(f"return {self.obj} != null")
+        except JavascriptException:
+            return False
+        else:
+            return is_ready
 
 
 class NotebookTestFailed(Exception):
@@ -230,7 +247,7 @@ class NotebookDriver:
         return result
 
     def get_test_runner_cell(self) -> WebElement:
-        # TODO: make this more robust --  maybe loop in reverse over
+        # this could be more robust -- maybe loop in reverse over
         #  cells and find the one whose text == "run_cell()"
         return self.driver.find_elements_by_class_name("cell")[-1]
 
@@ -247,6 +264,9 @@ class ColabDriver(NotebookDriver):
         super().__init__(url=url)
         try:
             self.sign_in_google()
+            wait = WebDriverWait(self.driver, 10)
+            notebook_obj_is_loaded = js_object_is_available("colab.global.notebook")
+            wait.until(notebook_obj_is_loaded)
             self.factory_reset_runtime()
         except WebDriverException:
             self.capture_error_artifacts()
@@ -364,7 +384,9 @@ class JupyterDriver(NotebookDriver):
         # noinspection HttpUrlsUsage
         url = f"http://{ip}:{port}/notebooks/{notebook_path}"
         super().__init__(url=url)
-        self.clear_all_outputs()
+        wait = WebDriverWait(self.driver, 10)
+        notebook_obj_is_loaded = js_object_is_available("Jupyter.notebook")
+        wait.until(notebook_obj_is_loaded)
 
     def clear_all_outputs(self):
         # takes a moment for Jupyter.notebook JS object to be defined

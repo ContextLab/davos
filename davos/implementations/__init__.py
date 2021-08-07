@@ -62,8 +62,7 @@ else:
     from davos.implementations.ipython_common import (
         _check_conda_avail_helper,
         _run_shell_command_helper,
-        _set_custom_showsyntaxerror,
-        _showsyntaxerror_davos
+        _set_custom_showsyntaxerror
     )
 
     _set_custom_showsyntaxerror()

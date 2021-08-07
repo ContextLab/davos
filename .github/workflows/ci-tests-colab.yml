@@ -7,12 +7,6 @@ on:
       - '.gitattributes'
       - 'LICENSE'
       - 'README.md'
-  pull_request:
-    paths-ignore:
-      - 'paper/**'
-      - '.gitattributes'
-      - 'LICENSE'
-      - 'README.md'
   workflow_dispatch:
     inputs:
       fork:
@@ -40,14 +34,13 @@ jobs:
     #   - a workflow_dispatch event (manual or from trigger-colab-tests-pr workflow)
     #   - a push to paxtonfitzpatrick/davos
     #   - a push to ContextLab/davos
-    #   - a pull request between two branches of paxtonfitzpatrick/davos
-    #   - a pull request between two branches of ContextLab/davos
+    # don't run on any pull requests because:
+    #   - pull requests between branches duplicate checks run by pushing to the head branch
+    #   - pull requests between forks are handled by the workflow_dispatch setup
     if: >
       github.event_name == 'workflow_dispatch'
       || (github.event_name == 'push' && github.repository_owner == 'paxtonfitzpatrick')
       || (github.event_name == 'push' && github.repository_owner == 'ContextLab')
-      || (github.event_name == 'pull_request' && github.event.pull_request.base.user.login == 'paxtonfitzpatrick' && github.event.pull_request.head.user.login == 'paxtonfitzpatrick')
-      || (github.event_name == 'pull_request' && github.event.pull_request.base.user.login == 'ContextLab' && github.event.pull_request.head.user.login == 'ContextLab')
     env:
       ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
       GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
@@ -60,20 +53,12 @@ jobs:
     steps:
       - name: Determine fork and commit SHA
         run: |
-          case "$GITHUB_EVENT_NAME" in
-              "push" )
-                  head_sha="$GITHUB_SHA"
-                  ;;
-              "pull_request" )
-                  head_sha=${{ github.event.pull_request.head.sha }}
-                  ;;
-              "workflow_dispatch" )
-                  head_sha=${{ github.event.inputs.commit }}
-                  if [[ "$head_sha" == "default" ]]; then
-                      head_sha="$GITHUB_SHA"
-                  fi
-                  ;;
-          esac
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+              head_sha=${{ github.event.inputs.commit }}
+              [[ "$head_sha" == "default" ]] && head_sha="$GITHUB_SHA"
+          else
+              head_sha="$GITHUB_SHA"
+          fi
           echo "HEAD_SHA=$head_sha" >> $GITHUB_ENV
 
       - uses: actions/checkout@v2

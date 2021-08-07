@@ -44,8 +44,8 @@ jobs:
     #   - a pull request between two branches of ContextLab/davos
     if: >
       github.event_name == 'workflow_dispatch'
-      || (github.event_name == 'push' && github.event.repository_owner == 'paxtonfitzpatrick')
-      || (github.event_name == 'push' && github.event.repository_owner == 'ContextLab')
+      || (github.event_name == 'push' && github.repository_owner == 'paxtonfitzpatrick')
+      || (github.event_name == 'push' && github.repository_owner == 'ContextLab')
       || (github.event_name == 'pull_request' && github.event.pull_request.base.user.login == 'paxtonfitzpatrick' && github.event.pull_request.head.user.login == 'paxtonfitzpatrick')
       || (github.event_name == 'pull_request' && github.event.pull_request.base.user.login == 'ContextLab' && github.event.pull_request.head.user.login == 'ContextLab')
     env:

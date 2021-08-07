@@ -273,7 +273,7 @@ class ColabDriver(NotebookDriver):
             traceback.print_exc()
             pytest.exit(
                 "Failed to either sign into Google account or reset notebook "
-                "runtime. Error artifacts will be uploaded"
+                "runtime. Error artifacts will be uploaded."
             )
 
     def clear_all_outputs(self):
@@ -353,11 +353,19 @@ class ColabDriver(NotebookDriver):
         # wait.until(is_queued)
         # # wait for cell that runs test functions to start execution
         # # needs a longer timeout due to davos installation
-        wait = WebDriverWait(self.driver, 60)
-        is_running_tests = element_has_class((By.ID, test_runner_cell_id), "code-has-output")
-        wait.until(is_running_tests)
-        # switch focus to iframe containing cell output
-        self.driver.switch_to.frame(test_runner_cell.find_element_by_tag_name("iframe"))
+        try:
+            wait = WebDriverWait(self.driver, 60)
+            is_running_tests = element_has_class((By.ID, test_runner_cell_id), "code-has-output")
+            wait.until(is_running_tests)
+            # switch focus to iframe containing cell output
+            self.driver.switch_to.frame(test_runner_cell.find_element_by_tag_name("iframe"))
+        except WebDriverException:
+            self.capture_error_artifacts()
+            traceback.print_exc()
+            pytest.exit(
+                "Failed to locate test output cell. Error artifacts will be "
+                "uploaded."
+            )
 
 
 class JupyterDriver(NotebookDriver):

@@ -1,0 +1,37 @@
+name: Request Colab Tests for PR
+
+on:
+  pull_request_target:
+    paths-ignore:
+      - 'paper/**'
+      - '.gitattributes'
+      - 'LICENSE'
+      - 'README.md'
+
+defaults:
+  run:
+    shell: bash -leo pipefail {0}
+
+jobs:
+  request-colab-tests:
+    name: "Request approval to run Colab tests"
+    runs-on: ubuntu-latest
+    # run on pull requests from forks to the base repository
+    if: github.repository_owner == 'ContextLab' && github.event.pull_request.head.user.login != 'ContextLab'
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const headFork = context.payload.pull_request.head.user.login,
+                headSha = context.payload.pull_request.head.sha,
+                headShaShort = headSha.substr(0, 7),
+                headCommitUrl = `https://github.com/${headFork}/davos/tree/${headSha}`,
+                commentBody = `@paxtonfitzpatrick Run Colab CI tests on [${headFork}/davos@${headShaShort}](${headCommitUrl})?`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });

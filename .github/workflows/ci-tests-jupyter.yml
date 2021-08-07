@@ -1,6 +1,5 @@
-name: CI Tests
+name: CI Tests (Jupyter)
 
-#on: [push, pull_request]
 on:
   push:
     paths-ignore:
@@ -20,10 +19,6 @@ on:
         description: 'Pause before tests for tmate debugging'
         required: false
         default: 'false'
-      notebook_type:
-        description: 'Job type to debug {colab|jupyter|all}'
-        required: false
-        default: 'all'
 
 defaults:
   run:
@@ -31,7 +26,7 @@ defaults:
 
 jobs:
   run-tests:
-    name: "Run CI tests (${{ matrix.notebook-type }}, Python ${{ matrix.python-version }}, IPython ${{ matrix.ipython-version }})"
+    name: "Run Jupyter CI tests (Python ${{ matrix.python-version }}, IPython ${{ matrix.ipython-version }})"
     runs-on: ubuntu-latest
     # only run on pull requests between forks to avoid duplicate runs with 'push' event
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
@@ -39,42 +34,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - notebook-type: jupyter
-            python-version: 3.6
-            ipython-version: 5.5.0
-          - notebook-type: jupyter
-            python-version: 3.6
-            ipython-version: 7.16    # latest version to support Python 3.6
-          - notebook-type: jupyter
-            python-version: 3.7
-            ipython-version: 5.5.0
-          - notebook-type: jupyter
-            python-version: 3.7
+          # for each Python version, test with earliest and latest supported IPython version
+          - python-version: 3.6
+            ipython-version: 5.5.0    # earliest version supported by davos
+          - python-version: 3.6
+            ipython-version: 7.16     # latest version to support Python 3.6
+          - python-version: 3.7
+            ipython-version: 5.5.0    # earliest version supported by davos
+          - python-version: 3.7
             ipython-version: latest
-          - notebook-type: jupyter
-            python-version: 3.8
-            ipython-version: 7.3.0    # earliest version to support Python 3.8
-          - notebook-type: jupyter
-            python-version: 3.8
+          - python-version: 3.8
+            ipython-version: 7.3.0     # earliest version to support Python 3.8
+          - python-version: 3.8
             ipython-version: latest
-          - notebook-type: jupyter
-            python-version: 3.9
-            ipython-version: 7.15     # earliest version to support Python 3.9
-          - notebook-type: jupyter
-            python-version: 3.9
+          - python-version: 3.9
+            ipython-version: 7.15      # earliest version to support Python 3.9
+          - python-version: 3.9
             ipython-version: latest
-          - notebook-type: colab
-            python-version: 3.7       # I/Python versions are arbitrary for Colab-based
-            ipython-version: 5.5.0    # tests. Chosen to denote versions Colab uses
     env:
-      ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
-      GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
-      GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
+      HEAD_FORK: ${{ github.repository_owner }}
       HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       IPYTHON_VERSION: ${{ matrix.ipython-version }}
-      NOTEBOOK_TYPE: ${{ matrix.notebook-type }}
+      NOTEBOOK_TYPE: jupyter
       PYTHON_VERSION: ${{ matrix.python-version }}
-      RECOVERY_GMAIL_ADDRESS: ${{ secrets.DAVOS_RECOVERY_GMAIL_ADDRESS }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -117,7 +99,6 @@ jobs:
           echo "DRIVER_PATH=$driver_path" >> $GITHUB_ENV
 
       - name: setup notebook kernel environment
-        if: matrix.notebook-type == 'jupyter'
         run: |
           # install jupyter notebooks application in base environment
           pip install notebook "ipykernel==5.0.0"
@@ -143,24 +124,14 @@ jobs:
           conda deactivate
 
       - name: launch Jupyter server
-        if: matrix.notebook-type == 'jupyter'
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &
 
       - name: debug runner
         if: |
           github.event_name == 'workflow_dispatch'
           && github.event.inputs.debug_enabled == 'true'
-          && (github.event.inputs.notebook_type == 'all' || github.event.inputs.notebook_type == matrix.notebook-type)
         uses: mxschmitt/action-tmate@v3
 
       - name: run pytest
         id: run-pytest
-        continue-on-error: ${{ matrix.notebook-type == 'colab' }}
         run: pytest -sv tests/
-
-      - name: upload selenium error artifacts
-        if: matrix.notebook-type == 'colab'
-        uses: actions/upload-artifact@v2
-        with:
-          path: ${{ env.ARTIFACTS_DIR }}
-          if-no-files-found: ignore

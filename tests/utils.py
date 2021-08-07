@@ -145,30 +145,25 @@ def install_davos(
         fork: Optional[str] = None
 ) -> None:
     """
-    Install a particular version or revision of davos from
-    the specified remote source
+    Install a version or revision of davos from the specified source.
 
     Parameters
     ----------
-    source : {'github', 'pip', 'pypi', 'testpypi', 'conda'},
-             default: 'github'
-        The remote source from which to install davos. GitHub
-        is generally used for CI tests, pip/pypi for full
-        releases, and testpypi for test releases
-
+    source : {'github', 'pip', 'pypi', 'testpypi', 'conda'}, optional
+        The remote source from which to install `davos`. `'github'`
+        (default) is generally used for CI tests, `'pip'`/`'pypi'` for
+        full releases, and `'testpypi'` for test releases.
     ref : str, optional
-        The version or revision of davos to install. If
-        source is 'github', this can be a branch, commit hash,
-        or tag. Otherwise, this may be a valid version string
-        to install from the given source. Defaults to most
-        recent revision on the default branch of the specified
-        fork (GitHub) or the latest release version (others).
-
+        The version or revision of `davos` to install. If `source` is
+        `'github'`, this can be a branch, commit hash, or tag.
+        Otherwise, this may be a valid version string to install from
+        the given source. Defaults to most recent revision on the
+        default branch of the specified `fork` (GitHub) or the latest
+        release version (other sources).
     fork : str, optional
-        Optionally, the fork (GitHub username) to install from.
-        Defaults to the base repository (ContextLab). If source
-        is not 'github', this has no effect.
-
+        Optionally, the fork (GitHub username) to install from. Defaults
+        to the base repository (ContextLab). If `source` is not
+        `'github'`, this has no effect.
     """
     source = source.lower()
     if source == 'github':
@@ -336,11 +331,12 @@ def matches_expected_output(
 
 
 class ExceptionInfo(Generic[_E]):
-    _common_err_msg = ".{} can only be used after the context manager exits"
     """
     Simplified stand-in for _pytest._code.code.ExceptionInfo. Mocks
     some basic functionality useful in 'raises' context manager.
     """
+    _common_err_msg = ".{} can only be used after the context manager exits"
+
     def __init__(
             self,
             excinfo: Optional[Tuple[Type[_E], _E, types.TracebackType]]
@@ -472,4 +468,3 @@ def run_tests() -> None:
                  f"{test_name}{whitespace}{status}</div>")
         # noinspection PyTypeChecker
         display_html(html_, raw=True)
-

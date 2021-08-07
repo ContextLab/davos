@@ -66,8 +66,8 @@ jobs:
       - name: Dispatch Colab CI Test Workflow
         if: steps.check-comment.outputs.trigger_tests == 'true'
         env:
-          HEAD_FORK: steps.check-comment.outputs.head_fork
-          HEAD_SHA: steps.check-comment.outputs.head_sha
+          HEAD_FORK: ${{ steps.check-comment.outputs.head_fork }}
+          HEAD_SHA: ${{ steps.check-comment.outputs.head_sha }}
         uses: actions/github-script@v4
         with:
           script: |
@@ -75,7 +75,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 workflow_id: 'ci-tests-colab.yml',
-                ref: context.sha,
+                ref: context.ref,
                 inputs: {
                     fork: process.env.HEAD_FORK,
                     commit: process.env.HEAD_SHA,

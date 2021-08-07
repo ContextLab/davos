@@ -41,7 +41,7 @@ jobs:
                 core.setOutput('trigger_tests', 'true');
                 core.setOutput('head_fork', context.payload.issue.user.login);
                 try {
-                    core.setOutput('head_sha', context.payload.pull_request.pull_request.head.sha);
+                    core.setOutput('head_sha', context.payload.issue.pull_request.pull_request.head.sha);
                 } catch (error) {
                     console.log(context.payload.issue.pull_request);
                     throw error;

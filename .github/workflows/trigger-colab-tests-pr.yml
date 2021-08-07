@@ -1,0 +1,74 @@
+name: Trigger Colab CI Tests for Pull Request
+
+on:
+  issue_comment:
+    types: [created]
+
+defaults:
+  run:
+    shell: bash -leo pipefail {0}
+
+jobs:
+  trigger-tests-from-comment:
+    name: "Trigger Colab CI Tests from PR Comment"
+    runs-on: ubuntu-latest
+    # run if all of the following are true:
+    #   - the comment was made on a pull request (rather than an issue)
+    #   - the base repo of the pull request is ContextLab/davos
+    #   - the head repo of the pull request is a different fork
+    #   - the comment was made by paxtonfitzpatrick
+    #   - the github-actions bot is tagged at the beginning of the comment
+    if: >
+      github.event.issue.pull_request
+      && github.repository == 'ContextLab/davos'
+      && github.event.issue.pull_request.head.repo.full_name != 'ContextLab/davos'
+      && github.event.comment.user.login == 'paxtonfitzpatrick'
+      && startsWith(github.event.comment.body, '@github-actions ')
+    steps:
+      - name: Check whether comment triggers workflow
+        id: check-comment
+        uses: actions/github-script@v4
+        with:
+          script: |
+            // strings that trigger Colab CI tests
+            const approveStrings = ['approve', 'run', 'yes', '👍'],
+            // comment body with @github-actions bot tag removed
+                commentBody = context.payload.comment.body.replace(/@github-actions\s+/, '');
+
+            // if the comment contains a string that denotes approval"
+            if (approveStrings.some(str => commentBody.includes(str))) {
+                // set outputs for use in next step
+                core.setOutput('trigger_tests', 'true');
+                core.setOutput('fork', context.payload.issue.user.login);
+                core.setOutput('commit', context.payload.issue.pull_request.head.sha);
+                // react to comment with thumbs-up to confirm
+                github.reactions.createforIssueComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: context.payload.comment.id,
+                    content: '+1'
+                })
+            } else {
+                core.setOutput('trigger_tests', 'false');
+            }
+
+      - name: Dispatch Colab CI Test Workflow
+        if: steps.check-comment.outputs.trigger_tests == 'true'
+        env:
+          fork: steps.check-comment.outputs.fork
+          commit: steps.check-comment.outputs.commit
+        uses: actions/github-script@v4
+        with:
+          script: |
+            github.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'ci-tests-colab.yml',
+                ref: context.sha,
+                inputs: {
+                    fork: process.env.fork,
+                    commit: process.env.commit,
+                    debug_enabled: 'false'
+                }
+
+            })

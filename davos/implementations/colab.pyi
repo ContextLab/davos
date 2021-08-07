@@ -1,0 +1,6 @@
+from typing import Literal, NoReturn
+
+__all__ = list[Literal['auto_restart_rerun', 'prompt_restart_rerun_buttons']]
+
+def auto_restart_rerun(pkgs: list[str]) -> NoReturn: ...
+def prompt_restart_rerun_buttons(pkgs: list[str]) -> None: ...

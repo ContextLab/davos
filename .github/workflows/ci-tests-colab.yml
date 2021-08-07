@@ -1,0 +1,118 @@
+name: CI Tests (Colab)
+
+on:
+  push:
+    paths-ignore:
+      - 'paper/**'
+      - '.gitattributes'
+      - 'LICENSE'
+      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      fork:
+        description: 'The fork on which to run the tests'
+        required: false
+        default: 'ContextLab'
+      commit:
+        description: 'The SHA to checkout (defaults to ref that triggered workflow)'
+        required: false
+        default: 'default'
+      debug_enabled:
+        description: 'Pause before tests for tmate debugging'
+        required: false
+        default: 'false'
+
+defaults:
+  run:
+    shell: bash -leo pipefail {0}
+
+jobs:
+  run-tests:
+    name: "Run Colab CI Tests (Python 3.7, IPython 5.5.0)"
+    runs-on: ubuntu-latest
+    # run if triggered by any of the following:
+    #   - a workflow_dispatch event (manual or from trigger-colab-tests-pr workflow)
+    #   - a push to paxtonfitzpatrick/davos
+    #   - a push to ContextLab/davos
+    # don't run on any pull requests because:
+    #   - pull requests between branches duplicate checks run by pushing to the head branch
+    #   - pull requests between forks are handled by the workflow_dispatch setup
+    if: >
+      github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'push' && github.repository_owner == 'paxtonfitzpatrick')
+      || (github.event_name == 'push' && github.repository_owner == 'ContextLab')
+    env:
+      ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+      GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
+      GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
+      HEAD_FORK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fork || github.repository_owner }}
+      IPYTHON_VERSION: 5.5.0
+      NOTEBOOK_TYPE: colab
+      PYTHON_VERSION: 3.7
+      RECOVERY_GMAIL_ADDRESS: ${{ secrets.DAVOS_RECOVERY_GMAIL_ADDRESS }}
+    steps:
+      - name: Determine fork and commit SHA
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+              head_sha=${{ github.event.inputs.commit }}
+              [[ "$head_sha" == "default" ]] && head_sha="$GITHUB_SHA"
+          else
+              head_sha="$GITHUB_SHA"
+          fi
+          echo "HEAD_SHA=$head_sha" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v2
+        with:
+          repository: ${{ env.HEAD_FORK }}/davos
+          ref: ${{ env.HEAD_SHA }}
+
+      - name: install miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
+          activate-environment: ""
+
+      - name: setup base environment
+        run: |
+          # install Python 3.9 (used to run notebooks via selenium, not the tests themselves)
+          conda install python=3.9
+
+          # install Firefox browser
+          sudo apt-get install firefox
+
+          # install python packages
+          pip install pytest==6.2 "selenium>=3.141" geckodriver-autoinstaller
+
+          # install geckodriver
+          driver_path=$(python -c '
+
+          import shutil
+          from pathlib import Path
+
+          import geckodriver_autoinstaller
+
+          driver_src = Path(geckodriver_autoinstaller.install(cwd=True))
+          driver_dest = driver_src.rename(driver_src.parents[1].joinpath(driver_src.name))
+          driver_src.parent.rmdir()
+          print(driver_dest)
+
+          ')
+
+          # export path to driver as environment variable
+          echo "DRIVER_PATH=$driver_path" >> $GITHUB_ENV
+
+      - name: debug runner
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'
+        uses: mxschmitt/action-tmate@v3
+
+      - name: run pytest
+        id: run-pytest
+        run: pytest -sv tests/
+
+      - name: upload selenium error artifacts
+        if: failure() && steps.run-pytest.outcome == 'failure'
+        uses: actions/upload-artifact@v2
+        with:
+          path: ${{ env.ARTIFACTS_DIR }}
+          if-no-files-found: ignore

@@ -1,13 +1,29 @@
-from collections.abc import Callable
-from typing import Literal, Optional
-from davos._davos import Davos
-from davos.core import PipInstallerKwargs
+from typing import Literal
+from davos.core.config import DavosConfig
 
-__all__: list[Literal['activate', 'davos', 'deactivate', 'is_active', 'smuggle']]
+__all__ = list[
+    Literal[
+        'activate', 
+        'config', 
+        'configure', 
+        'deactivate', 
+        'is_active', 
+        'smuggle'
+    ]
+]
 __version__: str
 
-davos: Davos
-smuggle: Callable[[str, Optional[str], Literal['conda', 'pip'], str, Optional[PipInstallerKwargs]], None]
-activate: Callable[[], None]
-deactivate: Callable[[], None]
-is_active: Callable[[], bool]
+config: DavosConfig
+
+def activate() -> None: ...
+def configure(
+        *, 
+        active: bool = ..., 
+        auto_rerun: bool = ...,
+        conda_env: str = ..., 
+        confirm_install: bool = ..., 
+        noninteractive: bool = ..., 
+        suppress_stdout: bool = ...
+) -> None: ...
+def deactivate() -> None: ...
+def is_active() -> bool: ...

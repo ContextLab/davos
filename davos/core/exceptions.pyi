@@ -1,10 +1,11 @@
 from argparse import ArgumentError
 from subprocess import CalledProcessError
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, overload, Union
 
 __all__: list[
     Literal[
         'DavosError',
+        'DavosConfigError',
         'DavosParserError',
         'InstallerError',
         'OnionParserError',
@@ -15,6 +16,11 @@ __all__: list[
 ]
 
 class DavosError(Exception): ...
+
+class DavosConfigError(DavosError):
+    field: str
+    msg: str
+    def __init__(self, field: str, msg: str) -> None: ...
 
 class DavosParserError(SyntaxError, DavosError):
     def __init__(
@@ -41,13 +47,19 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError): ...
 class SmugglerError(DavosError): ...
 
 class InstallerError(SmugglerError, CalledProcessError):
-    msg: str
+    show_output: Optional[bool]
+    @classmethod
+    def from_error(
+            cls,
+            cpe: CalledProcessError,
+            show_output: Optional[bool] = ...
+    ) -> InstallerError: ...
     def __init__(
             self,
-            msg: str,
-            *args: Union[CalledProcessError, str],
+            returncode: int,
+            cmd: str,
             output: Optional[str] = ...,
             stderr: Optional[str] = ...,
-            show_stdout: Optional[bool] = ...
+            show_output: Optional[bool] = ...
     ) -> None: ...
     def __str__(self) -> str: ...

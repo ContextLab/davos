@@ -92,7 +92,7 @@ jobs:
                 inputs.fork: ${process.env.HEAD_FORK},
                 inputs.commit: ${process.env.HEAD_SHA}
             `);
-            await github.actions.createWorkflowDispatch({
+            const dispatchResponse = await github.actions.createWorkflowDispatch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 workflow_id: 'ci-tests-colab.yml',
@@ -103,3 +103,5 @@ jobs:
                     debug_enabled: 'false'
                 }
             });
+            console.log('triggered Colab CI tests');
+            console.log(dispatchResponse);

@@ -119,7 +119,10 @@ class element_has_class:
         self.locator = locator
         self.cls_name = cls_name
 
-    def __call__(self, driver: webdriver.Firefox) -> Union[WebElement, Literal[False]]:
+    def __call__(
+            self,
+            driver: webdriver.Firefox
+    ) -> Union[WebElement, Literal[False]]:
         element = driver.find_element(*self.locator)
         if self.cls_name in element.get_attribute('class').split():
             return element
@@ -143,10 +146,12 @@ class js_object_is_available:
 
 
 class NotebookTestFailed(Exception):
+    """Exception raised to convey that a notebook test failed"""
     pass
 
 
 class NotebookTestSkipped(Exception):
+    """Exception raised to convey that a notebook test was skipped"""
     pass
 
 
@@ -261,7 +266,8 @@ class NotebookDriver:
 
 class ColabDriver(NotebookDriver):
     def __init__(self, notebook_path: Union[Path, str]) -> None:
-        url = f"https://colab.research.google.com/github/{GITHUB_USERNAME}/davos/blob/{GITHUB_REF}/{notebook_path}"
+        url = f"https://colab.research.google.com/github/{GITHUB_USERNAME}" \
+              f"/davos/blob/{GITHUB_REF}/{notebook_path}"
         super().__init__(url=url)
         try:
             self.sign_in_google()
@@ -281,7 +287,9 @@ class ColabDriver(NotebookDriver):
         self.driver.execute_script("colab.global.notebook.clearAllOutputs()")
 
     def factory_reset_runtime(self):
-        self.driver.execute_script("colab.global.notebook.kernel.unassignCurrentVm({skipConfirm: 1})")
+        self.driver.execute_script(
+            "colab.global.notebook.kernel.unassignCurrentVm({skipConfirm: 1})"
+        )
 
     def run_all_cells(self, pre_approved: bool = False) -> None:
         keyboard_shortcut = ActionChains(self.driver) \
@@ -296,6 +304,7 @@ class ColabDriver(NotebookDriver):
             # ElementClickInterceptedException)
             time.sleep(3)
             self.driver.find_element_by_id("ok").click()
+        time.sleep(5)
 
     def set_template_vars(
             self,
@@ -350,20 +359,30 @@ class ColabDriver(NotebookDriver):
         # click "Manage Sessions" button
         self.driver.find_element_by_id('ok').click()
         # get "Active sessions" popup box under first #shadow-root
-        active_sessions_dialog_box = self.driver.find_element_by_tag_name('colab-sessions-dialog')
+        active_sessions_dialog_box = self.driver.find_element_by_tag_name(
+            'colab-sessions-dialog'
+        )
         # get popup box's footer element that contains buttons
         # use JavaScript to get element under second nested #shadow-root
         # because selenium itself can't
-        dialog_box_footer = self.driver.execute_script("return arguments[0].shadowRoot.getElementById('footer')",
-                                                       active_sessions_dialog_box)
+        dialog_box_footer = self.driver.execute_script(
+            "return arguments[0].shadowRoot.getElementById('footer')",
+            active_sessions_dialog_box
+        )
+        # give footer buttons a moment to appear and become clickable
+        time.sleep(2)
         # click "TERMINATE OTHER SESSIONS" button
-        dialog_box_footer.find_element_by_css_selector('paper-button.terminate-others').click()
+        dialog_box_footer.find_element_by_css_selector(
+            'paper-button.terminate-others'
+        ).click()
         # wait a moment for sessions to terminate (closing dialog before
         # sessions terminate would probably still work, but waiting just
         # to be safe)
         time.sleep(3)
         # click "CLOSE" button
-        dialog_box_footer.find_element_by_css_selector('paper-button.dismiss').click()
+        dialog_box_footer.find_element_by_css_selector(
+            'paper-button.dismiss'
+        ).click()
         # wait for popup element to be removed from DOM
         time.sleep(3)
         # need re-enter "run all cells" shortcut, but don't need to
@@ -389,10 +408,14 @@ class ColabDriver(NotebookDriver):
         # # needs a longer timeout due to davos installation
         try:
             wait = WebDriverWait(self.driver, 60)
-            is_running_tests = element_has_class((By.ID, test_runner_cell_id), "code-has-output")
+            is_running_tests = element_has_class(
+                (By.ID, test_runner_cell_id), "code-has-output"
+            )
             wait.until(is_running_tests)
             # switch focus to iframe containing cell output
-            self.driver.switch_to.frame(test_runner_cell.find_element_by_tag_name("iframe"))
+            self.driver.switch_to.frame(
+                test_runner_cell.find_element_by_tag_name("iframe")
+            )
         except WebDriverException:
             self.capture_error_artifacts()
             traceback.print_exc()
@@ -448,7 +471,9 @@ class JupyterDriver(NotebookDriver):
             to_replace = SHARED_VARS
         else:
             to_replace = SHARED_VARS | extra_vars
-        cell_contents = self.driver.execute_script("return Jupyter.notebook.get_cell(0).get_text()")
+        cell_contents = self.driver.execute_script(
+            "return Jupyter.notebook.get_cell(0).get_text()"
+        )
         for key, val in to_replace.items():
             template = f"${key}$"
             cell_contents = cell_contents.replace(template, val)

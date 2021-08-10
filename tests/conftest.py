@@ -634,12 +634,20 @@ def pytest_collect_file(
         path: py.path.local,
         parent: pytest.Collector
 ) -> Optional[NotebookFile]:
-    if NOTEBOOK_TYPE == 'colab':
-        driver_cls = ColabDriver
-    else:
-        driver_cls = JupyterDriver
-
     if path.basename.startswith('test_') and path.ext == ".ipynb":
+        if NOTEBOOK_TYPE == 'colab':
+            driver_cls = ColabDriver
+            if path.basename in ('test_ipython_post7.ipynb', 'test_jupyter.ipynb'):
+                return None
+        else:
+            driver_cls = JupyterDriver
+            run_ipy_post7_tests = (IPYTHON_VERSION == 'latest' or int(IPYTHON_VERSION.split('.')[0]) >= 7)
+            if path.basename == (
+                    'test_colab.ipynb'
+                    or (path.basename == 'test_ipython_pre7.ipynb' and run_ipy_post7_tests)
+                    or (path.basename == 'test_ipython_post7.ipynb' and not run_ipy_post7_tests)
+            ):
+                return None
         return NotebookFile.from_parent(parent, fspath=path, driver_cls=driver_cls)
     return None
 
@@ -679,3 +687,5 @@ def pytest_runtest_setup(item: pytest.Item):
 
     if missing_reqs:
         pytest.skip(f"Test requires {', '.join(missing_reqs)}")
+
+

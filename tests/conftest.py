@@ -642,8 +642,8 @@ def pytest_collect_file(
         else:
             driver_cls = JupyterDriver
             run_ipy_post7_tests = (IPYTHON_VERSION == 'latest' or int(IPYTHON_VERSION.split('.')[0]) >= 7)
-            if path.basename == (
-                    'test_colab.ipynb'
+            if (
+                    path.basename == 'test_colab.ipynb'
                     or (path.basename == 'test_ipython_pre7.ipynb' and run_ipy_post7_tests)
                     or (path.basename == 'test_ipython_post7.ipynb' and not run_ipy_post7_tests)
             ):

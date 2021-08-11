@@ -358,6 +358,7 @@ class ColabDriver(NotebookDriver):
         """terminate all sessions except for the current one"""
         # click "Manage Sessions" button
         self.driver.find_element_by_id('ok').click()
+        time.sleep(3)
         # get "Active sessions" popup box under first #shadow-root
         active_sessions_dialog_box = self.driver.find_element_by_tag_name(
             'colab-sessions-dialog'

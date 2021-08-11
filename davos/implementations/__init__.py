@@ -163,7 +163,7 @@ def _conda_env_fset(conf, new_env):
     if conf._conda_avail is False:
         raise DavosConfigError(
             "conda_env",
-            "Cannot set conda environment. No local conda installation found"
+            "cannot set conda environment. No local conda installation found"
         )
     elif new_env != conf._conda_env:
         if (

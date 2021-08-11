@@ -68,7 +68,7 @@ def _check_conda_avail_helper():
         base_exe_loc = Path(sys.executable).parent.joinpath('conda')
 
         if not base_exe_loc.is_file():
-            cmd += f"--prefix {sys.prefix}"
+            cmd += f" --prefix {sys.prefix}"
 
         with redirect_stdout(StringIO()) as conda_list_output:
             _run_shell_cmd(cmd)

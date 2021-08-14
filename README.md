@@ -5,6 +5,12 @@
 
 🟥🟥🟥 add badges 🟥🟥🟥
 
+[![CI Tests (Jupyter)](https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml/badge.svg?branch=main)](https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml)
+[![CI Tests (Colab)](https://github.com/ContextLab/davos/actions/workflows/ci-tests-colab.yml/badge.svg?branch=main&event=push)](https://github.com/ContextLab/davos/actions/workflows/ci-tests-colab.yml)
+
+[![](https://img.shields.io/pypi/v/davos?color=blue)](https://pypi.org/project/davos/)
+[![](https://img.shields.io/pypi/pyversions/davos)](https://pypi.org/project/davos/)
+[![](https://img.shields.io/github/license/ContextLab/davos)](https://github.com/ContextLab/davos/blob/main/LICENSE)
 
 > _Someone once told me that the night is dark and full of terrors. And tonight I am no knight. Tonight I am Davos the 
 smuggler again. Would that you were an onion._

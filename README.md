@@ -49,7 +49,7 @@ assert np.__version__ == '1.20.2'
   - [Smuggling Missing Packages](#smuggling-missing-packages)
   - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
   - [Use Cases](#use-cases)
-    - [Simplify Sharing Reproducible Code & Coding Environments](#simplify-sharing-reproducible-code--coding-environments)
+    - [Simplify Sharing Reproducible Code & Python Environments](#simplify-sharing-reproducible-code--python-environments)
     - [Guarantee your code always uses the latest version, release, or revision](#guarantee-your-code-always-uses-the-latest-version-release-or-revision)
     - [Compare behavior across package versions](#compare-behavior-across-package-versions)
 - [Usage](#usage)
@@ -59,11 +59,12 @@ assert np.__version__ == '1.20.2'
   - [The Onion Comment](#the-onion-comment)
     - [Syntax](#onion-comment-syntax)
     - [Rules](#onion-comment-rules)
-  - [Customizing `davos` Behavior](#customizing-davos-behavior)
+  - [The `davos` Config](#the-davos-config)
+    - [Reference](#config-reference)
+    - [Alternate Interface](#config-alternate-interface)
 - [Examples](#examples)
 - [How it works](#how-it-works)
-- [FAQ](#faq)
-- [Limitations & Final Notes](#limitations--final-notes)
+- [Additional Notes](#additional-notes)
 
 
 ## Installation
@@ -161,7 +162,7 @@ pandas>=0.23,<1.0`.
 In both cases, the imported versions will fit the constraints specified in their [onion comments](#the-onion-comment), 
 and the next time `numpy` or `pandas` is smuggled with the same constraints, valid local installations will be found.
 
-You can also ensure the state of a packages matches a specific VCS branch, revision, ref, or release. For example:
+You can also force the state of a packages to match a specific VCS branch, revision, ref, or release. For example:
 ```python
 smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@36c12fd
 ```
@@ -170,14 +171,14 @@ will load [`hypertools`](https://hypertools.readthedocs.io/en/latest/) (aliased 
 [36c12fd](https://github.com/ContextLab/hypertools/tree/36c12fd). The general format for VCS references in 
 [onion comments](#the-onion-comment) follows that of the 
 [`pip-install`](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) command. See the 
-[limitations section on smuggling from VCS](#limitation-vcs-smuggle) for additional notes.
+[notes on smuggling from VCS](#notes-vcs-smuggle) below for additional info.
 
-With [a few exceptions](#limitation-c-extensions), smuggling a specific package version will work _even if the package 
+With [a few exceptions](#notes-c-extensions), smuggling a specific package version will work _even if the package 
 has already been imported_.
 
 
 ### Use Cases
-#### Simplify sharing reproducible code & coding environments
+#### Simplify sharing reproducible code & Python environments
 Different versions of the same package can often behave quite differently&mdash;bugs are introduced and fixed, features 
 are implemented and removed, support for Python versions is added and dropped, etc. Because of this, Python code that is 
 meant to be _reproducible_ (e.g., tutorials, demos, data analyses) is commonly shared alongside a set of a set of fixed 
@@ -189,7 +190,7 @@ your code. Even then, a well-intentioned user may alter the environment in a way
 of pinned package versions (such as installing additional packages that trigger dependency updates).
    
 Instead, `davos` allows you to share code with one simple instruction: _just `pip install davos`!_ Replace your `import` 
-statements with `smuggle` statements, add package versions in onion comments, and let `davos` take care of the rest. 
+statements with `smuggle` statements, pin package versions in onion comments, and let `davos` take care of the rest. 
 Beyond its simplicity, this approach ensures your predetermined package versions are in place every time your code is 
 run.
 
@@ -207,20 +208,23 @@ smuggle mypkg    # pip: git+https://username/reponame.git
 
 #### Compare behavior across package versions
 The ability to `smuggle` a specific package version even after a different version has been imported makes `davos` a 
-useful tool for comparing behavior across multiple versions of the same package, all within the same runtime:
+useful tool for comparing behavior across multiple versions of the same package, all within the same interpreter 
+session:
 ```python
-data = list(range(10))
+def test_my_func_unchanged():
+    """Regression test for `mypkg.my_func()`"""
+    data = list(range(10))
+    
+    smuggle mypkg                    # pip: mypkg==0.1
+    result1 = mypkg.my_func(data)
 
-smuggle mypkg                    # pip: mypkg==0.1
-result1 = mypkg.my_func(data)
+    smuggle mypkg                    # pip: mypkg==0.2
+    result2 = mypkg.my_func(data)
 
-smuggle mypkg                    # pip: mypkg==0.2
-result2 = mypkg.my_func(data)
+    smuggle mypkg                    # pip: git+https://github.com/MyOrg/mypkg.git
+    result3 = mypkg.my_func(data)
 
-smuggle mypkg                    # pip: git+https://github.com/MyOrg/mypkg.git
-result3 = mypkg.my_func(data)
-
-print(result1 == result2 == result3)
+    assert result1 == result2 == result3
 ```
 
 
@@ -251,7 +255,7 @@ relative_module ::=  "."* module | "."+
 </sup>
 
 
-In simpler terms, any valid syntax for `import` is also a valid syntax for `smuggle` (`smuggle foo`, `from foo.bar 
+In simpler terms, **any valid syntax for `import` is also a valid syntax for `smuggle`** (`smuggle foo`, `from foo.bar 
 smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of valid forms.
 
 
@@ -259,11 +263,12 @@ smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of vali
 - Like `import` statements, `smuggle` statements are whitespace-insensitive, unless a lack of whitespace between two 
   tokens would cause them to be interpreted as a different token:
   ```python
-  from os.path smuggle dirname, join as opj                            # valid
-  from   os    . path    smuggle  dirname     ,join       as    opj    # valid
-  from os.path smuggle dirname, join asopj                             # invalid
+  from os.path smuggle dirname, join as opj                       # valid
+  from   os   . path   smuggle  dirname    ,join      as   opj    # also valid
+  from os.path smuggle dirname, join asopj                        # invalid ("asopj" != "as opj")
   ```
-- Any context that would cause an `import` statement _not_ to be executed will do the same to a `smuggle` statement:
+- Any context that would cause an `import` statement _not_ to be executed will have the same effect on a `smuggle` 
+  statement:
   ```python
   # smuggle matplotlib.pyplot as plt           # not executed
   print('smuggle matplotlib.pyplot as plt')    # not executed
@@ -292,7 +297,8 @@ smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of vali
      # etc...
      ```
 - In [IPython](https://ipython.readthedocs.io/en/stable/) environments (e.g., [Jupyter](https://jupyter.org/) & 
-  [Colaboratory](https://colab.research.google.com/)) `smuggle` statements always load names into the global namespace:
+  [Colaboratory](https://colab.research.google.com/) notebooks) `smuggle` statements always load names into the global 
+  namespace:
   ```python
   # example.ipynb
   import davos
@@ -310,20 +316,7 @@ smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of vali
   type(datetime)                               # raises NameError
   
   smuggle_example()
-  type(datetime)                               # executed
-  ```
-  However, this does not affect plain Python scripts:
-  ```python
-  # example.py
-  import davos
-  
-  
-  def smuggle_example():
-      smuggle datetime
-  
-  
-  smuggle_example()
-  type(datetime)                               # raises NameError
+  type(datetime)                               # returns
   ```
 
 
@@ -362,13 +355,12 @@ where `installer` is the program used to install the package; `install_opt` is a
 for the given `installer` program. For example, `pip` uses specific syntax for 
 [local](https://pip.pypa.io/en/stable/cli/pip_install/#local-project-installs), 
 [editable](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs), and 
-[VCS-based](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) installation, while `conda` supports 
-[additional specifier characters](https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/pkg-specs.html#examples) 
-and three-part 
-[package match specifications](https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/pkg-specs.html#package-match-specifications).
+[VCS-based](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) installation.  **Note**: support for installing 
+`smuggle`d packages via the [`conda`](https://docs.conda.io/en/latest/) package manager will be added in v0.2. For v0.1, 
+"`pip`" should always be passed as the `installer` program.
 
 Less formally, an onion comment simply consists of two parts, separated by a colon: 
-1. the name of the installer program
+1. the name of the installer program (e.g., *`pip`*)
 2. the arguments passed to the program's "install" command
 
 Thus, you can essentially think of writing an onion comment as taking the full shell command you would run to install 
@@ -386,16 +378,34 @@ In practice, onion comments are identified as matches for the
 ```regex
 #+ *(?:pip|conda) *: *[^#\n ].+?(?= +#| *\n| *$)
 ```
-
+<sup>
+  <i>
+    NB: support for installing <code>smuggle</code>d packages via 
+    <a href="https://docs.conda.io/en/latest/"><code>conda</code></a> will be added in v0.2. For v0.1, 
+    "<code>pip</code>" should be used exclusively.
+  </i>
+</sup>
 
 #### <a name="onion-comment-rules"></a>Rules
-- An onion comment may be followed by unrelated inline comments, as long as they are separated by at least one space:
+- An onion comment must be placed on the same line as a `smuggle` statement; otherwise, it is not parsed:
+  ```python
+  # assuming the dateutil package is not installed...
+  
+  # pip: python-dateutil                       # <-- has no effect
+  smuggle dateutil                             # raises InstallerError (no "dateutil" package exists)
+  
+  smuggle dateutil                             # raises InstallerError (no "dateutil" package exists)
+  # pip: python-dateutil                       # <-- has no effect
+  
+  smuggle dateutil    # pip: python-dateutil   # installs "python-dateutil" package, if necessary
+  ```
+- An onion comment may be followed by unrelated inline comments as long as they are separated by at least one space:
   ```python
   smuggle tqdm    # pip: tqdm>=4.46,<4.60 # this comment is ignored
   smuggle tqdm    # pip: tqdm>=4.46,<4.60            # so is this one
   smuggle tqdm    # pip: tqdm>=4.46,<4.60# but this comment raises OnionArgumentError
   ```
-- An onion comment must be the first inline comment immediately following a `smuggle` statement, otherwise it is not 
+- An onion comment must be the first inline comment immediately following a `smuggle` statement; otherwise, it is not 
   parsed:
   ```python
   smuggle numpy    # pip: numpy!=1.19.1        # <-- guarantees smuggled version is *not* v1.19.1
@@ -405,21 +415,11 @@ In practice, onion comments are identified as matches for the
   ```python
   smuggle numpy    ## pip: numpy!=1.19.1       # <-- has no effect
   ```
-- Onion comments must be placed on the same line as the `smuggle` statement, otherwise they are not parsed:
-  ```python
-  # pip: python-dateutil                       # <-- has no effect
-  smuggle dateutil                             # raises InstallerError (no "dateutil" package exists)
-  
-  smuggle dateutil                             # raises InstallerError (no "dateutil" package exists)
-  # pip: python-dateutil                       # <-- has no effect
-  
-  smuggle dateutil    # pip: python-dateutil   # installs "python-dateutil" package, if necessary
-  ```
 - Onion comments are generally whitespace-insensitive, but installer arguments must be separated by at least one space:
   ```python
-  from umap smuggle UMAP    # pip: umap-learn --user -v --no-clean       # valid
-  from umap smuggle UMAP#pip     :umap-learn    --user -v    --no-clean  # valid
-  from umap smuggle UMAP    # pip: umap-learn --user -v--no-clean        # raises OnionArgumentError
+  from umap smuggle UMAP    # pip: umap-learn --user -v --no-clean     # valid
+  from umap smuggle UMAP#pip:umap-learn --user     -v    --no-clean    # also valid
+  from umap smuggle UMAP    # pip: umap-learn --user-v--no-clean       # raises OnionArgumentError
   ```
 - Onion comments have no effect on standard library modules:
   ```python
@@ -435,7 +435,7 @@ In practice, onion comments are identified as matches for the
   ```python
   smuggle gensim; smuggle spacy; smuggle nltk    # pip: nltk~=3.5 --pre
   ```
-- For multiline `smuggle` statements, an onion comment may be placed on either the first or last line:
+- For multiline `smuggle` statements, an onion comment may be placed on the first line:
   ```python
   from scipy.interpolate smuggle (    # pip: scipy==1.6.3
       interp1d,
@@ -443,11 +443,13 @@ In practice, onion comments are identified as matches for the
       LinearNDInterpolator,
       NearestNDInterpolator,
   )
-  
-  from scipy.interpolate smuggle (interp1d,    # this comment and has no effect
+  ```
+  or on the last line:
+  ```python
+  from scipy.interpolate smuggle (interp1d,                  # this comment has no effect
                                   interpn as interp_ndgrid,
                                   LinearNDInterpolator,
-                                  NearestNDInterpolator)    # pip: scipy==1.6.3
+                                  NearestNDInterpolator)     # pip: scipy==1.6.3
   ```
   though the first line takes priority:
   ```python
@@ -456,30 +458,31 @@ In practice, onion comments are identified as matches for the
       interpn as interp_ndgrid,
       LinearNDInterpolator,
       NearestNDInterpolator,
-  )    # pip: scipy==1.6.2    # <-- this comment is ignored
+  )    # pip: scipy==1.6.2                                   # <-- this comment is ignored
   ```
   and all comments _not_ on the first or last line are ignored:
   ```python
-  from scipy.interpolate smuggle (interp1d,
-                                  interpn as interp_ndgrid,    # pip: scipy==1.6.3    # <-- ignored
-                                  LinearNDInterpolator,    # unrelated comment        # <-- ignored
-                                  NearestNDInterpolator)    # pip: scipy==1.6.2       # <-- parsed
+  from scipy.interpolate smuggle (
+      interp1d,    # pip: scipy==1.6.3                       # <-- ignored
+      interpn as interp_ndgrid,
+      LinearNDInterpolator,    # unrelated comment           # <-- ignored
+      NearestNDInterpolator
+  )    # pip: scipy==1.6.2                                   # <-- parsed
   ```
 - Because the onion comment is meant to control installation of a single `smuggle`d package, and because the purpose of 
   installing that package is to make it available for immediate use, installer options that either A) install more than 
   a single package and its dependencies (e.g., from a specification file), or B) do not install the specified package 
   are disallowed. The options listed below for each installer will raise an `OnionArgumentError`:
   - pip:
-    - `-r`/`--requirement`
-  - conda:
-    - `-d`/`--dry-run`
-    - `--download-only`
-    - `--file`
-    - `--only-deps`
-    - `--update-all`/`--all`
+    - `-h`, `--help`
+    - `-r`, `--requirement`
+    - `-V`, `--version`
 
 
-### Customizing `davos` Behavior
+### The `davos` Config
+#### <a name="config-reference"></a>Reference
+#### <a name="config-alternate-interface"></a>Alternate Interface
+
 ## Examples
 - smuggle specific version
 - smuggle package from VCS
@@ -489,14 +492,10 @@ In practice, onion comments are identified as matches for the
 - smuggle latest version fo package
 ### Valid Syntaxes
 ## How it works
-### Google Colab
-### Jupyter Notebooks
-### Python scripts
-## FAQ
 
 
-## Limitations & Final Notes
-- <a name="limitation-c-extensions"></a>**Smuggling packages with C-extensions**
+## Additional Notes
+- <a name="notes-c-extensions"></a>**Smuggling packages with C-extensions**
   
   Some Python packages that rely heavily on custom data types implemented via 
   [C-extensions](https://docs.python.org/3.9/extending/extending.html) (e.g., `numpy`, `pandas`) dynamically generate 
@@ -529,7 +528,7 @@ In practice, onion comments are identified as matches for the
 
 [comment]: <> (    - the next time the interpreter is launched, the `smuggle`d version will be used)
 
-- <a name="limitation-vcs-smuggle"></a>**Smuggling packages from version control systems**
+- <a name="notes-vcs-smuggle"></a>**Smuggling packages from version control systems**
   - To `smuggle` a package from a local or remote VCS URL, you must specify `pip` (i.e., not `conda`) as the  
     [installer](#smuggle-statement-syntax), as only `pip` supports VCS installation.
   - The first time during an interpreter session that a given package is installed from a VCS URL, it is assumed not to 

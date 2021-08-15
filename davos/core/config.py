@@ -38,6 +38,7 @@ class DavosConfig(metaclass=SingletonConfig):
     The global `davos` config object.
 
     Defines the following fields:
+
         **Configurable fields**:
             active : bool
                 Whether the `davos` parser should be run on subsequent
@@ -45,19 +46,19 @@ class DavosConfig(metaclass=SingletonConfig):
                 Python; default: `True`)
             auto_rerun : bool
                 If `True` (default: `False`), automatically restart the
-                interpreter sesssion and rerun previously executed code
+                interpreter session and rerun previously executed code
                 upon smuggling a package that cannot be dynamically
                 reloaded (Note: currently implemented for Jupyter
                 notebooks only)
             conda_env: str or None
-                The name of the resident conda environemnt of the
+                The name of the resident conda environment of the
                 current Python interpreter, if running within a `conda`
                 environment. Otherwise, `None`.
             confirm_install : bool
                 If `True` (default: `False`), prompt for user input
                 before installing any smuggled packages not already
                 available locally.
-            nonineractive : bool
+            noninteractive : bool
                 If `True` (default: `False`) run `davos` in
                 non-interactive mode. All user input and confirmation
                 will be disabled. **Note**: In Jupyter environments, the
@@ -81,6 +82,14 @@ class DavosConfig(metaclass=SingletonConfig):
                 If `conda_avail` is `True`, a mapping of conda
                 environment names to their environment directories.
                 Otherwise, `False`.
+            environment : {'Python', 'IPython<7.0', 'IPython>=7.0',
+                          'Colaboratory'}
+                The environment in which `davos` is running. Determines
+                which interchangeable implementation functions are used,
+                whether certain config fields are writable, and various
+                other behaviors.
+            ipython_shell : IPython.core.interactiveshell.InteractiveShell
+                The global `IPython` interactive shell instance.
             smuggled : dict
                 A cache of packages previously smuggled during the
                 current interpreter session, implemented as a dict whose

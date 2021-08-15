@@ -544,7 +544,14 @@ fields is available [below](#config-reference):
 - smuggle latest version fo package
 ### Valid Syntaxes
 ## How it works
+Functionally, importing `davos` appears to enable a new Python keyword, _`smuggle`_, that is not otherwise available. 
+However, nothing about the Py
+In [`IPython`](https://ipython.readthedocs.io/en/stable/) enivonments such as [Jupyter](https://jupyter.org/) and 
+[Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) notebooks, `davos` 
 
+- parser, smuggle statement -> function, activating/deactivating, etc.
+- interchangeable implementations
+- JS stuff for Jupyter and why it doesn't work for Colab
 
 ## Additional Notes
 - <a name="notes-installer-opts"></a>**Installer options that affect `davos` behavior**

@@ -161,7 +161,7 @@ class DavosConfig(metaclass=SingletonConfig):
             except CalledProcessError:
                 # try one more thing before we just throw up our hands...
                 try:
-                    chceck_output([sys.executable, '-c', 'import pip'])
+                    check_output([sys.executable, '-c', 'import pip'])
                 except CalledProcessError as e:
                     raise DavosError(
                         "Could not find 'pip' executable in $PATH or package "

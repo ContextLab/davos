@@ -189,6 +189,8 @@ class DavosConfig(metaclass=SingletonConfig):
                 attrs_in_repr.extend(['conda_env', 'conda_envs_dirs'])
         attrs_in_repr.extend([
             'confirm_install',
+            'environment',
+            'ipython_shell',
             'noninteractive',
             'pip_executable',
             'suppress_stdout',

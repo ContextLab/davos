@@ -549,7 +549,16 @@ However, nothing about the Py
 In [`IPython`](https://ipython.readthedocs.io/en/stable/) enivonments such as [Jupyter](https://jupyter.org/) and 
 [Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) notebooks, `davos` 
 
-- parser, smuggle statement -> function, activating/deactivating, etc.
+**Note**: in Jupyter and Colaboratory notebooks, `IPython` parses and transforms all lines in a cell before sending it 
+to the kernel for execution. This means that importing and/or activating `davos` will not enable the `smuggle` 
+statement until the _next_ cell, because the `davos` parser was not registered when the current cell was transformed. 
+Inversely, _deactivating_ `davos` will disable the `smuggle` statement immediately. Although the `davos` parser would 
+have already replaced all `smuggle` statements with `smuggle()` function calls, removing the function from the namespace 
+would cause it to throw a `NameError`.
+
+
+
+
 - interchangeable implementations
 - JS stuff for Jupyter and why it doesn't work for Colab
 

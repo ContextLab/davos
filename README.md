@@ -63,8 +63,10 @@ assert np.__version__ == '1.20.2'
     - [Reference](#config-reference)
     - [Top-level Functions](#top-level-functions)
 - [Examples](#examples)
-- [How it works](#how-it-works)
+- [How It Works](#how-it-works)
+  - [The `davos` Parser](#the-davos-parser)
 - [Additional Notes](#additional-notes)
+  - [Reimplementing installer programs' CLI parsers](#notes-reimplement-cli)
   - [Installer options that affect `davos` behavior](#notes-installer-opts)
   - [Smuggling packages with C-extensions](#notes-c-extensions)
   - [`import-from` statements and reloading modules](#notes-from-reload)
@@ -596,10 +598,22 @@ would cause it to throw a `NameError`.
 - JS stuff for Jupyter and why it doesn't work for Colab
 
 ## Additional Notes
+- <a name="notes-reimplement-cli"></a>**Reimplementing installer programs' CLI parsers**
+  The `davos` parser extracts info from onion comments by passing them to a (slightly modified) reimplementation of 
+  their specified installer program's CLI parser. This is somewhat redundant, since the arguments will eventually be 
+  re-parsed by the _actual_ installer program if the package needs to be installed. However, it affords a number of 
+  advantages, such as: 
+  - detecting errors early during the parser phase, before spending any time running code above the line containing the 
+    `smuggle` statement
+  - preventing shell injections in onion comments&mdash;e.g., `#pip: --upgrade numpy && rm -rf /` fails due to the 
+    `OnionParser`, but would otherwise execute successfully.
+  - allowing certain installer arguments to temporarily influence `davos` behavior while smuggling the current package 
+    (see [Installer options that affect `davos` behavior](#notes-installer-opts) below for specific info)
 - <a name="notes-installer-opts"></a>**Installer options that affect `davos` behavior**
+  - (e.g., `--force-reinstall` & `-I`, `--ignore-installed` skip check for local installation; `--no-input` causes a 
+    `True` value for `davos.config.confirm_install` to be ignored; etc.)
   - verbose, quiet, upgrade, ignore-installed, force-reinstall, others?
 - <a name="notes-c-extensions"></a>**Smuggling packages with C-extensions**
-- <a name="notes-from-reload"></a>**`import-from` statements and reloading modules**
 
   Some Python packages that rely heavily on custom data types implemented via 
   [C-extensions](https://docs.python.org/3.9/extending/extending.html) (e.g., `numpy`, `pandas`) dynamically generate 
@@ -632,6 +646,7 @@ would cause it to throw a `NameError`.
 
 [comment]: <> (    - the next time the interpreter is launched, the `smuggle`d version will be used)
 
+- <a name="notes-from-reload"></a>**`import-from` statements and reloading modules**
 - <a name="notes-vcs-smuggle"></a>**Smuggling packages from version control systems**
   - To `smuggle` a package from a local or remote VCS URL, you must specify `pip` (i.e., not `conda`) as the  
     [installer](#smuggle-statement-syntax), as only `pip` supports VCS installation.

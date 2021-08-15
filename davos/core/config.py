@@ -11,12 +11,12 @@ __all__ = ['DavosConfig']
 
 
 import pathlib
+import pprint
 import sys
 import traceback
 import warnings
 from io import StringIO
 from os.path import expandvars
-from pprint import PrettyPrinter
 from subprocess import CalledProcessError, check_output
 
 from davos.core.exceptions import DavosConfigError, DavosError
@@ -100,6 +100,39 @@ class DavosConfig(metaclass=SingletonConfig):
                 re-installation.
     """
 
+    @staticmethod
+    def __mock_sorted(__iterable, key=None, reverse=False):
+        """
+        Mock for built-in `sorted` that returns unsorted iterable.
+
+        Used to temporarily monkeypatch built-in `sorted` function in
+        `pprint` module when formatting display for `self.__repr__`
+        method. `dict` items in `smuggled` field should be shown in
+        insertion order, not alphabetically, because they represent a
+        history of cached `smuggle` commands. However,
+        `pprint.PrettyPrinter` didn't support option to *not* sort
+        `dict`s until Python 3.8, so for earlier versions, this is
+        assigned to `pprint.sorted` so that it takes priority over the
+        built-in `sorted` in module's namespace lookup chain.
+
+        Parameters
+        ----------
+        __iterable : iterable
+            The iterable to be "sorted."
+        key : callable, optional
+            Has no effect; exists to make function signature match that
+            of built-in `sorted` function.
+        reverse : bool
+            Has no effect; exists to make function signature match that
+            of built-in `sorted` function.
+
+        Returns
+        -------
+        iterable
+            The object passed as `__iterable`, unaltered.
+        """
+        return __iterable
+
     # noinspection PyFinal
     # (PyCharm doesn't differentiate between declarations here and in
     # stub file, which it should, according to PEP 591)
@@ -129,7 +162,10 @@ class DavosConfig(metaclass=SingletonConfig):
         self._conda_avail = None
         self._conda_envs_dirs = None
         self._ipy_showsyntaxerror_orig = None
-        self._repr_formatter = PrettyPrinter(sort_dicts=False)
+        self._repr_formatter = pprint.PrettyPrinter()
+        if sys.version_info.minor >= 8:
+            # sort_dicts constructor param added in Python 3.8
+            self._repr_formatter._sort_dicts = False
         self._smuggled = {}
         self._stdlib_modules = _get_stdlib_modules()
         ########################################
@@ -200,18 +236,31 @@ class DavosConfig(metaclass=SingletonConfig):
         last_item_ix = len(attrs_in_repr) - 1
         stream = StringIO()
         stream.write(f'{cls_name}(')
-        for i, attr_name in enumerate(attrs_in_repr):
-            attr_indent = base_indent + len(attr_name) + 1
-            is_last = i == last_item_ix
-            stream.write(f'{attr_name}=')
-            self._repr_formatter._format(getattr(self, f'_{attr_name}'),
-                                         stream=stream,
-                                         indent=attr_indent,
-                                         allowance=int(not is_last),
-                                         context={},
-                                         level=0)
-            if not is_last:
-                stream.write(newline_delim)
+        try:
+            if sys.version_info.minor < 8:
+                # monkeypatch built-in sorted function in pprint module
+                # while formatting __repr__ output
+                pprint.sorted = self.__mock_sorted
+            for i, attr_name in enumerate(attrs_in_repr):
+                attr_indent = base_indent + len(attr_name) + 1
+                is_last = i == last_item_ix
+                stream.write(f'{attr_name}=')
+                self._repr_formatter._format(getattr(self, f'_{attr_name}'),
+                                             stream=stream,
+                                             indent=attr_indent,
+                                             allowance=int(not is_last),
+                                             context={},
+                                             level=0)
+                if not is_last:
+                    stream.write(newline_delim)
+        finally:
+            if sys.version_info.minor < 8:
+                try:
+                    # delete the patch function so it doesn't interfere
+                    # with other libraries using pprint module
+                    del pprint.sorted
+                except AttributeError:
+                    pass
         repr_ = stream.getvalue()
         stream.close()
         return repr_ + ')'

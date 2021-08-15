@@ -1,3 +1,4 @@
+from collections.abc import Callable, Iterable
 from pathlib import PurePosixPath
 from pprint import PrettyPrinter
 from typing import (
@@ -8,6 +9,7 @@ from typing import (
     NoReturn,
     Optional,
     Protocol,
+    TypeVar,
     Union
 )
 from google.colab._shell import Shell                            # type: ignore
@@ -16,6 +18,7 @@ from IPython.core.interactiveshell import InteractiveShell       # type: ignore
 __all__: list[Literal['DavosConfig']]
 
 _Environment = Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']
+_I= TypeVar('_I', bound=Iterable)
 IpythonShell = Union[InteractiveShell, Shell]
 
 class IpyShowSyntaxErrorPre7(Protocol):
@@ -44,6 +47,8 @@ class DavosConfig(metaclass=SingletonConfig):
     _smuggled: dict[str, str]
     _stdlib_modules: Final[set[str]]
     _suppress_stdout: bool
+    @staticmethod
+    def __mock_sorted(__iterable: _I, key: Optional[Callable] = None, reverse: bool = False) -> _I: ...
     def __init__(self) -> None: ...
     def __repr__(self) -> str: ...
     @property

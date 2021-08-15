@@ -67,6 +67,7 @@ assert np.__version__ == '1.20.2'
 - [Additional Notes](#additional-notes)
   - [Installer options that affect `davos` behavior](#notes-installer-opts)
   - [Smuggling packages with C-extensions](#notes-c-extensions)
+  - [`import-from` statements and reloading modules](#notes-from-reload)
   - [Smuggling packages from version control systems](#notes-vcs-smuggle)
 
 
@@ -493,20 +494,29 @@ interpreter (unless updated); however, they do *not* persist across interpreter 
 fields is available [below](#config-reference):
 
 #### <a name="config-reference"></a>Reference
-| Field | Description | Type | Writable? |
-| --- | --- | --- | --- |
-| `active` | Whether the `davos` parser should be run 
+| Field | Description | Type | Default | Writable? |
+| :---: | --- | :---: | :---: | :---: |
+| `active` | Whether or not the `davos` parser should be run on subsequent input (cells, in Jupyter/Colab notebooks). Setting to `True` activates the `davos` parser, enables the `smuggle` keyword, and injects the `smuggle()` function into the user namespace. Setting to `False` deactivates the `davos` parser, disables the `smuggle` keyword, and removes "`smuggle`" from the user namespace (if it holds a reference to the `smuggle()` function). See [How it Works](#how-it-works) for more info. | `bool` | `True` | ✅ |
+| `auto_rerun` | If `True`, when smuggling a previously-imported package that cannot be reloaded (see [Smuggling packages with C-extensions](#notes-c-extensions)), `davos` will automatically restart the interpreter and rerun all code up to (and including) the current `smuggle` statement. Otherwise, issues a warning and prompts the user with buttons to either restart/rerun or continue running. | `bool` | `False` | ✅ (**Jupyter notebooks only**) |
+| `confirm_install` | Whether or not `davos` should require user confirmation (`[y/n]` input) before installing a smuggled package | `bool` | `False` | ✅ |
+| `environment` | A label describing the environment into which `davos` was running. Checked internally to determine which interchangeable implementation functions are used, whether certain config fields are writable, and various other behaviors | `Literal['Python', 'IPython<7.0', 'IPython>=7.0', 'Colaboratory']` | N/A | ❌ |
+| `ipython_shell` | The global `IPython` interactive shell instance | [`IPython.core`<br/>`.interactiveshell`<br/>`.InteractiveShell`](https://ipython.readthedocs.io/en/stable/api/generated/IPython.core.interactiveshell.html#IPython.core.interactiveshell.InteractiveShell) | N/A | ❌ |
+| `noninteractive` | Set to `True` to run `davos` in non-interactive mode (all user input and confirmation will be disabled). **NB**:<br/>1. Setting to `True` disables `confirm_install` if previously enabled <br/>2. If `auto_rerun` is `False` in non-interactive mode, `davos` will throw an error if a smuggled package cannot be reloaded | `bool` | `False` | ✅ (**Jupyter notebooks only**) |
+| `pip_executable` | The path to the `pip` executable used to install smuggled packages. Must be a path (`str` or [`pathlib.Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)) to a real file. Default is programmatically determined from Python environment; falls back to `sys.executable -m pip` if executable can't be found | `str` | `pip` exe path or `sys.executable -m pip` | ✅ |
+| `smuggled` | A cache of packages smuggled during the current interpreter session. Formatted as a `dict` whose keys are package names and values are the (`.split()` and `';'.join()`ed) onion comments. Implemented this way so that any non-whitespace change to installer arguments  re-installation | `dict[str, str]` | `{}` | ❌ |
+| `suppress_stdout` | If `True`, suppress all unnecessary output issued by both `davos` and the installer program. Useful when smuggling packages that need to install many dependencies and therefore generate extensive output. If the installer program throws an error while output is suppressed, both stdout & stderr will be shown with the traceback | `bool` | `False` | ✅ |
 
 #### <a name="top-level-functions"></a>Top-level Functions
 `davos` also provides a few convenience for reading/setting config values:
 - **`davos.activate()`**
   Activate the `davos` parser, enable the `smuggle` keyword, and inject the `smuggle()` function into the namespace. 
-  Equivalent to setting `davos.config.active = True`.
+  Equivalent to setting `davos.config.active = True`. See [How it Works](#how-it-works) for more info.
 
 - **`davos.deactivate()`**
   Deactivate the `davos` parser, disable the `smuggle` keyword, and remove the name `smuggle` from the namespace if (and 
   only if) it refers to the `smuggle()` function. If `smuggle` has been overwritten with a different value, the variable 
-  will not be deleted. Equivalent to setting `davos.config.active = False`.
+  will not be deleted. Equivalent to setting `davos.config.active = False`. See [How it Works](#how-it-works) for more 
+- info.
 
 - **`davos.is_active()`**
   Return the current value of `davos.config.active`.
@@ -538,7 +548,9 @@ fields is available [below](#config-reference):
 
 ## Additional Notes
 - <a name="notes-installer-opts"></a>**Installer options that affect `davos` behavior**
+  - verbose, quiet, upgrade, ignore-installed, force-reinstall, others?
 - <a name="notes-c-extensions"></a>**Smuggling packages with C-extensions**
+- <a name="notes-from-reload"></a>**`import-from` statements and reloading modules**
 
   Some Python packages that rely heavily on custom data types implemented via 
   [C-extensions](https://docs.python.org/3.9/extending/extending.html) (e.g., `numpy`, `pandas`) dynamically generate 

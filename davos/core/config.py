@@ -14,7 +14,9 @@ import pathlib
 import sys
 import traceback
 import warnings
+from io import StringIO
 from os.path import expandvars
+from pprint import PrettyPrinter
 from subprocess import CalledProcessError, check_output
 
 from davos.core.exceptions import DavosConfigError, DavosError
@@ -118,6 +120,7 @@ class DavosConfig(metaclass=SingletonConfig):
         self._conda_avail = None
         self._conda_envs_dirs = None
         self._ipy_showsyntaxerror_orig = None
+        self._repr_formatter = PrettyPrinter(sort_dicts=False)
         self._smuggled = {}
         self._stdlib_modules = _get_stdlib_modules()
         ########################################
@@ -168,9 +171,39 @@ class DavosConfig(metaclass=SingletonConfig):
                 self._pip_executable = pip_exe
 
     def __repr__(self):
-        # TODO: implement me
-        #  also implement _repr_html_ and/or _repr_pretty_ et al.
-        return super().__repr__()
+        cls_name = self.__class__.__name__
+        base_indent = len(cls_name) + 1
+        attrs_in_repr = ['active', 'auto_rerun', 'conda_avail']
+        if self._conda_avail is not None:
+            attrs_in_repr.append('conda_avail')
+            if self._conda_avail is True:
+                attrs_in_repr.extend(['conda_env', 'conda_envs_dirs'])
+        attrs_in_repr.extend([
+            'confirm_install',
+            'noninteractive',
+            'pip_executable',
+            'suppress_stdout',
+            'smuggled'
+        ])
+        newline_delim = ',\n' + ' ' * base_indent
+        last_item_ix = len(attrs_in_repr) - 1
+        stream = StringIO()
+        stream.write(f'{cls_name}(')
+        for i, attr_name in enumerate(attrs_in_repr):
+            attr_indent = base_indent + len(attr_name) + 1
+            is_last = i == last_item_ix
+            stream.write(f'{attr_name}=')
+            self._repr_formatter._format(getattr(self, f'_{attr_name}'),
+                                         stream=stream,
+                                         indent=attr_indent,
+                                         allowance=int(not is_last),
+                                         context={},
+                                         level=0)
+            if not is_last:
+                stream.write(newline_delim)
+        repr_ = stream.getvalue()
+        stream.close()
+        return repr_ + ')'
 
     @property
     def auto_rerun(self):

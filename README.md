@@ -543,11 +543,44 @@ fields is available [below](#config-reference):
 - smuggle package with extra requirements
 - smuggle latest version fo package
 ### Valid Syntaxes
-## How it works
-Functionally, importing `davos` appears to enable a new Python keyword, _`smuggle`_, that is not otherwise available. 
-However, nothing about the Py
-In [`IPython`](https://ipython.readthedocs.io/en/stable/) enivonments such as [Jupyter](https://jupyter.org/) and 
-[Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) notebooks, `davos` 
+## How It Works
+### The `davos` Parser
+While, functionally, importing `davos` appears to enable a new Python keyword, "_`smuggle`_", it doesn't modify the 
+rules or [reserved keywords](https://docs.python.org/3/reference/lexical_analysis.html#keywords) used by Python's 
+parser and lexical analyzer in order to do so (in fact, modifying the Python grammar is not possible at runtime and 
+would require rebuilding the interpreter). Instead, in [`IPython`](https://ipython.readthedocs.io/en/stable/) 
+enivonments like [Jupyter](https://jupyter.org/) and 
+[Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) notebooks, `davos` implements the `smuggle` 
+keyword via a combination of namespace injections and its own (far simpler) custom parser.
+
+The `smuggle` keyword can be enabled and disabled at will by "activating" and "deactivating" `davos` (see the 
+[`davos` Config Reference](config-reference) and [Top-level Functions](#top-level-functions), above). When `davos` is 
+imported, it is automatically activated by default. Activating `davos` triggers two things:
+1. The _`smuggle()` function_ (`davos.core.core.smuggle`) is injected into the `IPython` user namespace, under the name
+"`smuggle`"
+2. The _`davos` parser_ (`davos.implementations.full_parser`) is registered as a 
+[custom input transformer](https://ipython.readthedocs.io/en/stable/config/inputtransforms.html)
+
+`IPython` preprocesses all executed code as plain text before sending it to the Python parser in order to handle 
+special constructs like [`%magic`](https://ipython.readthedocs.io/en/stable/interactive/magics.html) and 
+[`!shell`](https://ipython.readthedocs.io/en/stable/interactive/reference.html#system-shell-access) commands. `davos` 
+similarly hooks into this process to transform `smuggle` statements into syntactically valid Python code. The `davos` 
+parser uses [this regular expression](https://github.com/ContextLab/davos/blob/main/davos/core/regexps.py) to match each
+line of code containing a `smuggle` statement (and, optionally, an onion comment), extracts information from its text, 
+and replaces it with an analogous call to the _`smuggle()` function_. Thus, even though the code visible to the user may 
+contain `smuggle` statements, e.g.:
+```python
+smuggle numpy as np    # pip: numpy>1.16,<=1.20 -vv
+```
+the code seen by the Python interpreter will not:
+```python
+smuggle(name="numpy", as_="np", installer="pip", args_str="""numpy>1.16,<=1.20 -vv""", installer_kwargs={'editable': False, 'spec': 'numpy>1.16,<=1.20', 'verbosity': 2})
+```
+
+The `davos` parser can be deactivated at any time, and doing so triggers the opposite actions of activating it:
+1. The name "`smuggle`" is deleted from the `IPython` user namespace, **unless** it no longer refers to the `smuggle()` 
+   function
+2. The `davos` parser input transformer is deregistered.
 
 **Note**: in Jupyter and Colaboratory notebooks, `IPython` parses and transforms all lines in a cell before sending it 
 to the kernel for execution. This means that importing and/or activating `davos` will not enable the `smuggle` 

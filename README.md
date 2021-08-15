@@ -61,10 +61,13 @@ assert np.__version__ == '1.20.2'
     - [Rules](#onion-comment-rules)
   - [The `davos` Config](#the-davos-config)
     - [Reference](#config-reference)
-    - [Alternate Interface](#config-alternate-interface)
+    - [Top-level Functions](#top-level-functions)
 - [Examples](#examples)
 - [How it works](#how-it-works)
 - [Additional Notes](#additional-notes)
+  - [Installer options that affect `davos` behavior](#notes-installer-opts)
+  - [Smuggling packages with C-extensions](#notes-c-extensions)
+  - [Smuggling packages from version control systems](#notes-vcs-smuggle)
 
 
 ## Installation
@@ -480,8 +483,47 @@ In practice, onion comments are identified as matches for the
 
 
 ### The `davos` Config
+The `davos` config object stores options and data that affect how `davos` behaves. After importing `davos`, the config 
+instance (a singleton) for the current session is available as `davos.config`, and its various fields are accessible as 
+attributes. The config object exposes a mixture of writable and read-only fields. Most `davos.config` attributes can be 
+assigned values to control aspects of `davos` behavior, while others are available for inspection but are set and used 
+internally. Additionally, certain config fields may be writable in some situations but not others (e.g. only if the 
+Python environment supports a particular feature). Once set, `davos` config options last for the lifetime of the 
+interpreter (unless updated); however, they do *not* persist across interpreter sessions. A full list of `davos` config 
+fields is available [below](#config-reference):
+
 #### <a name="config-reference"></a>Reference
-#### <a name="config-alternate-interface"></a>Alternate Interface
+| Field | Description | Type | Writable? |
+| --- | --- | --- | --- |
+| `active` | Whether the `davos` parser should be run 
+
+#### <a name="top-level-functions"></a>Top-level Functions
+`davos` also provides a few convenience for reading/setting config values:
+- **`davos.activate()`**
+  Activate the `davos` parser, enable the `smuggle` keyword, and inject the `smuggle()` function into the namespace. 
+  Equivalent to setting `davos.config.active = True`.
+
+- **`davos.deactivate()`**
+  Deactivate the `davos` parser, disable the `smuggle` keyword, and remove the name `smuggle` from the namespace if (and 
+  only if) it refers to the `smuggle()` function. If `smuggle` has been overwritten with a different value, the variable 
+  will not be deleted. Equivalent to setting `davos.config.active = False`.
+
+- **`davos.is_active()`**
+  Return the current value of `davos.config.active`.
+
+- **`davos.configure(**kwargs)`**
+  Set multiple `davos.config` fields at once by passing values as keyword arguments, e.g.:
+  ```python
+  import davos
+  davos.configure(active=False, noninteractive=True, pip_executable='/usr/bin/pip3')
+  ```
+  is equivalent to:
+  ```python
+  import davos
+  davos.active = False
+  davos.noninteractive = True
+  davos.pip_executable = '/usr/bin/pip3'
+  ```
 
 ## Examples
 - smuggle specific version
@@ -495,8 +537,9 @@ In practice, onion comments are identified as matches for the
 
 
 ## Additional Notes
+- <a name="notes-installer-opts"></a>**Installer options that affect `davos` behavior**
 - <a name="notes-c-extensions"></a>**Smuggling packages with C-extensions**
-  
+
   Some Python packages that rely heavily on custom data types implemented via 
   [C-extensions](https://docs.python.org/3.9/extending/extending.html) (e.g., `numpy`, `pandas`) dynamically generate 
   modules defining various C functions and data structures, and link them to the Python interpreter when they are first 

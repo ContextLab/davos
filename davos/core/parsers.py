@@ -76,7 +76,7 @@ class OnionParser(ArgumentParser):
         except (ArgumentError, ArgumentTypeError) as e:
             if isinstance(e, OnionArgumentError):
                 raise
-            elif isinstance(e, ArgumentError):
+            if isinstance(e, ArgumentError):
                 raise OnionArgumentError(msg=e.message,
                                          argument=e.argument_name,
                                          onion_txt=self._args) from None
@@ -114,10 +114,9 @@ class OnionParser(ArgumentParser):
         """
         if sys.exc_info()[1] is not None:
             raise
-        else:
-            if message == 'one of the arguments -e/--editable is required':
-                message = 'Onion comment must specify a package name'
-            raise OnionArgumentError(msg=message, onion_txt=self._args)
+        if message == 'one of the arguments -e/--editable is required':
+            message = 'Onion comment must specify a package name'
+        raise OnionArgumentError(msg=message, onion_txt=self._args)
 
 
 class EditableAction(Action):

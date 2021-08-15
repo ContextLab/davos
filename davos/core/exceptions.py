@@ -15,18 +15,16 @@ __all__ = [
 ]
 
 
-import IPython
-
 from argparse import ArgumentError
 from shutil import get_terminal_size
 from subprocess import CalledProcessError
 from textwrap import fill, indent
 
+import IPython
+
 
 class DavosError(Exception):
     """Base class for all `davos` library exceptions."""
-
-    pass
 
 
 class DavosConfigError(DavosError):
@@ -123,8 +121,6 @@ class DavosParserError(SyntaxError, DavosError):
 class OnionParserError(DavosParserError):
     """Class for errors related to parsing the onion comment syntax."""
 
-    pass
-
 
 class OnionArgumentError(ArgumentError, OnionParserError):
     """
@@ -199,19 +195,13 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError):
     comment) whose command line parser has not yet been added to `davos`
     """
 
-    pass
-
 
 class SmugglerError(DavosError):
     """Base class for errors raised during the smuggle phase"""
 
-    pass
-
 
 class TheNightIsDarkAndFullOfTerrors(SmugglerError):
     """A little Easter egg for if someone tries to `smuggle davos`"""
-
-    pass
 
 
 class InstallerError(SmugglerError, CalledProcessError):

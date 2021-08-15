@@ -223,8 +223,7 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
         raise NotImplementedError(
             "conda-install stdout parsing is not yet implemented"
         )
-    else:
-        installed_pkg_regex = pip_installed_pkgs_regex
+    installed_pkg_regex = pip_installed_pkgs_regex
 
     matches = installed_pkg_regex.findall(install_cmd_stdout)
     if len(matches) == 0:
@@ -298,8 +297,7 @@ def import_name(name):
                 f'No module or object "{obj_name}" found in "{mod_name}"'
             ) from e
         return obj
-    else:
-        return __import__(parts[0])
+    return __import__(parts[0])
 
 
 class Onion:
@@ -478,7 +476,7 @@ class Onion:
         if self.import_name in config._stdlib_modules:
             # smuggled module is part of standard library
             return True
-        elif (
+        if (
                 installer_kwargs.get('force_reinstall') or
                 installer_kwargs.get('ignore_installed') or
                 installer_kwargs.get('upgrade')
@@ -504,9 +502,8 @@ class Onion:
                 if module_spec is None:
                     # requested package is not installed
                     return False
-                else:
-                    # requested package is a namespace package
-                    return True
+                # requested package is a namespace package
+                return True
             except (
                 # package is installed, but installed version doesn't
                 # fit requested version constraints
@@ -721,8 +718,7 @@ def prompt_input(prompt, default=None, interrupt=None):
         except KeyboardInterrupt:
             if interrupt is not None:
                 return response_values[interrupt]
-            else:
-                raise
+            raise
         except KeyError:
             pass
 

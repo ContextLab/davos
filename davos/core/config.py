@@ -274,7 +274,7 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('auto_rerun',
                                    "field may be 'True' or 'False'")
-        elif self._environment == 'Colaboratory':
+        if self._environment == 'Colaboratory':
             raise DavosConfigError(
                 'auto_rerun',
                 'automatic rerunning of cells not available in Colaboratory'
@@ -290,7 +290,7 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('confirm_install',
                                    "field may be 'True' or 'False'")
-        elif self._noninteractive and value:
+        if self._noninteractive and value:
             raise DavosConfigError('confirm_install',
                                    "field may not be 'True' in noninteractive "
                                    "mode")
@@ -321,12 +321,12 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('noninteractive',
                                    "field may be 'True' or 'False'")
-        elif self._environment == 'Colaboratory':
+        if self._environment == 'Colaboratory':
             raise DavosConfigError(
                 'noninteractive',
                 "noninteractive mode not available in Colaboratory"
             )
-        elif value and self._confirm_install:
+        if value and self._confirm_install:
             warnings.warn(
                 "noninteractive mode enabled, setting `confirm_install = False`"
             )

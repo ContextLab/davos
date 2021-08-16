@@ -1,6 +1,6 @@
 from argparse import ArgumentError
 from subprocess import CalledProcessError
-from typing import Literal, Optional, overload, Union
+from typing import Literal, Optional
 
 __all__: list[
     Literal[
@@ -27,8 +27,7 @@ class DavosParserError(SyntaxError, DavosError):
             self,
             msg: Optional[str] = ...,
             target_text: Optional[str] = ...,
-            target_offset: int = ...,
-            *args: str
+            target_offset: int = ...
     ) -> None: ...
 
 class OnionParserError(DavosParserError): ...
@@ -38,8 +37,7 @@ class OnionArgumentError(ArgumentError, OnionParserError):
             self,
             msg: Optional[str] = ...,
             argument: Optional[str] = ...,
-            onion_txt: Optional[str] = ...,
-            *args: str
+            onion_txt: Optional[str] = ...
     ) -> None: ...
 
 class ParserNotImplementedError(OnionParserError, NotImplementedError): ...

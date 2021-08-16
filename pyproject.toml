@@ -5,6 +5,84 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+
+[tool.mypy]
+python_version = "3.9"
+disable_error_code = "override"
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+show_error_codes = true
+show_absolute_path = true
+
+
+[tool.pylint.basic]
+good-names = [
+    "e",
+    "i",
+    "ix",
+    "k",
+    "ns",
+    "p",
+    "tb",
+    "v"
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "fixme",
+    "import-outside-toplevel",
+    "too-many-ancestors",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-locals",
+    "too-many-return-statements",
+    "too-many-statements",
+    "wrong-import-position"
+]
+
+[tool.pylint.classes]
+exclude-protected = [
+    # davos.core.config.DavosConfig attributes
+    "_active",
+    "_conda_avail",
+    "_conda_env",
+    "_conda_envs_dirs",
+    "_ipy_showsyntaxerror_orig",
+    "_ipython_shell",
+    "_pip_executable",
+    "_smuggled",
+    "_stdlib_modules",
+    # IPython.core.interactiveshell.InteractiveShell methods
+    "_get_exc_info",
+    "_showtraceback",
+    # IPython custom display method for Exception classes
+    "_render_traceback_",
+    # ipykernel.ipkernel.IPythonKernel attribute
+    "_parent_ident"
+]
+
+[tool.pylint.design]
+max-attributes = 15
+
+[tool.pylint.typecheck]
+generated-members = [
+    "zmq.EAGAIN",
+    "NOBLOCK"
+]
+
+[tool.pylint.variables]
+additional-builtins = ["get_ipython"]
+allowed-redefined-builtins = ["help"]
+
 [tool.pytest.ini_options]
 addopts = "--capture=no --strict-markers --verbose"
 markers = [

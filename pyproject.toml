@@ -1,10 +1,8 @@
 [build-system]
-requires = [
-    "setuptools>=46.4",
-    "wheel"
-]
+requires = ["setuptools>=46.4", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# ======================================
 
 [tool.mypy]
 python_version = "3.9"
@@ -22,18 +20,10 @@ warn_unreachable = true
 show_error_codes = true
 show_absolute_path = true
 
+# ======================================
 
 [tool.pylint.basic]
-good-names = [
-    "e",
-    "i",
-    "ix",
-    "k",
-    "ns",
-    "p",
-    "tb",
-    "v"
-]
+good-names = ["e", "i", "ix", "k", "ns", "p", "tb", "v"]
 
 [tool.pylint.messages_control]
 disable = [
@@ -74,10 +64,7 @@ exclude-protected = [
 max-attributes = 15
 
 [tool.pylint.typecheck]
-generated-members = [
-    "zmq.EAGAIN",
-    "NOBLOCK"
-]
+generated-members = ["zmq.EAGAIN", "NOBLOCK"]
 
 [tool.pylint.variables]
 additional-builtins = ["get_ipython"]

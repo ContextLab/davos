@@ -48,7 +48,7 @@ from davos.implementations import (
 )
 
 
-class capture_stdout:
+class capture_stdout:    # pylint: disable=invalid-name
     """
     Context manager for sending stdout to multiple streams at once.
 
@@ -87,12 +87,12 @@ class capture_stdout:
     def __exit__(self, exc_type, exc_value, exc_tb):
         sys.stdout.write = self.sys_stdout_write
         if self.closing:
-            for s in self.streams:
-                s.close()
+            for stream in self.streams:
+                stream.close()
 
     def _write(self, data):
-        for s in self.streams:
-            s.write(data)
+        for stream in self.streams:
+            stream.write(data)
         self.sys_stdout_write(data)
         sys.stdout.flush()
 
@@ -115,14 +115,6 @@ def check_conda():
         If the environment mapping could be parsed from the output of
         `conda info --envs`, but the active environment name couldn't be
         parsed from the output of `conda list IPython`
-
-    Notes
-    -----
-    The full shell command run to format the output of
-    `conda info --envs` is:
-    ```sh
-    conda info --envs | grep -E '^\w' | sed -E 's/ +\*? +/ /g'
-    ```
     """
     conda_list_output = _check_conda_avail_helper()
     if conda_list_output is None:
@@ -141,7 +133,7 @@ def check_conda():
                                               live_stdout=False)
         # noinspection PyTypeChecker
         envs_dirs_dict = dict(map(str.split, conda_info_output.splitlines()))
-    except Exception:
+    except Exception:    # pylint: disable=broad-except
         # if no environments are found or output can't be parsed for
         # some reason, just count any conda env provided as valid. This
         # doesn't cause any major problems, we just can't catch errors
@@ -155,9 +147,9 @@ def check_conda():
     # format of first line of output seems to reliably be: `# packages
     # in environment at /path/to/environment/dir:` but can't hurt to
     # parse more conservatively since output is so short
-    for w in conda_list_output.split():
-        if '/' in w:
-            env_name = w.split('/')[-1].rstrip(':')
+    for word in conda_list_output.split():
+        if '/' in word:
+            env_name = word.split('/')[-1].rstrip(':')
             if (
                     envs_dirs_dict is not None and
                     env_name not in envs_dirs_dict.keys()
@@ -459,6 +451,7 @@ class Onion:
 
     @property
     def install_cmd(self):
+        """The shell command run to install the package as specified"""
         if self.args_str == '':
             args = self.install_name
         else:
@@ -472,6 +465,7 @@ class Onion:
 
     @property
     def is_installed(self):
+        """True if the package is installed locally; otherwise, False"""
         installer_kwargs = self.installer_kwargs
         if self.import_name in config._stdlib_modules:
             # smuggled module is part of standard library
@@ -483,13 +477,13 @@ class Onion:
         ):
             # args that trigger install regardless of installed version
             return False
-        elif self.args_str == config._smuggled.get(self.cache_key):
+        if self.args_str == config._smuggled.get(self.cache_key):
             # if the same version of the same package was smuggled from
             # the same source with all the same arguments previously in
             # the current interpreter session/notebook runtime (i.e.,
             # line is just being rerun)
             return True
-        elif '/' not in self.install_name:
+        if '/' not in self.install_name:
             # onion comment does not specify a VCS URL
             full_spec = self.install_name + self.version_spec.replace("'", "")
             try:
@@ -640,14 +634,14 @@ def parse_line(line):
 
     smuggle_funcs = []
     names_aliases = to_smuggle.split(',')
-    for na in names_aliases:
-        if ' as ' in na:
-            name, alias = na.split(' as ')
+    for n_a in names_aliases:
+        if ' as ' in n_a:
+            name, alias = n_a.split(' as ')
             name = f'"{qualname_prefix}{name}"'
             alias = f'"{alias.strip()}"'
         else:
-            name = f'"{qualname_prefix}{na}"'
-            alias = f'"{na.strip()}"' if is_from_statement else None
+            name = f'"{qualname_prefix}{n_a}"'
+            alias = f'"{n_a.strip()}"' if is_from_statement else None
 
         name = name.replace(' ', '')
         smuggle_funcs.append(f'smuggle(name={name}, as_={alias})')
@@ -852,7 +846,7 @@ def smuggle(
             # Also adds module (+ parents, if any) to sys.modules if not
             # already present.
             smuggled_obj = import_name(name)
-        except ModuleNotFoundError as e:
+        except ModuleNotFoundError:
             install_pkg = True
         else:
             install_pkg = False

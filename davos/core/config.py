@@ -100,6 +100,8 @@ class DavosConfig(metaclass=SingletonConfig):
                 re-installation.
     """
 
+    # noinspection PyUnusedLocal
+    # pylint: disable=unused-argument, missing-function-docstring, no-self-use
     @staticmethod
     def __mock_sorted(__iterable, key=None, reverse=False):
         """
@@ -141,7 +143,6 @@ class DavosConfig(metaclass=SingletonConfig):
         #           READ-ONLY FIELDS           #
         ########################################
         try:
-            # noinspection PyUnresolvedReferences
             # (function exists globally when imported into IPython context)
             self._ipython_shell = get_ipython()
         except NameError:
@@ -258,6 +259,7 @@ class DavosConfig(metaclass=SingletonConfig):
                 try:
                     # delete the patch function so it doesn't interfere
                     # with other libraries using pprint module
+                    # noinspection PyUnresolvedReferences
                     del pprint.sorted
                 except AttributeError:
                     pass

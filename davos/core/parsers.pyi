@@ -7,8 +7,8 @@ __all__ = list[Literal['EditableAction', 'OnionParser', 'pip_parser', 'SubtractA
 class OnionParser(ArgumentParser):
     _args: Optional[str]
     def parse_args(                                              # type: ignore
-            self, 
-            args: Sequence[str], 
+            self,
+            args: Sequence[str],
             namespace: Optional[Namespace] = ...
     ) -> Namespace: ...
     def error(self, message: str) -> NoReturn: ...

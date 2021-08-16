@@ -10,7 +10,7 @@ __all__ = ['pip_installed_pkgs_regex', 'smuggle_statement_regex']
 import re
 
 
-_name_re = r'[a-zA-Z]\w*'
+_name_re = r'[a-zA-Z]\w*'    # pylint: disable=invalid-name
 
 _smuggle_subexprs = {
     'name_re': _name_re,
@@ -22,8 +22,8 @@ _smuggle_subexprs = {
 
 pip_installed_pkgs_regex = re.compile("^Successfully installed (.*)$", re.MULTILINE)
 
-
-smuggle_statement_regex = re.compile((
+# pylint: disable=line-too-long, trailing-whitespace
+smuggle_statement_regex = re.compile((    # noqa: E131
     r'^\s*'                                                               # match only if statement is first non-whitespace chars
     r'(?P<FULL_CMD>'                                                      # capture full text of command in named group
         r'(?:'                                                            # first valid syntax:

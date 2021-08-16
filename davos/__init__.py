@@ -25,7 +25,6 @@ __version__ = pkg_resources.get_distribution('davos').version
 config = DavosConfig()
 
 
-# pylint: disable=wrong-import-position
 import davos.implementations
 from davos.core.core import smuggle
 

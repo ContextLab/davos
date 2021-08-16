@@ -4,7 +4,7 @@ Google Colaboratory notebooks.
 """
 
 
-__all__ = ['auto_restart_rerun', 'prompt_rerun_buttons']
+__all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']
 
 
 from IPython.core.display import _display_mimetype

@@ -48,6 +48,7 @@ class DotDict(dict):
     __setattr__ = dict.__setitem__
 
     # noinspection PyMissingConstructor
+    # pylint: disable=super-init-not-called
     def __init__(self, d):
         """
         Parameters

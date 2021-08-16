@@ -178,7 +178,7 @@ def generate_parser_func(line_parser):
 
         parsed_lines = []
         curr_buff = []
-        for ix, raw_line in enumerate(lines):
+        for raw_line in lines:
             # don't include trailing '\n'
             python_line = pyline_assembler.push(raw_line[:-1])
             if python_line is None:

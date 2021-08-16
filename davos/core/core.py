@@ -906,7 +906,7 @@ def smuggle(
             dep_modules_old[dep_name] = sys.modules[dep_name]
             try:
                 importlib.reload(sys.modules[dep_name])
-            except (ImportError, ModuleNotFoundError, RuntimeError):
+            except (ImportError, RuntimeError):
                 # if we aren't able to reload the module, put the old
                 # version's submodules we removed back in sys.modules
                 # for now and prepare to show a warning post-execution.

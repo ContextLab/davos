@@ -21,6 +21,8 @@ show_error_codes = true
 show_absolute_path = true
 
 # ======================================
+[tool.pylint.master]
+load-plugins = ["pylint.extensions.overlapping_exceptions"]
 
 [tool.pylint.basic]
 good-names = ["e", "i", "ix", "k", "ns", "p", "tb", "v"]

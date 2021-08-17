@@ -1,6 +1,25 @@
 <div align="center">
   <h1>davos</h1>
   <img src="https://user-images.githubusercontent.com/26118297/116332586-0c6ce080-a7a0-11eb-94ad-0502c96cf8ef.png" width=250/>
+  <br/>
+  <br/>
+  <a href="https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml">
+    <img src="https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml/badge.svg?branch=main" alt="CI Tests (Jupyter)">
+  </a>
+  <a href="https://github.com/ContextLab/davos/actions/workflows/ci-tests-colab.yml">
+    <img src="https://github.com/ContextLab/davos/actions/workflows/ci-tests-colab.yml/badge.svg?branch=main&event=push" alt="CI Tests (Colab)">
+  </a>
+  <img src="https://img.shields.io/codefactor/grade/github/paxtonfitzpatrick/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
+  <img src="https://img.shields.io/badge/mypy-type%20checked-blue" alt="mypy: checked">
+  <a href="https://pypi.org/project/davos/">
+    <img src="https://img.shields.io/pypi/pyversions/davos?logo=python&logoColor=white" alt="Python Versions">
+  </a> 
+  <a href="https://github.com/ContextLab/davos/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/ContextLab/davos" alt="License: MIT">
+  </a>
+  <a href="https://pepy.tech/project/davos">
+    <img src="https://static.pepy.tech/personalized-badge/davos?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads" alt="PyPI Downloads">
+  </a>
 </div>
 
 🟥🟥🟥 add badges 🟥🟥🟥
@@ -75,14 +94,19 @@ assert np.__version__ == '1.20.2'
 
 ## Installation
 ### Latest stable PyPI release
-🟥🟥🟥 add badges 🟥🟥🟥
+[![](https://img.shields.io/pypi/v/davos?label=PyPI&logo=pypi)](https://pypi.org/project/davos/)
+[![](https://img.shields.io/pypi/status/davos)]((https://pypi.org/project/davos/))
+[![](https://img.shields.io/pypi/format/davos)]((https://pypi.org/project/davos/))
 ```sh
 pip install davos
 ```
 
 
-### Latest unstable GitHub update
-🟥🟥🟥 add badges 🟥🟥🟥
+### Latest GitHub update
+[![](https://img.shields.io/github/commits-since/ContextLab/davos/latest)](https://github.com/ContextLab/davos/releases)
+[![](https://img.shields.io/github/last-commit/ContextLab/davos?logo=git&logoColor=white)](https://github.com/ContextLab/davos/commits/main)
+[![](https://img.shields.io/github/release-date/ContextLab/davos?label=last%20release)](https://github.com/ContextLab/davos/releases/latest)
+
 ```sh
 pip install git+https://github.com/ContextLab/davos.git#egg=davos
 ```

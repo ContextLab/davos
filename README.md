@@ -1,8 +1,8 @@
 <div align="center">
   <h1>davos</h1>
   <img src="https://user-images.githubusercontent.com/26118297/116332586-0c6ce080-a7a0-11eb-94ad-0502c96cf8ef.png" width=250/>
-  <br/>
-  <br/>
+  <br>
+  <br>
   <a href="https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml">
     <img src="https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml/badge.svg?branch=main" alt="CI Tests (Jupyter)">
   </a>
@@ -11,54 +11,60 @@
   </a>
   <img src="https://img.shields.io/codefactor/grade/github/paxtonfitzpatrick/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
   <img src="https://img.shields.io/badge/mypy-type%20checked-blue" alt="mypy: checked">
-  <br/>
+  <br>
   <a href="https://pypi.org/project/davos/">
     <img src="https://img.shields.io/pypi/pyversions/davos?logo=python&logoColor=white" alt="Python Versions">
   </a>
   <a href="https://pepy.tech/project/davos">
     <img src="https://static.pepy.tech/personalized-badge/davos?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads" alt="PyPI Downloads">
   </a>
-  <br/>
+  <br>
   <a href="https://github.com/ContextLab/davos/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/ContextLab/davos" alt="License: MIT">
   </a>
-  <br/>
-  <br/>
+  <br>
+  <br>
 </div>
 
 > _Someone once told me that the night is dark and full of terrors. And tonight I am no knight. Tonight I am Davos the 
 smuggler again. Would that you were an onion._
 <div align="right">
-    &mdash;<a href="https://gameofthrones.fandom.com/wiki/Davos_Seaworth">Ser Davos Seaworth</a>
-    <br>
-    <a href="https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire"><i>A Clash of Kings</i></a> by
-    <a href="https://en.wikipedia.org/wiki/George_R._R._Martin">George R. R. Martin</a>
+  &mdash;<a href="https://gameofthrones.fandom.com/wiki/Davos_Seaworth">Ser Davos Seaworth</a>
+  <br>
+  <a href="https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire"><i>A Clash of Kings</i></a> by
+  <a href="https://en.wikipedia.org/wiki/George_R._R._Martin">George R. R. Martin</a>
+  <br>
+  <br>
 </div>
 
 
 The `davos` library provides Python with an additional keyword: **`smuggle`**. 
 
-[`smuggle` statements](#the-smuggle-statement) work just like standard 
-[`import` statements](https://docs.python.org/3/reference/import.html) with one major addition: _you can `smuggle` a 
-package without installing it first_. A special type of comment (called an ["**onion**"](#the-onion-comment)) can also 
-be added after a `smuggle` statement, allowing you to _`smuggle` specific package versions_ and fully control 
-installation of missing packages.
+[The `smuggle` statement](#the-smuggle-statement) works just like the built-in 
+[`import` statement](https://docs.python.org/3/reference/import.html), with one major difference: **you can `smuggle` a 
+package without installing it first**. A special type of comment called an 
+["_onion comment_"](#the-onion-comment) can also be added to lines containing `smuggle` statements, allowing you to 
+**`smuggle` specific package versions** and **fully control how missing packages are installed**.
 
-To enable the `smuggle` keyword, simply `import davos`:
+**To enable the `smuggle` keyword, simply `import davos`**:
 ```python
 import davos
 
-# pip-install numpy if needed
+# pip-install numpy v1.20.2, if needed
 smuggle numpy as np    # pip: numpy==1.20.2
+
 
 # the smuggled package is fully imported and usable
 arr = np.arange(15).reshape(3, 5)
+
 # and the onion comment guarantees the desired version!
 assert np.__version__ == '1.20.2'
 ```
 
 ## Table of contents
 - [Installation](#installation)
+  - [Latest Stable PyPI Release](#latest-stable-pypi-release)
+  - [Latest GitHub Update](#latest-github-update)
 - [Overview](#overview)
   - [Smuggling Missing Packages](#smuggling-missing-packages)
   - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
@@ -76,19 +82,17 @@ assert np.__version__ == '1.20.2'
   - [The `davos` Config](#the-davos-config)
     - [Reference](#config-reference)
     - [Top-level Functions](#top-level-functions)
-- [Examples](#examples)
-- [How It Works](#how-it-works)
-  - [The `davos` Parser](#the-davos-parser)
+- [How It Works: The `davos` Parser](#how-it-works-the-davos-parser)
 - [Additional Notes](#additional-notes)
   - [Reimplementing installer programs' CLI parsers](#notes-reimplement-cli)
   - [Installer options that affect `davos` behavior](#notes-installer-opts)
   - [Smuggling packages with C-extensions](#notes-c-extensions)
-  - [`import-from` statements and reloading modules](#notes-from-reload)
+  - [_`from` ... `import` ..._ statements and reloading modules](#notes-from-reload)
   - [Smuggling packages from version control systems](#notes-vcs-smuggle)
 
 
 ## Installation
-### Latest stable PyPI release
+### Latest Stable PyPI Release
 [![](https://img.shields.io/pypi/v/davos?label=PyPI&logo=pypi)](https://pypi.org/project/davos/)
 [![](https://img.shields.io/pypi/status/davos)]((https://pypi.org/project/davos/))
 [![](https://img.shields.io/pypi/format/davos)]((https://pypi.org/project/davos/))
@@ -97,7 +101,7 @@ pip install davos
 ```
 
 
-### Latest GitHub update
+### Latest GitHub Update
 [![](https://img.shields.io/github/commits-since/ContextLab/davos/latest)](https://github.com/ContextLab/davos/releases)
 [![](https://img.shields.io/github/last-commit/ContextLab/davos?logo=git&logoColor=white)](https://github.com/ContextLab/davos/commits/main)
 [![](https://img.shields.io/github/release-date/ContextLab/davos?label=last%20release)](https://github.com/ContextLab/davos/releases/latest)
@@ -143,21 +147,21 @@ You can control _how_ `davos` installs missing packages by adding a special type
 One simple but powerful use for [onion comments](#the-onion-comment) is making `smuggle` statements version-sensitive. 
 
 Python does not provide native, viable a way to ensure a third-party package imported at runtime matches a specific 
-version, or fits a particular [version constraint](https://www.python.org/dev/peps/pep-0440/#version-specifiers). 
+version or fits a particular [version constraint](https://www.python.org/dev/peps/pep-0440/#version-specifiers). 
 Many packages expose their version info via a top-level `__version__` attribute (see 
-[PEP 396](https://www.python.org/dev/peps/pep-0396/)), and certain tools such as the standard library's 
+[PEP 396](https://www.python.org/dev/peps/pep-0396/)), and certain tools (such as the standard library's 
 [`importlib.metadata`](https://docs.python.org/3/library/importlib.metadata.html) and 
 [`setuptools`](https://setuptools.readthedocs.io/en/latest/index.html)'s 
-[`pkg_resources`](https://setuptools.readthedocs.io/en/latest/pkg_resources.html) attempt to parse version info from 
-installed distributions. However, using these to constrain imported package would enail writing extra code to compare 
-version strings and _still_ require manually installing the desired version and restarting the interpreter any time an 
+[`pkg_resources`](https://setuptools.readthedocs.io/en/latest/pkg_resources.html)) attempt to parse version info from 
+installed distributions. However, using these to constrain imported package would require writing extra code to compare 
+version strings and _still_ having manually installing the desired version and restarting the interpreter any time an 
 invalid version is caught.
 
 Additionally, for packages installed through a version control system (e.g., [git](https://git-scm.com/)), this would be 
 insensitive to differences between revisions (e.g., commits) within the same semantic version.
 
 **`davos` solves these issues** by allowing you to specify a specific version or set of acceptable versions for each 
-`smuggle`d package. To do this, simply provide a 
+smuggled package. To do this, simply provide a 
 [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) in an 
 [onion comment](#the-onion-comment) next to the `smuggle` statement:
 ```python
@@ -167,8 +171,8 @@ from pandas smuggle DataFrame    # pip: pandas>=0.23,<1.0
 In this example, the first line will load [`numpy`](https://numpy.org/) into the local namespace under the alias "`np`", 
 just as "`import numpy as np`" would. First, `davos` will check whether `numpy` is installed locally, and if so, whether 
 the installed version _exactly_ matches `1.20.2`. If `numpy` is not installed, or the installed version is anything 
-other than `1.20.2`, `davos` will use the specified _installer program_, `pip`, to install `numpy==1.20.2` before 
-loading the package. 
+other than `1.20.2`, `davos` will use the specified _installer program_, [`pip`](https://pip.pypa.io/en/stable/), to 
+install `numpy==1.20.2` before loading the package. 
 
 Similarly, the second line will load the "`DataFrame`" object from the [`pandas`](https://pandas.pydata.org/) library, 
 analogously to "`from pandas import DataFrame`". A local `pandas` version of `0.24.1` would be used, but a local version 
@@ -178,7 +182,7 @@ pandas>=0.23,<1.0`.
 In both cases, the imported versions will fit the constraints specified in their [onion comments](#the-onion-comment), 
 and the next time `numpy` or `pandas` is smuggled with the same constraints, valid local installations will be found.
 
-You can also force the state of a `smuggle`d packages to match a specific VCS ref (branch, revision, tag, releas, etc.). 
+You can also force the state of a smuggled packages to match a specific VCS ref (branch, revision, tag, releas, etc.). 
 For example:
 ```python
 smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@98a3d80
@@ -187,24 +191,29 @@ will load [`hypertools`](https://hypertools.readthedocs.io/en/latest/) (aliased 
 [on GitHub](https://github.com/ContextLab/hypertools), at commit 
 [98a3d80](https://github.com/ContextLab/hypertools/tree/98a3d80). The general format for VCS references in 
 [onion comments](#the-onion-comment) follows that of the 
-[`pip-install`](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) command. See the 
+[`pip-install`](https://pip.pypa.io/en/stable/topics/vcs-support) command. See the 
 [notes on smuggling from VCS](#notes-vcs-smuggle) below for additional info.
 
 And with [a few exceptions](#notes-c-extensions), smuggling a specific package version will work _even if the package 
 has already been imported_!
+
+**Note**: `davos` v0.1 supports [IPython](https://ipython.readthedocs.io/en/stable/) environments  (e.g., 
+[Jupyter](https://jupyter.org/) and [Colaboratory](https://colab.research.google.com/) notebooks) only. v0.2 will add 
+support for "regular" (i.e., non-interactive) Python scripts.
 
 
 ### Use Cases
 #### Simplify sharing reproducible code & Python environments
 Different versions of the same package can often behave quite differently&mdash;bugs are introduced and fixed, features 
 are implemented and removed, support for Python versions is added and dropped, etc. Because of this, Python code that is 
-meant to be _reproducible_ (e.g., tutorials, demos, data analyses) is commonly shared alongside a set of a set of fixed 
-versions for each package used. And since there is no Python-native way to specify package versions at runtime (see 
-[above](#smuggling-specific-package-versions)), this often takes the form of a pre-configured development environment 
-(e.g., a [Docker](https://www.docker.com/) container), which can be cumbersome, slow to set up, resource-intensive, and 
-confusing for newer users, as well as require shipping both additional specification files _and_ instructions along with 
-your code. Even then, a well-intentioned user may alter the environment in a way that affects your carefully curated set 
-of pinned package versions (such as installing additional packages that trigger dependency updates).
+meant to be _reproducible_ (e.g., tutorials, demos, data analyses) is commonly shared alongside a set of fixed versions 
+for each package used. And since there is no Python-native way to specify package versions at runtime (see 
+[above](#smuggling-specific-package-versions)), this typically takes the form of a pre-configured development 
+environment the end user must build themselves (e.g., a [Docker](https://www.docker.com/) container or 
+[conda](https://docs.conda.io/en/latest/) environment), which can be cumbersome, slow to set up, resource-intensive, and 
+confusing for newer users, as well as require shipping both additional specification files _and_ setup instructions 
+along with your code. And even then, a well-intentioned user may alter the environment in a way that affects your 
+carefully curated set of pinned packages (such as installing additional packages that trigger dependency updates).
    
 Instead, `davos` allows you to share code with one simple instruction: _just `pip install davos`!_ Replace your `import` 
 statements with `smuggle` statements, pin package versions in onion comments, and let `davos` take care of the rest. 
@@ -225,8 +234,7 @@ smuggle mypkg    # pip: git+https://username/reponame.git
 
 #### Compare behavior across package versions
 The ability to `smuggle` a specific package version even after a different version has been imported makes `davos` a 
-useful tool for comparing behavior across multiple versions of the same package, all within the same interpreter 
-session:
+useful tool for comparing behavior across multiple versions of the same package, within the same interpreter session:
 ```python
 def test_my_func_unchanged():
     """Regression test for `mypkg.my_func()`"""
@@ -248,7 +256,7 @@ def test_my_func_unchanged():
 ## Usage
 ### The `smuggle` Statement
 #### <a name="smuggle-statement-syntax"></a>Syntax
-The `smuggle` statement is designed to be used in place of 
+The `smuggle` statement is meant to be used in place of 
 [the built-in `import` statement](https://docs.python.org/3/reference/import.html) and shares
 [its full syntactic definition](https://docs.python.org/3/reference/simple_stmts.html#the-import-statement):
 ```ebnf
@@ -272,8 +280,7 @@ relative_module ::=  "."* module | "."+
 </sup>
 
 
-In simpler terms, **any valid syntax for `import` is also a valid syntax for `smuggle`** (`smuggle foo`, `from foo.bar 
-smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of valid forms.
+In simpler terms, **any valid syntax for `import` is also valid for `smuggle`**.
 
 
 #### <a name="smuggle-statement-rules"></a>Rules
@@ -340,16 +347,16 @@ smuggle baz as qux`, etc.). See [below](#valid-syntaxes) for a full list of vali
 ### The Onion Comment
 An _onion comment_ is a special type of inline comment placed on a line containing a `smuggle` statement. Onion comments 
 can be used to control how `davos`:
-1. determines whether the `smuggle`d package should be installed
-2. installs the `smuggle`d package, if necessary
+1. determines whether the smuggled package should be installed
+2. installs the smuggled package, if necessary
 
-[Onion comments](#the-onion-comment) are also useful when smuggling a package whose _distribution name_ (i.e., the name 
+Onion comments are also useful when smuggling a package whose _distribution name_ (i.e., the name 
 used when installing it) is different from its _top-level module name_ (i.e., the name used when importing it). Take for 
 example:
 ```python
 from sklearn.decomposition smuggle pca    # pip: scikit-learn
 ```
-The [onion comment](#the-onion-comment) here (`# pip: scikit-learn`) tells `davos` that if "`sklearn`" does not exist 
+The onion comment here (`# pip: scikit-learn`) tells `davos` that if "`sklearn`" does not exist 
 locally, the "`scikit-learn`" package should be installed.
 
 #### <a name="onion-comment-syntax"></a>Syntax
@@ -376,26 +383,24 @@ where `installer` is the program used to install the package; `install_opt` is a
 "`install`" command; and `version_spec` may be a 
 [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) defined by 
 [PEP 440](https://www.python.org/dev/peps/pep-0440) followed by a 
-[version string](https://www.python.org/dev/peps/pep-0440/#public-version-identifiers), or an alternative syntax valid 
-for the given `installer` program. For example, `pip` uses specific syntax for 
+[version string](https://www.python.org/dev/peps/pep-0440/#public-version-identifiers), or an alternative syntaxe valid 
+for the given `installer` program. For example, [`pip`](https://pip.pypa.io/en/stable/) uses specific syntaxes for 
 [local](https://pip.pypa.io/en/stable/cli/pip_install/#local-project-installs), 
 [editable](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs), and 
-[VCS-based](https://pip.pypa.io/en/stable/cli/pip_install/#vcs-support) installation.  **Note**: support for installing 
-`smuggle`d packages via the [`conda`](https://docs.conda.io/en/latest/) package manager will be added in v0.2. For v0.1, 
-"`pip`" should always be passed as the `installer` program.
+[VCS-based](https://pip.pypa.io/en/stable/topics/vcs-support) installation.  
 
-Less formally, an onion comment simply consists of two parts, separated by a colon: 
-1. the name of the installer program (e.g., *`pip`*)
-2. the arguments passed to the program's "install" command
+Less formally, **an onion comment simply consists of two parts, separated by a colon**: 
+1. the name of the installer program (e.g., [`pip`](https://pip.pypa.io/en/stable/))
+2. arguments passed to the program's "install" command
 
 Thus, you can essentially think of writing an onion comment as taking the full shell command you would run to install 
 the package, and replacing "_install_" with "_:_". For instance, the command:
 ```sh
-pip install -I --no-cache-dir numpy==1.20.2 -vvv
+pip install -I --no-cache-dir numpy==1.20.2 -vvv --timeout 30
 ```
 is easily translated into an onion comment as:
 ```python
-smuggle numpy    # pip: -I --no-cache-dir numpy==1.20.2 -vvv
+smuggle numpy    # pip: -I --no-cache-dir numpy==1.20.2 -vvv --timeout 30
 ```
 
 In practice, onion comments are identified as matches for the
@@ -410,6 +415,10 @@ In practice, onion comments are identified as matches for the
     "<code>pip</code>" should be used exclusively.
   </i>
 </sup>
+
+**Note**: support for installing smuggled packages via the [`conda`](https://docs.conda.io/en/latest/) package manager 
+will be added in v0.2. For v0.1, onion comments should always specify "`pip`" as the `installer` program.
+
 
 #### <a name="onion-comment-rules"></a>Rules
 - An onion comment must be placed on the same line as a `smuggle` statement; otherwise, it is not parsed:
@@ -455,8 +464,8 @@ In practice, onion comments are identified as matches for the
   ```python
   smuggle nilearn, nibabel, nltools    # pip: nilearn==0.7.1
   ```
-- If multiple _separate_ `smuggle` statements appear on a single line separated by semicolons, an onion comment 
-  may be used to modify the **last** `smuggle` statement:
+- If multiple _separate_ `smuggle` statements are placed on a single line, an onion comment may be used to refer to the 
+  **last** statement:
   ```python
   smuggle gensim; smuggle spacy; smuggle nltk    # pip: nltk~=3.5 --pre
   ```
@@ -469,14 +478,14 @@ In practice, onion comments are identified as matches for the
       NearestNDInterpolator,
   )
   ```
-  or on the last line:
+  ... or on the last line:
   ```python
   from scipy.interpolate smuggle (interp1d,                  # this comment has no effect
                                   interpn as interp_ndgrid,
                                   LinearNDInterpolator,
                                   NearestNDInterpolator)     # pip: scipy==1.6.3
   ```
-  though the first line takes priority:
+  ... though the first line takes priority:
   ```python
   from scipy.interpolate smuggle (    # pip: scipy==1.6.3    # <-- this version is installed
       interp1d,
@@ -485,23 +494,22 @@ In practice, onion comments are identified as matches for the
       NearestNDInterpolator,
   )    # pip: scipy==1.6.2                                   # <-- this comment is ignored
   ```
-  and all comments _not_ on the first or last line are ignored:
+  ... and all comments _not_ on the first or last line are ignored:
   ```python
   from scipy.interpolate smuggle (
-      interp1d,    # pip: scipy==1.6.3                       # <-- ignored
+      interp1d,                       # pip: scipy==1.6.3    # <-- ignored
       interpn as interp_ndgrid,
-      LinearNDInterpolator,    # unrelated comment           # <-- ignored
+      LinearNDInterpolator,           # unrelated comment    # <-- ignored
       NearestNDInterpolator
-  )    # pip: scipy==1.6.2                                   # <-- parsed
+  )                                   # pip: scipy==1.6.2    # <-- parsed
   ```
-- Because the onion comment is meant to control installation of a single `smuggle`d package, and because the purpose of 
-  installing that package is to make it available for immediate use, installer options that either A) install more than 
-  a single package and its dependencies (e.g., from a specification file), or B) do not install the specified package 
-  are disallowed. The options listed below for each installer will raise an `OnionArgumentError`:
-  - pip:
-    - `-h`, `--help`
-    - `-r`, `--requirement`
-    - `-V`, `--version`
+- The onion comment is intended to describe how a specific smuggled package should be installed if it is not found 
+  locally, in order to make it available for immediate use. Therefore, installer options that either (A) install 
+  packages other than the smuggled package and its dependencies (e.g., from a specification file), or (B) cause the 
+  smuggled package not to be installed, are disallowed. The options listed below will raise an `OnionArgumentError`:
+  - `-h`, `--help`
+  - `-r`, `--requirement`
+  - `-V`, `--version`
 
 
 ### The `davos` Config
@@ -510,7 +518,7 @@ instance (a singleton) for the current session is available as `davos.config`, a
 attributes. The config object exposes a mixture of writable and read-only fields. Most `davos.config` attributes can be 
 assigned values to control aspects of `davos` behavior, while others are available for inspection but are set and used 
 internally. Additionally, certain config fields may be writable in some situations but not others (e.g. only if the 
-Python environment supports a particular feature). Once set, `davos` config options last for the lifetime of the 
+importing environment supports a particular feature). Once set, `davos` config options last for the lifetime of the 
 interpreter (unless updated); however, they do *not* persist across interpreter sessions. A full list of `davos` config 
 fields is available [below](#config-reference):
 
@@ -521,8 +529,8 @@ fields is available [below](#config-reference):
 | `auto_rerun` | If `True`, when smuggling a previously-imported package that cannot be reloaded (see [Smuggling packages with C-extensions](#notes-c-extensions)), `davos` will automatically restart the interpreter and rerun all code up to (and including) the current `smuggle` statement. Otherwise, issues a warning and prompts the user with buttons to either restart/rerun or continue running. | `bool` | `False` | ✅ (**Jupyter notebooks only**) |
 | `confirm_install` | Whether or not `davos` should require user confirmation (`[y/n]` input) before installing a smuggled package | `bool` | `False` | ✅ |
 | `environment` | A label describing the environment into which `davos` was running. Checked internally to determine which interchangeable implementation functions are used, whether certain config fields are writable, and various other behaviors | `Literal['Python', 'IPython<7.0', 'IPython>=7.0', 'Colaboratory']` | N/A | ❌ |
-| `ipython_shell` | The global `IPython` interactive shell instance | [`IPython.core`<br/>`.interactiveshell`<br/>`.InteractiveShell`](https://ipython.readthedocs.io/en/stable/api/generated/IPython.core.interactiveshell.html#IPython.core.interactiveshell.InteractiveShell) | N/A | ❌ |
-| `noninteractive` | Set to `True` to run `davos` in non-interactive mode (all user input and confirmation will be disabled). **NB**:<br/>1. Setting to `True` disables `confirm_install` if previously enabled <br/>2. If `auto_rerun` is `False` in non-interactive mode, `davos` will throw an error if a smuggled package cannot be reloaded | `bool` | `False` | ✅ (**Jupyter notebooks only**) |
+| `ipython_shell` | The global IPython interactive shell instance | [`IPython.core`<br>`.interactiveshell`<br>`.InteractiveShell`](https://ipython.readthedocs.io/en/stable/api/generated/IPython.core.interactiveshell.html#IPython.core.interactiveshell.InteractiveShell) | N/A | ❌ |
+| `noninteractive` | Set to `True` to run `davos` in non-interactive mode (all user input and confirmation will be disabled). **NB**:<br>1. Setting to `True` disables `confirm_install` if previously enabled <br>2. If `auto_rerun` is `False` in non-interactive mode, `davos` will throw an error if a smuggled package cannot be reloaded | `bool` | `False` | ✅ (**Jupyter notebooks only**) |
 | `pip_executable` | The path to the `pip` executable used to install smuggled packages. Must be a path (`str` or [`pathlib.Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)) to a real file. Default is programmatically determined from Python environment; falls back to `sys.executable -m pip` if executable can't be found | `str` | `pip` exe path or `sys.executable -m pip` | ✅ |
 | `smuggled` | A cache of packages smuggled during the current interpreter session. Formatted as a `dict` whose keys are package names and values are the (`.split()` and `';'.join()`ed) onion comments. Implemented this way so that any non-whitespace change to installer arguments  re-installation | `dict[str, str]` | `{}` | ❌ |
 | `suppress_stdout` | If `True`, suppress all unnecessary output issued by both `davos` and the installer program. Useful when smuggling packages that need to install many dependencies and therefore generate extensive output. If the installer program throws an error while output is suppressed, both stdout & stderr will be shown with the traceback | `bool` | `False` | ✅ |
@@ -556,20 +564,11 @@ fields is available [below](#config-reference):
   davos.pip_executable = '/usr/bin/pip3'
   ```
 
-## Examples
-- smuggle specific version
-- smuggle package from VCS
-- smuggle package from local dir
-- smuggle editable package
-- smuggle package with extra requirements
-- smuggle latest version fo package
-### Valid Syntaxes
-## How It Works
-### The `davos` Parser
-While, functionally, importing `davos` appears to enable a new Python keyword, "_`smuggle`_", it doesn't modify the 
-rules or [reserved keywords](https://docs.python.org/3/reference/lexical_analysis.html#keywords) used by Python's 
-parser and lexical analyzer in order to do so (in fact, modifying the Python grammar is not possible at runtime and 
-would require rebuilding the interpreter). Instead, in [`IPython`](https://ipython.readthedocs.io/en/stable/) 
+## How It Works: The `davos` Parser
+Functionally, importing `davos` appears to enable a new Python keyword, "_`smuggle`_". However, `davos` doesn't actually 
+modify the rules or [reserved keywords](https://docs.python.org/3/reference/lexical_analysis.html#keywords) used by 
+Python's parser and lexical analyzer in order to do so&mdash;in fact, modifying the Python grammar is not possible at 
+runtime and would require rebuilding the interpreter. Instead, in [IPython](https://ipython.readthedocs.io/en/stable/) 
 enivonments like [Jupyter](https://jupyter.org/) and 
 [Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) notebooks, `davos` implements the `smuggle` 
 keyword via a combination of namespace injections and its own (far simpler) custom parser.
@@ -577,15 +576,14 @@ keyword via a combination of namespace injections and its own (far simpler) cust
 The `smuggle` keyword can be enabled and disabled at will by "activating" and "deactivating" `davos` (see the 
 [`davos` Config Reference](config-reference) and [Top-level Functions](#top-level-functions), above). When `davos` is 
 imported, it is automatically activated by default. Activating `davos` triggers two things:
-1. The _`smuggle()` function_ (`davos.core.core.smuggle`) is injected into the `IPython` user namespace, under the name
-"`smuggle`"
-2. The _`davos` parser_ (`davos.implementations.full_parser`) is registered as a 
+1. The _`smuggle()` function_ is injected into the `IPython` user namespace
+2. The _`davos` parser_ is registered as a
 [custom input transformer](https://ipython.readthedocs.io/en/stable/config/inputtransforms.html)
 
-`IPython` preprocesses all executed code as plain text before sending it to the Python parser in order to handle 
+IPython preprocesses all executed code as plain text before it is sent to the Python parser in order to handle 
 special constructs like [`%magic`](https://ipython.readthedocs.io/en/stable/interactive/magics.html) and 
-[`!shell`](https://ipython.readthedocs.io/en/stable/interactive/reference.html#system-shell-access) commands. `davos` 
-similarly hooks into this process to transform `smuggle` statements into syntactically valid Python code. The `davos` 
+[`!shell`](https://ipython.readthedocs.io/en/stable/interactive/reference.html#system-shell-access) commands. `davos`
+hooks into this process to transform `smuggle` statements into syntactically valid Python code. The `davos` 
 parser uses [this regular expression](https://github.com/ContextLab/davos/blob/main/davos/core/regexps.py) to match each
 line of code containing a `smuggle` statement (and, optionally, an onion comment), extracts information from its text, 
 and replaces it with an analogous call to the _`smuggle()` function_. Thus, even though the code visible to the user may 
@@ -593,31 +591,27 @@ contain `smuggle` statements, e.g.:
 ```python
 smuggle numpy as np    # pip: numpy>1.16,<=1.20 -vv
 ```
-the code seen by the Python interpreter will not:
+the code that is actually executed by the Python interpreter will not:
 ```python
 smuggle(name="numpy", as_="np", installer="pip", args_str="""numpy>1.16,<=1.20 -vv""", installer_kwargs={'editable': False, 'spec': 'numpy>1.16,<=1.20', 'verbosity': 2})
 ```
 
 The `davos` parser can be deactivated at any time, and doing so triggers the opposite actions of activating it:
-1. The name "`smuggle`" is deleted from the `IPython` user namespace, **unless** it no longer refers to the `smuggle()` 
-   function
+1. The name "`smuggle`" is deleted from the `IPython` user namespace, *unless it has been overwritten and no longer 
+   refers to the `smuggle()` function*
 2. The `davos` parser input transformer is deregistered.
 
-**Note**: in Jupyter and Colaboratory notebooks, `IPython` parses and transforms all lines in a cell before sending it 
-to the kernel for execution. This means that importing and/or activating `davos` will not enable the `smuggle` 
-statement until the _next_ cell, because the `davos` parser was not registered when the current cell was transformed. 
-Inversely, _deactivating_ `davos` will disable the `smuggle` statement immediately. Although the `davos` parser would 
-have already replaced all `smuggle` statements with `smuggle()` function calls, removing the function from the namespace 
-would cause it to throw a `NameError`.
+**Note**: in Jupyter and Colaboratory notebooks, IPython parses and transforms all text in a cell before sending it 
+to the kernel for execution. This means that importing or activating `davos` will not make the `smuggle` statement 
+available until the _next_ cell, because all lines in the current cell were transformed before the `davos` parser was 
+registered. However, _deactivating_ `davos` disables the `smuggle` statement immediately&mdash;although the `davos` 
+parser will have already replaced all `smuggle` statements with `smuggle()` function calls, removing the function from 
+the namespace causes them to throw `NameError`.
 
-
-
-
-- interchangeable implementations
-- JS stuff for Jupyter and why it doesn't work for Colab
 
 ## Additional Notes
 - <a name="notes-reimplement-cli"></a>**Reimplementing installer programs' CLI parsers**
+
   The `davos` parser extracts info from onion comments by passing them to a (slightly modified) reimplementation of 
   their specified installer program's CLI parser. This is somewhat redundant, since the arguments will eventually be 
   re-parsed by the _actual_ installer program if the package needs to be installed. However, it affords a number of 
@@ -628,10 +622,29 @@ would cause it to throw a `NameError`.
     `OnionParser`, but would otherwise execute successfully.
   - allowing certain installer arguments to temporarily influence `davos` behavior while smuggling the current package 
     (see [Installer options that affect `davos` behavior](#notes-installer-opts) below for specific info)
+
 - <a name="notes-installer-opts"></a>**Installer options that affect `davos` behavior**
-  - (e.g., `--force-reinstall` & `-I`, `--ignore-installed` skip check for local installation; `--no-input` causes a 
-    `True` value for `davos.config.confirm_install` to be ignored; etc.)
-  - verbose, quiet, upgrade, ignore-installed, force-reinstall, others?
+  
+  Passing certain options to the installer program via an [onion comment](#the-onion-comment) will also affect the 
+  corresponding `smuggle` statement in a predictable way:
+
+  - [**`--force-reinstall`**](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-force-reinstall) | 
+    [**`-I`, `--ignore-installed`**](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-I) | 
+    [**`-U`, `--upgrade`**](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-I)
+      
+    The package will be installed, even if it exists locally
+
+  - [**`--no-input`**](https://pip.pypa.io/en/stable/cli/pip/#cmdoption-no-input)
+      
+    Disables input prompts, analogous to temporarily setting `davos.config.noninteractive` to `True`. Overrides value 
+    of `davos.config.confirm_install`.
+
+  - [**`--src <dir>`**](https://pip.pypa.io/en/stable/cli/pip/#cmdoption-no-input) | 
+    [**`-t`, `--target <dir>`**](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-t)
+      
+    Prepends `<dir>` to [`sys.path`](https://docs.python.org/3/library/sys.html#sys.path) if not already present so 
+    the package can be imported.
+    
 - <a name="notes-c-extensions"></a>**Smuggling packages with C-extensions**
 
   Some Python packages that rely heavily on custom data types implemented via 
@@ -640,39 +653,42 @@ would cause it to throw a `NameError`.
   imported. Depending on how these objects are initialized, they may not be subject to normal garbage collection, and 
   persist despite their reference count dropping to zero. This can lead to unexpected errors when reloading the Python 
   module that creates them, particularly if their dynamically generated source code has been changed (e.g., because the 
-  reloaded package is a different version).
+  reloaded package is a newer version).
   
   This can occasionally affect `davos`'s ability to `smuggle` a new version of a package (or dependency) that was 
-  previously `import`ed. To handle this, `davos` first checks each package it installs against 
+  previously imported. To handle this, `davos` first checks each package it installs against 
   [`sys.modules`](https://docs.python.org/3.9/library/sys.html#sys.modules). If a different version has already been 
-  loaded by the interpreter, `davos` will attempt to replace it with the requested version (in the vast majority of 
-  cases, this is not a problem). However, if this fails due to a C-extension-related issue, `davos` will reinstate the 
-  old package version _in memory_, while replacing it with the new package version _on disk_.    
-  🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥
-  **describe behavior after implementing option to trigger restart & rerun cells above**
+  loaded by the interpreter, `davos` will attempt to replace it with the requested version. If this fails, `davos` will 
+  restore the old package version _in memory_, while replacing it with the new package version _on disk_. This allows 
+  subsequent code that uses the non-reloadable module to still execute in most cases, while dependency checks for other 
+  packages run against the updated version. Then, depending on the value of `davos.config.auto_rerun`, `davos` will 
+  either either automatically restart the interpreter to load the updated package, prompt you to do so, or raise an 
+  exception.
+
+- <a name="notes-from-reload"></a>**_`from` ... `import` ..._ statements and reloading modules**
+
+  The Python docs for [`importlib.reload()`](https://docs.python.org/3/library/importlib.html#importlib.reload) include 
+  the following caveat:
+  > If a module imports objects from another module using 
+  > [`from`](https://docs.python.org/3/reference/simple_stmts.html#from) … 
+  > [`import`](https://docs.python.org/3/reference/simple_stmts.html#import) …, calling 
+  > [`reload()`](https://docs.python.org/3/library/importlib.html#importlib.reload) for the other module does 
+  > not redefine the objects imported from it — one way around this is to re-execute the `from` statement, another is to 
+  > use `import` and qualified names (_module.name_) instead.
+
+  The same applies to smuggling packages or modules from which objects have already been loaded. If object _`name`_ from 
+  module _`module`_ was loaded using either _`from module import name`_ or _`from module smuggle name`_, subsequently 
+  running _`smuggle module    # pip --upgrade`_ will in fact install and load an upgraded version of _`module`_, but the 
+  the _`name`_ object will still be that of the old version! To fix this, you can simply run _`from module smuggle 
+  name`_ either instead in lieu of or after _`smuggle module`_.
   
-[comment]: <> (  In a Jupyter/Colbab )
 
-[comment]: <> (  notebook, `davos` will prompt you to restart the kernel while allowing the remaining code in the current cell to )
-
-[comment]: <> (  execute. )
-  
-[comment]: <> (  This way:)
-
-[comment]: <> (    - the `smuggle` statement finishes executing without error)
-
-[comment]: <> (    - )
-
-[comment]: <> (    - the next time the interpreter is launched, the `smuggle`d version will be used)
-
-- <a name="notes-from-reload"></a>**`import-from` statements and reloading modules**
 - <a name="notes-vcs-smuggle"></a>**Smuggling packages from version control systems**
-  - To `smuggle` a package from a local or remote VCS URL, you must specify `pip` (i.e., not `conda`) as the  
-    [installer](#smuggle-statement-syntax), as only `pip` supports VCS installation.
-  - The first time during an interpreter session that a given package is installed from a VCS URL, it is assumed not to 
-    be present locally, and is therefore freshly installed. `pip` clones non-editable VCS repositories into a temporary 
-    directory, installs them with setuptools, and then immediately deletes them. Since no information is retained about 
-    the state of the repository at installation, it is impossible to determine whether an existing package satisfies the 
-    state (branch, commit hash, etc.) requested for `smuggle`d package.
+
+  The first time during an interpreter session that a given package is installed from a VCS URL, it is assumed not to be 
+  present locally, and is therefore freshly installed. `pip` clones non-editable VCS repositories into a temporary 
+  directory, runs `setup.py install`, and then immediately deletes them. Since no information is retained about the 
+  state of the repository at installation, it is impossible to determine whether an existing package satisfies the state 
+  (i.e., branch, tag, commit hash, etc.) requested for smuggled package.
 
 [comment]: <> (- As with _all_ code, you should use caution when running Python code containing `smuggle` statements that was not written by you or someone you know. )

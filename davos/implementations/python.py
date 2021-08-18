@@ -22,6 +22,7 @@ from io import StringIO
 from subprocess import CalledProcessError, PIPE, Popen
 
 
+# noinspection PyUnusedLocal
 def _activate_helper(smuggle_func, parser_func):
     """
     Pure Python implementation of `_activate_helper`.
@@ -84,6 +85,7 @@ def _check_conda_avail_helper():
     return conda_list_output.getvalue()
 
 
+# noinspection PyUnusedLocal
 def _deactivate_helper(smuggle_func, parser_func):
     """
     Pure Python implementation of `_activate_helper`.
@@ -133,7 +135,9 @@ def _run_shell_command_helper(command):
         If the command returned a non-zero exit status.
     """
     cmd = shlex.split(command)
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE,
+    process = Popen(cmd,    # pylint: disable=consider-using-with
+                    stdout=PIPE,
+                    stderr=PIPE,
                     encoding=locale.getpreferredencoding())
     try:
         while True:
@@ -151,6 +155,7 @@ def _run_shell_command_helper(command):
         raise
 
 
+# noinspection PyUnusedLocal
 def auto_restart_rerun(pkgs):
     """
     Pure Python implementation of `auto_restart_rerun`.
@@ -175,6 +180,7 @@ def auto_restart_rerun(pkgs):
     )
 
 
+# noinspection PyUnusedLocal
 def generate_parser_func(line_parser):
     """
     Pure Python implementation of `generate_parser_func`.
@@ -198,6 +204,7 @@ def generate_parser_func(line_parser):
     )
 
 
+# noinspection PyUnusedLocal
 def prompt_restart_rerun_buttons(pkgs):
     """
     Pure Python implementation of `prompt_restart_rerun_buttons`.

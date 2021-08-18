@@ -4,7 +4,6 @@ all IPython versions and front-end interfaces.
 """
 
 
-import re
 import sys
 import textwrap
 from contextlib import redirect_stdout
@@ -12,7 +11,6 @@ from io import StringIO
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from IPython.core.error import UsageError
 from IPython.utils.process import system as _run_shell_cmd
 
 from davos import config
@@ -160,14 +158,18 @@ def _set_custom_showsyntaxerror():
 
     _showsyntaxerror_davos.__doc__ = new_doc
     config._ipy_showsyntaxerror_orig = ipy_shell.showsyntaxerror
-    ipy_shell.showsyntaxerror = _showsyntaxerror_davos.__get__(ipy_shell)
+    # bind function as method
+    # pylint: disable=no-value-for-parameter
+    # (pylint bug: expects __get__ method to take same args as function)
+    ipy_shell.showsyntaxerror = _showsyntaxerror_davos.__get__(ipy_shell,
+                                                               type(ipy_shell))
 
 
 # noinspection PyUnusedLocal
 def _showsyntaxerror_davos(
         ipy_shell,
         filename=None,
-        running_compiled_code=False
+        running_compiled_code=False    # pylint: disable=unused-argument
 ):
     """
     Show `davos` library `SyntaxError` subclasses with full tracebacks.
@@ -227,18 +229,18 @@ def _showsyntaxerror_davos(
         try:
             # noinspection PyBroadException
             try:
+                # display custom traceback, if class supports it
                 stb = value._render_traceback_()
-            except:
+            except Exception:    # pylint: disable=broad-except
                 stb = ipy_shell.InteractiveTB.structured_traceback(
                     etype, value, tb, tb_offset=ipy_shell.InteractiveTB.tb_offset
                 )
             ipy_shell._showtraceback(etype, value, stb)
             if ipy_shell.call_pdb:
                 ipy_shell.debugger(force=True)
-            return
         except KeyboardInterrupt:
             print('\n' + ipy_shell.get_exception_only(), file=sys.stderr)
-    else:
-        # original method is stored in Davos instance, but still bound
-        # IPython.core.interactiveshell.InteractiveShell instance
-        return config._ipy_showsyntaxerror_orig(filename=filename)
+        return None
+    # original method is stored in Davos instance, but still bound
+    # IPython.core.interactiveshell.InteractiveShell instance
+    return config._ipy_showsyntaxerror_orig(filename=filename)

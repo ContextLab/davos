@@ -10,7 +10,7 @@ __all__ = ['pip_installed_pkgs_regex', 'smuggle_statement_regex']
 import re
 
 
-_name_re = r'[a-zA-Z]\w*'
+_name_re = r'[a-zA-Z_]\w*'    # pylint: disable=invalid-name
 
 _smuggle_subexprs = {
     'name_re': _name_re,
@@ -20,10 +20,11 @@ _smuggle_subexprs = {
     'comment_re': r'(?m:\#+.*$)'
 }
 
-pip_installed_pkgs_regex = re.compile("^Successfully installed (.*)$", re.MULTILINE)
+pip_installed_pkgs_regex = re.compile("^Successfully installed (.*)$",
+                                      re.MULTILINE)
 
-
-smuggle_statement_regex = re.compile((
+# pylint: disable=line-too-long, trailing-whitespace
+smuggle_statement_regex = re.compile((    # noqa: E131
     r'^\s*'                                                               # match only if statement is first non-whitespace chars
     r'(?P<FULL_CMD>'                                                      # capture full text of command in named group
         r'(?:'                                                            # first valid syntax:
@@ -115,19 +116,19 @@ smuggle_statement_regex = re.compile((
 ).format_map(_smuggle_subexprs))
 
 # Condensed, fully substituted regex:
-# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as
-# +[a-zA-Z]\w*)?(?: *, *[a-zA-Z]\w*(?: *\. *[a-zA-Z]\w*)*(?: +as +[a-zA-
-# Z]\w*)?)*(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?(SEMICOLON_SEP
-# )|(?: *(?=\#+ *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))(?P<ONION
-# >\#+ *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))?)?))|(?:from *[a-
-# zA-Z]\w*(?: *\. *[a-zA-Z]\w*)* +smuggle +(?P<OPEN_PARENS>\()?(?(OPEN_P
-# ARENS)(?: *(?:[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?:
-# +as +[a-zA-Z]\w*)? *)*,? *)?(?:(?P<FROM_ONION_1>\#+ *(?:pip|conda) *:
-# *[^#\n ].+?(?= +\#| *\n| *$)) *(?m:\#+.*$)?|(?m:\#+.*$)|(?m:$)|(?P<CLO
-# SE_PARENS_FIRSTLINE>\)))(?(CLOSE_PARENS_FIRSTLINE)|(?:\s*(?:[a-zA-Z]\w
-# *(?: +as +[a-zA-Z]\w*)? *(?:, *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)? *)*[^
-# )\n]*| *(?m:\#+.*$)|\n *))*\)))|[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?(?: *
-# , *[a-zA-Z]\w*(?: +as +[a-zA-Z]\w*)?)*)(?P<FROM_SEMICOLON_SEP>(?= *; *
-# (?:smuggle|from)))?(?(FROM_SEMICOLON_SEP)|(?(FROM_ONION_1)|(?: *(?=\#+
-#  *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))(?P<FROM_ONION>\#+ *(?
-# :pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)))?))))
+# ^\s*(?P<FULL_CMD>(?:smuggle +[a-zA-Z_]\w*(?: *\. *[a-zA-Z_]\w*)*(?: +a
+# s +[a-zA-Z_]\w*)?(?: *, *[a-zA-Z_]\w*(?: *\. *[a-zA-Z_]\w*)*(?: +as +[
+# a-zA-Z_]\w*)?)*(?P<SEMICOLON_SEP>(?= *; *(?:smuggle|from)))?(?(SEMICOL
+# ON_SEP)|(?: *(?=\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))(?P<
+# ONION>\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))?)?))|(?:from
+# *[a-zA-Z_]\w*(?: *\. *[a-zA-Z_]\w*)* +smuggle +(?P<OPEN_PARENS>\()?(?(
+# OPEN_PARENS)(?: *(?:[a-zA-Z_]\w*(?: +as +[a-zA-Z_]\w*)? *(?:, *[a-zA-Z
+# _]\w*(?: +as +[a-zA-Z_]\w*)? *)*,? *)?(?:(?P<FROM_ONION_1>\# *(?:pip|c
+# onda) *: *[^#\n ].+?(?= +\#| *\n| *$)) *(?m:\#+.*$)?|(?m:\#+.*$)|(?m:$
+# )|(?P<CLOSE_PARENS_FIRSTLINE>\)))(?(CLOSE_PARENS_FIRSTLINE)|(?:\s*(?:[
+# a-zA-Z_]\w*(?: +as +[a-zA-Z_]\w*)? *(?:, *[a-zA-Z_]\w*(?: +as +[a-zA-Z
+# _]\w*)? *)*[^)\n]*| *(?m:\#+.*$)|\n *))*\)))|[a-zA-Z_]\w*(?: +as +[a-z
+# A-Z_]\w*)?(?: *, *[a-zA-Z_]\w*(?: +as +[a-zA-Z_]\w*)?)*)(?P<FROM_SEMIC
+# OLON_SEP>(?= *; *(?:smuggle|from)))?(?(FROM_SEMICOLON_SEP)|(?(FROM_ONI
+# ON_1)|(?: *(?=\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$))(?P<FR
+# OM_ONION>\# *(?:pip|conda) *: *[^#\n ].+?(?= +\#| *\n| *$)))?))))

@@ -60,22 +60,18 @@ class _DecoratorData(TypedDict):
 ########################################
 class DavosTestingError(Exception):
     """Base class for Davos testing-related errors"""
-    pass
 
 
 class DavosAssertionError(DavosTestingError, AssertionError):
     """Subclasses AssertionError for pytest-specific handling"""
-    pass
 
 
 class TestingEnvironmentError(DavosAssertionError, OSError):
     """Raised due to issues with the testing environment"""
-    pass
 
 
 class TestTimeoutError(DavosAssertionError):
     """Raised if a test exceeds its timeout limit"""
-    pass
 
 
 ########################################
@@ -197,7 +193,7 @@ def install_davos(
 def is_imported(pkg_name: str) -> bool:
     if pkg_name in sys.modules:
         return True
-    elif any(pkg.startswith(f'{pkg_name}.') for pkg in sys.modules):
+    if any(pkg.startswith(f'{pkg_name}.') for pkg in sys.modules):
         return True
     return False
 
@@ -429,7 +425,7 @@ class raises:
     ) -> bool:
         if exc_type is None:
             raise DavosAssertionError(f"DID NOT RAISE {self.expected_exceptions}")
-        elif not issubclass(exc_type, self.expected_exceptions):
+        if not issubclass(exc_type, self.expected_exceptions):
             # causes exc_value to be raised
             return False
         self.excinfo._excinfo = (exc_type, exc_value, exc_tb)

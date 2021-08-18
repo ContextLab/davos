@@ -48,7 +48,9 @@ from davos.core.exceptions import DavosConfigError
 
 import_environment = config.environment
 
+
 if import_environment == 'Python':
+    # noinspection PyUnresolvedReferences
     from davos.implementations.python import (
         _activate_helper,
         _check_conda_avail_helper,
@@ -59,6 +61,7 @@ if import_environment == 'Python':
         prompt_restart_rerun_buttons
     )
 else:
+    # noinspection PyUnresolvedReferences
     from davos.implementations.ipython_common import (
         _check_conda_avail_helper,
         _run_shell_command_helper,
@@ -94,7 +97,6 @@ else:
                 prompt_restart_rerun_buttons
             )
 
-
 from davos.core.core import check_conda, smuggle, parse_line
 
 
@@ -114,6 +116,9 @@ full_parser = generate_parser_func(parse_line)
 #     `check_conda`) which needs to be imported after
 #     implementation-specific functions are set here.
 
+
+# pylint: disable=unused-argument
+# noinspection PyUnusedLocal
 def _active_fget(conf):
     """getter for davos.config.active"""
     return config._active
@@ -139,6 +144,7 @@ def _conda_avail_fget(conf):
     return conf._conda_avail
 
 
+# noinspection PyUnusedLocal
 def _conda_avail_fset(conf, _):
     """setter for davos.config.conda_avail"""
     raise DavosConfigError('conda_avail', 'field is read-only')
@@ -165,7 +171,7 @@ def _conda_env_fset(conf, new_env):
             "conda_env",
             "cannot set conda environment. No local conda installation found"
         )
-    elif new_env != conf._conda_env:
+    if new_env != conf._conda_env:
         if (
                 conf._conda_envs_dirs is not None and
                 new_env not in conf._conda_envs_dirs.keys()
@@ -188,6 +194,7 @@ def _conda_envs_dirs_fget(conf):
     return conf._conda_envs_dirs
 
 
+# noinspection PyUnusedLocal
 def _conda_envs_dirs_fset(conf, _):
     """setter for davos.config.conda_envs_dirs"""
     raise DavosConfigError('conda_envs_dirs', 'field is read-only')

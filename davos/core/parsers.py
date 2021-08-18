@@ -16,6 +16,7 @@ from argparse import (
     ArgumentParser,
     SUPPRESS
 )
+from textwrap import dedent, indent
 
 from davos.core.exceptions import OnionArgumentError
 
@@ -50,6 +51,7 @@ class OnionParser(ArgumentParser):
     arguments are consistent across versions.
     """
 
+    # pylint: disable=signature-differs
     def parse_args(self, args, namespace=None):
         """
         Parse installer options as command line arguments.
@@ -69,6 +71,7 @@ class OnionParser(ArgumentParser):
         object
             The populated object passed as `namespace`
         """
+        # pylint: disable=attribute-defined-outside-init
         self._args = ' '.join(args)
         try:
             ns, extras = super().parse_known_args(args=args,
@@ -76,13 +79,12 @@ class OnionParser(ArgumentParser):
         except (ArgumentError, ArgumentTypeError) as e:
             if isinstance(e, OnionArgumentError):
                 raise
-            elif isinstance(e, ArgumentError):
+            if isinstance(e, ArgumentError):
                 raise OnionArgumentError(msg=e.message,
                                          argument=e.argument_name,
                                          onion_txt=self._args) from None
-            else:
-                raise OnionArgumentError(msg=e.args[0],
-                                         onion_txt=self._args) from None
+            raise OnionArgumentError(msg=e.args[0],
+                                     onion_txt=self._args) from None
         else:
             if extras:
                 msg = f"Unrecognized arguments: {' '.join(extras)}"
@@ -113,11 +115,10 @@ class OnionParser(ArgumentParser):
             The error message to be displayed for the raised exception.
         """
         if sys.exc_info()[1] is not None:
-            raise
-        else:
-            if message == 'one of the arguments -e/--editable is required':
-                message = 'Onion comment must specify a package name'
-            raise OnionArgumentError(msg=message, onion_txt=self._args)
+            raise    # pylint: disable=misplaced-bare-raise
+        if message == 'one of the arguments -e/--editable is required':
+            message = 'Onion comment must specify a package name'
+        raise OnionArgumentError(msg=message, onion_txt=self._args)
 
 
 class EditableAction(Action):
@@ -145,6 +146,7 @@ class EditableAction(Action):
            `editable` will always be a `bool`.
     """
 
+    # noinspection PyShadowingBuiltins
     def __init__(
             self,
             option_strings,
@@ -203,6 +205,7 @@ class SubtractAction(Action):
     the net value of the two.
     """
 
+    # noinspection PyShadowingBuiltins
     def __init__(
             self,
             option_strings,
@@ -239,12 +242,14 @@ class SubtractAction(Action):
 # does not include usage for `pip install [options] -r
 # <requirements file> [package-index-options] ...` since it's not
 # relevant to `davos` usage
-_pip_install_usage = '\n  '.join("""
-pip install [options] <requirement specifier> [package-index-options] ...
-pip install [options] [-e] <vcs project url> ...
-pip install [options] [-e] <local project path> ...
-pip install [options] <archive url/path> ...
-""".splitlines())
+_pip_install_usage = indent(    # noqa: E124 pylint: disable=invalid-name
+    dedent("""\
+        pip install [options] <requirement specifier> [package-index-options] ...
+        pip install [options] [-e] <vcs project url> ...
+        pip install [options] [-e] <local project path> ...
+        pip install [options] <archive url/path> ..."""
+    ), '  '
+)
 
 pip_parser = OnionParser(usage=_pip_install_usage,
                          add_help=False,

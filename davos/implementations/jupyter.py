@@ -165,8 +165,7 @@ def prompt_restart_rerun_buttons(pkgs):
         displayButtonPrompt(buttonArgs, true);
     """)
 
-    # noinspection PyUnresolvedReferences
-    # (function exists globally when imported into IPython context)
+    # get_ipython() exists globally when imported into IPython context
     kernel = get_ipython().kernel
     stdin_sock = kernel.stdin_socket
 
@@ -187,8 +186,7 @@ def prompt_restart_rerun_buttons(pkgs):
             # (dynamically imported names not included in stub files)
             if e.errno == zmq.EAGAIN:
                 break
-            else:
-                raise
+            raise
 
     # noinspection PyTypeChecker
     display(Javascript(display_button_prompt_full))
@@ -205,19 +203,18 @@ def prompt_restart_rerun_buttons(pkgs):
                 ident, reply = kernel.session.recv(stdin_sock)
                 if ident is not None or reply is not None:
                     break
-        except Exception as e:
+        except Exception as e:    # pylint: disable=broad-except
             if isinstance(e, KeyboardInterrupt):
                 # re-raise KeyboardInterrupt with simplified traceback
                 # (excludes some convoluted calls to internal
                 # IPython/zmq machinery)
                 raise KeyboardInterrupt("Interrupted by user") from None
-            else:
-                kernel.log.warning("Invalid Message:", exc_info=True)
+            kernel.log.warning("Invalid Message:", exc_info=True)
 
     # noinspection PyBroadException
     try:
         value = py3compat.unicode_to_str(reply['content']['value'])
-    except:
+    except Exception:    # pylint: disable=broad-except
         if ipykernel.version_info[0] >= 6:
             _parent_header = kernel._parent_ident['shell']
         else:

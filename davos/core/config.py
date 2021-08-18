@@ -11,9 +11,11 @@ __all__ = ['DavosConfig']
 
 
 import pathlib
+import pprint
 import sys
 import traceback
 import warnings
+from io import StringIO
 from os.path import expandvars
 from subprocess import CalledProcessError, check_output
 
@@ -36,6 +38,7 @@ class DavosConfig(metaclass=SingletonConfig):
     The global `davos` config object.
 
     Defines the following fields:
+
         **Configurable fields**:
             active : bool
                 Whether the `davos` parser should be run on subsequent
@@ -43,19 +46,19 @@ class DavosConfig(metaclass=SingletonConfig):
                 Python; default: `True`)
             auto_rerun : bool
                 If `True` (default: `False`), automatically restart the
-                interpreter sesssion and rerun previously executed code
+                interpreter session and rerun previously executed code
                 upon smuggling a package that cannot be dynamically
                 reloaded (Note: currently implemented for Jupyter
                 notebooks only)
             conda_env: str or None
-                The name of the resident conda environemnt of the
+                The name of the resident conda environment of the
                 current Python interpreter, if running within a `conda`
                 environment. Otherwise, `None`.
             confirm_install : bool
                 If `True` (default: `False`), prompt for user input
                 before installing any smuggled packages not already
                 available locally.
-            nonineractive : bool
+            noninteractive : bool
                 If `True` (default: `False`) run `davos` in
                 non-interactive mode. All user input and confirmation
                 will be disabled. **Note**: In Jupyter environments, the
@@ -79,6 +82,14 @@ class DavosConfig(metaclass=SingletonConfig):
                 If `conda_avail` is `True`, a mapping of conda
                 environment names to their environment directories.
                 Otherwise, `False`.
+            environment : {'Python', 'IPython<7.0', 'IPython>=7.0',
+                          'Colaboratory'}
+                The environment in which `davos` is running. Determines
+                which interchangeable implementation functions are used,
+                whether certain config fields are writable, and various
+                other behaviors.
+            ipython_shell : IPython.core.interactiveshell.InteractiveShell
+                The global `IPython` interactive shell instance.
             smuggled : dict
                 A cache of packages previously smuggled during the
                 current interpreter session, implemented as a dict whose
@@ -89,6 +100,41 @@ class DavosConfig(metaclass=SingletonConfig):
                 re-installation.
     """
 
+    # noinspection PyUnusedLocal
+    # pylint: disable=unused-argument, missing-function-docstring, no-self-use
+    @staticmethod
+    def __mock_sorted(__iterable, key=None, reverse=False):
+        """
+        Mock for built-in `sorted` that returns unsorted iterable.
+
+        Used to temporarily monkeypatch built-in `sorted` function in
+        `pprint` module when formatting display for `self.__repr__`
+        method. `dict` items in `smuggled` field should be shown in
+        insertion order, not alphabetically, because they represent a
+        history of cached `smuggle` commands. However,
+        `pprint.PrettyPrinter` didn't support option to *not* sort
+        `dict`s until Python 3.8, so for earlier versions, this is
+        assigned to `pprint.sorted` so that it takes priority over the
+        built-in `sorted` in module's namespace lookup chain.
+
+        Parameters
+        ----------
+        __iterable : iterable
+            The iterable to be "sorted."
+        key : callable, optional
+            Has no effect; exists to make function signature match that
+            of built-in `sorted` function.
+        reverse : bool
+            Has no effect; exists to make function signature match that
+            of built-in `sorted` function.
+
+        Returns
+        -------
+        iterable
+            The object passed as `__iterable`, unaltered.
+        """
+        return __iterable
+
     # noinspection PyFinal
     # (PyCharm doesn't differentiate between declarations here and in
     # stub file, which it should, according to PEP 591)
@@ -97,7 +143,6 @@ class DavosConfig(metaclass=SingletonConfig):
         #           READ-ONLY FIELDS           #
         ########################################
         try:
-            # noinspection PyUnresolvedReferences
             # (function exists globally when imported into IPython context)
             self._ipython_shell = get_ipython()
         except NameError:
@@ -118,6 +163,10 @@ class DavosConfig(metaclass=SingletonConfig):
         self._conda_avail = None
         self._conda_envs_dirs = None
         self._ipy_showsyntaxerror_orig = None
+        self._repr_formatter = pprint.PrettyPrinter()
+        if sys.version_info.minor >= 8:
+            # sort_dicts constructor param added in Python 3.8
+            self._repr_formatter._sort_dicts = False
         self._smuggled = {}
         self._stdlib_modules = _get_stdlib_modules()
         ########################################
@@ -149,7 +198,7 @@ class DavosConfig(metaclass=SingletonConfig):
             except CalledProcessError:
                 # try one more thing before we just throw up our hands...
                 try:
-                    chceck_output([sys.executable, '-c', 'import pip'])
+                    check_output([sys.executable, '-c', 'import pip'])
                 except CalledProcessError as e:
                     raise DavosError(
                         "Could not find 'pip' executable in $PATH or package "
@@ -168,9 +217,55 @@ class DavosConfig(metaclass=SingletonConfig):
                 self._pip_executable = pip_exe
 
     def __repr__(self):
-        # TODO: implement me
-        #  also implement _repr_html_ and/or _repr_pretty_ et al.
-        return super().__repr__()
+        cls_name = self.__class__.__name__
+        base_indent = len(cls_name) + 1
+        attrs_in_repr = ['active', 'auto_rerun', 'conda_avail']
+        if self._conda_avail is not None:
+            attrs_in_repr.append('conda_avail')
+            if self._conda_avail is True:
+                attrs_in_repr.extend(['conda_env', 'conda_envs_dirs'])
+        attrs_in_repr.extend([
+            'confirm_install',
+            'environment',
+            'ipython_shell',
+            'noninteractive',
+            'pip_executable',
+            'suppress_stdout',
+            'smuggled'
+        ])
+        newline_delim = ',\n' + ' ' * base_indent
+        last_item_ix = len(attrs_in_repr) - 1
+        stream = StringIO()
+        stream.write(f'{cls_name}(')
+        try:
+            if sys.version_info.minor < 8:
+                # monkeypatch built-in sorted function in pprint module
+                # while formatting __repr__ output
+                pprint.sorted = self.__mock_sorted
+            for i, attr_name in enumerate(attrs_in_repr):
+                attr_indent = base_indent + len(attr_name) + 1
+                is_last = i == last_item_ix
+                stream.write(f'{attr_name}=')
+                self._repr_formatter._format(getattr(self, f'_{attr_name}'),
+                                             stream=stream,
+                                             indent=attr_indent,
+                                             allowance=int(not is_last),
+                                             context={},
+                                             level=0)
+                if not is_last:
+                    stream.write(newline_delim)
+        finally:
+            if sys.version_info.minor < 8:
+                try:
+                    # delete the patch function so it doesn't interfere
+                    # with other libraries using pprint module
+                    # noinspection PyUnresolvedReferences
+                    del pprint.sorted
+                except AttributeError:
+                    pass
+        repr_ = stream.getvalue()
+        stream.close()
+        return repr_ + ')'
 
     @property
     def auto_rerun(self):
@@ -181,7 +276,7 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('auto_rerun',
                                    "field may be 'True' or 'False'")
-        elif self._environment == 'Colaboratory':
+        if self._environment == 'Colaboratory':
             raise DavosConfigError(
                 'auto_rerun',
                 'automatic rerunning of cells not available in Colaboratory'
@@ -197,7 +292,7 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('confirm_install',
                                    "field may be 'True' or 'False'")
-        elif self._noninteractive and value:
+        if self._noninteractive and value:
             raise DavosConfigError('confirm_install',
                                    "field may not be 'True' in noninteractive "
                                    "mode")
@@ -228,12 +323,12 @@ class DavosConfig(metaclass=SingletonConfig):
         if not isinstance(value, bool):
             raise DavosConfigError('noninteractive',
                                    "field may be 'True' or 'False'")
-        elif self._environment == 'Colaboratory':
+        if self._environment == 'Colaboratory':
             raise DavosConfigError(
                 'noninteractive',
                 "noninteractive mode not available in Colaboratory"
             )
-        elif value and self._confirm_install:
+        if value and self._confirm_install:
             warnings.warn(
                 "noninteractive mode enabled, setting `confirm_install = False`"
             )

@@ -1,3 +1,10 @@
+"""
+Top-level `davos` module. Initializes the global `davos` config object
+and defines some convenience functions for accessing/setting
+`davos.config` values.
+"""
+
+
 import pkg_resources
 from davos.core.config import DavosConfig
 
@@ -33,6 +40,7 @@ def activate():
     config.active = True
 
 
+# pylint: disable=unused-argument
 def configure(
         *,
         active=...,
@@ -88,7 +96,7 @@ def configure(
             old_value = getattr(config, name)
             try:
                 setattr(config, name, new_value)
-            except:
+            except Exception:
                 # if one assignment fails, no config fields are updated
                 for _name, old_value in old_values.items():
                     setattr(config, _name, old_value)

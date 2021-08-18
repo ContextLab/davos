@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import Any, Literal, NoReturn, Optional, Protocol, Union
 from davos.core.config import DavosConfig, IpythonShell
 from davos.core.core import PipInstallerKwargs
+# noinspection PyUnresolvedReferences
 from davos.implementations.ipython_post7 import IPyPost7FullParserFunc
 
 __all__ = list[

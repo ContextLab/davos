@@ -15,18 +15,16 @@ __all__ = [
 ]
 
 
-import IPython
-
 from argparse import ArgumentError
 from shutil import get_terminal_size
 from subprocess import CalledProcessError
 from textwrap import fill, indent
 
+import IPython
+
 
 class DavosError(Exception):
     """Base class for all `davos` library exceptions."""
-
-    pass
 
 
 class DavosConfigError(DavosError):
@@ -68,8 +66,7 @@ class DavosParserError(SyntaxError, DavosError):
             self,
             msg=None,
             target_text=None,
-            target_offset=1,
-            *args
+            target_offset=1
     ):
         """
         Parameters
@@ -87,9 +84,6 @@ class DavosParserError(SyntaxError, DavosError):
             The (*1-indexed*) column offset from the beginning of
             `target_text` where the error occurred. Defaults to `1` (the
             first character in `target_text`).
-        *args : tuple, optional
-            Additional arguments forwarded to the `SyntaxError`
-            constructor.
         """
         # note: flot is a 4-tuple of (filename, lineno, offset, text)
         # passed to the SyntaxError constructor.
@@ -117,13 +111,11 @@ class DavosParserError(SyntaxError, DavosError):
             # leave lineno as None so IPython will fill it in as
             # "<ipython-input-...>"
             flot = (None, lineno, offset, target_text)
-        super().__init__(msg, flot, *args)
+        super().__init__(msg, flot)
 
 
 class OnionParserError(DavosParserError):
     """Class for errors related to parsing the onion comment syntax."""
-
-    pass
 
 
 class OnionArgumentError(ArgumentError, OnionParserError):
@@ -138,7 +130,7 @@ class OnionArgumentError(ArgumentError, OnionParserError):
     be expected to support attributes defined on both parents.
     """
 
-    def __init__(self, msg, argument=None, onion_txt=None, *args):
+    def __init__(self, msg, argument=None, onion_txt=None):
         """
         Parameters
         ----------
@@ -154,9 +146,6 @@ class OnionArgumentError(ArgumentError, OnionParserError):
             `# <installer>:` removed). If `None` (default), the error
             will not be displayed in Python's `SyntaxError`-specific
             traceback format.
-        args : tuple, optional
-            Additional arguments forwarded to the `DavosParserError`
-            constructor.
         """
         if (
                 msg is not None and
@@ -183,7 +172,7 @@ class OnionArgumentError(ArgumentError, OnionParserError):
         # than just running through the MRO via a call to super()
         ArgumentError.__init__(self, argument=None, message=msg)
         OnionParserError.__init__(self, msg=msg, target_text=onion_txt,
-                                  target_offset=target_offset, *args)
+                                  target_offset=target_offset)
         self.argument_name = argument
 
 
@@ -199,19 +188,13 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError):
     comment) whose command line parser has not yet been added to `davos`
     """
 
-    pass
-
 
 class SmugglerError(DavosError):
     """Base class for errors raised during the smuggle phase"""
 
-    pass
-
 
 class TheNightIsDarkAndFullOfTerrors(SmugglerError):
     """A little Easter egg for if someone tries to `smuggle davos`"""
-
-    pass
 
 
 class InstallerError(SmugglerError, CalledProcessError):

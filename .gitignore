@@ -13,10 +13,13 @@
 # Python package distribution egg
 davos.egg-info
 
+# build dir for non-editable installs
+build
+
 # Mypy daemon status file
 .dmypy.json
 
-# selenium Firefox driver & log
+# Selenium Firefox driver & log
 tests/geckodriver
 **/geckodriver.log
 

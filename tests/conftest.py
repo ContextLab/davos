@@ -24,6 +24,7 @@ from typing import (
 import pytest
 from selenium import webdriver
 from selenium.common.exceptions import (
+    ElementClickInterceptedException,
     ElementNotInteractableException,
     JavascriptException,
     NoSuchElementException,
@@ -238,7 +239,14 @@ class NotebookDriver:
             element_is_clickable = EC.element_to_be_clickable(locator)
             wait.until(element_is_visible)
             element: WebElement = wait.until(element_is_clickable)
-            element.click()
+            try:
+                element.click()
+            except ElementClickInterceptedException as e:
+                # sometimes element_to_be_clickable() returns True but
+                # clicking the element fails because another element
+                # obscures it. This should usually work when that happens.
+                time.sleep(5)
+                self.driver.execute_script("arguments[0].click()", element)
             return element
 
     def get_test_result(self, func_name: str) -> list[str]:

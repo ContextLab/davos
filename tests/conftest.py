@@ -87,7 +87,7 @@ class _DecoratorData(TypedDict):
 
 class _NotebookJson(TypedDict):
     cells: list[_CellJson]
-    metadata: dict[str, Union[dict[str, dict[str, Any]]]]
+    metadata: dict[str, dict[str, dict[str, Any]]]
     nbformat: int
     nbformat_minor: int
 
@@ -327,7 +327,7 @@ class ColabDriver(NotebookDriver):
 
     def sign_in_google(self) -> None:
         # click "Sign in" button
-        self.click("#gb > div > div.gb_Se > a")
+        self.click("#gb > div > div > a")
         # enter email
         email_input_box = self.driver.find_element_by_id("identifierId")
         email_input_box.send_keys(getenv("GMAIL_ADDRESS"))

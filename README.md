@@ -42,9 +42,12 @@ The `davos` library provides Python with an additional keyword: **`smuggle`**.
 
 [The `smuggle` statement](#the-smuggle-statement) works just like the built-in 
 [`import` statement](https://docs.python.org/3/reference/import.html), with one major difference: **you can `smuggle` a 
-package without installing it first**. A special type of comment called an 
-["_onion comment_"](#the-onion-comment) can also be added to lines containing `smuggle` statements, allowing you to 
-**`smuggle` specific package versions** and **fully control how missing packages are installed**.
+package without installing it first**.
+
+A key use case for this package is turning standard [iPython notebooks](https://ipython.org/notebook.html) (including [Google Colaboratory notebooks](colab.research.google.com/)) into fully specified Python environments, without the need for external containers or virtualized environments like conda, docker, etc.  This can facilitate sharing, collaboration, and reproducibility.
+
+While the simplest way to use `davos` is as a drop-in replaceemnt for `import`, the way `davos` smuggles packages can be fully controlled and customized using ["_onion comments_"](#the-onion-comment).  Onion comments can be added to lines containing `smuggle` statements to specify which 
+**specific package versions** should be installed and imported, and to **fully control how missing packages are installed**.
 
 **To enable the `smuggle` keyword, simply `import davos`**:
 ```python

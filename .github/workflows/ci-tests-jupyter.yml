@@ -111,7 +111,7 @@ jobs:
           if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
               pip install typing-extensions
           fi
-          [[ "$IPYTHON_VERSION" == "3.6" ]] || pip install numpy==1.20.3
+          [[ "$PYTHON_VERSION" == "3.6" ]] || pip install numpy==1.20.3
           pip install "ipykernel==5.0.0" ipython-genutils requests scipy fastdtw==0.3.4 tqdm==4.41.1
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython

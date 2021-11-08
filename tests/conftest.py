@@ -24,6 +24,7 @@ from typing import (
 import pytest
 from selenium import webdriver
 from selenium.common.exceptions import (
+    ElementClickInterceptedException,
     ElementNotInteractableException,
     JavascriptException,
     NoSuchElementException,
@@ -87,7 +88,7 @@ class _DecoratorData(TypedDict):
 
 class _NotebookJson(TypedDict):
     cells: list[_CellJson]
-    metadata: dict[str, Union[dict[str, dict[str, Any]]]]
+    metadata: dict[str, dict[str, dict[str, Any]]]
     nbformat: int
     nbformat_minor: int
 
@@ -238,7 +239,14 @@ class NotebookDriver:
             element_is_clickable = EC.element_to_be_clickable(locator)
             wait.until(element_is_visible)
             element: WebElement = wait.until(element_is_clickable)
-            element.click()
+            try:
+                element.click()
+            except ElementClickInterceptedException as e:
+                # sometimes element_to_be_clickable() returns True but
+                # clicking the element fails because another element
+                # obscures it. This should usually work when that happens.
+                time.sleep(5)
+                self.driver.execute_script("arguments[0].click()", element)
             return element
 
     def get_test_result(self, func_name: str) -> list[str]:
@@ -327,7 +335,7 @@ class ColabDriver(NotebookDriver):
 
     def sign_in_google(self) -> None:
         # click "Sign in" button
-        self.click("#gb > div > div.gb_Se > a")
+        self.click("#gb > div > div > a")
         # enter email
         email_input_box = self.driver.find_element_by_id("identifierId")
         email_input_box.send_keys(getenv("GMAIL_ADDRESS"))

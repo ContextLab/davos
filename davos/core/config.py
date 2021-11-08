@@ -23,7 +23,7 @@ from davos.core.exceptions import DavosConfigError, DavosError
 
 
 class SingletonConfig(type):
-    """Metaclass that enforces singleton behavor for `DavosConfig`"""
+    """Metaclass that enforces singleton behavior for `DavosConfig`"""
 
     __instance = None
 
@@ -423,7 +423,7 @@ def _block_greedy_ipython_completer():
     # ~12 entries deep, after davos & importlib, so add small buffer to
     # be safe and start searching from oldest.
     stack_trace = traceback.extract_stack(limit=20)
-    # drop most recent 3 frames, which will always be nternal davos
+    # drop most recent 3 frames, which will always be internal davos
     # calls due to package layout
     for frame in stack_trace[:-3]:
         if frame.filename.endswith('IPython/core/completerlib.py'):

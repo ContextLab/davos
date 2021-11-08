@@ -46,7 +46,7 @@ package without installing it first**.
 
 A key use case for this package is turning standard [iPython notebooks](https://ipython.org/notebook.html) (including [Google Colaboratory notebooks](colab.research.google.com/)) into fully specified Python environments, without the need for external containers or virtualized environments like conda, docker, etc.  This can facilitate sharing, collaboration, and reproducibility.
 
-While the "default" way to use `davos` is as a drop-in replaceemnt for `import`, the way `davos` smuggles packages can be fully controlled and customized using ["_onion comments_"](#the-onion-comment).  Onion comments can be added to lines containing `smuggle` statements to specify which 
+While the simplest way to use `davos` is as a drop-in replaceemnt for `import`, the way `davos` smuggles packages can be fully controlled and customized using ["_onion comments_"](#the-onion-comment).  Onion comments can be added to lines containing `smuggle` statements to specify which 
 **specific package versions** should be installed and imported, and to **fully control how missing packages are installed**.
 
 **To enable the `smuggle` keyword, simply `import davos`**:

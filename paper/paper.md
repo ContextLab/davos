@@ -1,12 +1,16 @@
 ---
-title: 'Expanding Python `import`s using a keyword-like wrapper'
+title: 'Davos: The Python package smuggler'
 tags:
  - Python
+ - Jupyter Notebook
+ - JupyterLab
+ - Google Colab
  - package-management
- - installer
+ - import
+ - install
  - pip
 authors:
- - name: Paxton C. Fitzpatrick
+ - name: Paxton C. Fitzpatrick^[corresponding author]
    orcid: 0000-0003-0205-3088
    affiliation: 1
  - name: Jeremy R. Manning
@@ -15,7 +19,7 @@ authors:
 affiliations:
  - name: Department of Psychological and Brain Sciences, Dartmouth College
    index: 1
-date: 9 March 2021
+date: 14 November 2021
 bibliography: paper.bib
 ---
 

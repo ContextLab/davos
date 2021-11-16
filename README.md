@@ -128,7 +128,7 @@ VM instance.
 The primary way to use `davos` is via [the `smuggle` statement](#the-smuggle-statement), which is made available 
 simply by running `import davos`. Like 
 [the built-in `import` statement](https://docs.python.org/3/reference/import.html), the `smuggle` statement is used to 
-load packages, module, and other objects into the current namespace. The main difference between the two is in how 
+load packages, modules, and other objects into the current namespace. The main difference between the two is in how 
 they handle missing packages and specific package versions.
 
 

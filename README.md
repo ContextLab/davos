@@ -185,7 +185,7 @@ pandas>=0.23,<1.0`.
 In both cases, the imported versions will fit the constraints specified in their [onion comments](#the-onion-comment), 
 and the next time `numpy` or `pandas` is smuggled with the same constraints, valid local installations will be found.
 
-You can also force the state of a smuggled packages to match a specific VCS ref (branch, revision, tag, releas, etc.). 
+You can also force the state of a smuggled packages to match a specific VCS ref (branch, revision, tag, release, etc.). 
 For example:
 ```python
 smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@98a3d80

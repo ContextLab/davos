@@ -149,7 +149,7 @@ You can control _how_ `davos` installs missing packages by adding a special type
 ### Smuggling Specific Package Versions
 One simple but powerful use for [onion comments](#the-onion-comment) is making `smuggle` statements version-sensitive. 
 
-Python does not provide native, viable a way to ensure a third-party package imported at runtime matches a specific 
+Python does not provide a native, viable way to ensure a third-party package imported at runtime matches a specific 
 version or fits a particular [version constraint](https://www.python.org/dev/peps/pep-0440/#version-specifiers). 
 Many packages expose their version info via a top-level `__version__` attribute (see 
 [PEP 396](https://www.python.org/dev/peps/pep-0396/)), and certain tools (such as the standard library's 

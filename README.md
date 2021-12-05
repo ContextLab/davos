@@ -386,7 +386,7 @@ where `installer` is the program used to install the package; `install_opt` is a
 "`install`" command; and `version_spec` may be a 
 [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) defined by 
 [PEP 440](https://www.python.org/dev/peps/pep-0440) followed by a 
-[version string](https://www.python.org/dev/peps/pep-0440/#public-version-identifiers), or an alternative syntaxe valid 
+[version string](https://www.python.org/dev/peps/pep-0440/#public-version-identifiers), or an alternative syntax valid 
 for the given `installer` program. For example, [`pip`](https://pip.pypa.io/en/stable/) uses specific syntaxes for 
 [local](https://pip.pypa.io/en/stable/cli/pip_install/#local-project-installs), 
 [editable](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs), and 

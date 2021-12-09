@@ -5,6 +5,7 @@ tags:
  - Jupyter Notebook
  - JupyterLab
  - Google Colab
+ - Reproducibility
  - package-management
  - import
  - install
@@ -13,7 +14,7 @@ authors:
  - name: Paxton C. Fitzpatrick
    orcid: 0000-0003-0205-3088
    affiliation: 1
- - name: Jeremy R. Manning^[corresponding author]
+ - name: Jeremy R. Manning
    orcid: 0000-0001-7613-4732
    affiliation: 1
 affiliations:

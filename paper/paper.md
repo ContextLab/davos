@@ -48,10 +48,46 @@ Onion comments follow a simple syntax based on the type comment syntax introduce
 designed to make controlling installation via `davos` intuitive and familiar&mdash;simply specify the installer program 
 (e.g., `pip`) and provide the same arguments one would use to install the package manually via the command line:
 
-The `davos` package also defines a special type of inline comment called an "*onion comment*" that can be added to a line containing 
-a `smuggle` statement to customize its behavior and provide additional, more complex functionality. Onion comments 
-follow a simple syntax based on the type comment format introduced in PEP 484 [@vanREtal14], and allow the user to customize 
-when and how specific packages are installed from the Python Package Index (PyPI), using wrapped calls to `pip`.
+```python
+import davos
+
+# if numpy is not installed locally, pip-install it with verbose output
+smuggle numpy as np    # pip: numpy --verbose 
+
+# install pandas without checking for an existing local version first
+smuggle pandas as pd    # pip: pandas --ignore-installed
+
+# install scipy from a relative local path, in editable mode
+from scipy.interpolate smuggle interp1d    # pip: -e ../../pkgs/scipy
+```
+
+Onion comments are also useful when smuggling a package whose distribution name (i.e., the name used when installing it) 
+is different from its top-level module name (i.e., the name used when importing it):
+
+```python
+smuggle dateutil    # pip: python-dateutil
+from sklearn.decomposition smuggle pca    # pip: scikit-learn
+```
+
+However, the most powerful use of the onion comment is making `smuggle` statements *version-sensitive*. Adding a 
+[version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) to an onion comment tells `davos` that 
+an existing installation of the smuggled package should be used only if its version satisfies the given constraint; 
+otherwise, a suitable version should be installed:
+
+```python
+# use matplotlib v3.4.2 specifically, pip-installing it if needed
+smuggle matplotlib.pyplot as plt    # pip: matplotlib==3.4.2
+
+# use a version of seaborn no older than v0.9.1, but prior to v0.11
+smuggle seaborn as sns    # pip: seaborn>=0.9.1,<0.11
+```
+
+This also works with specific VCS reference (e.g., git branch, commit, tag, etc.):
+
+```python
+# use quail as it existed on GitHub at commit 6c847a4
+smuggle quail    # pip: git+https://github.com/ContextLab/quail.git@6c847a4
+```
 
 Because onion comments can be used to make `smuggle` statements version-sensitive, `davos` provides a powerful way of
 creating fully contained shareable workflows within a single iPython notebook.  In some cases, this can obviate the need

@@ -28,14 +28,25 @@ link-citations: true
 
 # Summary
 
-The `davos` Python package provides a toolkit for installing and managing packages at runtime within IPython
-notebook environments [@PereGran07] including Jupyter notebooks [@KluyEtal16], JupyterLab, and Google Colaboratory.
+`davos` is a Python package for managing dependencies at runtime. It allows users to specify requirements directly 
+within their code that are validated and, if necessary, installed in a just-in-time fashion. `davos` was developed as a 
+tool for turning standard Jupyter notebooks [@KluyEtal16] into self-contained, fully-specified Python environments to 
+facilitate code sharing, collaboration, and reproducibility.
 
-Importing `davos` enables an additional Python keyword: `smuggle`. The `smuggle` statement can be used as a drop-in replacement for the
-built-in `import` statement to load libraries, modules, and other objects into the current namespace. However, whereas 
-`import` will fail if the requested package is not installed locally, `smuggle` statements can handle missing 
-packages on-the-fly. If a to-be-smuggled package does not exist in the local environment, `davos` installs it, 
-make its contents visible to Python's import machinery, and load it into the namespace for immediate use.
+Importing `davos` enables an additional Python keyword: `smuggle`. The `smuggle` statement can be used as a drop-in 
+replacement for the built-in `import` statement to load libraries, modules, and other objects into the current 
+namespace. However, whereas `import` will fail if the requested package is not installed locally, `smuggle` statements 
+can handle missing packages on the fly. If a smuggled package does not exist in the local environment, `davos` 
+will install it, make its contents visible to Python's import machinery, and load it into the namespace for immediate 
+use.
+
+While the `smuggle` statement may simply be used on its own, `davos` defines an additional construct called the "*onion 
+comment*" that provides greater control over its behavior and more complex functionality. An onion comment is a special 
+type of inline comment that can be placed on a line containing a `smuggle` statement to customize how `davos` (1) 
+determines whether the smuggled package should be installed, and (2) retrieves and installs the package, if necessary. 
+Onion comments follow a simple syntax based on the type comment syntax introduced in PEP 484 [@vanREtal14], and are 
+designed to make controlling installation via `davos` intuitive and familiar&mdash;simply specify the installer program 
+(e.g., `pip`) and provide the same arguments one would use to install the package manually via the command line:
 
 The `davos` package also defines a special type of inline comment called an "*onion comment*" that can be added to a line containing 
 a `smuggle` statement to customize its behavior and provide additional, more complex functionality. Onion comments 

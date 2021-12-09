@@ -89,16 +89,17 @@ This also works with specific VCS reference (e.g., git branch, commit, tag, etc.
 smuggle quail    # pip: git+https://github.com/ContextLab/quail.git@6c847a4
 ```
 
-Because onion comments can be used to make `smuggle` statements version-sensitive, `davos` provides a powerful way of
-creating fully contained shareable workflows within a single iPython notebook.  In some cases, this can obviate the need
-for constructing containerized or virtualized environments (e.g., using [Docker](https://www.docker.com/), [Singularity](https://sylabs.io/singularity/), or [conda](https://docs.conda.io/en/latest/)).
+In most cases, smuggling a specific package version or revision is possible even if a different version was previously 
+imported. This opens the door to more complex workflows that involve using multiple versions of a package within a 
+single interpreter session (e.g., comparing behavior across versions).
 
-For example, `davos` enables users to specify specific package versions (and even specific VCS revisions, such as git commit
-hashes) of to-be-smuggled packages.  When `smuggle` statements are called multiple times within the same notebook (e.g., with
-different onion comments), multiple versions of the same package may be used within a single interpreter session.  Although
-the current version of `davos` is already fully usable and feature-complete, future extensions of the package could enable
-use of the `smuggle` keyword within "vanilla" (non-interactive) Python scripts, and/or support of alternative package managers
-such as `conda`.
+`davos` also provides a simple, high-level interface to disable, re-enable, and configure its functionality at any point 
+while in use. `davos` currently supports IPython-based notebook environments [@PereGran07] including Jupyter notebooks, 
+JupyterLab, and Google Colaboratory. Potential future directions include extending `davos` for use in "vanilla" (i.e., 
+non-interactive) Python scripts and adding support for installation via alternative package managers such as `conda`. A 
+more extensive guide to using `davos`, additional examples, and a description of how it works are available 
+[here](https://github.com/ContextLab/davos).
+
 
 # Statement of Need
 

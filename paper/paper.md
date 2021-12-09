@@ -103,13 +103,26 @@ more extensive guide to using `davos`, additional examples, and a description of
 
 # Statement of Need
 
-Modern open science practices often entail sharing code and data to enable scientists to reproduce and extend each others' work.
-As of the time of writing, Python is already one of the most widely used scientific programming languages, and its user base
-is expanding rapidly.  A centerpiece of the Python ecosystem is a powerful and extensive data science toolkit designed to facilitate
-rapid development and collaboration.  These tools include platforms for interactive development (e.g., Project 
-Jupyter [@PereGran07;@KluyEtal16] and Google Colaboratory), packages for data manipulation (e.g., `NumPy` [@HarrEtal20], 
-`SciPy` [@VirtEtal20], `Pandas` [@McKi10]),  packages for data visualization (e.g., `Matplotlib` [@Hunt07], `seaborn` [@Wask21]), and
-myriad others.
+Modern open science practices encourage sharing code and data to enable others to explore, reproduce and extend existing
+work. Researchers may seek to share analyses with collaborators while working on a study, with the public upon its 
+completion, or with students in classroom or workshop settings. Python is among the most widely used and fastest growing 
+scientific programming languages [@MullEtal15]. In addition to the language's high-level, accessible syntax and large 
+standard library, the Python ecosystem offers a powerful and extensive data science toolkit designed to facilitate rapid 
+development and collaboration, including platforms for interactive development (e.g., Project Jupyter [@KluyEtal16], 
+Google Colaboratory), community-driven packages for data manipulation (e.g., NumPy [@HarrEtal20], SciPy [@VirtEtal20], 
+Pandas [@McKi10]) and visualization (e.g., Matplotlib [@Hunt07], seaborn [@Wask21]), and myriad other tools. 
+
+However, one challenge posed by the rapidly growing Python ecosystem is that different versions of the same package can 
+behave quite differently&mdash;bugs are introduced and fixed, features are implemented and removed, support for Python 
+versions is added and dropped, and so on. Thus, Python workflows whose outputs are meant to be stable across different 
+environments and over time (e.g., data analyses, tutorials, or demos) are customarily shared alongside a set of fixed 
+versions for each package used, often in the form of a configuration file for a development environment (e.g., a 
+[Docker](https://www.docker.com/) image, [Singularity](https://sylabs.io/singularity/) image, or 
+[conda](https://docs.conda.io/en/latest/) environment) the end user must build and manage themselves. Though powerful, 
+such tools are often superfluous for simpler needs. For authors, they require distributing additional files and 
+setup instructions alongside code. For users, they require installing additional, more complex software that can be 
+cumbersome, resource-intensive, and confusing to navigate without prior familiarity, raising the barrier of entry to 
+exploring and reproducing scientific analyses.
 
 One downside of the rapidly growing Python ecosystem is that different versions of the same software package can behave differently
 as syntax changes are introduced, bugs are introduced or fixed, features are implemented or removed, support for different versions of

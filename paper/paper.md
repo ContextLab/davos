@@ -101,11 +101,11 @@ smuggle hypertools as hyp    # pip: hypertools==0.7 --ignore-installed
 from requests smuggle Session    # pip: requests --upgrade --pre
 ```
 
-`davos` parses onion comments at runtime and manages required packages in a just-in-time manner. Because of this, it is
-possible in most cases to `smuggle` a specific package version (or revision) even when a different version has already 
-been loaded. This opens the door to more complex use cases involving using multiple versions of a package within a 
-single interpreter session (e.g., using an unstable development version that supports a new feature only when necessary, 
-or comparing behavior across versions for regression testing).
+Because `davos` parses onion comments at runtime and manages required packages in a just-in-time manner, it is possible 
+in most cases to `smuggle` a specific package version (or revision) even when a different version has already been 
+loaded. This opens the door to more complex use cases involving using multiple versions of a package within a single 
+interpreter session (e.g., using an unstable development version that supports a new feature only when necessary, or 
+comparing behavior across versions for regression testing).
 
 `davos` provides a simple, high-level interface that allows the user to disable, re-enable, and configure its 
 functionality at any point throughout their code. `davos` currently supports IPython-based notebook environments 

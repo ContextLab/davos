@@ -28,10 +28,10 @@ link-citations: true
 
 # Summary
 
-`davos` is a Python package for managing dependencies at runtime. It allows users to specify requirements directly 
-within their code that are validated and, if necessary, installed in a just-in-time fashion. `davos` was developed as a 
-tool for turning standard Jupyter notebooks [@KluyEtal16] into self-contained, fully-specified Python environments to 
-facilitate code sharing, collaboration, and reproducibility.
+`davos` is a Python package for creating self-managing, reproducible workflows that specify dependencies directly within 
+their code and install packages as needed at runtime. `davos` was developed to simplify sharing research-related code 
+including data analyses, tutorials, and demos by allowing users to distribute their code and environment together in a 
+single, ready-to-run Jupyter notebook [@KluyEtal16].
 
 Importing `davos` enables an additional Python keyword: `smuggle`. The `smuggle` statement can be used as a drop-in 
 replacement for the built-in `import` statement to load libraries, modules, and other objects into the current 
@@ -41,12 +41,12 @@ will install it, make its contents visible to Python's import machinery, and loa
 use.
 
 While the `smuggle` statement may simply be used on its own, `davos` defines an additional construct called the "*onion 
-comment*" that provides greater control over its behavior and more complex functionality. An onion comment is a special 
-type of inline comment that can be placed on a line containing a `smuggle` statement to customize how `davos` (1) 
-determines whether the smuggled package should be installed, and (2) retrieves and installs the package, if necessary. 
-Onion comments follow a simple syntax based on the type comment syntax introduced in PEP 484 [@vanREtal14], and are 
-designed to make controlling installation via `davos` intuitive and familiar&mdash;simply specify the installer program 
-(e.g., `pip`) and provide the same arguments one would use to install the package manually via the command line:
+comment*" that provides greater control over its behavior as well as more complex functionality. An onion comment is a 
+special type of inline comment that can be placed on a line containing a `smuggle` statement to customize how `davos` 
+(1) determines whether the smuggled package should be installed, and (2) retrieves and installs the package, if 
+necessary. Onion comments follow a simple syntax based on the type comment syntax introduced in PEP 484 [@vanREtal14], 
+and are designed to make controlling installation via `davos` intuitive and familiar&mdash;simply specify the installer 
+program (e.g., `pip`) and provide the same arguments one would use to install the package manually via the command line:
 
 ```python
 import davos
@@ -54,8 +54,8 @@ import davos
 # if numpy is not installed locally, pip-install it with verbose output
 smuggle numpy as np    # pip: numpy --verbose 
 
-# install pandas without checking for an existing local version first
-smuggle pandas as pd    # pip: pandas --ignore-installed
+# pip-install pandas without using or writing to the package cache
+smuggle pandas as pd    # pip: pandas --no-cache-dir
 
 # install scipy from a relative local path, in editable mode
 from scipy.interpolate smuggle interp1d    # pip: -e ../../pkgs/scipy
@@ -70,19 +70,20 @@ from sklearn.decomposition smuggle pca    # pip: scikit-learn
 ```
 
 However, the most powerful use of the onion comment is making `smuggle` statements *version-sensitive*. Adding a 
-[version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) to an onion comment tells `davos` that 
-an existing installation of the smuggled package should be used only if its version satisfies the given constraint; 
-otherwise, a suitable version should be installed:
+[version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) to an onion comment will cause `davos`
+to first search for the smuggled package in the local environment (as usual), but before loading it, also check that the 
+installed version satisfies the given version constraint(s). If it does not (or no version is installed), `davos` will 
+install and use a version that does:
 
 ```python
-# use matplotlib v3.4.2 specifically, pip-installing it if needed
+# specifically use matplotlib v3.4.2, pip-installing it if needed
 smuggle matplotlib.pyplot as plt    # pip: matplotlib==3.4.2
 
 # use a version of seaborn no older than v0.9.1, but prior to v0.11
 smuggle seaborn as sns    # pip: seaborn>=0.9.1,<0.11
 ```
 
-This also works with specific VCS reference (e.g., git branch, commit, tag, etc.):
+This also works with a specific VCS reference (e.g., git branch, commit, tag, etc.):
 
 ```python
 # use quail as it existed on GitHub at commit 6c847a4

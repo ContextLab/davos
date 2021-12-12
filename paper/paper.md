@@ -90,16 +90,29 @@ This also works with a specific VCS reference (e.g., git branch, commit, tag, et
 smuggle quail    # pip: git+https://github.com/ContextLab/quail.git@6c847a4
 ```
 
-In most cases, smuggling a specific package version or revision is possible even if a different version was previously 
-imported. This opens the door to more complex workflows that involve using multiple versions of a package within a 
-single interpreter session (e.g., comparing behavior across versions).
+Additionally, certain arguments can be added to skip searching the local environment altogether, and instead always 
+install a fresh version of the package by default:
 
-`davos` also provides a simple, high-level interface to disable, re-enable, and configure its functionality at any point 
-while in use. `davos` currently supports IPython-based notebook environments [@PereGran07] including Jupyter notebooks, 
-JupyterLab, and Google Colaboratory. Potential future directions include extending `davos` for use in "vanilla" (i.e., 
-non-interactive) Python scripts and adding support for installation via alternative package managers such as `conda`. A 
-more extensive guide to using `davos`, additional examples, and a description of how it works are available 
-[here](https://github.com/ContextLab/davos).
+```python
+# install hypertools v0.7 without first checking for it locally
+smuggle hypertools as hyp    # pip: hypertools==0.7 --ignore-installed
+
+# always install the latest version of requests, including pre-release and development versions
+from requests smuggle Session    # pip: requests --upgrade --pre
+```
+
+`davos` parses onion comments at runtime and manages required packages in a just-in-time manner. Because of this, it is
+possible in most cases to `smuggle` a specific package version (or revision) even when a different version has already 
+been loaded. This opens the door to more complex use cases involving using multiple versions of a package within a 
+single interpreter session (e.g., using an unstable development version that supports a new feature only when necessary, 
+or comparing behavior across versions for regression testing).
+
+`davos` provides a simple, high-level interface that allows the user to disable, re-enable, and configure its 
+functionality at any point throughout their code. `davos` currently supports IPython-based notebook environments 
+[@PereGran07] including Jupyter notebooks, JupyterLab, and Google Colaboratory. Potential future directions include 
+extending `davos` for use in "vanilla" (i.e., non-interactive) Python scripts and adding support for installation via 
+alternative package managers such as `conda`. A more extensive guide to using `davos`, additional examples, and a 
+description of how it works are available [here](https://github.com/ContextLab/davos).
 
 
 # Statement of Need

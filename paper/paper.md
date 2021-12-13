@@ -91,7 +91,7 @@ smuggle quail    # pip: git+https://github.com/ContextLab/quail.git@6c847a4
 ```
 
 Additionally, certain arguments can be added to skip searching the local environment altogether, and instead always 
-install a fresh version of the package by default:
+install a fresh version of the package:
 
 ```python
 # install hypertools v0.7 without first checking for it locally
@@ -162,12 +162,12 @@ statements are run, ensuring that any accidental changes to the environment will
 reproducibility.
 
 
+# Origin of the Name
 
-One downside of the rapidly growing Python ecosystem is that different versions of the same software package can behave differently
-as syntax changes are introduced, bugs are introduced or fixed, features are implemented or removed, support for different versions of
-Python is added or dropped, and so on.  This instability can be at odds with the goal of producing reproducible workflows that remain
-usable across different development environments and over time.  Through its `smuggle` keyword and onion comments, the `davos` package
-improves the stability of Python-based workflows by providing a convenient means of precisely controling and manipulating the environment
-in which specific code is executed.
+The package name is inspired by [Davos Seaworth](https://en.wikipedia.org/wiki/Davos_Seaworth), a smuggler often 
+referred to as "the Onion Knight" from the series 
+[A song of Ice and Fire](https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire) by 
+[George R. R. Martin](https://en.wikipedia.org/wiki/George_R._R._Martin).
+
 
 # References

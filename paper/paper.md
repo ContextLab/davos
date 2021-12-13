@@ -150,7 +150,16 @@ non-Python software, Docker (possibly in combination with `davos`) is likely a b
 `davos`-based notebooks via Colaboratory or inside an empty virtual environment quickly created using Python's built-in 
 [`venv`](https://docs.python.org/3/library/venv.html) module.
 
-The second advantage to using `davos` is that it provides a means of ensuring stability of 
+The second advantage to using `davos` is that it helps ensure dependencies *remain* present and stable over time. Most 
+requirement specification schemes entail building a development environment in which a particular set of packages and 
+versions are initially installed, but not constrained past that point. This can pose unexpected challenges for 
+researchers working on data analyses within such a preconfigured environment, as well as those with whom their code and 
+environment may eventually be shared: it can be easy to inadvertently alter the development environment after its inital 
+setup. For example, deciding to perform aditional analyses can mean installing additional packges at a later point. This 
+can trigger updates to packages used in earlier analyses that can easily go unnoticed and potentially affect their 
+behavior. `davos` provides a safeguard against this by continuing to enforce pinned package versions each time `smuggle`
+statements are run, ensuring that any accidental changes to the environment will be caught, and will not affect 
+reproducibility.
 
 
 

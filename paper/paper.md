@@ -119,24 +119,40 @@ description of how it works are available [here](https://github.com/ContextLab/d
 
 Modern open science practices encourage sharing code and data to enable others to explore, reproduce and extend existing
 work. Researchers may seek to share analyses with collaborators while working on a study, with the public upon its 
-completion, or with students in classroom or workshop settings. Python is among the most widely used and fastest growing 
+completion, or with students in classroom or workshop settings. Python is among the most widely used and fastest-growing 
 scientific programming languages [@MullEtal15]. In addition to the language's high-level, accessible syntax and large 
 standard library, the Python ecosystem offers a powerful and extensive data science toolkit designed to facilitate rapid 
 development and collaboration, including platforms for interactive development (e.g., Project Jupyter [@KluyEtal16], 
-Google Colaboratory), community-driven packages for data manipulation (e.g., NumPy [@HarrEtal20], SciPy [@VirtEtal20], 
-Pandas [@McKi10]) and visualization (e.g., Matplotlib [@Hunt07], seaborn [@Wask21]), and myriad other tools. 
+Google Colaboratory), community-maintained libraries for data manipulation (e.g., NumPy [@HarrEtal20], SciPy 
+[@VirtEtal20], Pandas [@McKi10]) and visualization (e.g., Matplotlib [@Hunt07], seaborn [@Wask21]), and myriad other 
+tools. 
 
 However, one challenge posed by the rapidly growing Python ecosystem is that different versions of the same package can 
 behave quite differently&mdash;bugs are introduced and fixed, features are implemented and removed, support for Python 
-versions is added and dropped, and so on. Thus, Python workflows whose outputs are meant to be stable across different 
-environments and over time (e.g., data analyses, tutorials, or demos) are customarily shared alongside a set of fixed 
-versions for each package used, often in the form of a configuration file for a development environment (e.g., a 
+versions is added and dropped, and so on. Thus, Python workflows whose outputs must be consistent over time and across 
+users (e.g., data analyses, tutorials, or demos) are customarily shared alongside a set of fixed versions for each 
+package used. This often takes the form of a configuration file for a development environment (e.g., a 
 [Docker](https://www.docker.com/) image, [Singularity](https://sylabs.io/singularity/) image, or 
-[conda](https://docs.conda.io/en/latest/) environment) the end user must build and manage themselves. Though powerful, 
-such tools are often superfluous for simpler needs. For authors, they require distributing additional files and 
-setup instructions alongside code. For users, they require installing additional, more complex software that can be 
-cumbersome, resource-intensive, and confusing to navigate without prior familiarity, raising the barrier of entry to 
-exploring and reproducing scientific analyses.
+[conda](https://docs.conda.io/en/latest/) environment) the end user must build and manage themselves. While powerful,
+such tools are often superfluous for simpler needs and add an additional level of complexity that can raise the 
+barriers to entry for sharing, exploring, and contributing to research-related code. For authors, they require 
+distributing additional files and setup instructions alongside the code itself. For users, they require installing and 
+using additional software that can be cumbersome, resource-intensive, and confusing to navigate without prior 
+familiarity.
+
+Instead, `davos` offers a mechanism for defining a set of required Python packages directly within the code that uses 
+them. The first improvement this framework affords is the ability to create reproducible workflows that can be shared 
+and run without the need for extra configuration files, software, and setup in order to do so. This can expedite 
+collaboration between reserachers and improve accessibility for less experienced users. `davos` is intended for sharing 
+relatively simple, Python-specific requirements, whereas, for example, if an analysis or demo notebook relies heavily on
+non-Python software, Docker (possibly in combination with `davos`) is likely a better option. Additionally, while 
+`davos` itself is not designed as a tool for isolating Python environments, this can easily be achieved by running 
+`davos`-based notebooks via Colaboratory or inside an empty virtual environment quickly created using Python's built-in 
+[`venv`](https://docs.python.org/3/library/venv.html) module.
+
+The second advantage to using `davos` is that it provides a means of ensuring stability of 
+
+
 
 One downside of the rapidly growing Python ecosystem is that different versions of the same software package can behave differently
 as syntax changes are introduced, bugs are introduced or fixed, features are implemented or removed, support for different versions of

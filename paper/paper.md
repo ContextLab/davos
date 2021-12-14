@@ -111,7 +111,10 @@ comparing behavior across versions for regression testing).
 functionality at any point throughout their code. `davos` currently supports IPython-based notebook environments 
 [@PereGran07] including Jupyter notebooks, JupyterLab, and Google Colaboratory. Potential future directions include 
 extending `davos` for use in "vanilla" (i.e., non-interactive) Python scripts and adding support for installation via 
-alternative package managers such as `conda`. A more extensive guide to using `davos`, additional examples, and a 
+alternative package managers such as `conda`. `davos` is currently being used in a number of ongoing projects, as well 
+as online demos for [*Storytelling with Data*](https://github.com/ContextLab/storytelling-with-data) (@Mann21b; an open 
+course on data science, visualization, and communication) and `abstract2paper` (@Mann21a; an toy application of 
+[GPT-Neo](https://github.com/EleutherAI/gpt-neo)). A more extensive guide to using `davos`, additional examples, and a 
 description of how it works are available [here](https://github.com/ContextLab/davos).
 
 

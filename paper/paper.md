@@ -48,26 +48,12 @@ necessary. Onion comments follow a simple syntax based on the type comment synta
 and are designed to make controlling installation via `davos` intuitive and familiar&mdash;simply specify the installer 
 program (e.g., `pip`) and provide the same arguments one would use to install the package manually via the command line:
 
-```python
-import davos
-
-# if numpy is not installed locally, pip-install it with verbose output
-smuggle numpy as np    # pip: numpy --verbose 
-
-# pip-install pandas without using or writing to the package cache
-smuggle pandas as pd    # pip: pandas --no-cache-dir
-
-# install scipy from a relative local path, in editable mode
-from scipy.interpolate smuggle interp1d    # pip: -e ../../pkgs/scipy
-```
+![](snippets/snippet1.pdf)
 
 Onion comments are also useful when smuggling a package whose distribution name (i.e., the name used when installing it) 
 is different from its top-level module name (i.e., the name used when importing it):
 
-```python
-smuggle dateutil    # pip: python-dateutil
-from sklearn.decomposition smuggle pca    # pip: scikit-learn
-```
+![](snippets/snippet2.pdf)
 
 However, the most powerful use of the onion comment is making `smuggle` statements *version-sensitive*. Adding a 
 [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) to an onion comment will cause `davos`
@@ -75,31 +61,16 @@ to first search for the smuggled package in the local environment (as usual), bu
 installed version satisfies the given version constraint(s). If it does not (or no version is installed), `davos` will 
 install and use a version that does:
 
-```python
-# specifically use matplotlib v3.4.2, pip-installing it if needed
-smuggle matplotlib.pyplot as plt    # pip: matplotlib==3.4.2
-
-# use a version of seaborn no older than v0.9.1, but prior to v0.11
-smuggle seaborn as sns    # pip: seaborn>=0.9.1,<0.11
-```
+![](snippets/snippet3.pdf)
 
 This also works with a specific VCS reference (e.g., git branch, commit, tag, etc.):
 
-```python
-# use quail as it existed on GitHub at commit 6c847a4
-smuggle quail    # pip: git+https://github.com/ContextLab/quail.git@6c847a4
-```
+![](snippets/snippet4.pdf)
 
 Additionally, certain arguments can be added to skip searching the local environment altogether, and instead always 
 install a fresh version of the package:
 
-```python
-# install hypertools v0.7 without first checking for it locally
-smuggle hypertools as hyp    # pip: hypertools==0.7 --ignore-installed
-
-# always install the latest version of requests, including pre-release and development versions
-from requests smuggle Session    # pip: requests --upgrade --pre
-```
+![](snippets/snippet5.pdf)
 
 Because `davos` parses onion comments at runtime and manages required packages in a just-in-time manner, it is possible 
 in most cases to `smuggle` a specific package version (or revision) even when a different version has already been 

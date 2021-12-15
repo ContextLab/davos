@@ -25,3 +25,6 @@ tests/geckodriver
 
 # scripts & notebooks for scratch/debugging
 scratch
+
+# Illustrator source for snippets
+paper/snippets/snippets.ai

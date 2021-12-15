@@ -97,8 +97,8 @@ completion, or with students in classroom or workshop settings. Python is among 
 scientific programming languages [@MullEtal15]. In addition to the language's high-level, accessible syntax and large 
 standard library, the Python ecosystem offers a powerful and extensive data science toolkit designed to facilitate rapid 
 development and collaboration, including platforms for interactive development [e.g., Project Jupyter, @KluyEtal16\; 
-Google Colaboratory], community-maintained libraries for data manipulation [e.g., NumPy, @HarrEtal20; SciPy, 
-@VirtEtal20; Pandas, @McKi10] and visualization [e.g., Matplotlib, @Hunt07; seaborn, @Wask21], and myriad other 
+Google Colaboratory], community-maintained libraries for data manipulation [e.g., `NumPy`, @HarrEtal20; `SciPy`, 
+@VirtEtal20; `Pandas`, @McKi10] and visualization [e.g., `Matplotlib`, @Hunt07; `seaborn`, @Wask21], and myriad other 
 tools. 
 
 However, one challenge posed by the rapidly growing Python ecosystem is that different versions of the same package can 

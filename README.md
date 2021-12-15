@@ -44,7 +44,7 @@ The `davos` library provides Python with an additional keyword: **`smuggle`**.
 [`import` statement](https://docs.python.org/3/reference/import.html), with one major difference: **you can `smuggle` a 
 package without installing it first**.
 
-A key use case for this package is turning standard [iPython notebooks](https://ipython.org/notebook.html) (including [Google Colaboratory notebooks](colab.research.google.com/)) into fully specified Python environments, without the need for external containers or virtualized environments like conda, docker, etc.  This can facilitate sharing, collaboration, and reproducibility.
+A key use case for this package is turning standard [IPython notebooks](https://ipython.org/notebook.html) (including [Google Colaboratory notebooks](colab.research.google.com/)) into fully specified Python environments, without the need for external containers or virtualized environments like conda, docker, etc.  This can facilitate sharing, collaboration, and reproducibility.
 
 While the simplest way to use `davos` is as a drop-in replaceemnt for `import`, the way `davos` smuggles packages can be fully controlled and customized using ["_onion comments_"](#the-onion-comment).  Onion comments can be added to lines containing `smuggle` statements to specify which 
 **specific package versions** should be installed and imported, and to **fully control how missing packages are installed**.
@@ -149,7 +149,7 @@ You can control _how_ `davos` installs missing packages by adding a special type
 ### Smuggling Specific Package Versions
 One simple but powerful use for [onion comments](#the-onion-comment) is making `smuggle` statements version-sensitive. 
 
-Python does not provide native, viable a way to ensure a third-party package imported at runtime matches a specific 
+Python does not provide a native, viable way to ensure a third-party package imported at runtime matches a specific 
 version or fits a particular [version constraint](https://www.python.org/dev/peps/pep-0440/#version-specifiers). 
 Many packages expose their version info via a top-level `__version__` attribute (see 
 [PEP 396](https://www.python.org/dev/peps/pep-0396/)), and certain tools (such as the standard library's 
@@ -185,7 +185,7 @@ pandas>=0.23,<1.0`.
 In both cases, the imported versions will fit the constraints specified in their [onion comments](#the-onion-comment), 
 and the next time `numpy` or `pandas` is smuggled with the same constraints, valid local installations will be found.
 
-You can also force the state of a smuggled packages to match a specific VCS ref (branch, revision, tag, releas, etc.). 
+You can also force the state of a smuggled packages to match a specific VCS ref (branch, revision, tag, release, etc.). 
 For example:
 ```python
 smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@98a3d80
@@ -386,7 +386,7 @@ where `installer` is the program used to install the package; `install_opt` is a
 "`install`" command; and `version_spec` may be a 
 [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) defined by 
 [PEP 440](https://www.python.org/dev/peps/pep-0440) followed by a 
-[version string](https://www.python.org/dev/peps/pep-0440/#public-version-identifiers), or an alternative syntaxe valid 
+[version string](https://www.python.org/dev/peps/pep-0440/#public-version-identifiers), or an alternative syntax valid 
 for the given `installer` program. For example, [`pip`](https://pip.pypa.io/en/stable/) uses specific syntaxes for 
 [local](https://pip.pypa.io/en/stable/cli/pip_install/#local-project-installs), 
 [editable](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs), and 

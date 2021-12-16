@@ -74,7 +74,7 @@ install a fresh version of the package:
 ![](snippets/snippet5.pdf)
 
 Because `davos` parses onion comments at runtime, required packages are validated and installed in a just-in-time 
-manner. Thus it is possible in most cases to `smuggle` a specific package version or revision even if a different 
+manner. Thus, it is possible in most cases to `smuggle` a specific package version or revision even if a different 
 version has already been loaded. This opens the door to more complex use cases that take advantage of multiple versions 
 of a package within a single interpreter session (e.g., loading an unstable development version only when necessary to 
 use a new feature, comparing performance across versions for demos or regression testing, etc.).
@@ -86,7 +86,7 @@ IDE-based notebook editors. Potential future directions include extending `davos
 non-interactive) Python scripts and adding support for installation via alternative package managers such as `conda`. 
 The `davos` package is currently being used in a number of ongoing projects, as well as online demos for 
 [*Storytelling with Data*](https://github.com/ContextLab/storytelling-with-data) [@Mann21b\; an open course on data 
-science, visualization, and communication] and `abstract2paper` [@Mann21a\; an toy application of 
+science, visualization, and communication] and `abstract2paper` [@Mann21a\; a toy application of 
 [GPT-Neo](https://github.com/EleutherAI/gpt-neo)]. A more extensive guide to using `davos`, additional examples, and a 
 description of how it works are available [here](https://github.com/ContextLab/davos).
 
@@ -119,18 +119,18 @@ prior familiarity.
 Instead, `davos` offers a mechanism for defining a set of required Python packages directly within the code that uses 
 them. The first improvement this framework affords is the ability to create reproducible workflows that can be shared 
 and run without the need for extra configuration files, software, and setup in order to do so. This can expedite 
-collaboration between reserachers and improve accessibility for less experienced users.
+collaboration between researchers and improve accessibility for less experienced users.
 
 The second advantage to using `davos` is that it helps ensure dependencies *remain* present and stable over time. Most 
 requirement specification schemes entail building a development environment in which a particular set of packages and 
 versions are initially installed, but not constrained past that point. This can pose unexpected challenges for 
 researchers working on data analyses within such a preconfigured environment, as well as anyone with whom their code and 
-environment may eventually be shared: it's easy to inadvertently alter the development environment after its inital 
-creation. For example, deciding to perform additional analyses or extend extend existing ones may require installing 
-additional packges after the environment has been built to specification. This can trigger easy-to-miss updates to 
-packages used in earlier analyses that can go unnoticed and potentially affect their behavior. `davos` provides a 
-safeguard against this by continuing to enforce pinned package versions each time a `smuggle` statement is run, 
-ensuring that any accidental changes to the environment are caught and will not affect reproducibility.
+environment may eventually be shared: it is easy to inadvertently alter the development environment after its initial 
+creation. For example, deciding to perform additional analyses or extend existing ones may require installing additional 
+packages after the environment has been built to specification. This can trigger easy-to-miss updates to packages used 
+in earlier analyses that can go unnoticed and potentially affect their behavior. `davos` provides a 
+safeguard against this situation by continuing to enforce pinned package versions each time a `smuggle` statement is 
+run, ensuring that any accidental changes to the environment are caught and will not affect reproducibility.
 
 
 # Origin of the Name

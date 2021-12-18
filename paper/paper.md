@@ -20,7 +20,7 @@ authors:
 affiliations:
  - name: Department of Psychological and Brain Sciences, Dartmouth College
    index: 1
-date: 15 December 2021
+date: 17 December 2021
 bibliography: paper.bib
 link-citations: true
 ---
@@ -105,35 +105,35 @@ tools.
 
 However, one challenge posed by the rapidly growing Python ecosystem is that different versions of the same package can 
 behave quite differently&mdash;bugs are introduced and fixed, features are implemented and removed, support for Python 
-versions is added and dropped, and so on. Thus, Python code whose behavior and outputs need to remain consistent over 
-time and across users (e.g., data analyses, tutorials, or demos) are customarily shared alongside a set of fixed 
-versions for each package used. This frequently takes the form of a configuration file for a development environment 
-(e.g., a [Docker](https://www.docker.com/) image, [Singularity](https://sylabs.io/singularity/) image, or 
+versions is added and dropped, and so on. Thus, Python code whose behavior and outputs must remain consistent over time 
+and across users (e.g., data analyses, tutorials, or demos) is commonly shared alongside a set of fixed versions for 
+each package used. This frequently takes the form of a configuration file for a development environment (e.g., a 
+[Docker](https://www.docker.com/) image, [Singularity](https://sylabs.io/singularity/) image, or 
 [conda](https://docs.conda.io/en/latest/) environment) the end user must build and manage themselves. While powerful,
 such tools are often superfluous for simpler needs and add an additional level of complexity that can raise the 
-barriers to entry for sharing, exploring, contributing to, and learning from research-related code. For authors, they 
-require distributing additional files and setup instructions alongside the code itself. For users, they require 
-installing and using additional software that can be cumbersome, resource-intensive, and confusing to navigate without 
-prior familiarity.
+barriers to entry for sharing, exploring, and contributing to research-related code. For authors, they require 
+distributing additional files and setup instructions alongside the code itself. For users, they require installing and 
+using additional software that can be cumbersome, resource-intensive, and confusing to navigate without prior 
+familiarity.
 
-Instead, `davos` defines a framework in which required packages are specified directly within the code that uses them, and 
-installed automatically when they are needed. This approach to dependency management offers two notable advantages over 
-alternative methods. First, it allows users to create reproducible workflows that can be shared and run without 
+Instead, `davos` defines a framework in which required packages are specified directly within the code that uses them, 
+and installed automatically when they are needed. This approach to dependency management offers two notable advantages 
+over alternative methods. First, it allows users to create reproducible workflows that can be shared and run without 
 the need for extra configuration files, software, or setup steps. This serves to expedite collaboration between 
 researchers and improve accessibility for less experienced users in common cases where a more abtruse tool like Docker 
 is not necessary.
 
 The second benefit of using `davos` (either in lieu of or alongside a different environment management tool) is that
-`smuggle` statements and onion comments continue to ensure requirements are satisfied after they are initially installed. 
-Typical dependency specification schemes allow a user to configure a Python environment with particular packages and 
-package versions installed upfront, but do not constrain or monitor them in any way beyond that point. This can lead to
-potential problems for researchers using such preconfigured environments for longer-term tasks (e.g., data analyzing data 
-a study), as they are easy to inadvertently alter in subtle but significant ways. For example, deciding to perform 
-additional analyses or redesign a figure may require installing additional packages after the environment has been built 
-to specification. This can trigger easy-to-miss updates to software used in earlier analyses that, if overlooked, could 
-potentially affect their behavior. `davos` provides a safeguard against this situation by enforcing pinned package 
-versions every time a `smuggle` statement is executed, ensuring that any accidental changes to the environment are 
-caught and will not affect reproducibility.
+`smuggle` statements and onion comments continue to ensure requirements are satisfied after they are initially 
+installed. Typical dependency specification schemes allow a user to configure a Python environment with particular 
+packages and package versions installed upfront, but do not constrain or monitor them in any way beyond that point. This 
+can lead to potential problems for researchers using such preconfigured environments for longer-term tasks (e.g., data 
+analyzing data a study), as they are easy to inadvertently alter in subtle but significant ways. For example, deciding 
+to perform additional analyses or redesign a figure may require installing additional packages after the environment has 
+been built to specification. This can trigger easy-to-miss updates to software used in earlier analyses that, if 
+overlooked, could potentially affect their behavior. `davos` provides a safeguard against this situation by enforcing 
+pinned package versions every time a `smuggle` statement is executed, ensuring that any accidental changes to the 
+environment are caught and will not affect reproducibility.
 
 
 # Origin of the Name

@@ -116,21 +116,24 @@ require distributing additional files and setup instructions alongside the code 
 installing and using additional software that can be cumbersome, resource-intensive, and confusing to navigate without 
 prior familiarity.
 
-Instead, `davos` offers a mechanism for defining a set of required Python packages directly within the code that uses 
-them. The first improvement this framework affords is the ability to create reproducible workflows that can be shared 
-and run without the need for extra configuration files, software, and setup in order to do so. This can expedite 
-collaboration between researchers and improve accessibility for less experienced users.
+Instead, `davos` defines a framework in which required packages are specified directly within the code that uses them, and 
+installed automatically when they are needed. This approach to dependency management offers two notable advantages over 
+alternative methods. First, it allows users to create reproducible workflows that can be shared and run without 
+the need for extra configuration files, software, or setup steps. This serves to expedite collaboration between 
+researchers and improve accessibility for less experienced users in common cases where a more abtruse tool like Docker 
+is not necessary.
 
-The second advantage to using `davos` is that it helps ensure dependencies *remain* present and stable over time. Most 
-requirement specification schemes entail building a development environment in which a particular set of packages and 
-versions are initially installed, but not constrained past that point. This can pose unexpected challenges for 
-researchers working on data analyses within such a preconfigured environment, as well as anyone with whom their code and 
-environment may eventually be shared: it is easy to inadvertently alter the development environment after its initial 
-creation. For example, deciding to perform additional analyses or extend existing ones may require installing additional 
-packages after the environment has been built to specification. This can trigger easy-to-miss updates to packages used 
-in earlier analyses that can go unnoticed and potentially affect their behavior. `davos` provides a 
-safeguard against this situation by continuing to enforce pinned package versions each time a `smuggle` statement is 
-run, ensuring that any accidental changes to the environment are caught and will not affect reproducibility.
+The second benefit of using `davos` (either in lieu of or alongside a different environment management tool) is that
+`smuggle` statements and onion comments continue to ensure requirements are satisfied after they are initially installed. 
+Typical dependency specification schemes allow a user to configure a Python environment with particular packages and 
+package versions installed upfront, but do not constrain or monitor them in any way beyond that point. This can lead to
+potential problems for researchers using such preconfigured environments for longer-term tasks (e.g., data analyzing data 
+a study), as they are easy to inadvertently alter in subtle but significant ways. For example, deciding to perform 
+additional analyses or redesign a figure may require installing additional packages after the environment has been built 
+to specification. This can trigger easy-to-miss updates to software used in earlier analyses that, if overlooked, could 
+potentially affect their behavior. `davos` provides a safeguard against this situation by enforcing pinned package 
+versions every time a `smuggle` statement is executed, ensuring that any accidental changes to the environment are 
+caught and will not affect reproducibility.
 
 
 # Origin of the Name

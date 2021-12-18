@@ -32,44 +32,44 @@ link-citations: true
 that specify dependencies directly within their code and install packages as
 needed at runtime. The `davos` package was developed to simplify sharing
 research-related code including data analyses, tutorials, and demos by allowing
-users to distribute their code and  environment together in a single,
+users to distribute their code and environment together in a single,
 ready-to-run Jupyter notebook [@KluyEtal16].
 
 Importing `davos` enables an additional Python keyword: `smuggle`. The `smuggle`
-keyword can be used as a drop-in  replacement for the built-in `import` keyword
+keyword can be used as a drop-in replacement for the built-in `import` keyword
 to load libraries, modules, and other objects into the current namespace.
 However, whereas `import` will fail if the requested package is not installed
-locally, `smuggle` statements  can handle missing packages on the fly. If a
+locally, `smuggle` statements can handle missing packages on the fly. If a
 smuggled package does not exist in the local environment, `davos` will install
 it, make its contents visible to Python's `import` machinery, and load it into
 the namespace for immediate use.
 
 To provide greater control over the behavior of `smuggle` statements, `davos`
-also defines an additional construct, called *onion comments*.  An onion comment
+also defines an additional construct, called *onion comments*. An onion comment
 is a special type of inline comment that can be placed on any line containing a
 `smuggle` statement to customize how `davos` determines whether and how
 smuggled packages should be installed. Onion comments follow a simple syntax
 based on the type comment syntax introduced in PEP 484 [@vanREtal14] and are
 designed to make controlling installation via `davos` intuitive and familiar.
-To construct an onion comment, simply provide the name of the installer  program
+To construct an onion comment, simply provide the name of the installer program
 (e.g., `pip`) and the same arguments one would use to install the package as
-desired manually via the command  line:
+desired manually via the command line:
 
 ![](snippets/snippet1.pdf)
 
 Onion comments are also useful for smuggling a package whose distribution name
-(i.e., the name used when installing it)  is different from its top-level module
+(i.e., the name used when installing it) is different from its top-level module
 name (i.e., the name used when importing it):
 
 ![](snippets/snippet2.pdf)
 
 However, the most powerful use of the onion comment is making `smuggle`
-statements *version-sensitive*. Adding a  [version
+statements *version-sensitive*. Adding a [version
 specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) to an
 onion comment will cause `davos` to search for the smuggled package in the local
-environment (as usual), and if it exists, additionally check whether  the
+environment (as usual), and if it exists, additionally check whether the
 installed version satisfies the given constraint(s). If either check fails,
-`davos` will install and use a suitable  version of the package:
+`davos` will install and use a suitable version of the package:
 
 ![](snippets/snippet3.pdf)
 
@@ -100,14 +100,14 @@ environments including Jupyter notebooks [@KluyEtal16], JupyterLab
 [@GranGrou16], Google Colaboratory, Binder [@RagaWill18], and IDE-based notebook
 editors. Potential future directions include extending `davos` for use in
 "vanilla" (i.e., non-interactive) Python scripts and adding support for
-installation via alternative package managers such as `conda`.  The `davos`
+installation via alternative package managers such as `conda`. The `davos`
 package is currently being used in a number of ongoing projects, as well as
 online demos for [*Storytelling with
 Data*](https://github.com/ContextLab/storytelling-with-data) [@Mann21b\; an open
 course on data science, visualization, and communication] and `abstract2paper`
 [@Mann21a\; a toy application of
-[GPT-Neo](https://github.com/EleutherAI/gpt-neo)].  A more extensive guide to
-using `davos`, additional examples, and a  description of how it works are
+[GPT-Neo](https://github.com/EleutherAI/gpt-neo)]. A more extensive guide to
+using `davos`, additional examples, and a description of how it works are
 available [here](https://github.com/ContextLab/davos).
 
 
@@ -116,55 +116,55 @@ available [here](https://github.com/ContextLab/davos).
 Modern open science practices encourage sharing code and data to enable others
 to explore, reproduce, and extend existing work. Scientists, researchers, and
 educators may seek to share analyses with collaborators, students, the research
-community, or the general public.  Python is among the most widely used and
+community, or the general public. Python is among the most widely used and
 fastest-growing scientific programming languages [@MullEtal15]. In addition to
 the language's high-level, accessible syntax and large standard library, the
 Python ecosystem offers a powerful and extensive data science toolkit designed
 to facilitate rapid development and collaboration, including platforms for
-interactive development [e.g., Project Jupyter, @KluyEtal16\;  Google
+interactive development [e.g., Project Jupyter, @KluyEtal16\; Google
 Colaboratory], community-maintained libraries for data manipulation [e.g.,
-`NumPy`, @HarrEtal20; `SciPy`,  @VirtEtal20; `Pandas`, @McKi10] and
+`NumPy`, @HarrEtal20; `SciPy`, @VirtEtal20; `Pandas`, @McKi10] and
 visualization [e.g., `Matplotlib`, @Hunt07; `seaborn`, @Wask21], and myriad
 other tools. 
 
 However, one impediment to sharing and reproducing computational work
 implemented in Python is that different versions of a given package or library
 can behave differently, use different syntax, add or drop support for specific
-functions or other libraries, address (or introduce) bugs, and so on.  These
+functions or other libraries, address (or introduce) bugs, and so on. These
 challenges are true to some extent in any language or ecosystem, but they have a
 particular impact on the Python community due to its unusually rapid growth
-relative to other languages.  Ensuring stable and reproducible results across
+relative to other languages. Ensuring stable and reproducible results across
 users typically requires ensuring that the same versions of each library are
-installed.  One approach is to use containerized or virtualized environments
+installed. One approach is to use containerized or virtualized environments
 (e.g., using [Docker](https://www.docker.com/),
 [Singularity](https://sylabs.io/singularity/), or
 [conda](https://docs.conda.io/en/latest/)) that are effectively cordoned off
-from the user's primary Python installation.  Configuration files may be used
+from the user's primary Python installation. Configuration files may be used
 alongside these tools to construct environments that guarantee (within limits)
-the same or similar functionality across systems.  However, a downside to
-relying on this approach is that it is highly resource intensive.  For example,
+the same or similar functionality across systems. However, a downside to
+relying on this approach is that it is highly resource intensive. For example,
 distributing research code that relies on a particular Docker image to run
 correctly requires the authors to distribute additional configuration files and
-instructions alongside their main code.  Users must then download or build the
+instructions alongside their main code. Users must then download or build the
 image on their machine, which uses additional time and storage.
 
 `davos` provides an alternative way of ensuring stable functionality of iPython
 notebooks across users that is lightweight and contained entirely within the
-notebook file itself.  All setup and configuration of packages needed to run the
+notebook file itself. All setup and configuration of packages needed to run the
 code in the notebook, including ensuring that the correct version of each
-package is utilized, may be managed by `davos`.  Bypassing the need for
+package is utilized, may be managed by `davos`. Bypassing the need for
 the user to set up containers or virtual environments can enable users to run
 the notebook quickly and more easily.
 
 A second benefit of using `davos` (either in lieu of or alongside a different
 environment management tool) is that `smuggle` statements and onion comments
 continue to ensure requirements are satisfied after they are initially
-installed.  For example, suppose a developer decides to install version 1.0 of
-package `x`, a critical library for some code they are working on.  If `x`
+installed. For example, suppose a developer decides to install version 1.0 of
+package `x`, a critical library for some code they are working on. If `x`
 version 1.1 is a dependency of another package, `y`, then installing package `y`
-might overwrite version 1.0 of package `x` with version 1.1.  This can lead to
-unexpected behavior if versions 1.0 and 1.1 of package `x` differ.  To protect
-against unexpected behavior,  `smuggle` statements and onion comments may be
+might overwrite version 1.0 of package `x` with version 1.1. This can lead to
+unexpected behavior if versions 1.0 and 1.1 of package `x` differ. To protect
+against unexpected behavior, `smuggle` statements and onion comments may be
 used to ensure that the expected versions of each library are imported.
 
 # Origin of the Name
@@ -172,7 +172,7 @@ used to ensure that the expected versions of each library are imported.
 The package name is inspired by [Davos
 Seaworth](https://en.wikipedia.org/wiki/Davos_Seaworth), a smuggler often
 referred to as "the Onion Knight" from the series [*A song of Ice and
-Fire*](https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire) by  [George R. R.
+Fire*](https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire) by [George R. R.
 Martin](https://en.wikipedia.org/wiki/George_R._R._Martin).
 
 

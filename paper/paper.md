@@ -20,7 +20,7 @@ authors:
 affiliations:
  - name: Department of Psychological and Brain Sciences, Dartmouth College
    index: 1
-date: 20 January 2022
+date: 21 January 2022
 bibliography: paper.bib
 link-citations: true
 ---

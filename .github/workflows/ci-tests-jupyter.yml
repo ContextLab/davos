@@ -42,13 +42,13 @@ jobs:
           - python-version: 3.7
             ipython-version: 5.5.0    # earliest version supported by davos
           - python-version: 3.7
-            ipython-version: latest
+            ipython-version: 7.31     # latest version to support Python 3.7
           - python-version: 3.8
-            ipython-version: 7.3.0     # earliest version to support Python 3.8
+            ipython-version: 7.3.0    # earliest version to support Python 3.8
           - python-version: 3.8
             ipython-version: latest
           - python-version: 3.9
-            ipython-version: 7.15      # earliest version to support Python 3.9
+            ipython-version: 7.15     # earliest version to support Python 3.9
           - python-version: 3.9
             ipython-version: latest
     env:

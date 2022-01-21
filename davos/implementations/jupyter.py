@@ -131,7 +131,7 @@ def prompt_restart_rerun_buttons(pkgs):
        in notebook environments.
 
     """
-    # TODO: remove warning message when button is clicked
+    # UI: could remove warning message when "continue" button is clicked
     msg = (
         "WARNING: The following packages were previously imported by the "
         "interpreter and could not be reloaded because their compiled modules "

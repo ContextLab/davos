@@ -453,7 +453,7 @@ pip_install_opts.add_argument(
     action='store_true',
     help="Do not warn about broken dependencies"
 )
-# NOTE: in the actual pip-install implementation, `--no-binary`,
+# note: in the actual pip-install implementation, `--no-binary`,
 #  `--only-binary`, and `--prefer-binary` triggers a fairly complex
 #  callback. But fortunately, we can just store all invocations and
 #  forward them to the real pip-install parser

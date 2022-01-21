@@ -154,13 +154,19 @@ among researchers, and can create barriers to both contributing to and taking
 advantage of open science.
 
 
-`davos` provides an alternative way of ensuring stable functionality of iPython
-notebooks across users that is lightweight and contained entirely within the
-notebook file itself. All setup and configuration of packages needed to run the
-code in the notebook, including ensuring that the correct version of each
-package is utilized, may be managed by `davos`. Bypassing the need for
-the user to set up containers or virtual environments can enable users to run
-the notebook quickly and more easily.
+`davos` provides an alternative way to ensure stable functionality of 
+Jupyter notebooks across users and over time that is intuitive, lightweight, and contained 
+entirely within the notebook file itself. Using `smuggle` statements and onion 
+comments, required packages can be specified directly within the code that uses 
+them and automatically installed as they are needed. This offers two 
+notable advantages over typical approaches to dependency management. First, it 
+simplifies and expedites the process of sharing reproducible workflows by 
+eliminating the need for additional configuration files, pre-execution setup, 
+and environment management software (aside from `davos` itself). With `davos`, 
+analyses, tutorials, and demos can be packaged and shared as "batteries 
+included" notebooks that can be downloaded and immediately run, making them more
+accessible to less technical users.
+
 
 A second benefit of using `davos` (either in lieu of or alongside a different
 environment management tool) is that `smuggle` statements and onion comments

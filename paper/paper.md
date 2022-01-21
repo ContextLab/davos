@@ -44,9 +44,9 @@ If a smuggled package does not exist in the local environment, `davos` will
 install it, make its contents visible to Python's `import` machinery, and load
 it into the namespace for immediate use.
 
-For greater control over the behavior of `smuggle` statements, `davos` defines 
-an additional construct called the *onion comment*. An onion comment is a 
-special type of inline comment that can be placed on a line containing a 
+For greater control over the behavior of `smuggle` statements, `davos` defines
+an additional construct called the *onion comment*. An onion comment is a
+special type of inline comment that can be placed on a line containing a
 `smuggle` statement to customize how `davos` determines whether and how the
 smuggled package should be installed. Onion comments follow a simple syntax
 based on the type comment syntax introduced in PEP 484 [@vanREtal14] and are
@@ -67,9 +67,9 @@ However, the most powerful use of the onion comment is making `smuggle`
 statements *version-sensitive*. Adding a [version
 specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) to an
 onion comment will cause `davos` to search for the smuggled package in the local
-environment (as usual), and if it is found, further check whether the
-installed version satisfies the given constraint(s). If either check fails,
-`davos` will install and use a suitable version of the package:
+environment (as usual), and if it is found, further check whether the installed
+version satisfies the given constraint(s). If either check fails, `davos` will
+install and use a suitable version of the package:
 
 ![](snippets/snippet3.pdf)
 
@@ -115,22 +115,22 @@ using `davos`, additional examples, and implementation details are available
 
 Modern open science practices encourage sharing code and data to enable others
 to explore, reproduce, and build on existing work. Scientists, researchers, and
-educators may seek to share research-related code with collaborators, students, the research
-community, or the general public. Python is among the most widely used and
-fastest-growing scientific programming languages [@MullEtal15]. In addition to
-the language's high-level, accessible syntax and large standard library, the
-Python ecosystem offers a powerful and extensive data science toolkit designed
-to facilitate rapid development and collaboration, including platforms for
-interactive programming [e.g., Project Jupyter, @KluyEtal16\; Google
-Colaboratory], community-maintained libraries for data manipulation [e.g.,
-`NumPy`, @HarrEtal20; `SciPy`, @VirtEtal20; `Pandas`, @McKi10] and
+educators may seek to share research-related code with collaborators, students,
+the research community, or the general public. Python is among the most widely
+used and fastest-growing scientific programming languages [@MullEtal15]. In
+addition to the language's high-level, accessible syntax and large standard
+library, the Python ecosystem offers a powerful and extensive data science
+toolkit designed to facilitate rapid development and collaboration, including
+platforms for interactive programming [e.g., Project Jupyter, @KluyEtal16\;
+Google Colaboratory], community-maintained libraries for data manipulation
+[e.g., `NumPy`, @HarrEtal20; `SciPy`, @VirtEtal20; `Pandas`, @McKi10] and
 visualization [e.g., `Matplotlib`, @Hunt07; `seaborn`, @Wask21], and myriad
 other tools.
 
 However, one impediment to sharing and reproducing computational work
 implemented in Python is that different versions of a given package or library
 can behave differently, use different syntax, add or drop support for specific
-functions or other libraries, address (or introduce) bugs, and so on. While 
+functions or other libraries, address (or introduce) bugs, and so on. While
 these challenges are present to some extent in any language or ecosystem, they
 have a particular impact on the Python community due to its unusually rapid
 growth relative to other languages. Ensuring stable and reproducible results
@@ -140,55 +140,54 @@ problem is to create containerized or virtualized environments (e.g., using
 [Docker](https://www.docker.com/),
 [Singularity](https://sylabs.io/singularity/), or
 [conda](https://docs.conda.io/en/latest/)) that house fully isolated Python
-installations tailored to specific projects. These environments may be
-shared publicly as configuration files from which other users may
-build identical copies themselves. While effective, one drawback to this 
-approach is that it can introduce a level of complexity beyond what is 
-warranted for many simpler use cases. For example, distributing research code that relies on a
-particular Docker image to run properly not only necessitates extra 
-configuration files and setup steps, but requires that both the author and end
-user install and navigate additional software that is often more complicated and
-resource-intensive than the actual code being shared. These added prerequisites
-clash with the simplicity and accessibility that have helped popularize Python 
-among researchers, and can create barriers to both contributing to and taking 
+installations tailored to specific projects. These environments may be shared
+publicly as configuration files from which other users may build identical
+copies themselves. While effective, one drawback to this approach is that it can
+introduce a level of complexity beyond what is warranted for many simpler use
+cases. For example, distributing research code that relies on a particular
+Docker image to run properly not only necessitates extra configuration files and
+setup steps, but requires that both the author and end user install and navigate
+additional software that is often more complicated and resource-intensive than
+the actual code being shared. These added prerequisites clash with the
+simplicity and accessibility that have helped popularize Python among
+researchers, and can create barriers to both contributing to and taking
 advantage of open science.
 
-
-`davos` provides an alternative way to ensure stable functionality of 
-Jupyter notebooks across users and over time that is intuitive, lightweight, and contained 
-entirely within the notebook file itself. Using `smuggle` statements and onion 
-comments, required packages can be specified directly within the code that uses 
-them and automatically installed as they are needed. This offers two 
-notable advantages over typical approaches to dependency management. First, it 
-simplifies and expedites the process of sharing reproducible workflows by 
-eliminating the need for additional configuration files, pre-execution setup, 
-and environment management software (aside from `davos` itself). With `davos`, 
-analyses, tutorials, and demos can be packaged and shared as "batteries 
+`davos` provides an alternative way to ensure stable functionality of Jupyter
+notebooks across users and over time that is intuitive, lightweight, and
+contained entirely within the notebook file itself. Using `smuggle` statements
+and onion comments, required packages can be specified directly within the code
+that uses them and automatically installed as they are needed. This offers two
+notable advantages over typical approaches to dependency management. First, it
+simplifies and expedites the process of sharing reproducible workflows by
+eliminating the need for additional configuration files, pre-execution setup,
+and environment management software (aside from `davos` itself). With `davos`,
+analyses, tutorials, and demos can be packaged and shared as "batteries
 included" notebooks that can be downloaded and immediately run, making them more
 accessible to less technical users.
 
-Second, `smuggle` statements and onion comments continue to ensure requirements 
-are satisfied after they are initially installed. Most dependency specification 
-schemes follow a common strategy: required packages and package versions are 
-listed in a configuration file (e.g., a `requirements.txt`, `pyproject.toml`, 
-`environment.yml`, `Pipfile`, `RUN` instructions in a 
-`Dockerfile`, etc.) which is used to install them in a Python environment 
-upfront. After this initial setup, however, this method generally does not 
-ensure that the specified requirements *remain* installed, allowing them to be easily 
-altered&mdash;sometimes inadvertently. This can lead to subtle issues when 
-writing reproducible code in such a preconfigured environment. For instance, suppose a 
-researcher has implemented a series of analyses using version 1.0 of "Package 
-*X*", and later decides to perform an additional analysis that requires installing 
-"Package *Y*". If Package *Y* depends on version 1.1 of Package *X*, then
-Package *X* will be upgraded to accommodate this new requirement. And if the 
-researcher does not notice this change, differences between the two Package *X* 
-versions risk introducing bugs into previously written code. Using `davos`, either
-in lieu of or alongside a different environment management tool, provides a 
-safeguard against this situation. `smuggle` statements and onion comments 
-enforce requirements every time they are executed, guaranteeing the expected 
-version of each package is always used. This would not only catch and correct 
-the unintentional change to Package *X*, but would also allow the researcher to 
-choose whether to manually resolve the inconsistency or, if appropriate, 
+Second, `smuggle` statements and onion comments continue to ensure requirements
+are satisfied after they are initially installed. Most dependency specification
+schemes follow a common strategy: required packages and package versions are
+listed in a configuration file (e.g., a `requirements.txt`, `pyproject.toml`,
+`environment.yml`, `Pipfile`, `RUN` instructions in a `Dockerfile`, etc.) which
+is used to install them in a Python environment upfront. After this initial
+setup, however, this method generally does not ensure that the specified
+requirements *remain* installed, allowing them to be easily
+altered&mdash;sometimes inadvertently. This can lead to subtle issues when
+writing reproducible code in such a preconfigured environment. For instance,
+suppose a researcher has implemented a series of analyses using version 1.0 of
+"Package *X*," and later decides to perform an additional analysis that requires
+installing "Package *Y*." If Package *Y* depends on version 1.1 of Package *X*,
+then Package *X* will be upgraded to accommodate this new requirement. And if
+the researcher does not notice this change, differences between the two Package
+*X* versions risk introducing bugs into previously written code. Using `davos`,
+either in lieu of or alongside a different environment management tool, provides
+a safeguard against this situation. `smuggle` statements and onion comments
+enforce requirements every time they are executed, guaranteeing the expected
+version of each package is always used. This would not only catch and correct
+the unintentional change to Package *X*, but would also allow the researcher to
+choose whether to manually resolve the inconsistency or, if appropriate,
 `smuggle` different versions of the package as necessary.
 
 

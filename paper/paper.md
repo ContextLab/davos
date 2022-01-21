@@ -167,17 +167,30 @@ analyses, tutorials, and demos can be packaged and shared as "batteries
 included" notebooks that can be downloaded and immediately run, making them more
 accessible to less technical users.
 
+Second, `smuggle` statements and onion comments continue to ensure requirements 
+are satisfied after they are initially installed. Most dependency specification 
+schemes follow a common strategy: required packages and package versions are 
+listed in a configuration file (e.g., a `requirements.txt`, `pyproject.toml`, 
+`environment.yml`, `Pipfile`, `RUN` instructions in a 
+`Dockerfile`, etc.) which is used to install them in a Python environment 
+upfront. After this initial setup, however, this method generally does not 
+ensure that the specified requirements *remain* installed, allowing them to be easily 
+altered&mdash;sometimes inadvertently. This can lead to subtle issues when 
+writing reproducible code in such a preconfigured environment. For instance, suppose a 
+researcher has implemented a series of analyses using version 1.0 of "Package 
+*X*", and later decides to perform an additional analysis that requires installing 
+"Package *Y*". If Package *Y* depends on version 1.1 of Package *X*, then
+Package *X* will be upgraded to accommodate this new requirement. And if the 
+researcher does not notice this change, differences between the two Package *X* 
+versions risk introducing bugs into previously written code. Using `davos`, either
+in lieu of or alongside a different environment management tool, provides a 
+safeguard against this situation. `smuggle` statements and onion comments 
+enforce requirements every time they are executed, guaranteeing the expected 
+version of each package is always used. This would not only catch and correct 
+the unintentional change to Package *X*, but would also allow the researcher to 
+choose whether to manually resolve the inconsistency or, if appropriate, 
+`smuggle` different versions of the package as necessary.
 
-A second benefit of using `davos` (either in lieu of or alongside a different
-environment management tool) is that `smuggle` statements and onion comments
-continue to ensure requirements are satisfied after they are initially
-installed. For example, suppose a developer decides to install version 1.0 of
-package `x`, a critical library for some code they are working on. If `x`
-version 1.1 is a dependency of another package, `y`, then installing package `y`
-might overwrite version 1.0 of package `x` with version 1.1. This can lead to
-unexpected behavior if versions 1.0 and 1.1 of package `x` differ. To protect
-against unexpected behavior, `smuggle` statements and onion comments may be
-used to ensure that the expected versions of each library are imported.
 
 # Origin of the Name
 

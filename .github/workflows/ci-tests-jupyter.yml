@@ -42,13 +42,13 @@ jobs:
           - python-version: 3.7
             ipython-version: 5.5.0    # earliest version supported by davos
           - python-version: 3.7
-            ipython-version: latest
+            ipython-version: 7.31     # latest version to support Python 3.7
           - python-version: 3.8
-            ipython-version: 7.3.0     # earliest version to support Python 3.8
+            ipython-version: 7.3.0    # earliest version to support Python 3.8
           - python-version: 3.8
             ipython-version: latest
           - python-version: 3.9
-            ipython-version: 7.15      # earliest version to support Python 3.9
+            ipython-version: 7.15     # earliest version to support Python 3.9
           - python-version: 3.9
             ipython-version: latest
     env:
@@ -111,7 +111,7 @@ jobs:
           if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
               pip install typing-extensions
           fi
-          [[ "$PYTHON_VERSION" == "3.6" ]] || pip install numpy==1.20.3
+          [[ "$PYTHON_VERSION" == "3.6" ]] || pip install numpy==1.20.3	
           pip install "ipykernel==5.0.0" ipython-genutils requests scipy fastdtw==0.3.4 tqdm==4.41.1
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython

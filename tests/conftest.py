@@ -58,7 +58,7 @@ _ByOpts = Literal[
     'xpath'
 ]
 _E = TypeVar('_E', bound=BaseException)
-_IpyVersions = Literal['5.5.0', '7.3.0', '7.15', '7.16', 'latest']
+_IpyVersions = Literal['5.5.0', '7.3.0', '7.15', '7.16', '7.31', 'latest']
 _NbTypes = Literal['colab', 'jupyter']
 _PyVersions = Literal['3.6', '3.7', '3.8', '3.9']
 
@@ -569,7 +569,6 @@ class NotebookFile(pytest.File):
                     yield test_obj
 
     def setup(self) -> None:
-        # TODO: refactor this to call self.driver.<setup_func>()?
         super().setup()
         self.driver = self.driver_cls(self.notebook_path)
         self.driver.clear_all_outputs()

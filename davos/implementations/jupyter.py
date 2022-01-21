@@ -14,7 +14,6 @@ from textwrap import dedent
 import ipykernel
 import zmq
 from IPython.display import display, Javascript
-from ipython_genutils import py3compat
 
 from davos import config
 from davos.implementations.js_functions import JS_FUNCTIONS
@@ -213,7 +212,7 @@ def prompt_restart_rerun_buttons(pkgs):
 
     # noinspection PyBroadException
     try:
-        value = py3compat.unicode_to_str(reply['content']['value'])
+        value = reply['content']['value']
     except Exception:    # pylint: disable=broad-except
         if ipykernel.version_info[0] >= 6:
             _parent_header = kernel._parent_ident['shell']

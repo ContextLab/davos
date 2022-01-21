@@ -36,22 +36,22 @@ users to distribute their code and environment together in a single,
 ready-to-run Jupyter notebook [@KluyEtal16].
 
 Importing `davos` enables an additional Python keyword: `smuggle`. The `smuggle`
-keyword can be used as a drop-in replacement for the built-in `import` keyword
-to load libraries, modules, and other objects into the current namespace.
-However, whereas `import` will fail if the requested package is not installed
-locally, `smuggle` statements can handle missing packages on the fly. If a
-smuggled package does not exist in the local environment, `davos` will install
-it, make its contents visible to Python's `import` machinery, and load it into
-the namespace for immediate use.
+statement can be used as a drop-in replacement for the built-in `import`
+statement to load libraries, modules, and other objects into the current
+namespace. However, whereas `import` will fail if the requested package is not
+installed locally, `smuggle` statements can handle missing packages on the fly.
+If a smuggled package does not exist in the local environment, `davos` will
+install it, make its contents visible to Python's `import` machinery, and load
+it into the namespace for immediate use.
 
-To provide greater control over the behavior of `smuggle` statements, `davos`
-also defines an additional construct, called *onion comments*. An onion comment
-is a special type of inline comment that can be placed on any line containing a
-`smuggle` statement to customize how `davos` determines whether and how
-smuggled packages should be installed. Onion comments follow a simple syntax
+For greater control over the behavior of `smuggle` statements, `davos` defines 
+an additional construct called the *onion comment*. An onion comment is a 
+special type of inline comment that can be placed on a line containing a 
+`smuggle` statement to customize how `davos` determines whether and how the
+smuggled package should be installed. Onion comments follow a simple syntax
 based on the type comment syntax introduced in PEP 484 [@vanREtal14] and are
-designed to make controlling installation via `davos` intuitive and familiar.
-To construct an onion comment, simply provide the name of the installer program
+designed to make controlling installation via `davos` intuitive and familiar. To
+construct an onion comment, simply provide the name of the installer program
 (e.g., `pip`) and the same arguments one would use to install the package as
 desired manually via the command line:
 
@@ -67,7 +67,7 @@ However, the most powerful use of the onion comment is making `smuggle`
 statements *version-sensitive*. Adding a [version
 specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) to an
 onion comment will cause `davos` to search for the smuggled package in the local
-environment (as usual), and if it exists, additionally check whether the
+environment (as usual), and if it is found, further check whether the
 installed version satisfies the given constraint(s). If either check fails,
 `davos` will install and use a suitable version of the package:
 
@@ -107,25 +107,25 @@ Data*](https://github.com/ContextLab/storytelling-with-data) [@Mann21b\; an open
 course on data science, visualization, and communication] and `abstract2paper`
 [@Mann21a\; a toy application of
 [GPT-Neo](https://github.com/EleutherAI/gpt-neo)]. A more extensive guide to
-using `davos`, additional examples, and a description of how it works are
-available [here](https://github.com/ContextLab/davos).
+using `davos`, additional examples, and implementation details are available
+[here](https://github.com/ContextLab/davos).
 
 
 # Statement of Need
 
 Modern open science practices encourage sharing code and data to enable others
-to explore, reproduce, and extend existing work. Scientists, researchers, and
-educators may seek to share analyses with collaborators, students, the research
+to explore, reproduce, and build on existing work. Scientists, researchers, and
+educators may seek to share research-related code with collaborators, students, the research
 community, or the general public. Python is among the most widely used and
 fastest-growing scientific programming languages [@MullEtal15]. In addition to
 the language's high-level, accessible syntax and large standard library, the
 Python ecosystem offers a powerful and extensive data science toolkit designed
 to facilitate rapid development and collaboration, including platforms for
-interactive development [e.g., Project Jupyter, @KluyEtal16\; Google
+interactive programming [e.g., Project Jupyter, @KluyEtal16\; Google
 Colaboratory], community-maintained libraries for data manipulation [e.g.,
 `NumPy`, @HarrEtal20; `SciPy`, @VirtEtal20; `Pandas`, @McKi10] and
 visualization [e.g., `Matplotlib`, @Hunt07; `seaborn`, @Wask21], and myriad
-other tools. 
+other tools.
 
 However, one impediment to sharing and reproducing computational work
 implemented in Python is that different versions of a given package or library

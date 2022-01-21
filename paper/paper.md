@@ -5,8 +5,8 @@ tags:
  - Jupyter Notebook
  - JupyterLab
  - Google Colab
- - Reproducibility
- - package-management
+ - reproducibility
+ - package management
  - import
  - install
  - pip
@@ -20,7 +20,7 @@ authors:
 affiliations:
  - name: Department of Psychological and Brain Sciences, Dartmouth College
    index: 1
-date: 17 December 2021
+date: 20 January 2022
 bibliography: paper.bib
 link-citations: true
 ---

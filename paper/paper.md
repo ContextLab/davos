@@ -127,16 +127,16 @@ Google Colaboratory], community-maintained libraries for data manipulation
 visualization [e.g., `Matplotlib`, @Hunt07; `seaborn`, @Wask21], and myriad
 other tools.
 
-However, one impediment to sharing and reproducing computational work
-implemented in Python is that different versions of a given package or library
-can behave differently, use different syntax, add or drop support for specific
-functions or other libraries, address (or introduce) bugs, and so on. While
-these challenges are present to some extent in any language or ecosystem, they
-have a particular impact on the Python community due to its unusually rapid
-growth relative to other languages. Ensuring stable and reproducible results
-across users typically requires ensuring that shared code is always run with the
-same set of versions for each package used. One common approach to solving this
-problem is to create containerized or virtualized environments (e.g., using
+One impediment to sharing and reproducing computational work implemented in
+Python is that different versions of a given package or library can behave
+differently, use different syntax, add or drop support for specific functions or
+other libraries, address (or introduce) bugs, and so on. While these challenges
+are present to some extent in any language or ecosystem, they have a particular
+impact on the Python community due to its unusually rapid growth relative to
+other languages. Ensuring stable and reproducible results across users typically
+requires ensuring that shared code is always run with the same set of versions
+for each package used. One common approach to solving this problem is to create
+containerized or virtualized environments (e.g., using
 [Docker](https://www.docker.com/),
 [Singularity](https://sylabs.io/singularity/), or
 [conda](https://docs.conda.io/en/latest/)) that house fully isolated Python
@@ -171,7 +171,7 @@ are satisfied after they are initially installed. Most dependency specification
 schemes follow a common strategy: required packages and package versions are
 listed in a configuration file (e.g., a `requirements.txt`, `pyproject.toml`,
 `environment.yml`, `Pipfile`, `RUN` instructions in a `Dockerfile`, etc.) which
-is used to install them in a Python environment upfront. After this initial
+is used to install them in a Python environment up front. After this initial
 setup, however, this method generally does not ensure that the specified
 requirements *remain* installed, allowing them to be easily
 altered&mdash;sometimes inadvertently. This can lead to subtle issues when

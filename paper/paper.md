@@ -130,23 +130,29 @@ other tools.
 However, one impediment to sharing and reproducing computational work
 implemented in Python is that different versions of a given package or library
 can behave differently, use different syntax, add or drop support for specific
-functions or other libraries, address (or introduce) bugs, and so on. These
-challenges are true to some extent in any language or ecosystem, but they have a
-particular impact on the Python community due to its unusually rapid growth
-relative to other languages. Ensuring stable and reproducible results across
-users typically requires ensuring that the same versions of each library are
-installed. One approach is to use containerized or virtualized environments
-(e.g., using [Docker](https://www.docker.com/),
+functions or other libraries, address (or introduce) bugs, and so on. While 
+these challenges are present to some extent in any language or ecosystem, they
+have a particular impact on the Python community due to its unusually rapid
+growth relative to other languages. Ensuring stable and reproducible results
+across users typically requires ensuring that shared code is always run with the
+same set of versions for each package used. One common approach to solving this
+problem is to create containerized or virtualized environments (e.g., using
+[Docker](https://www.docker.com/),
 [Singularity](https://sylabs.io/singularity/), or
-[conda](https://docs.conda.io/en/latest/)) that are effectively cordoned off
-from the user's primary Python installation. Configuration files may be used
-alongside these tools to construct environments that guarantee (within limits)
-the same or similar functionality across systems. However, a downside to
-relying on this approach is that it is highly resource intensive. For example,
-distributing research code that relies on a particular Docker image to run
-correctly requires the authors to distribute additional configuration files and
-instructions alongside their main code. Users must then download or build the
-image on their machine, which uses additional time and storage.
+[conda](https://docs.conda.io/en/latest/)) that house fully isolated Python
+installations tailored to specific projects. These environments may be
+shared publicly as configuration files from which other users may
+build identical copies themselves. While effective, one drawback to this 
+approach is that it can introduce a level of complexity beyond what is 
+warranted for many simpler use cases. For example, distributing research code that relies on a
+particular Docker image to run properly not only necessitates extra 
+configuration files and setup steps, but requires that both the author and end
+user install and navigate additional software that is often more complicated and
+resource-intensive than the actual code being shared. These added prerequisites
+clash with the simplicity and accessibility that have helped popularize Python 
+among researchers, and can create barriers to both contributing to and taking 
+advantage of open science.
+
 
 `davos` provides an alternative way of ensuring stable functionality of iPython
 notebooks across users that is lightweight and contained entirely within the

@@ -26,5 +26,11 @@ tests/geckodriver
 # scripts & notebooks for scratch/debugging
 scratch/
 
+# LaTeX generated files
+paper/*.aux
+paper/*.log
+paper/*.spl
+paper/*.synctex.gz
+
 # Illustrator source for snippets
 paper/snippets/snippets.ai

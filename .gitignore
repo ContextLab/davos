@@ -1,20 +1,20 @@
 # Mac Finder display config
 *.DS_Store
 
-# PyCharm project config dir
-*.idea
+# PyCharm & VS Code project config dirs
+*.idea/
+*.vscode/
 
 # Python bytecode
-*__pycache__
+*__pycache__/
 
 # IPython notebook checkpoints
-*.ipynb_checkpoints
+*.ipynb_checkpoints/
 
-# Python package distribution egg
-davos.egg-info
-
-# build dir for non-editable installs
-build
+# Package distribution dirs for wheels & eggs
+dist/
+build/
+davos.egg-info/
 
 # Mypy daemon status file
 .dmypy.json
@@ -24,7 +24,7 @@ tests/geckodriver
 **/geckodriver.log
 
 # scripts & notebooks for scratch/debugging
-scratch
+scratch/
 
 # Illustrator source for snippets
 paper/snippets/snippets.ai

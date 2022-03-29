@@ -28,6 +28,8 @@ scratch/
 
 # LaTeX generated files
 paper/*.aux
+paper/*.bbl
+paper/*.blg
 paper/*.log
 paper/*.spl
 paper/*.synctex.gz

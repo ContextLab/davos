@@ -41,7 +41,7 @@
 \usepackage{float}
 \restylefloat{table}
 
-\usepackage[hidelinks]{hyperref}
+\usepackage[colorlinks=true, urlcolor=blue, pdfborder={0 0 0}]{hyperref}
 \usepackage{breakurl}
 
 \journal{SoftwareX}
@@ -59,8 +59,10 @@
 % ------------------------------------------------------ ABSTRACT ------------------------------------------------------
 
 \begin{abstract}
-% Text of abstract 
-% Ca. 100 words
+% 100-word limit (though many published articles don't seem to conform to this?)
+% \texttt{davos} is a Python package for creating self-managing, reproducible workflows that specify dependencies directly in their code, and install them 
+% \texttt{davos} is a Python package that enables creating and sharing reproducible workflows as a single, ready-to-run IPython notebook. 
+\texttt{davos} is a Python package for sharing 
 
 \end{abstract}
 
@@ -83,9 +85,9 @@ Python \sep Jupyter Notebook \sep Google Colaboratory \sep Reproducibility \sep 
 \hline
 \textbf{Nr.} & \textbf{Code metadata description} & \textbf{Please fill in this column} \\
 \hline
-C1 & Current code version &  v0.1.0 \\
+C1 & Current code version &  v0.1.1 \\
 \hline
-C2 & Permanent link to code/repository used for this code version & \url{https://github.com/ContextLab/davos} \\
+C2 & Permanent link to code/repository used for this code version & \url{https://github.com/ContextLab/davos/tree/v0.1.1} \\
 \hline
 C3 & Code Ocean compute capsule & \\
 \hline
@@ -107,19 +109,26 @@ C9 & Support email for questions & contextualdynamics@gmail.com \\
 \end{table}
 
 \linenumbers
-%The permanent link to code/repository or the zip archive should include the following requirements: 
-
-%README.txt and LICENSE.txt.
-
-%Source code in a src/ directory, not the root of the repository.
-
-%Tag corresponding with the version of the software that is reviewed.
-
-%Documentation in the repository in a docs/ directory, and/or READMEs, as appropriate.
 
 
 % --------------------------------------------- MOTIVATION & SIGNIFICANCE ----------------------------------------------
 \section{Motivation and significance}
+Modern open science practices encourage sharing code and data to enable others to explore, reproduce, learn from, and build upon existing work. Scientists, researchers, and educators produce many different forms of research-related code (e.g., experiments, data analyses, tutorials, demos) that they may seek to share with a wide range of audiences, including collaborators, students, the broader scientific community, and the general public. Python has become one of the most widely used and fastest-growing scientific programming languages by offering both powerful research functionality and high-level accessibility \cite{MullEtal15}. In addition to the language’s intuitive, readable grammar and large standard library, the Python ecosystem provides an extensive data science toolkit designed to facilitate rapid development and collaboration, including platforms for interactive programming (e.g., Project Jupyter, \cite{KluyEtal16}; Google Colaboratory), community-maintained libraries for data manipulation (e.g., \texttt{NumPy} \cite{HarrEtal20}, \texttt{SciPy} \cite{VirtEtal20}, \texttt{Pandas} \cite{McKi10}) and visualization (e.g., \texttt{Matplotlib} \cite{Hunt07}, \texttt{seaborn} \cite{Wask21}), and myriad other tools.
+
+However, this also presents a challenge to sharing reproducible scientific Python code: different versions of a given package or library can behave differently, use different syntax, add or drop support for specific functions or other libraries, address (or introduce) bugs, and so on. While these issues are present to some extent in any language or ecosystem, they have a particular impact on the Python community due to its unusually rapid growth relative to other languages. Ensuring stable and reproducible results over time and across users therefore typically requires ensuring that shared code is always run with a specific set of versions for each package used. 
+
+One common approach to solving this problem involves creating containerized or virtualized Python environments (e.g., using \href{https://www.docker.com/}{Docker}, \href{https://sylabs.io/singularity/}{Singularity}, or \href{https://docs.conda.io/en/latest/}{conda}) tailored to individual applications. Authors may then share these environments alongside their code as configuration files from which users may build identical copies themselves. While effective, a significant drawback to this approach is that it introduces additional prerequisite knowledge  
+
+
+% While effective, such tools can add a significant degree of complexity to the process of sharing research code for both the author and 
+
+
+a significant drawback to this approach is that it adds to the requisite knowledge 
+
+
+
+
+in many cases, it introduces a level of complexity beyond . For example, distributing research code that relies on a particular Docker image to run properly not only necessitates extra configuration files and setup steps, but requires that both the author and end user install and navigate additional software that is often more complicated and resource-intensive than the actual code being shared. These added prerequisites clash with the simplicity and accessibility that have helped popularize Python among researchers, and can create barriers to both contributing to and taking advantage of open science. \texttt{davos} was developed with the goal of addressing 
 
 %Introduce the scientific background and the motivation for developing the software.
 

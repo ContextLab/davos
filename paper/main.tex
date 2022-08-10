@@ -1,19 +1,19 @@
-%% 
+%%
 %% Copyright 2007, 2008, 2009 Elsevier Ltd
-%% 
+%%
 %% This file is part of the 'Elsarticle Bundle'.
 %% ---------------------------------------------
-%% 
+%%
 %% It may be distributed under the conditions of the LaTeX Project Public
 %% License, either version 1.2 of this license or (at your option) any
 %% later version.  The latest version of this license is in
 %%    http://www.latex-project.org/lppl.txt
 %% and version 1.2 or later is part of all distributions of LaTeX
 %% version 1999/12/01 or later.
-%% 
+%%
 %% The list of all files belonging to the 'Elsarticle Bundle' is
 %% given in the file `manifest.txt'.
-%% 
+%%
 
 %% Template article for Elsevier's document class `elsarticle'
 %% with numbered style bibliographic references
@@ -119,29 +119,29 @@ Additionally, modern open science practices encourage sharing research code and 
 Much of the benefit afforded by freely available research code relies on users ability to execute it and achieve the same result as its original author.
 
 
-Python has become one of the most widely used and fastest-growing scientific programming languages by combining an accessible, high-level syntax with the availability of powerful third-party tools that facilitate rapid development and collaboration \cite{MullEtal15}. 
-The Python ecosystem offers an extensive data science toolkit, with platforms for interactive programming (e.g., Project Jupyter \cite{KluyEtal16}, Google Colaboratory), community-maintained libraries for data manipulation (e.g., NumPy \cite{HarrEtal20}, SciPy \cite{VirtEtal20}, Pandas \cite{McKi10}) and visualization (e.g., Matplotlib \cite{Hunt07}, seaborn \cite{Wask21}), frameworks for training complex machine learning models (e.g., scikit-learn \cite{PedrEtal11}, TensorFlow \cite{AbadEtal15}, Hugging Face \cite{WolfEtal20}), and myriad other resources. 
-However, this heavy emphasis on third-party libraries also presents a challenge to writing and sharing stable, reproducible scientific Python code: different versions of the same library may behave differently, adopting different syntax, adding or dropping support for specific functions or other libraries, addressing (or introducing) bugs, and so on. 
-While these issues are present to some extent in any language or ecosystem, they have a particular impact on the Python community due to its unusually rapid growth relative to other languages. 
-Ensuring Python code behaves consistently over time and across users therefore typically requires making sure it is always run with the same specific set of versions for each package used. 
+Python has become one of the most widely used and fastest-growing scientific programming languages by combining an accessible, high-level syntax with the availability of powerful third-party tools that facilitate rapid development and collaboration \cite{MullEtal15}.
+The Python ecosystem offers an extensive data science toolkit, with platforms for interactive programming (e.g., Project Jupyter \cite{KluyEtal16}, Google Colaboratory), community-maintained libraries for data manipulation (e.g., NumPy \cite{HarrEtal20}, SciPy \cite{VirtEtal20}, Pandas \cite{McKi10}) and visualization (e.g., Matplotlib \cite{Hunt07}, seaborn \cite{Wask21}), frameworks for training complex machine learning models (e.g., scikit-learn \cite{PedrEtal11}, TensorFlow \cite{AbadEtal15}, Hugging Face \cite{WolfEtal20}), and myriad other resources.
+However, this heavy emphasis on third-party libraries also presents a challenge to writing and sharing stable, reproducible scientific Python code: different versions of the same library may behave differently, adopting different syntax, adding or dropping support for specific functions or other libraries, addressing (or introducing) bugs, and so on.
+While these issues are present to some extent in any language or ecosystem, they have a particular impact on the Python community due to its unusually rapid growth relative to other languages.
+Ensuring Python code behaves consistently over time and across users therefore typically requires making sure it is always run with the same specific set of versions for each package used.
 
-One common approach to solving this problem is to create containerized or virtualized Python environments (e.g., using \href{https://www.docker.com/}{Docker}, \href{https://sylabs.io/singularity/}{Singularity}, or \href{https://docs.conda.io/en/latest/}{conda}) tailored to individual applications. 
-Researchers can then share these environments alongside their code as configuration files that explicitly list required package versions, enabling other users to build identical copies for themselves. 
-While often effective, this approach comes with two notable drawbacks: 
-First, it can add significantly to the technical knowledge, system resources, and initial setup required to share and run the actual code of interest. 
-For example, sharing research code that relies on a particular Docker image to run properly not only necessitates distributing extra configuration files and setup instructions, but also requires that both the original author and anyone with whom the code may be shared install and navigate additional software that is likely more complex and resource-intensive than the Python code it is used to manage. 
+One common approach to solving this problem is to create containerized or virtualized Python environments (e.g., using \href{https://www.docker.com/}{Docker}, \href{https://sylabs.io/singularity/}{Singularity}, or \href{https://docs.conda.io/en/latest/}{conda}) tailored to individual applications.
+Researchers can then share these environments alongside their code as configuration files that explicitly list required package versions, enabling other users to build identical copies for themselves.
+While often effective, this approach comes with two notable drawbacks:
+First, it can add significantly to the technical knowledge, system resources, and initial setup required to share and run the actual code of interest.
+For example, sharing research code that relies on a particular Docker image to run properly not only necessitates distributing extra configuration files and setup instructions, but also requires that both the original author and anyone with whom the code may be shared install and navigate additional software that is likely more complex and resource-intensive than the Python code it is used to manage.
 These added prerequisites clash with the simplicity and accessibility that have contributed to Python's popularity, and can create significant barriers to both contributing to and taking advantage of open science resources.
 
-%Second, typical environment management tools don't enforce that specified requirements \textit{remain} satisfied after they are initially installed. 
-%This makes it easy to inadvertently alter existing packages in a Python environment at any point in time, potentially affecting the behavior of code that depends on them. 
-%For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}." 
-%If Package \textit{Y} depends on version 1.1 of Package \textit{X}, then Package \textit{X} will be upgrade to accommodate this new requirement, potentially altering or breaking the previous analyses in future runs, as well as for anyone with whom  analysis code. 
-%Further, if earlier analyses require functionality 
+%Second, typical environment management tools don't enforce that specified requirements \textit{remain} satisfied after they are initially installed.
+%This makes it easy to inadvertently alter existing packages in a Python environment at any point in time, potentially affecting the behavior of code that depends on them.
+%For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}."
+%If Package \textit{Y} depends on version 1.1 of Package \textit{X}, then Package \textit{X} will be upgrade to accommodate this new requirement, potentially altering or breaking the previous analyses in future runs, as well as for anyone with whom  analysis code.
+%Further, if earlier analyses require functionality
 
-Second, although many tools exist for installing Python packages in an isolated environment from a fixed set of required packages (e.g., in a \texttt{requirements.txt}, \texttt{pyproject.toml}, \texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN} instruction, etc.), few if any enforce that the specified requirements \textit{remain} satisfied after this initial setup. 
-The ability to modify an environment after its creation is useful in many cases (e.g., to install additional software as needed); however, it also makes it easy to inadvertently alter existing packages, potentially leading to subtle issues with code that relies on them. 
-For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}." 
-If Package \textit{Y} depends on version 0.9 of Package \textit{X}, then Package \textit{X} will be downgraded to accommodate this new requirement, potentially altering or breaking prior analyses for both the researcher and anyone with whom their code may be shared. 
+Second, although many tools exist for installing Python packages in an isolated environment from a fixed set of required packages (e.g., in a \texttt{requirements.txt}, \texttt{pyproject.toml}, \texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN} instruction, etc.), few if any enforce that the specified requirements \textit{remain} satisfied after this initial setup.
+The ability to modify an environment after its creation is useful in many cases (e.g., to install additional software as needed); however, it also makes it easy to inadvertently alter existing packages, potentially leading to subtle issues with code that relies on them.
+For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}."
+If Package \textit{Y} depends on version 0.9 of Package \textit{X}, then Package \textit{X} will be downgraded to accommodate this new requirement, potentially altering or breaking prior analyses for both the researcher and anyone with whom their code may be shared.
 Further, if certain analyses require Package \textit{Y} while others rely on a feature of Package \textit{X} not implemented until version 1.0, it's unclear which version the researcher should install in the environment.
 
 
@@ -159,7 +159,7 @@ Further, if certain analyses require Package \textit{Y} while others rely on a f
 
 % ------------------------------------------------ SOFTWARE DESCRIPTION ------------------------------------------------
 \section{Software description}
-% Describe the software in as much as is necessary to establish a vocabulary needed to explain its impact. 
+% Describe the software in as much as is necessary to establish a vocabulary needed to explain its impact.
 
 
 \subsection{Software Architecture}
@@ -198,7 +198,7 @@ Further, if certain analyses require Package \textit{Y} while others rely on a f
 - mention something about not having to teach environment management to teach day 1 python lesson, or spend hours debugging conda installation in order to share tutorial or demo with students
 }
 
-Despite the short time since its conception and initial release, \texttt{davos} has already found use in a variety of applications. 
+Despite the short time since its conception and initial release, \texttt{davos} has already found use in a variety of applications.
 In addition to managing data analysis environments for multiple ongoing research studies, \texttt{davos} is being used by both students and instructors in programming courses such as \href{https://github.com/ContextLab/storytelling-with-data}{\textit{Storytelling with Data}} \cite{Mann21b} (an open course on data science, visualization, and communication) to simplify distributing lessons and submitting assignments, as well as in online demos such as {\texttt{abstract2paper}} \cite{Mann21a} (an example application of \href{https://github.com/EleutherAI/gpt-neo}{GPT-Neo}) to share ready-to-run code that installs dependencies automatically.
 
 %\textbf{This is the main section of the article and the reviewers weight the description here appropriately}
@@ -223,7 +223,7 @@ In addition to managing data analysis environments for multiple ongoing research
 \textbf{Paxton C. Fitzpatrick}: Conceptualization, Methodology, Software, Validation, Writing - Original Draft, Visualization. \textbf{Jeremy R. Manning}: Conceptualization, Resources, Writing - Review \& Editing, Supervision, Funding acquisition.
 
 \section*{Funding}
-Our work was supported in part by NSF grant number 2145172 to J.R.M. 
+Our work was supported in part by NSF grant number 2145172 to J.R.M.
 The content is solely the responsibility of the authors and does not necessarily represent the official views of our supporting organizations.
 
 
@@ -235,7 +235,7 @@ We wish to confirm that there are no known conflicts of interest associated with
 
 
 %---------------------------------------------------- BIBLIOGRAPHY -----------------------------------------------------
-\bibliographystyle{elsarticle-num} 
+\bibliographystyle{elsarticle-num}
 \bibliography{main.bib}
 
 \end{document}

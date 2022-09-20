@@ -129,11 +129,16 @@ While these issues exist to some extent in any software language or ecosystem, t
 Ensuring Python code behaves consistently over time and across users therefore typically requires ensuring it is always run with the same specific set of versions for each third-party package used.
 %Ensuring Python code behaves consistently over time and across users therefore typically requires guaranteeing that the same specific version of each required third-party package is used, every time it is run.
 
-One common approach to solving this problem is to create containerized or virtualized Python environments (e.g., using \href{https://www.docker.com/}{Docker}, \href{https://sylabs.io/singularity/}{Singularity}, or \href{https://docs.conda.io/en/latest/}{conda}) tailored to individual applications.
-Researchers can then share these environments alongside their code as configuration files that explicitly list required package versions, enabling other users to build identical copies for themselves.
-While often effective, this approach comes with two notable drawbacks:
-First, it can add significantly to the technical knowledge, system resources, and initial setup required to share and run the actual code of interest.
-For example, sharing research code that relies on a particular Docker image to run properly not only necessitates distributing extra configuration files and setup instructions, but also requires that both the original author and anyone with whom the code may be shared install and navigate additional software that is likely more complex and resource-intensive than the Python code it is used to manage.
+One common approach to solving this problem is to create containerized or virtualized Python environments (e.g., using Docker \cite{Merk14}, Singularity \cite{KurtEtal17}, or conda \cite{Anac12}) tailored to individual applications.
+A researcher may build such an environment around a specific experiment or analysis pipeline, and exclusively run their code from inside it, ``entering" and ``exiting" the environment before and after each time they do so.
+They can also share their custom environment alongside their code as a configuration file that explicitly lists required package versions, enabling others to build identical copies for themselves.
+While often effective, this approach bears two notable drawbacks.
+First, it can add substantially to the technical knowledge, computing resources, and initial setup needed to run or share the actual code of interest.
+%For example, sharing an analysis or tutorial that relies on a particular Docker image to run properly not only necessitates distributing extra configuration files and setup instructions, but also requires both the original author and anyone with whom the code is shared to first install and navigate additional software that is likely more complex and resource-intensive than the actual code it facilitates running.
+%For example, sharing an analysis or tutorial that relies on a particular Docker image to run properly not only necessitates writing and distributing extra configuration files and setup instructions, but more significantly, requires both the original author and anyone else who may want to run their code to first be able to install and be able to use additional software that is likely more complex and resource-intensive than the actual code it facilitates running.
+For example, sharing an analysis or tutorial that relies on a particular Docker image to run properly would, of course, necessitate writing and distributing extra configuration files and setup instructions. While this may seem like merely a minor inconvenience to a seasoned user of such tooling,
+
+But far more significantly, it would also require both the original author and anyone else who may want to run their code to first be able to install and be able to use additional software that is likely more complex and resource-intensive than the actual code it facilitates running.
 These added prerequisites clash with the simplicity and accessibility that have contributed to Python's popularity, and can create significant barriers to both contributing to and taking advantage of open science resources.
 
 %Second, typical environment management tools don't enforce that specified requirements \textit{remain} satisfied after they are initially installed.

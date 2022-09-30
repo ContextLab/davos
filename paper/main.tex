@@ -41,10 +41,19 @@
 \usepackage{float}
 \restylefloat{table}
 
+% ======== additional package not in SoftwareX template ========
 \usepackage[colorlinks=true, urlcolor=blue, pdfborder={0 0 0}]{hyperref}
 \usepackage{breakurl}
 \usepackage[htt]{hyphenat}
+%\usepackage{listings}
+%\usepackage{xcolor}
+%\usepackage{todonotes}
 
+% \let\oldtodo\todo
+% \renewcommand{\todo}[1]{\oldtodo[tickmarkheight=0.5em]{#1}}
+
+\newcommand{\comment}[1]{}
+% =================================================
 
 \journal{SoftwareX}
 
@@ -62,39 +71,12 @@
 
 \begin{abstract}
 % 100-word limit (though many published articles don't seem to conform to this?)
-% \texttt{davos} is a Python package for creating self-managing, reproducible workflows that specify dependencies directly in their code, and install them
-% \texttt{davos} is a Python package that enables creating and sharing reproducible workflows as a single, ready-to-run IPython notebook.
-
-%davos is a python package for creating, sharing, and running reproducible code without the need for
 
 TODO: clean up after writing body
 
 Reproducible code plays many important roles in modern scientific research: it enables scientists to collaborate on projects,\comment{parallelize data collection across multiple sites or machines} replicate and extend prior work, and teach students new concepts and techniques via hands-on, interactive tutorials.
 However, existing tools that facilitate creating, sharing, and running reproducible code are often highly complex and resource-intensive, creating barriers to both contributing to and benefitting from open science resources.
 Here, we introduce \texttt{davos}, a Python package that allows users to create and share reproducible workflows...
-
-
-%Many important parts of modern scientific research depend on writing, sharing, and running reproducible code. It enables scientists to collaborate on projects, replicate and extend prior work, and teach students new ideas and techniques through hands-on, interactive tutorials.
-
-%The ability to write, share, and run reproducible code plays many important roles in modern scientific research:
-
-%Writing and sharing reproducible code plays an important role in modern scientific research, enabling scientists to collaborate on projects, replicate and extend previous work, and teach students concepts and techniques through
-
-%\texttt{davos} is a Python package that provides a simple, accessible, and effective way to manage and share reproducible code.
-
-%\texttt{davos} provides the \texttt{smuggle} statement
-
-%\texttt{davos} is a Python package that allows users to write, run, and share reproducible Python code without the need for containers or virtual environments.
-
-%davos is a Python package that allows users to manage and share reproducible code without the need for containers or virtual environments.
-
-%\texttt{davos} is a Python package for creating, running, and sharing reproducible workflows without the need for external containerized or virtualized environments.
-
-%\texttt{davos} is a Python package that makes writing, running, and sharing reproducible code easy. Importing \texttt{davos} in an IPython notebook enables the \textit{smuggle} statement: a drop-in replacement for the built-in \textit{import} statement that can install missing packages as needed at runtime, and may be
-
-%\texttt{davos} is a Python package for creating self-managing, reproducible workflows that specify dependencies directly within their code and install packages as needed at runtime.
-
-%\texttt{davos} works by providing the \textit{smuggle} statement: a drop-in replacement for the built-in \texttt{import} statement that  \_\_\_, and the
 
 \end{abstract}
 
@@ -177,9 +159,23 @@ These added prerequisites clash with the simplicity and accessibility that have 
 Second, while many existing tools allow users to initially populate a Python environment with a fixed set of packages and package versions (e.g., from a \texttt{requirements.txt}, \texttt{pyproject.toml}, \texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN} instruction, etc.), few, if any, ensure that these specified requirements \textit{remain} satisfied after they are first installed.
 The ability to modify an environment after its creation is useful in many cases (e.g., to install additional software, when needed). However, this also makes it easy to inadvertently alter existing packages, potentially leading to subtle issues with code that relies on them.
 For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}."
-If Package \textit{Y} depends on version 0.9 of Package \textit{X}, then Package \textit{X} will be downgraded to accommodate this new requirement, potentially altering or breaking prior analyses for both the researcher and anyone with whom their code may be shared.
-Further, if certain analyses require Package \textit{Y} while others rely on a feature of Package \textit{X} not implemented until version 1.0, it's unclear which version the researcher should install in the environment.
+If Package \textit{Y} depends on version 0.9 of Package \textit{X}, then Package \textit{X} will be downgraded to accommodate this new requirement, potentially altering or breaking previous analyses when they are rerun later, either by the researcher or someone with whom they've shared their code.
+Further, if some analyses require Package \textit{Y} while others rely on features of Package \textit{X} not implemented until version 1.0, it's unclear which version the researcher should install in their environment.
 
+%The \texttt{davos} package provides a novel, Python-native framework for creating, sharing, and running reproducible workflows that was designed to address each of these issues.
+The \texttt{davos} package provides a novel, Python-native framework for creating reproducible workflows that was designed to address each of these issues. \texttt{davos} allows users to specify dependencies directly within the code that...
+
+\comment {
+POINTS TO MAKE/THINGS TO SAY HERE TO WRAP UP (or maybe save some for impact section?):
+- davos simplifies the process of writing, sharing, and running reproducible code (eliminates need for additional complex env management tools, syntax is simple, packages are just installed at runtime without additional setup beforehand, etc.)...
+- ...it also provides stability/additional protections against accidental changes in ways other tools don't (i.e., addresses issue 2 above) by verifying (and installing if necessary) requirements each time code is run
+- ... while simultaneously enabling new package management patterns (using multiple versions versions of package in same notebook, etc.)
+- it's lightweight and intuitive (unlike big/complex env management tools like docker, etc.)
+- "davos was specifically designed for use with Jupyter notebook environments, and can be used either on its own or in tandem with another environment management tool"
+- "\texttt{davos} was designed specifically for use in Jupyter notebook (formerly called IPython notebook \cite{PereGran07}) environments, and supports Jupyter notebooks \cite{KluyEtal16}, JupyterLab \cite{GranGrou16}, Google Colaboratory, Binder \cite{RagaWill18}, and IDE-based notebook editors."
+
+- maybe don't mention smuggle statement \& onion comment explicitly in this paragraph since they haven't been defined/explained yet, or if we do, then add some sort of "see \_\_\_ below" with \\ref to relevant subsection
+}
 
 
 %Introduce the scientific background and the motivation for developing the software.
@@ -198,7 +194,9 @@ Further, if certain analyses require Package \textit{Y} while others rely on a f
 % Describe the software in as much as is necessary to establish a vocabulary needed to explain its impact.
 
 
-\subsection{Software Architecture}
+\subsection{Software architecture}
+The \texttt{davos} package is structured as two subpackages: a set of ``core" modules that implement...
+
 % Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
 
 
@@ -270,13 +268,17 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 % ------------------------------------------------------- IMPACT -------------------------------------------------------
 \section{Impact}
 \comment{
-- research domain-independent application
+- emphasize research domain-independent application (Journal's goals/values page says they prioritize this in submissions)
 - applicability not limited to research
-  - regression (?) testing
+    - regression (?) testing
+    - ***^^not sure this should be included -- hurts framing of davos as "research software"***
+- makes writing and running publicly available reproducible code more accessible (lowers required software comfort/familiarity level \& computing resources vs. installing docker/singularity/conda)
+    - also removes these requirements from other scenarios, e.g., easier for new/less experienced students/RAs to get involved with analyses
 - mention something about not having to teach environment management to teach day 1 python lesson, or spend hours debugging conda installation in order to share tutorial or demo with students
+    - e.g., "researchers who teach \_\_\_ may be familiar with the experience of running a lesson or workshop that requires students to use Docker (or similar...) to run their code, only to spend the majority of class time debugging students' computing environments rather than teaching the lesson itself."
 }
 
-Despite the short time since its conception and initial release, \texttt{davos} has already found use in a variety of applications.
+Since its initial release, \texttt{davos} has found use in a variety of applications.
 In addition to managing data analysis environments for multiple ongoing research studies, \texttt{davos} is being used by both students and instructors in programming courses such as \href{https://github.com/ContextLab/storytelling-with-data}{\textit{Storytelling with Data}} \cite{Mann21b} (an open course on data science, visualization, and communication) to simplify distributing lessons and submitting assignments, as well as in online demos such as {\texttt{abstract2paper}} \cite{Mann21a} (an example application of \href{https://github.com/EleutherAI/gpt-neo}{GPT-Neo}) to share ready-to-run code that installs dependencies automatically.
 
 %\textbf{This is the main section of the article and the reviewers weight the description here appropriately}

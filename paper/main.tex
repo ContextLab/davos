@@ -164,22 +164,18 @@ Ensuring Python code behaves consistently over time and across users therefore t
 
 One common approach to solving this problem is to create containerized or virtualized Python environments (e.g., using Docker \cite{Merk14}, Singularity \cite{KurtEtal17}, or conda \cite{Anac12}) tailored to individual applications.
 A researcher may build such an environment around a particular experiment or analysis pipeline, and exclusively run their code from inside it, ``entering" and ``exiting" the environment before and after each time they do so.
-They can also share this custom environment alongside their code as a configuration file that explicitly lists required package versions, enabling others to build identical copies for themselves.
+They can also distribute their custom environment alongside their code as a configuration file that explicitly lists required package versions, enabling others to build identical copies for themselves.
+This allows research teams to deploy experiments on multiple machines for more efficient data collection, collaborate on analyses without introducing conflicts or inconsistencies, and publicly share their study designs and results for others to reproduce, replicate, or adapt to study new questions in the future.
 
 While often effective, this approach bears two notable drawbacks.
 First, it can add substantially to the technical knowledge, computing resources, and initial setup needed to run or share the actual code of interest.
-For example, sharing code for an analysis or tutorial that relies on a particular Docker image to run properly naturally requires writing and distributing extra configuration files and setup instructions.
-But much more significantly, it also requires anyone hoping to run code to first be able to install and navigate additional software that is usually far more complex and resource-intensive than the actual analysis or tutorial code it facilitates running.
+For example, sharing code for an analysis or tutorial that relies on a particular Docker image to run properly would of course necessitate writing and distributing extra configuration files and setup instructions.
+But far more burdensomely, it also requires that anyone who may want to run the code (in addition to the author seeking to share it!) first be able to install and navigate additional software that is likely far more complex and resource-intensive than the actual analysis or tutorial code it facilitates running.
+This can introduce a need for both a degree of computer literacy and computational resources that may not be universally accessible, particularly to students or other early-career scientists hoping to learn from publicly available tutorials.
 These added prerequisites clash with the simplicity and accessibility that have contributed to Python's popularity, and can create significant barriers to both contributing to and taking advantage of open science resources.
 
-%Second, typical environment management tools don't enforce that specified requirements \textit{remain} satisfied after they are initially installed.
-%This makes it easy to inadvertently alter existing packages in a Python environment at any point in time, potentially affecting the behavior of code that depends on them.
-%For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}."
-%If Package \textit{Y} depends on version 1.1 of Package \textit{X}, then Package \textit{X} will be upgrade to accommodate this new requirement, potentially altering or breaking the previous analyses in future runs, as well as for anyone with whom  analysis code.
-%Further, if earlier analyses require functionality
-
-Second, although many tools exist for installing Python packages in an isolated environment from a fixed set of required packages (e.g., in a \texttt{requirements.txt}, \texttt{pyproject.toml}, \texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN} instruction, etc.), few if any enforce that the specified requirements \textit{remain} satisfied after this initial setup.
-The ability to modify an environment after its creation is useful in many cases (e.g., to install additional software as needed); however, it also makes it easy to inadvertently alter existing packages, potentially leading to subtle issues with code that relies on them.
+Second, while many existing tools allow users to initially populate a Python environment with a fixed set of packages and package versions (e.g., from a \texttt{requirements.txt}, \texttt{pyproject.toml}, \texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN} instruction, etc.), few, if any, ensure that these specified requirements \textit{remain} satisfied after they are first installed.
+The ability to modify an environment after its creation is useful in many cases (e.g., to install additional software, when needed). However, this also makes it easy to inadvertently alter existing packages, potentially leading to subtle issues with code that relies on them.
 For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}."
 If Package \textit{Y} depends on version 0.9 of Package \textit{X}, then Package \textit{X} will be downgraded to accommodate this new requirement, potentially altering or breaking prior analyses for both the researcher and anyone with whom their code may be shared.
 Further, if certain analyses require Package \textit{Y} while others rely on a feature of Package \textit{X} not implemented until version 1.0, it's unclear which version the researcher should install in the environment.

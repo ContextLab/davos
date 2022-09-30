@@ -202,15 +202,57 @@ Further, if certain analyses require Package \textit{Y} while others rely on a f
 % Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
 
 
-\subsection{Software functionalities}\label{sec:functionalities}
+\subsection{Software functionalities}%\label{sec:functionalities}
 
-\subsection{The \texttt{smuggle} statement}
+\subsubsection{The \texttt{smuggle} statement}
+Importing \texttt{davos}\comment{in a Jupyter notebook} enables an additional Python keyword: ``\texttt{smuggle}".
+The \texttt{smuggle} statement can be used as a drop-in replacement for Python's built-in \texttt{import} statement to load libraries, modules, and other objects into the current namespace.
+However, whereas \texttt{import} will fail if the requested package is not installed locally, \texttt{smuggle} statements can handle missing packages on the fly.
+If a smuggled package does not exist in the local environment, \texttt{davos} will install it, expose its contents to Python's \texttt{import} machinery, and load it into the namespace for immediate use.
 
-\subsection{The onion comment}
 
-\subsection{The \texttt{davos} config}
+\subsubsection{The onion comment}
+For greater control over the behavior of \texttt{smuggle} statements, \texttt{davos} defines an additional construct called the \textit{onion comment}. An onion comment is a special type of inline comment that may be placed on a line containing a \texttt{smuggle} statement to customize how \texttt{davos} searches for the smuggled package locally and, if necessary, how it should be installed. Onion comments follow a simple syntax based on the ``type comment" syntax introduced in PEP 484 \cite{vanREtal14} and are designed to make managing packages via \texttt{davos} intuitive and familiar. To construct an onion comment, simply provide the name of the installer program (e.g., \texttt{pip}) and the same arguments one would use to install the package as desired manually via the command line (see Fig.~\ref{fig:snippet1}).
 
-\subsection{Additional functionality}
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{snippets/snippet1.pdf}
+\caption{\small \textbf{Figure 1}}
+\label{fig:snippet1}
+\end{figure}
+
+
+
+%\definecolor{backgroundgrey}{RGB}{244,246,249}
+%\definecolor{commentgrey}{RGB}{91,99,110}
+%\definecolor{keywordred}{RGB}{194,11,36}
+%
+%\lstset{
+%    backgroundcolor=\color{backgroundgrey},
+%    basicstyle=\footnotesize\fontfamily{qag}\selectfont, %\ttfamily,
+%    breaklines=true,
+%    commentstyle=\color{commentgrey},
+%    language=Python,
+%    emph={import, smuggle, from, as},
+%    emphstyle=\color{keywordred},
+%}
+%
+%\begin{lstlisting}
+%import davos
+%
+%# if numpy is not installed locally, pip-install it and display verbose output
+%smuggle numpy as np    # pip: numpy --verbose
+%
+%# pip-install pandas without using or writing to the package cache
+%smuggle pandas as pd    # pip: pandas --no-cache-dir
+%
+%# install scipy from a relative local path, in editable mode
+%from scipy.stats smuggle ttest_ind # pip: -e ../../pkgs/scipy
+%\end{lstlisting}
+
+\subsubsection{The \texttt{davos} config}
+
+\subsubsection{Additional functionality}
 
 % Present the major functionalities of the software.
 

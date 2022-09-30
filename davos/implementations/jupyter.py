@@ -48,18 +48,18 @@ def auto_restart_rerun(pkgs):
     1. The message displayed before restarting the kernel can be
        silenced by setting `davos.config.suppress_stdout` to `True`.
     2. After calling `JS_FUNCTIONS.jupyter.restartRunCellsAbove`, this
-       function sleeps until until the kernel restarts to prevent any
-       further code in the current cell or other queued cells from
-       executing. Restarting the kernel is often not instantaneous;
-       there's generally a 1-2s delay while the kernel sends & receives
-       various shutdown messages, but it can take significantly
-       longer on a slow machine, with older Python/Jupyter/ipykernel
-       versions, if a large amount of data was loaded into memory, if
-       multiple notebook kernels are running at once, etc. If this
-       function returned immediately, it's likely subsequent lines of
-       code would be run before the kernel disconnected. This can cause
-       problems if those lines of code use the package(s) that prompted
-       the restart, or have effects that persist across kernel sessions.
+       function sleeps until the kernel restarts to prevent any further
+       code in the current cell or other queued cells from executing.
+       Restarting the kernel is often not instantaneous; there's
+       generally a 1-2s delay while the kernel sends & receives various
+       shutdown messages, but it can take significantly longer on a slow
+       machine, with older Python/Jupyter/ipykernel versions, if a large
+       amount of data was loaded into memory, if multiple notebook
+       kernels are running at once, etc. If this function returned
+       immediately, it's likely subsequent lines of code would be run
+       before the kernel disconnected. This can cause problems if those
+       lines of code use the package(s) that prompted the restart, or
+       have effects that persist across kernel sessions.
     """
     msg = (
         "Restarting kernel and rerunning cells (required to smuggle "

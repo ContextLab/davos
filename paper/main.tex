@@ -60,7 +60,8 @@
 \begin{document}
 \begin{frontmatter}
 
-\title{\texttt{davos}: The Python package smuggler}
+\title{\texttt{davos}: a Python package ``smuggler'' for constructing
+  lightweight reproducible notebooks}
 \author{Paxton C. Fitzpatrick}
 \author{Jeremy R. Manning\corref{cor}}
 \ead{Jeremy.R.Manning@Dartmouth.edu}
@@ -70,13 +71,27 @@
 % ------------------------------------------------------ ABSTRACT ------------------------------------------------------
 
 \begin{abstract}
-% 100-word limit (though many published articles don't seem to conform to this?)
+% 100-word limit (though many published articles don't seem to conform
+% to this?)
 
-TODO: clean up after writing body
-
-Reproducible code plays many important roles in modern scientific research: it enables scientists to collaborate on projects,\comment{parallelize data collection across multiple sites or machines} replicate and extend prior work, and teach students new concepts and techniques via hands-on, interactive tutorials.
-However, existing tools that facilitate creating, sharing, and running reproducible code are often highly complex and resource-intensive, creating barriers to both contributing to and benefitting from open science resources.
-Here, we introduce \texttt{davos}, a Python package that allows users to create and share reproducible workflows...
+A core requirement of modern scientific research is replicability.
+For computational research, replicability means that code should
+produce the same results, even when run on different systems.  The
+standard solution to improving replicability entails packaging a
+project's dependencies along with its primary code base.  Existing
+solutions vary in how deeply these dependencies are specified, ranging
+from virtual environments (which specify all Python package versions),
+to containers (which also specify the operating system), to
+virtual machines (which also specify hardware layers of the system).
+Each of these existing solutions requires installing or setting up a
+system for running the desired code that must be packaged alongside
+the primary code base.  Here we propose an even lighter-weight
+solution than virtual environments: the \texttt{davos} library.  When
+used in combination with a notebook-based Python project, \texttt{davos}
+library provides a mechanism for specifying (and automatically
+installing) the correct package versions of the project's.  This
+enables researchers to share a complete reproducible environment using
+a single iPython notebook file.
 
 \end{abstract}
 
@@ -97,7 +112,7 @@ Reproducibility \sep Open science \sep Python \sep Jupyter Notebook \sep Google 
 \begin{table}[H]
 \begin{tabular}{|l|p{6.5cm}|p{6.5cm}|}
 \hline
-\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Please fill in this column} \\
+\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Notes} \\
 \hline
 C1 & Current code version &  v0.1.1 \\
 \hline
@@ -113,7 +128,7 @@ C6 & Software code languages, tools, and services used & Python, JavaScript, PyP
 \hline
 C7 & Compilation requirements, operating environments \& dependencies & Dependencies:~Python$>$=3.6, packaging, setuptools.~Supported OSes: MacOS, Linux, Unix-like.~Supported IPython environments: Jupyter notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors. \\
 \hline
-C8 & If available Link to developer documentation/manual & \url{https://github.com/ContextLab/davos\#readme} \\
+C8 & Link to developer documentation/manual & \url{https://github.com/ContextLab/davos\#readme} \\
 \hline
 C9 & Support email for questions & contextualdynamics@gmail.com \\
 \hline
@@ -127,43 +142,137 @@ C9 & Support email for questions & contextualdynamics@gmail.com \\
 
 % --------------------------------------------- MOTIVATION & SIGNIFICANCE ----------------------------------------------
 \section{Motivation and significance}
-Modern scientific research frequently entails writing software code for a wide variety of purposes throughout the scientific process.
-Researchers across disciplines may design and implement complex experiments; collect, store, and analyze large datasets; create visualizations for presentations and publications; and share their findings and techniques with peers, students, and the broader public through tutorials, demos, workshops, and classes.
-However, one fundamental requirement of virtually any form of research-related code is that its behavior and outputs remain consistent and predictable, no matter when, where, or by whom it is run.
-This stability can be crucial, for example, to ensuring that data are collected under the same conditions (e.g., across recordings, subjects, or physical locations)
-%^ or locations, e.g., in different test rooms, on different machines, at different sites, etc.
-over multiple months or years, and that they can be accessed, processed, and analyzed consistently by a research team that may be spread across multiple institutions or countries.
-Additionally, modern open science practices encourage publicly sharing research code and data so that others may explore, reproduce, learn from, and build upon existing work.
-Much of the benefit afforded by freely available research code depends on users' ability to execute it and achieve the same result as its original author.
 
-Python \cite{vanR95} has become one of the most widely used and fastest-growing scientific programming languages, in part by combining an accessible, high-level syntax with a rich ecosystem of powerful third-party tools that facilitate rapid development and collaboration \cite{MullEtal15}.
-The Python ecosystem offers an extensive data science toolkit with platforms for interactive programming (e.g., Project Jupyter \cite{KluyEtal16}, Google Colaboratory), community-maintained libraries for data manipulation (e.g., NumPy \cite{HarrEtal20}, SciPy \cite{VirtEtal20}, Pandas \cite{McKi10}) and visualization (e.g., Matplotlib \cite{Hunt07}, seaborn \cite{Wask21}), frameworks for training complex machine learning models (e.g., scikit-learn \cite{PedrEtal11}, TensorFlow \cite{AbadEtal15}, Hugging Face \cite{WolfEtal20}), and myriad other resources.
-However, this heavy emphasis on third-party libraries also presents a challenge to writing and sharing stable, reproducible scientific Python code:
-different versions of the same library may behave differently, adopt changes in syntax, expose different functions and interfaces, add or drop support for specific hardware or software, write (or expect to read) files in different formats, fix (or introduce) bugs, and so on.
-While these issues exist to some extent in any software language or ecosystem, they have a particular impact on the Python community due to its unusually rapid growth relative to other languages.
-Ensuring Python code behaves consistently over time and across users therefore typically requires ensuring it is always run with the same specific set of versions for each third-party package used.
+Jupyter (iPython) notebooks~\citep{KluyEtal16} have revolutionized
+code sharing by providing a single filetype that combines text, code,
+and figures.  For projects that depend on other software packages,
+however, additional work is often required to enable the code to run
+as its authors intended.  For example, a piece of software that
+depends on version 0.8 of package \textit{X} may behave differently
+(or may fail to run at all) if the user instead attempts to run the
+code in an environment with version 0.9 of package \textit{X}.
+
+% STOPPED HERE...
+
+
+
+Sharing a project's code base is most valuable when that code may be
+run on 
+
+
+
+Modern scientific research frequently entails writing software code
+for a wide variety of purposes throughout the scientific process.
+Researchers across disciplines may design and implement complex
+experiments; collect, store, and analyze large datasets; create
+visualizations for presentations and publications; and share their
+findings and techniques with peers, students, and the broader public
+through tutorials, demos, workshops, and classes.  However, one
+fundamental requirement of virtually any form of research-related code
+is that its behavior and outputs remain consistent and predictable, no
+matter when, where, or by whom it is run.  This stability can be
+crucial, for example, to ensuring that data are collected under the
+same conditions (e.g., across recordings, subjects, or physical
+locations)
+%^ or locations, e.g., in different test rooms, on different machines, at different sites, etc.
+over multiple months or years, and that they can be accessed,
+processed, and analyzed consistently by a research team that may be
+spread across multiple institutions or countries.  Additionally,
+modern open science practices encourage publicly sharing research code
+and data so that others may explore, reproduce, learn from, and build
+upon existing work.  Much of the benefit afforded by freely available
+research code depends on users' ability to execute it and achieve the
+same result as its original author.
+
+Python \cite{vanR95} has become one of the most widely used and
+fastest-growing scientific programming languages, in part by combining
+an accessible, high-level syntax with a rich ecosystem of powerful
+third-party tools that facilitate rapid development and collaboration
+\cite{MullEtal15}.  The Python ecosystem offers an extensive data
+science toolkit with platforms for interactive programming (e.g.,
+Project Jupyter \cite{KluyEtal16}, Google Colaboratory),
+community-maintained libraries for data manipulation (e.g., NumPy
+\cite{HarrEtal20}, SciPy \cite{VirtEtal20}, Pandas \cite{McKi10}) and
+visualization (e.g., Matplotlib \cite{Hunt07}, seaborn \cite{Wask21}),
+frameworks for training complex machine learning models (e.g.,
+scikit-learn \cite{PedrEtal11}, TensorFlow \cite{AbadEtal15}, Hugging
+Face \cite{WolfEtal20}), and myriad other resources.  However, this
+heavy emphasis on third-party libraries also presents a challenge to
+writing and sharing stable, reproducible scientific Python code:
+different versions of the same library may behave differently, adopt
+changes in syntax, expose different functions and interfaces, add or
+drop support for specific hardware or software, write (or expect to
+read) files in different formats, fix (or introduce) bugs, and so on.
+While these issues exist to some extent in any software language or
+ecosystem, they have a particular impact on the Python community due
+to its unusually rapid growth relative to other languages.  Ensuring
+Python code behaves consistently over time and across users therefore
+typically requires ensuring it is always run with the same specific
+set of versions for each third-party package used.
 %Ensuring Python code behaves consistently over time and across users therefore typically requires guaranteeing that the same specific version of each required third-party package is used, every time it is run.
 
-One common approach to solving this problem is to create containerized or virtualized Python environments (e.g., using Docker \cite{Merk14}, Singularity \cite{KurtEtal17}, or conda \cite{Anac12}) tailored to individual applications.
-A researcher may build such an environment around a particular experiment or analysis pipeline, and exclusively run their code from inside it, ``entering" and ``exiting" the environment before and after each time they do so.
-They can also distribute their custom environment alongside their code as a configuration file that explicitly lists required package versions, enabling others to build identical copies for themselves.
-This allows research teams to deploy experiments on multiple machines for more efficient data collection, collaborate on analyses without introducing conflicts or inconsistencies, and publicly share their study designs and results for others to reproduce, replicate, or adapt to study new questions in the future.
+One common approach to solving this problem is to create containerized
+or virtualized Python environments (e.g., using Docker \cite{Merk14},
+Singularity \cite{KurtEtal17}, or conda \cite{Anac12}) tailored to
+individual applications.  A researcher may build such an environment
+around a particular experiment or analysis pipeline, and exclusively
+run their code from inside it, ``entering" and ``exiting" the
+environment before and after each time they do so.  They can also
+distribute their custom environment alongside their code as a
+configuration file that explicitly lists required package versions,
+enabling others to build identical copies for themselves.  This allows
+research teams to deploy experiments on multiple machines for more
+efficient data collection, collaborate on analyses without introducing
+conflicts or inconsistencies, and publicly share their study designs
+and results for others to reproduce, replicate, or adapt to study new
+questions in the future.
 
 While often effective, this approach bears two notable drawbacks.
-First, it can add substantially to the technical knowledge, computing resources, and initial setup needed to run or share the actual code of interest.
-For example, sharing code for an analysis or tutorial that relies on a particular Docker image to run properly would of course necessitate writing and distributing extra configuration files and setup instructions.
-But far more burdensomely, it also requires that anyone who may want to run the code (in addition to the author seeking to share it!) first be able to install and navigate additional software that is likely far more complex and resource-intensive than the actual analysis or tutorial code it facilitates running.
-This can introduce a need for both a degree of computer literacy and computational resources that may not be universally accessible, particularly to students or other early-career scientists hoping to learn from publicly available tutorials.
-These added prerequisites clash with the simplicity and accessibility that have contributed to Python's popularity, and can create significant barriers to both contributing to and taking advantage of open science resources.
+First, it can add substantially to the technical knowledge, computing
+resources, and initial setup needed to run or share the actual code of
+interest.  For example, sharing code for an analysis or tutorial that
+relies on a particular Docker image to run properly would of course
+necessitate writing and distributing extra configuration files and
+setup instructions.  But far more burdensomely, it also requires that
+anyone who may want to run the code (in addition to the author seeking
+to share it!) first be able to install and navigate additional
+software that is likely far more complex and resource-intensive than
+the actual analysis or tutorial code it facilitates running.  This can
+introduce a need for both a degree of computer literacy and
+computational resources that may not be universally accessible,
+particularly to students or other early-career scientists hoping to
+learn from publicly available tutorials.  These added prerequisites
+clash with the simplicity and accessibility that have contributed to
+Python's popularity, and can create significant barriers to both
+contributing to and taking advantage of open science resources.
 
-Second, while many existing tools allow users to initially populate a Python environment with a fixed set of packages and package versions (e.g., from a \texttt{requirements.txt}, \texttt{pyproject.toml}, \texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN} instruction, etc.), few, if any, ensure that these specified requirements \textit{remain} satisfied after they are first installed.
-The ability to modify an environment after its creation is useful in many cases (e.g., to install additional software, when needed). However, this also makes it easy to inadvertently alter existing packages, potentially leading to subtle issues with code that relies on them.
-For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}."
-If Package \textit{Y} depends on version 0.9 of Package \textit{X}, then Package \textit{X} will be downgraded to accommodate this new requirement, potentially altering or breaking previous analyses when they are rerun later, either by the researcher or someone with whom they've shared their code.
-Further, if some analyses require Package \textit{Y} while others rely on features of Package \textit{X} not implemented until version 1.0, it's unclear which version the researcher should install in their environment.
+Second, while many existing tools allow users to initially populate a
+Python environment with a fixed set of packages and package versions
+(e.g., from a \texttt{requirements.txt}, \texttt{pyproject.toml},
+\texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN}
+instruction, etc.), few, if any, ensure that these specified
+requirements \textit{remain} satisfied after they are first installed.
+The ability to modify an environment after its creation is useful in
+many cases (e.g., to install additional software, when
+needed). However, this also makes it easy to inadvertently alter
+existing packages, potentially leading to subtle issues with code that
+relies on them.  For instance, suppose a researcher has implemented a
+series of analyses using version 1.0 of ``Package \textit{X}," and
+decides to perform an additional analysis that requires installing
+``Package \textit{Y}."  If Package \textit{Y} depends on version 0.9
+of Package \textit{X}, then Package \textit{X} will be downgraded to
+accommodate this new requirement, potentially altering or breaking
+previous analyses when they are rerun later, either by the researcher
+or someone with whom they've shared their code.  Further, if some
+analyses require Package \textit{Y} while others rely on features of
+Package \textit{X} not implemented until version 1.0, it's unclear
+which version the researcher should install in their environment.
 
 %The \texttt{davos} package provides a novel, Python-native framework for creating, sharing, and running reproducible workflows that was designed to address each of these issues.
-The \texttt{davos} package provides a novel, Python-native framework for creating reproducible workflows that was designed to address each of these issues. \texttt{davos} allows users to specify dependencies directly within the code that...
+The \texttt{davos} package provides a novel, Python-native framework
+for creating reproducible workflows that was designed to address each
+of these issues. \texttt{davos} allows users to specify dependencies
+directly within the code that...
 
 \comment {
 POINTS TO MAKE/THINGS TO SAY HERE TO WRAP UP (or maybe save some for impact section?):
@@ -278,8 +387,17 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
     - e.g., "researchers who teach \_\_\_ may be familiar with the experience of running a lesson or workshop that requires students to use Docker (or similar...) to run their code, only to spend the majority of class time debugging students' computing environments rather than teaching the lesson itself."
 }
 
-Since its initial release, \texttt{davos} has found use in a variety of applications.
-In addition to managing data analysis environments for multiple ongoing research studies, \texttt{davos} is being used by both students and instructors in programming courses such as \href{https://github.com/ContextLab/storytelling-with-data}{\textit{Storytelling with Data}} \cite{Mann21b} (an open course on data science, visualization, and communication) to simplify distributing lessons and submitting assignments, as well as in online demos such as {\texttt{abstract2paper}} \cite{Mann21a} (an example application of \href{https://github.com/EleutherAI/gpt-neo}{GPT-Neo}) to share ready-to-run code that installs dependencies automatically.
+Since its initial release, \texttt{davos} has found use in a variety
+of applications.  In addition to managing data analysis environments
+for multiple ongoing research studies, \texttt{davos} is being used by
+both students and instructors in programming courses such as
+\href{https://github.com/ContextLab/storytelling-with-data}{\textit{Storytelling
+    with Data}} \cite{Mann21b} (an open course on data science,
+visualization, and communication) to simplify distributing lessons and
+submitting assignments, as well as in online demos such as
+{\texttt{abstract2paper}} \cite{Mann21a} (an example application of
+\href{https://github.com/EleutherAI/gpt-neo}{GPT-Neo}) to share
+ready-to-run code that installs dependencies automatically.
 
 %\textbf{This is the main section of the article and the reviewers weight the description here appropriately}
 

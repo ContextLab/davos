@@ -143,14 +143,68 @@ C9 & Support email for questions & contextualdynamics@gmail.com \\
 % --------------------------------------------- MOTIVATION & SIGNIFICANCE ----------------------------------------------
 \section{Motivation and significance}
 
-Jupyter (iPython) notebooks~\citep{KluyEtal16} have revolutionized
-code sharing by providing a single filetype that combines text, code,
-and figures.  For projects that depend on other software packages,
-however, additional work is often required to enable the code to run
-as its authors intended.  For example, a piece of software that
-depends on version 0.8 of package \textit{X} may behave differently
-(or may fail to run at all) if the user instead attempts to run the
-code in an environment with version 0.9 of package \textit{X}.
+Code sharing is a core component of the open science movement
+that has inspired a full ecosystem of tools and packages.  However,
+sharing code, in and of itself, does not guarantee that others will be
+able to \textit{reproduce} the desired results.  For eample, research
+code often requires installing other software packages that extends
+the language's basic functionality.  Within the Python community,
+external packages that are published in the most popular 
+repositories~\citep{PIP, CONDA} are associated with version numbers
+and tags that enable users to guarantee that they are installing
+exactly the same code across different computing environments.
+Despire that it is \textit{possible} to manually install the intended version numbers of
+every dependency of a Python script or package, doing so may cause
+conflicts within the user's computing environment that interferes with
+the functionality of  \textit{other} code.
+
+To facilitate code sharing, the Python community has developed a broad
+set of approaches and tools (Fig.~\ref{fig:code-sharing}).  At one
+extreme, simply publishing a set of Python scripts (.py files) may
+enable others to use or gain insights into the relevant work.  Because
+Python is installed by default on most modern operating systems, for
+some projects this may be sufficient.  Another popular approach entails
+creating JSON files, called Jupyter notebooks~\citep{KluyEtal16} that
+comprise a mix of text, executable code, and embedded media.
+Notebooks may call or import external scripts or libraries in order to
+provide a more compact and readable experience for the users.  Each of
+these systems (Python scripts and notebooks) provides a convenient
+means of sharing code, with the caveat that they do not specify a
+complete computing environment.  Therefore the functionality of code
+shared using these systems cannot be guaranteed across different
+computing environments.
+
+At another extreme, virtual machines~citep{VM} provide a complete hardware-level
+simulation of the desired system.  Virtual machines are typically
+fully isolated from the user's system such that installing or running
+software on a virtual machine does not impact the user's primary
+operating system or computing environment.  Containers~\citep[e.g.,][]{Merk14,
+  SINGULARITY} provide a similar ``isolated'' experience.  Although
+containerized environments do not specify hardware-level operations,
+they are typically packaged with a complete operating system, in
+addition to a complete copy of Python and any relevant dependencies.
+Virtual environments~\citep[e.g.,][]{vanRoEtal14} also provide a
+computing environment that is largely separated from the user's main
+environment.  They incorporate a copy of Python and the target
+software's dependencies, but virtual environments do not specify or
+reproducee a complete copy of the original operating system.  Each of
+these systems (virtual machines, containers, and virtual environments)
+guarantees (to differing degrees-- at the hardware-level, operating system
+level, and Python environment, respectively) that the relevant code
+will run similarly for different users.  However, each of these
+systems also requires installing independent tools that
+can be resource intensive or burdensome to install or configure.
+
+We designed \texttt{davos} to occupy a ``sweet spot'' between these
+extremes.  \texttt{davos} is a notebook-installable package that adds
+functionality to the original.  Like standard Jupyter notebooks,
+\texttt{davos}-enhanced notebooks allows researchers to include text,
+executable code, and media within a single file.  No further setup or
+installation is required, beyond what is needed to run standard
+Jupyter notebooks.  And like virtual environments \texttt{davos}
+provides a convenient mechanism for fully specifying (and installing,
+as needed) a complete set of Python dependencies, including the
+relevant version numbers.
 
 % STOPPED HERE...
 

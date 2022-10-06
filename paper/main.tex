@@ -60,7 +60,8 @@
 \begin{document}
 \begin{frontmatter}
 
-\title{\texttt{davos}: The Python package smuggler}
+\title{\texttt{davos}: a Python package ``smuggler'' for constructing
+  lightweight reproducible notebooks}
 \author{Paxton C. Fitzpatrick}
 \author{Jeremy R. Manning\corref{cor}}
 \ead{Jeremy.R.Manning@Dartmouth.edu}
@@ -70,13 +71,28 @@
 % ------------------------------------------------------ ABSTRACT ------------------------------------------------------
 
 \begin{abstract}
-% 100-word limit (though many published articles don't seem to conform to this?)
+% 100-word limit (though many published articles don't seem to conform
+% to this?)
 
-TODO: clean up after writing body
-
-Reproducible code plays many important roles in modern scientific research: it enables scientists to collaborate on projects,\comment{parallelize data collection across multiple sites or machines} replicate and extend prior work, and teach students new concepts and techniques via hands-on, interactive tutorials.
-However, existing tools that facilitate creating, sharing, and running reproducible code are often highly complex and resource-intensive, creating barriers to both contributing to and benefitting from open science resources.
-Here, we introduce \texttt{davos}, a Python package that allows users to create and share reproducible workflows...
+  Reproducibility is a core requirement of modern scientific research.
+  For computational research, reproducibility means that code should
+  produce the same results, even when run on different systems.  A
+  standard approach to ensuring reproducibility entails packaging a
+  project's dependencies along with its primary code base.  Existing
+  solutions vary in how deeply these dependencies are specified,
+  ranging from virtual environments (which specify all Python package
+  versions), to containers (which also specify the operating system),
+  to virtual machines (which also specify hardware layers of the
+  system).  Each of these existing solutions requires installing or
+  setting up a system for running the desired code that must be
+  packaged alongside the primary code base.  Here we propose a
+  lighter-weight solution than virtual environments: the
+  \texttt{davos} library.  When used in combination with a
+  notebook-based Python project, the \texttt{davos} library provides a
+  mechanism for specifying (and automatically installing) the correct
+  package versions of the project's dependencies.  This enables researchers to
+  share a complete reproducible environment using a single Jupyter
+  notebook file.
 
 \end{abstract}
 
@@ -97,7 +113,7 @@ Reproducibility \sep Open science \sep Python \sep Jupyter Notebook \sep Google 
 \begin{table}[H]
 \begin{tabular}{|l|p{6.5cm}|p{6.5cm}|}
 \hline
-\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Please fill in this column} \\
+\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Metadata value} \\
 \hline
 C1 & Current code version &  v0.1.1 \\
 \hline
@@ -111,9 +127,10 @@ C5 & Code versioning system used & git \\
 \hline
 C6 & Software code languages, tools, and services used & Python, JavaScript, PyPI/pip, IPython, Jupyter, Ipykernel, PyZMQ. Additional tools used for tests: pytest, Selenium, Requests, mypy, GitHub Actions \\
 \hline
-C7 & Compilation requirements, operating environments \& dependencies & Dependencies:~Python$>$=3.6, packaging, setuptools.~Supported OSes: MacOS, Linux, Unix-like.~Supported IPython environments: Jupyter notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors. \\
+C7 & Compilation requirements, operating environments, and
+     dependencies & Dependencies:~Python $\geq 3.6$, packaging, setuptools.~Supported OSes: MacOS, Linux, Unix-like.~Supported IPython environments: Jupyter notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors. \\
 \hline
-C8 & If available Link to developer documentation/manual & \url{https://github.com/ContextLab/davos\#readme} \\
+C8 & Link to developer documentation/manual & \url{https://github.com/ContextLab/davos\#readme} \\
 \hline
 C9 & Support email for questions & contextualdynamics@gmail.com \\
 \hline
@@ -127,66 +144,116 @@ C9 & Support email for questions & contextualdynamics@gmail.com \\
 
 % --------------------------------------------- MOTIVATION & SIGNIFICANCE ----------------------------------------------
 \section{Motivation and significance}
-Modern scientific research frequently entails writing software code for a wide variety of purposes throughout the scientific process.
-Researchers across disciplines may design and implement complex experiments; collect, store, and analyze large datasets; create visualizations for presentations and publications; and share their findings and techniques with peers, students, and the broader public through tutorials, demos, workshops, and classes.
-However, one fundamental requirement of virtually any form of research-related code is that its behavior and outputs remain consistent and predictable, no matter when, where, or by whom it is run.
-This stability can be crucial, for example, to ensuring that data are collected under the same conditions (e.g., across recordings, subjects, or physical locations)
-%^ or locations, e.g., in different test rooms, on different machines, at different sites, etc.
-over multiple months or years, and that they can be accessed, processed, and analyzed consistently by a research team that may be spread across multiple institutions or countries.
-Additionally, modern open science practices encourage publicly sharing research code and data so that others may explore, reproduce, learn from, and build upon existing work.
-Much of the benefit afforded by freely available research code depends on users' ability to execute it and achieve the same result as its original author.
 
-Python \cite{vanR95} has become one of the most widely used and fastest-growing scientific programming languages, in part by combining an accessible, high-level syntax with a rich ecosystem of powerful third-party tools that facilitate rapid development and collaboration \cite{MullEtal15}.
-The Python ecosystem offers an extensive data science toolkit with platforms for interactive programming (e.g., Project Jupyter \cite{KluyEtal16}, Google Colaboratory), community-maintained libraries for data manipulation (e.g., NumPy \cite{HarrEtal20}, SciPy \cite{VirtEtal20}, Pandas \cite{McKi10}) and visualization (e.g., Matplotlib \cite{Hunt07}, seaborn \cite{Wask21}), frameworks for training complex machine learning models (e.g., scikit-learn \cite{PedrEtal11}, TensorFlow \cite{AbadEtal15}, Hugging Face \cite{WolfEtal20}), and myriad other resources.
-However, this heavy emphasis on third-party libraries also presents a challenge to writing and sharing stable, reproducible scientific Python code:
-different versions of the same library may behave differently, adopt changes in syntax, expose different functions and interfaces, add or drop support for specific hardware or software, write (or expect to read) files in different formats, fix (or introduce) bugs, and so on.
-While these issues exist to some extent in any software language or ecosystem, they have a particular impact on the Python community due to its unusually rapid growth relative to other languages.
-Ensuring Python code behaves consistently over time and across users therefore typically requires ensuring it is always run with the same specific set of versions for each third-party package used.
-%Ensuring Python code behaves consistently over time and across users therefore typically requires guaranteeing that the same specific version of each required third-party package is used, every time it is run.
+Code sharing is a core component of the open science movement that has
+inspired the development of a full ecosystem of tools and packages.
+However, sharing code, in and of itself, does not guarantee that
+others will be able to \textit{reproduce} the desired results.  For
+example, research code often requires installing other software
+packages that extend the implementation language's basic
+functionality.  Within the Python community~\citep{vanR95}, external
+packages that are published in the most popular
+repositories~\citep{pypi, Anac12} are associated with version numbers
+and tags that enable users to guarantee that they are installing
+exactly the same code across different computing environments.
+Despite that it is \textit{possible} to manually install the intended
+version numbers of every dependency of a Python script or package,
+doing so may cause conflicts within the user's computing environment
+that interfere with the functionality of \textit{other} code.
 
-One common approach to solving this problem is to create containerized or virtualized Python environments (e.g., using Docker \cite{Merk14}, Singularity \cite{KurtEtal17}, or conda \cite{Anac12}) tailored to individual applications.
-A researcher may build such an environment around a particular experiment or analysis pipeline, and exclusively run their code from inside it, ``entering" and ``exiting" the environment before and after each time they do so.
-They can also distribute their custom environment alongside their code as a configuration file that explicitly lists required package versions, enabling others to build identical copies for themselves.
-This allows research teams to deploy experiments on multiple machines for more efficient data collection, collaborate on analyses without introducing conflicts or inconsistencies, and publicly share their study designs and results for others to reproduce, replicate, or adapt to study new questions in the future.
+\begin{figure}[tp]
+\centering
+\includegraphics[width=\textwidth]{figs/shareable_code}
+\caption{\small \textbf{Systems for sharing code within the Python
+    ecosystem.}  From left to right: plain-text \textbf{Python
+    scripts} (.py files) provide the
+  most basic ``system'' for sharing raw code.  Scripts may reference
+  external libraries, but those libraries are not automatically
+  installed on other users' systems, nor is any version checking
+  performed by default.  \textbf{Jupyter notebooks} (.ipynb files) comprise embedded text,
+  executable code, and media (including rendered figures, code output,
+  etc.).  When the \textbf{\texttt{davos} library} is imported into a Jupyter
+  notebook, the notebook's functionality is extended to automatically
+  install the required external libraries (at their correct versions,
+  when specified).  \textbf{Virtual environments} install an isolated copy of
+  Python and all required dependencies.  This typically requires
+  defining a \texttt{requirements.txt} file that lists all
+  dependencies (including version numbers) along with an environment
+  (.yml) file that specifies how the virtual environment should be
+  configured.  \textbf{Containers} provide a means of defining an isolated
+  environment that includes a complete operating system (independent
+  of the user's operating system), in addition to a virtual
+  environment or other configurations needed to provide the necessary
+  computing environment.  Containers are typically defined using
+  specification files (e.g., a plain-text \texttt{dockerfile}) that
+  instruct the virtualization engine regarding how to build the
+  virtual environment.  \textbf{Virtual machines} provide a complete
+  hardware-level simulation of the computing environment.  In addition
+  to simulating specific hardware, virtual machines (typically
+  specified using binary images files) must also define operating
+  system-level properties of the computing environment.  Systems to
+  the left of the blue vertical line entail sharing individual
+  files, with no additional installation or configuration needed to
+  run the target software.  Systems to the right of the red vertical
+  line provide high reproducibility by supporting precise control over
+  dependencies and versioning.  Notebooks enhanced using the
+  \texttt{davos} library are easily shareable and require minimal
+  setup costs, while also facilitating high reproducibility by
+  enabling precise control over project dependencies.}
+\label{fig:code-sharing}
+\end{figure}
 
-While often effective, this approach bears two notable drawbacks.
-First, it can add substantially to the technical knowledge, computing resources, and initial setup needed to run or share the actual code of interest.
-For example, sharing code for an analysis or tutorial that relies on a particular Docker image to run properly would of course necessitate writing and distributing extra configuration files and setup instructions.
-But far more burdensomely, it also requires that anyone who may want to run the code (in addition to the author seeking to share it!) first be able to install and navigate additional software that is likely far more complex and resource-intensive than the actual analysis or tutorial code it facilitates running.
-This can introduce a need for both a degree of computer literacy and computational resources that may not be universally accessible, particularly to students or other early-career scientists hoping to learn from publicly available tutorials.
-These added prerequisites clash with the simplicity and accessibility that have contributed to Python's popularity, and can create significant barriers to both contributing to and taking advantage of open science resources.
+To facilitate code sharing, the Python community has developed a broad
+set of approaches and tools (Fig.~\ref{fig:code-sharing}).  At one
+extreme, simply publishing a set of Python scripts (.py files) may
+enable others to use or gain insights into the relevant work.  Because
+Python is installed by default on most modern operating systems, for
+some projects this may be sufficient.  Another popular approach
+entails creating JSON files, called Jupyter
+notebooks~\citep{KluyEtal16}, that comprise a mix of text, executable
+code, and embedded media.  Notebooks may call or import external
+scripts or libraries in order to provide a more compact and readable
+experience for users.  Each of these systems (Python scripts and
+notebooks) provides a convenient means of sharing code, with the
+caveat that they do not specify the computing environment in which the
+code is executed.  Therefore the functionality of code shared using
+these systems cannot be guaranteed across different computing
+environments.
 
-Second, while many existing tools allow users to initially populate a Python environment with a fixed set of packages and package versions (e.g., from a \texttt{requirements.txt}, \texttt{pyproject.toml}, \texttt{environment.yml}, \texttt{Pipfile}, \texttt{Dockerfile RUN} instruction, etc.), few, if any, ensure that these specified requirements \textit{remain} satisfied after they are first installed.
-The ability to modify an environment after its creation is useful in many cases (e.g., to install additional software, when needed). However, this also makes it easy to inadvertently alter existing packages, potentially leading to subtle issues with code that relies on them.
-For instance, suppose a researcher has implemented a series of analyses using version 1.0 of ``Package \textit{X}," and decides to  perform an additional analysis that requires installing ``Package \textit{Y}."
-If Package \textit{Y} depends on version 0.9 of Package \textit{X}, then Package \textit{X} will be downgraded to accommodate this new requirement, potentially altering or breaking previous analyses when they are rerun later, either by the researcher or someone with whom they've shared their code.
-Further, if some analyses require Package \textit{Y} while others rely on features of Package \textit{X} not implemented until version 1.0, it's unclear which version the researcher should install in their environment.
+At another extreme, virtual machines~\citep{Gold74, AltiEtal05,
+  vmware} provide a hardware-level simulation of the desired system.
+Virtual machines are typically isolated from the user's system, such
+that installing or running software on a virtual machine does not
+impact the user's primary operating system or computing environment.
+Containers~\citep[e.g.,][]{Merk14, KurtEtal17} provide a similar
+``isolated'' experience.  Although containerized environments do not
+specify hardware-level operations, they are typically packaged with a
+complete operating system, in addition to a complete copy of Python
+and any relevant package dependencies.  Virtual
+environments~\citep[e.g.,][]{vanREtal14} also provide a computing
+environment that is largely separated from the user's main
+environment.  They incorporate a copy of Python and the target
+software's dependencies, but virtual environments do not specify or
+reproduce an operating system for the runtime environment.  Each of
+these systems (virtual machines, containers, and virtual environments)
+guarantees (to differing degrees-- at the hardware level, operating
+system level, and Python environment level, respectively) that the
+relevant code will run similarly for different users.  However, each
+of these systems also relies on additional software that can be
+resource intensive or burdensome to install or configure.
 
-%The \texttt{davos} package provides a novel, Python-native framework for creating, sharing, and running reproducible workflows that was designed to address each of these issues.
-The \texttt{davos} package provides a novel, Python-native framework for creating reproducible workflows that was designed to address each of these issues. \texttt{davos} allows users to specify dependencies directly within the code that...
-
-\comment {
-POINTS TO MAKE/THINGS TO SAY HERE TO WRAP UP (or maybe save some for impact section?):
-- davos simplifies the process of writing, sharing, and running reproducible code (eliminates need for additional complex env management tools, syntax is simple, packages are just installed at runtime without additional setup beforehand, etc.)...
-- ...it also provides stability/additional protections against accidental changes in ways other tools don't (i.e., addresses issue 2 above) by verifying (and installing if necessary) requirements each time code is run
-- ... while simultaneously enabling new package management patterns (using multiple versions versions of package in same notebook, etc.)
-- it's lightweight and intuitive (unlike big/complex env management tools like docker, etc.)
-- "davos was specifically designed for use with Jupyter notebook environments, and can be used either on its own or in tandem with another environment management tool"
-- "\texttt{davos} was designed specifically for use in Jupyter notebook (formerly called IPython notebook \cite{PereGran07}) environments, and supports Jupyter notebooks \cite{KluyEtal16}, JupyterLab \cite{GranGrou16}, Google Colaboratory, Binder \cite{RagaWill18}, and IDE-based notebook editors."
-
-- maybe don't mention smuggle statement \& onion comment explicitly in this paragraph since they haven't been defined/explained yet, or if we do, then add some sort of "see \_\_\_ below" with \\ref to relevant subsection
-}
+We designed \texttt{davos} to occupy a ``sweet spot'' between these
+extremes.  \texttt{davos} is a notebook-installable package that adds
+functionality to the default notebook experience.  Like standard
+Jupyter notebooks, \texttt{davos}-enhanced notebooks allows
+researchers to include text, executable code, and media within a
+single file.  No further setup or installation is required, beyond
+what is needed to run standard Jupyter notebooks.  And like virtual
+environments \texttt{davos} provides a convenient mechanism for fully
+specifying (and installing, as needed) a complete set of Python
+dependencies, including package versions.
 
 
-%Introduce the scientific background and the motivation for developing the software.
-
-%Explain why the software is important, and describe the exact (scientific) problem(s) it solves.
-
-%Indicate in what way the software has contributed (or how it will contribute in the future) to the process of scientific discovery; if available, this is to be supported by citing a research paper using the software.
-
-%Provide a description of the experimental setting (how does the user use the software?).
-
-%Introduce related work in literature (cite or list algorithms used, other software etc.).
 
 
 % ------------------------------------------------ SOFTWARE DESCRIPTION ------------------------------------------------
@@ -195,7 +262,7 @@ POINTS TO MAKE/THINGS TO SAY HERE TO WRAP UP (or maybe save some for impact sect
 
 
 \subsection{Software architecture}
-The \texttt{davos} package is structured as two subpackages: a set of ``core" modules that implement...
+The \texttt{davos} package is structured as two sub-packages: a set of ``core" modules that implement...
 
 % Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
 
@@ -215,7 +282,7 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 \begin{figure}[h]
 \centering
 \includegraphics[width=\textwidth]{snippets/snippet1.pdf}
-\caption{\small \textbf{Figure 1}}
+\caption{\small \textbf{FILL THIS IN...}}
 \label{fig:snippet1}
 \end{figure}
 
@@ -267,43 +334,89 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 
 % ------------------------------------------------------- IMPACT -------------------------------------------------------
 \section{Impact}
-\comment{
-- emphasize research domain-independent application (Journal's goals/values page says they prioritize this in submissions)
-- applicability not limited to research
-    - regression (?) testing
-    - ***^^not sure this should be included -- hurts framing of davos as "research software"***
-- makes writing and running publicly available reproducible code more accessible (lowers required software comfort/familiarity level \& computing resources vs. installing docker/singularity/conda)
-    - also removes these requirements from other scenarios, e.g., easier for new/less experienced students/RAs to get involved with analyses
-- mention something about not having to teach environment management to teach day 1 python lesson, or spend hours debugging conda installation in order to share tutorial or demo with students
-    - e.g., "researchers who teach \_\_\_ may be familiar with the experience of running a lesson or workshop that requires students to use Docker (or similar...) to run their code, only to spend the majority of class time debugging students' computing environments rather than teaching the lesson itself."
-}
 
-Since its initial release, \texttt{davos} has found use in a variety of applications.
-In addition to managing data analysis environments for multiple ongoing research studies, \texttt{davos} is being used by both students and instructors in programming courses such as \href{https://github.com/ContextLab/storytelling-with-data}{\textit{Storytelling with Data}} \cite{Mann21b} (an open course on data science, visualization, and communication) to simplify distributing lessons and submitting assignments, as well as in online demos such as {\texttt{abstract2paper}} \cite{Mann21a} (an example application of \href{https://github.com/EleutherAI/gpt-neo}{GPT-Neo}) to share ready-to-run code that installs dependencies automatically.
+Like virtual environments, containers, and virtual machines, the
+\texttt{davos} library (when used in conjunction with Jupyter
+notebooks) provides a lightweight mechanism for sharing code and
+ensuring reproducibility across users and computing environments
+(Fig.~\ref{fig:code-sharing}).  Further, \texttt{davos} enables users
+to fully specify (and install, as needed) any project dependencies
+within the same notebook.  This provides a system whereby executable
+code (along with text and media) \textit{and} code for setting up and
+configuring the project dependencies, may be combined within a single
+notebook file.
 
-%\textbf{This is the main section of the article and the reviewers weight the description here appropriately}
+We designed \texttt{davos} for use in research applications.  For
+example, in many settings \texttt{davos} may be used as a drop-in
+replacement for more-difficult-to-set-up virtual environments,
+containers, and/or virtual machines.  For researchers, this lowers
+barriers to sharing code.  By eliminating most of the setup costs
+of reconstructing the original researchers' computing environment,
+\texttt{davos} also lowers barriers to entry for members of
+the scientific community and the public who seek to \textit{benefit}
+from shared code.
 
-%Indicate in what way new research questions can be pursued as a result of the software (if any).
+Beyond research applications, \texttt{davos} is also useful in
+pedagogical settings.  For example, in programming courses,
+instructors and students may import the \texttt{davos} library into
+their notebooks to provide a simple means of ensuring their code will
+run on others' machines.  When combined with online notebook-based
+platforms like Google Colaboratory, \texttt{davos} provides a
+convenient way to manage dependencies within a notebook, without
+requiring any software (beyond a web browser) to be installed on the
+students' or instructors' systems.  For the same reasons,
+\texttt{davos} also provides an elegant means of sharing ready-to-run
+notebook-based demonstrations that install their dependencies
+automatically.
 
-%Indicate in what way, and to what extent, the pursuit of existing research questions is improved (if so).
+Our work also has several more subtle ``advanced'' use cases and
+potential impacts.  Whereas Python's built-in \texttt{import}
+statement is agnostic to packages' version numbers, \texttt{smuggle}
+statements (when combined with onion comments) are version-sensitive.
+This enables multiple versions of a single library to be
+imported within the same notebook.  This could be useful in cases
+where specific features were added or removed from a package across
+different versions, or in comparing the performance or functionality
+of particular features across different versions of the same package.
 
-%Indicate in what way the software has changed the daily practice of its users (if so).
-
-%Indicate how widespread the use of the software is within and outside the intended user group.
-
-%Indicate in what way the software is used in commercial settings and/or how it led to the creation of spin-off companies (if so).
-
+A second advanced use case is in providing a proof-of-concept of how
+one can add new ``keywords'' to the Python language by leveraging the
+error-handling mechanisms.  This could lead to exciting new tools
+that, like \texttt{davos}, extend the Python language in useful ways.
+We note that our approach to adding the \texttt{smuggle} keyword to
+Python when \texttt{davos} is imported into a notebook-based
+environment also has the potential to be exploited for more nefarious
+purposes.  For example, a malicious user could use a similar approach
+(e.g., in a different library) to substantially change a notebook's
+functionality by adding new \textit{unexpected} keyword-like objects
+(e.g., based around common typos).  This could lead to
+difficult-to-predict changes in a notebook's behavior once the
+malicious library was imported.  This highlights an important reason
+why security-conscious users would be well-served to only make use of
+libraries from trusted sources, or whose code is publicly available
+for review.
 
 % ---------------------------------------------------- CONCLUSIONS -----------------------------------------------------
 \section{Conclusions}
 % Set out the conclusion of this original software publication.
 
+The \texttt{davos} library supports reproducible research by providing
+a novel lightweight system for sharing notebook-based code.  But
+perhaps the most exciting uses of the \texttt{davos} library are those
+that we have \textit{not} yet considered or imagined.  We hope that
+the Python community will find \texttt{davos} to provide a convenient
+means of managing project dependencies to facilitate code sharing.  We
+also hope that some of the more advanced applications of our library
+might lead to new insights or discoveries.
+
 
 \section*{Author Contributions}
-\textbf{Paxton C. Fitzpatrick}: Conceptualization, Methodology, Software, Validation, Writing - Original Draft, Visualization. \textbf{Jeremy R. Manning}: Conceptualization, Resources, Writing - Review \& Editing, Supervision, Funding acquisition.
+Conceptualization: PCF and JRM.  Methodology: PCF and JRM.
+Implementation: PCF.  Validation: PCF.  Testing: PCF and JRM.
+Writing: PCF and JRM.
 
 \section*{Funding}
-Our work was supported in part by NSF grant number 2145172 to J.R.M.
+Our work was supported in part by NSF grant number 2145172 to JRM.
 The content is solely the responsibility of the authors and does not necessarily represent the official views of our supporting organizations.
 
 
@@ -312,7 +425,9 @@ We wish to confirm that there are no known conflicts of interest associated with
 
 
 \section*{Acknowledgements}
-
+We acknowledge useful feedback and discussion from the students of
+JRM's \textit{Storytelling with Data} course (Winter, 2022 offering)
+who used preliminary versions of our library in several assignments.
 
 %---------------------------------------------------- BIBLIOGRAPHY -----------------------------------------------------
 \bibliographystyle{elsarticle-num}

@@ -60,7 +60,7 @@
 \begin{document}
 \begin{frontmatter}
 
-\title{\texttt{davos}: a Python package ``smuggler'' for constructing
+\title{\texttt{davos}: a Python package ``smuggler" for constructing
   lightweight reproducible notebooks}
 \author{Paxton C. Fitzpatrick}
 \author{Jeremy R. Manning\corref{cor}}
@@ -262,8 +262,15 @@ dependencies, including package versions.
 
 
 \subsection{Software architecture}
-The \texttt{davos} package consists of two interdependent subpackages. The first comprises a set of ``core" modules that implement\comment{provide?} much of \texttt{davos}'s major functionality, including machinery for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section \ref{subsec:smuggle}) and onion comment (see Section \ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section \ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementations depending on various properties of the notebook in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython \cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions", which are imported from the ``implementations" subpackage. This second subpackage defines multiple, interchangeable implementations of each helper function, organized into per-environment modules. At runtime, \texttt{davos}
+The \texttt{davos} package consists of two interdependent subpackages. The first, \texttt{davos.core}, comprises a set of modules that implement\comment{provide?} the bulk of the package's core functionality, including pipelines for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section \ref{subsec:smuggle}) and onion comment (see Section \ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section \ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementation approaches depending on various properties of the notebook environment in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython \cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions" in the \texttt{davos.implementations} subpackage. This second subpackage defines multiple, interchangeable versions of each helper function, organized into\comment{per-environment} modules by the conditions that trigger their use. At runtime, \texttt{davos} detects various features in the notebook environment and selectively imports a single version of each helper function into the top-level \texttt{davos.implementations} namespace, allowing \texttt{davos.core} modules to access the correct implementations for the current notebook environment from a single, constant location. An additional benefit of this design pattern is that it makes adding support for new or updated notebook variants \texttt{davos} in the future relatively easy.
 
+\comment{
+- js_functions.py?
+- how parser is registered and deregistered?
+- stub files?
+- test suite?
+- packaged with new PEP \_\_\_ standard (pyproject.toml + setup.cfg; no setup.py)?
+}
 % Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
 
 

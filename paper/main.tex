@@ -80,19 +80,18 @@
   standard approach to ensuring reproducibility entails packaging a
   project's dependencies along with its primary code base.  Existing
   solutions vary in how deeply these dependencies are specified,
-  ranging from virtual environments (which specify all Python package
-  versions), to containers (which also specify the operating system),
-  to virtual machines (which also specify hardware layers of the
-  system).  Each of these existing solutions requires installing or
+  ranging from virtual environments, to containers, to virtual
+  machines.  Each of these existing solutions requires installing or
   setting up a system for running the desired code that must be
   packaged alongside the primary code base.  Here we propose a
   lighter-weight solution than virtual environments: the
   \texttt{davos} library.  When used in combination with a
   notebook-based Python project, the \texttt{davos} library provides a
   mechanism for specifying (and automatically installing) the correct
-  package versions of the project's dependencies.  This enables researchers to
-  share a complete reproducible environment using a single Jupyter
-  notebook file.
+  package versions of the project's dependencies.  The \texttt{davos}
+  library also ensures that those versions are in use any time the
+  notebook's code is executed.  This enables researchers to share a complete
+  reproducible environment using a single Jupyter notebook file.
 
 \end{abstract}
 
@@ -145,8 +144,29 @@ C9 & Support email for questions & contextualdynamics@gmail.com \\
 % --------------------------------------------- MOTIVATION & SIGNIFICANCE ----------------------------------------------
 \section{Motivation and significance}
 
+Modern research projects that rely on software are becoming
+increasingly complex.  Even when a particular function or script
+appears simple, the code may depend on external libraries (which in
+turn may depend on other libraries), particular CPU or GPU instruction sets, and
+so on.  Different versions of those external libraries (or processor
+instruction sets) may ....
+
+% IN-PROGRESS TEXT------
+
+
+The same code, executed on different systems or in different computing
+environments, may behave differently.  For example, when research code relies
+on external libraries, the code's functionality 
+
+
+Reproducability and predictability are fundamental goals of nearly all
+scientific undertakings.  For projects that rely on software
+components, achieving these goals 
+
+% --------
+
 Code sharing is a core component of the open science movement that has
-inspired the development of a full ecosystem of tools and packages.
+inspired the development of a large ecosystem of tools and packages.
 However, sharing code, in and of itself, does not guarantee that
 others will be able to \textit{reproduce} the desired results.  For
 example, research code often requires installing other software

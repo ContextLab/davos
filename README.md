@@ -642,7 +642,7 @@ the namespace causes them to throw `NameError`.
     Disables input prompts, analogous to temporarily setting `davos.config.noninteractive` to `True`. Overrides value
     of `davos.config.confirm_install`.
 
-  - [**`--src <dir>`**](https://pip.pypa.io/en/stable/cli/pip/#cmdoption-no-input) |
+  - [**`--src <dir>`**](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-src) |
     [**`-t`, `--target <dir>`**](https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-t)
 
     Prepends `<dir>` to [`sys.path`](https://docs.python.org/3/library/sys.html#sys.path) if not already present so

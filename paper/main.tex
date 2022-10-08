@@ -274,7 +274,7 @@ The \texttt{davos} package consists of two interdependent subpackages. The first
 % Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
 
 
-\subsection{Software functionalities}%\label{sec:functionalities}
+\subsection{Software functionalities}
 
 \subsubsection{The \texttt{smuggle} statement}\label{subsec:smuggle}
 Importing \texttt{davos} in a Jupyter notebook enables an additional Python keyword: ``\texttt{smuggle}''.
@@ -284,7 +284,9 @@ If a smuggled package does not exist in the local environment, \texttt{davos} wi
 
 
 \subsubsection{The onion comment}\label{subsec:onion}
-For greater control over the behavior of \texttt{smuggle} statements, \texttt{davos} defines an additional construct called the \textit{onion comment}. An onion comment is a special type of inline comment that may be placed on a line containing a \texttt{smuggle} statement to customize how \texttt{davos} searches for the smuggled package locally and, if necessary, how it should be installed. Onion comments follow a simple syntax based on the ``type comment'' syntax introduced in PEP 484 \cite{vanREtal14}, and are designed to make managing packages via \texttt{davos} intuitive and familiar. To construct an onion comment, simply provide the name of the installer program (e.g., \texttt{pip}) and the same arguments one would use to install the package as desired manually via the command line (see Fig.~\ref{fig:snippet1}).
+For greater control over the behavior of \texttt{smuggle} statements, \texttt{davos} defines an additional construct called the \textit{onion comment}. An onion comment is a special type of inline comment that may be placed on a line containing a \texttt{smuggle} statement to customize how \texttt{davos} searches for the smuggled package locally and, if necessary, how it should be installed. Onion comments follow a simple syntax based on the ``type comment'' syntax introduced in PEP 484 \cite{vanREtal14}, and are designed to make managing packages with \texttt{davos} intuitive and familiar. To construct an onion comment, simply provide the name of the installer program (e.g., \texttt{pip}) and the same arguments one would use to install the package as desired manually via the command line (see Fig.~\ref{fig:snippet1}).
+%Figure \ref{fig:snippet1} provides a number of examples of \texttt{smuggle} statements accompanied by
+
 
 \begin{figure}[h]
 \centering
@@ -293,7 +295,7 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 \label{fig:snippet1}
 \end{figure}
 
-
+Onion comments are also useful for smuggling a package whose distribution name (i.e., the name used when installing it) is different from its top-level module name (i.e., the name used when importing it; see Fig.~\ref{fig:snippet1}, lines \_\_\_-\_\_\_ for examples). However, the most powerful use of the onion comment is making \texttt{smuggle} statements \textit{version-sensitive}. If an onion comment includes a version specifier \cite{CoghStuf13}, \texttt{davos} will search for the smuggled package in the local environment (as usual), and if it is found, further check whether the existing version satisfies the given constraint(s). If either check fails, \texttt{davos} will install and use a suitable version of the package (see Fig.~\ref{fig:snippet1}, lines \_\_\_-\_\_\_ for examples).
 
 %\definecolor{backgroundgrey}{RGB}{244,246,249}
 %\definecolor{commentgrey}{RGB}{91,99,110}
@@ -322,7 +324,7 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 %from scipy.stats smuggle ttest_ind # pip: -e ../../pkgs/scipy
 %\end{lstlisting}
 
-\subsubsection{The \texttt{davos} config}
+\subsubsection{The \texttt{davos} config}\label{subsec:config}
 
 \subsubsection{Additional functionality}
 

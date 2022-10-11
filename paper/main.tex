@@ -80,19 +80,18 @@
   standard approach to ensuring reproducibility entails packaging a
   project's dependencies along with its primary code base.  Existing
   solutions vary in how deeply these dependencies are specified,
-  ranging from virtual environments (which specify all Python package
-  versions), to containers (which also specify the operating system),
-  to virtual machines (which also specify hardware layers of the
-  system).  Each of these existing solutions requires installing or
+  ranging from virtual environments, to containers, to virtual
+  machines.  Each of these existing solutions requires installing or
   setting up a system for running the desired code that must be
   packaged alongside the primary code base.  Here we propose a
   lighter-weight solution than virtual environments: the
   \texttt{davos} library.  When used in combination with a
   notebook-based Python project, the \texttt{davos} library provides a
   mechanism for specifying (and automatically installing) the correct
-  package versions of the project's dependencies.  This enables researchers to
-  share a complete reproducible environment using a single Jupyter
-  notebook file.
+  package versions of the project's dependencies.  The \texttt{davos}
+  library also ensures that those versions are in use any time the
+  notebook's code is executed.  This enables researchers to share a complete
+  reproducible copy of their code within a single Jupyter notebook file.
 
 \end{abstract}
 
@@ -145,66 +144,71 @@ C9 & Support email for questions & contextualdynamics@gmail.com \\
 % --------------------------------------------- MOTIVATION & SIGNIFICANCE ----------------------------------------------
 \section{Motivation and significance}
 
-Code sharing is a core component of the open science movement that has
-inspired the development of a full ecosystem of tools and packages.
-However, sharing code, in and of itself, does not guarantee that
-others will be able to \textit{reproduce} the desired results.  For
-example, research code often requires installing other software
-packages that extend the implementation language's basic
-functionality.  Within the Python community~\citep{vanR95}, external
+The same computer code may not behave identically under different
+circumstances.  For example, when code depends on external libraries,
+different versions of those libraries may function differently.  Or
+when CPU or GPU instruction sets differ across machines, the same
+high-level code may be compiled into different machine instructions.
+Because executing identical code does not guarantee identical
+outcomes, code sharing in and of itself is often insufficient for
+enabling researchers to reproduce each others' work.
+
+Within the Python~\citep{vanR95} community, external
 packages that are published in the most popular
 repositories~\citep{pypi, Anac12} are associated with version numbers
 and tags that enable users to guarantee that they are installing
 exactly the same code across different computing environments.
 Despite that it is \textit{possible} to manually install the intended
-version numbers of every dependency of a Python script or package,
-doing so may cause conflicts within the user's computing environment
-that interfere with the functionality of \textit{other} code.
+version numbers of every dependency of a Python script or package, manually
+tracking down those dependencies can impose a substantial burden on
+the user.
 
 \begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{figs/shareable_code}
 \caption{\small \textbf{Systems for sharing code within the Python
     ecosystem.}  From left to right: plain-text \textbf{Python
-    scripts} (.py files) provide the
-  most basic ``system'' for sharing raw code.  Scripts may reference
-  external libraries, but those libraries are not automatically
-  installed on other users' systems, nor is any version checking
-  performed by default.  \textbf{Jupyter notebooks} (.ipynb files) comprise embedded text,
-  executable code, and media (including rendered figures, code output,
-  etc.).  When the \textbf{\texttt{davos} library} is imported into a Jupyter
-  notebook, the notebook's functionality is extended to automatically
-  install the required external libraries (at their correct versions,
-  when specified).  \textbf{Virtual environments} install an isolated copy of
-  Python and all required dependencies.  This typically requires
-  defining a \texttt{requirements.txt} file that lists all
-  dependencies (including version numbers) along with an environment
-  (.yml) file that specifies how the virtual environment should be
-  configured.  \textbf{Containers} provide a means of defining an isolated
+    scripts} (\texttt{.py} files) provide the most basic ``system''
+  for sharing raw code.  Scripts may reference external libraries, but
+  those libraries must be manually installed on other users' systems.
+  Further, any checking needed to verify that the correct versions of
+  those libraries were installed must also be performed manually.
+  \textbf{Jupyter notebooks} (\texttt{.ipynb} files) comprise embedded
+  text, executable code, and media (including rendered figures, code
+  output, etc.).  When the \textbf{\texttt{davos} library} is imported
+  into a Jupyter notebook, the notebook's functionality is extended to
+  automatically install the required external libraries (at their
+  correct versions, when specified).  \textbf{Virtual environments}
+  install an isolated copy of Python and all required dependencies.
+  This typically requires defining a \texttt{requirements.txt} file or
+  an environment (\texttt{.yml}) file that that specifies all project
+  dependencies (including version numbers of external libraries).
+  \textbf{Containers} provide a means of defining an isolated
   environment that includes a complete operating system (independent
-  of the user's operating system), in addition to a virtual
-  environment or other configurations needed to provide the necessary
-  computing environment.  Containers are typically defined using
-  specification files (e.g., a plain-text \texttt{dockerfile}) that
-  instruct the virtualization engine regarding how to build the
-  virtual environment.  \textbf{Virtual machines} provide a complete
-  hardware-level simulation of the computing environment.  In addition
-  to simulating specific hardware, virtual machines (typically
-  specified using binary images files) must also define operating
-  system-level properties of the computing environment.  Systems to
-  the left of the blue vertical line entail sharing individual
-  files, with no additional installation or configuration needed to
-  run the target software.  Systems to the right of the red vertical
-  line provide high reproducibility by supporting precise control over
-  dependencies and versioning.  Notebooks enhanced using the
-  \texttt{davos} library are easily shareable and require minimal
-  setup costs, while also facilitating high reproducibility by
-  enabling precise control over project dependencies.}
+  of the user's operating system), in addition to (optionally)
+  specifying a virtual environment or other configurations needed to
+  provide the necessary computing environment.  Containers are
+  typically defined using specification files (e.g., a plain-text
+  \texttt{Dockerfile}) that instruct the virtualization engine
+  regarding how to build the virtual environment.  \textbf{Virtual
+    machines} provide a complete hardware-level simulation of the
+  computing environment.  In addition to simulating specific hardware,
+  virtual machines (typically specified using binary images files)
+  must also define operating system-level properties of the computing
+  environment.  Systems to the left of the blue vertical line entail
+  sharing individual files, with no additional installation or
+  configuration needed to run the target code.  Systems to the right
+  of the red vertical line support precise control over dependencies
+  and versioning.  Notebooks enhanced using the \texttt{davos} library
+  are easily shareable and require minimal setup costs, while also
+  facilitating high reproducibility by enabling precise control over
+  project dependencies.}
 \label{fig:code-sharing}
 \end{figure}
 
-To facilitate code sharing, the Python community has developed a broad
-set of approaches and tools (Fig.~\ref{fig:code-sharing}).  At one
+Researchers, programmers, and others have developed a broad
+set of approaches and tools to facilitate code sharing and
+reproducible outcomes (Fig.~\ref{fig:code-sharing}).  At one
 extreme, simply publishing a set of Python scripts (.py files) may
 enable others to use or gain insights into the relevant work.  Because
 Python is installed by default on most modern operating systems, for
@@ -369,6 +373,18 @@ students' or instructors' systems.  For the same reasons,
 notebook-based demonstrations that install their dependencies
 automatically.
 
+Since its initial release, \texttt{davos} has found use in a variety
+of applications.  In addition to managing computing environments
+for multiple ongoing research studies, \texttt{davos} is being used by
+both students and instructors in programming courses such as
+\href{https://github.com/ContextLab/storytelling-with-data}{\textit{Storytelling
+    with Data}} \cite{Mann21b} (an open course on data science,
+visualization, and communication) to simplify distributing lessons and
+submitting assignments, as well as in online demos such as
+{\texttt{abstract2paper}} \cite{Mann21a} (an example application of
+\href{https://github.com/EleutherAI/gpt-neo}{GPT-Neo}) to share
+ready-to-run code that installs dependencies automatically.
+
 Our work also has several more subtle ``advanced'' use cases and
 potential impacts.  Whereas Python's built-in \texttt{import}
 statement is agnostic to packages' version numbers, \texttt{smuggle}
@@ -380,21 +396,21 @@ different versions, or in comparing the performance or functionality
 of particular features across different versions of the same package.
 
 A second advanced use case is in providing a proof-of-concept of how
-one can add new ``keywords'' to the Python language by leveraging the
-error-handling mechanisms.  This could lead to exciting new tools
-that, like \texttt{davos}, extend the Python language in useful ways.
-We note that our approach to adding the \texttt{smuggle} keyword to
-Python when \texttt{davos} is imported into a notebook-based
-environment also has the potential to be exploited for more nefarious
-purposes.  For example, a malicious user could use a similar approach
-(e.g., in a different library) to substantially change a notebook's
-functionality by adding new \textit{unexpected} keyword-like objects
-(e.g., based around common typos).  This could lead to
-difficult-to-predict changes in a notebook's behavior once the
-malicious library was imported.  This highlights an important reason
-why security-conscious users would be well-served to only make use of
-libraries from trusted sources, or whose code is publicly available
-for review.
+one can add new ``keyword-like'' operators to the Python language by
+leveraging notebooks' error-handling mechanisms.  This could lead to
+exciting new tools that, like \texttt{davos}, extend the Python
+language in useful ways within notebook-based environments.  We note that
+our approach to adding the \texttt{smuggle} keyword to Python when
+\texttt{davos} is imported into a notebook-based environment also has
+the potential to be exploited for more nefarious purposes.  For
+example, a malicious user could use a similar approach (e.g., in a
+different library) to substantially change a notebook's functionality
+by adding new \textit{unexpected} keyword-like objects (e.g., based
+around common typos).  This could lead to difficult-to-predict changes
+in a notebook's behavior once the malicious library was imported.
+This highlights an important reason why security-conscious users would
+be well-served to only make use of libraries from trusted sources, or
+whose code is publicly available for review.
 
 % ---------------------------------------------------- CONCLUSIONS -----------------------------------------------------
 \section{Conclusions}
@@ -411,9 +427,11 @@ might lead to new insights or discoveries.
 
 
 \section*{Author Contributions}
-Conceptualization: PCF and JRM.  Methodology: PCF and JRM.
-Implementation: PCF.  Validation: PCF.  Testing: PCF and JRM.
-Writing: PCF and JRM.
+\textbf{Paxton C. Fitzpatrick}: Conceptualization, Methodology,
+Software, Validation, Writing - Original Draft,
+Visualization. \textbf{Jeremy R. Manning}: Conceptualization,
+Resources, Validation, Writing - Review \& Editing, Supervision, Funding
+acquisition.
 
 \section*{Funding}
 Our work was supported in part by NSF grant number 2145172 to JRM.

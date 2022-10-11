@@ -91,7 +91,7 @@
   package versions of the project's dependencies.  The \texttt{davos}
   library also ensures that those versions are in use any time the
   notebook's code is executed.  This enables researchers to share a complete
-  reproducible environment using a single Jupyter notebook file.
+  reproducible copy of their code within a single Jupyter notebook file.
 
 \end{abstract}
 
@@ -159,9 +159,9 @@ repositories~\citep{pypi, Anac12} are associated with version numbers
 and tags that enable users to guarantee that they are installing
 exactly the same code across different computing environments.
 Despite that it is \textit{possible} to manually install the intended
-version numbers of every dependency of a Python script or package,
-doing so may cause conflicts within the user's computing environment
-that interfere with the functionality of \textit{other} code.
+version numbers of every dependency of a Python script or package, manually
+tracking down those dependencies can impose a substantial burden on
+the user.
 
 \begin{figure}[tp]
 \centering

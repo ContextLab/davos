@@ -35,5 +35,5 @@ paper/*.out
 paper/*.spl
 paper/*.synctex.gz
 
-# Illustrator source for snippets
-paper/snippets/snippets.ai
+# Illustrator source files
+paper/figs/*.ai

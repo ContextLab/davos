@@ -266,7 +266,9 @@ dependencies, including package versions.
 
 
 \subsection{Software architecture}
-The \texttt{davos} package consists of two interdependent subpackages. The first, \texttt{davos.core}, comprises a set of modules that implement\comment{provide?} the bulk of the package's core functionality, including pipelines for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section \ref{subsec:smuggle}) and onion comment (see Section \ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section \ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementation approaches depending on various properties of the notebook environment in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython \cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions'' in the \texttt{davos.implementations} subpackage. This second subpackage defines multiple, interchangeable versions of each helper function, organized into\comment{per-environment} modules by the conditions that trigger their use. At runtime, \texttt{davos} detects various features in the notebook environment and selectively imports a single version of each helper function into the top-level \texttt{davos.implementations} namespace, allowing \texttt{davos.core} modules to access the correct implementations for the current notebook environment from a single, constant location. An additional benefit of this design pattern is that it makes adding support for new or updated notebook variants to \texttt{davos} in the future relatively easy.
+The \texttt{davos} package consists of two interdependent subpackages. The first, \texttt{davos.core}, comprises a set of modules that implement\comment{provide?} the bulk of the package's core functionality, including pipelines for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section \ref{subsec:smuggle}) and onion comment (see Section \ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section \ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementation approaches depending on various properties of the notebook environment in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython \cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions'' in the \texttt{davos.implementations} subpackage. This second subpackage defines multiple, interchangeable versions of each helper function, organized into\comment{per-environment} modules by the conditions that trigger their use. At runtime, \texttt{davos} detects various features in the notebook environment and selectively imports a single version of each helper function into the top-level \texttt{davos.implementations} namespace, allowing \texttt{davos.core} modules to access the correct implementations for the current notebook environment from a single, constant location. An additional benefit of this design pattern is that it allows maintainers or contributors to extend \texttt{davos} to support new, updated, or custom notebook variants simply by creating a new \texttt{davos.implementations} module with any necessary tweaks to existing helper functions.
+
+%The package also includes stub files (\texttt{.pyi} files) for each module for use with a static type checker, as well as a custom GitHub Actions-based CI test suite that uses 
 
 \comment{
 - js_functions.py?
@@ -281,7 +283,7 @@ The \texttt{davos} package consists of two interdependent subpackages. The first
 \subsection{Software functionalities}
 
 \subsubsection{The \texttt{smuggle} statement}\label{subsec:smuggle}
-Importing \texttt{davos} in a Jupyter notebook enables an additional Python keyword: ``\texttt{smuggle}''.
+Importing \texttt{davos} in a Jupyter notebook enables an additional Python keyword: ``\texttt{smuggle}'' (also see Section \ref{subsec:implementation}).
 The \texttt{smuggle} statement can be used as a drop-in replacement for Python's built-in \texttt{import} statement to load libraries, modules, and other objects into the current namespace.
 However, whereas \texttt{import} will fail if the requested package is not installed locally, \texttt{smuggle} statements can handle missing packages on the fly.
 If a smuggled package does not exist in the local environment, \texttt{davos} will install it, expose its contents to Python's \texttt{import} machinery, and load it into the namespace for immediate use.
@@ -337,12 +339,15 @@ Onion comments are useful when smuggling a package whose distribution name (i.e.
 
 \subsubsection{The \texttt{davos} config}\label{subsec:config}
 
+
 \subsubsection{Additional functionality}
 
 % Present the major functionalities of the software.
 
 
-\subsection{Sample code snippets analysis (optional)}
+\subsection{Implementation details}\label{subsec:implementation}
+Functionally, importing \texttt{davos} appears to define ``\texttt{smuggle}'' as a Python keyword, similar to ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}''. It also appears to cause Python to parse comments as potentially relevant to the code's behavior, which they normally are not. However, \texttt{davos} doesn't actually modify the rules used by Python's parser or lexical analyzer---in fact, modifying the Python grammar isn't possible at runtime, as doing so would require rebuilding the interpreter. Instead, \texttt{davos} leverages the IPython notebook backend to implement the \texttt{smuggle} statement and onion comment via a combination of namespace injections and its own (far simpler) custom parser.
+
 
 
 % ----------------------------------------------- ILLUSTRATIVE EXAMPLES ------------------------------------------------

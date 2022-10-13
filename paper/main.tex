@@ -234,7 +234,7 @@ Containers~\citep[e.g.,][]{Merk14, KurtEtal17} provide a similar
 specify hardware-level operations, they are typically packaged with a
 complete operating system, in addition to a complete copy of Python
 and any relevant package dependencies.  Virtual
-environments~\citep[e.g.,][]{vanREtal14} also provide a computing
+environments~\citep[e.g.,][]{Anac12} also provide a computing
 environment that is largely separated from the user's main
 environment.  They incorporate a copy of Python and the target
 software's dependencies, but virtual environments do not specify or
@@ -268,7 +268,7 @@ dependencies, including package versions.
 \subsection{Software architecture}
 The \texttt{davos} package consists of two interdependent subpackages. The first, \texttt{davos.core}, comprises a set of modules that implement\comment{provide?} the bulk of the package's core functionality, including pipelines for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section \ref{subsec:smuggle}) and onion comment (see Section \ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section \ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementation approaches depending on various properties of the notebook environment in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython \cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions'' in the \texttt{davos.implementations} subpackage. This second subpackage defines multiple, interchangeable versions of each helper function, organized into\comment{per-environment} modules by the conditions that trigger their use. At runtime, \texttt{davos} detects various features in the notebook environment and selectively imports a single version of each helper function into the top-level \texttt{davos.implementations} namespace, allowing \texttt{davos.core} modules to access the correct implementations for the current notebook environment from a single, constant location. An additional benefit of this design pattern is that it allows maintainers or contributors to extend \texttt{davos} to support new, updated, or custom notebook variants simply by creating a new \texttt{davos.implementations} module with any necessary tweaks to existing helper functions.
 
-%The package also includes stub files (\texttt{.pyi} files) for each module for use with a static type checker, as well as a custom GitHub Actions-based CI test suite that uses 
+%The package also includes stub files (\texttt{.pyi} files) for each module for use with a static type checker, as well as a custom GitHub Actions-based CI test suite that uses
 
 \comment{
 - js_functions.py?

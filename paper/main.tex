@@ -19,7 +19,7 @@
 %% with numbered style bibliographic references
 %% SP 2008/03/01
 
-\documentclass[preprint,12pt, a4paper]{elsarticle}
+\documentclass[preprint,12pt,a4paper]{elsarticle}
 
 %% Use the option review to obtain double line spacing
 %% \documentclass[authoryear,preprint,review,12pt]{elsarticle}
@@ -266,9 +266,10 @@ dependencies, including package versions.
 
 
 \subsection{Software architecture}
+% Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
 The \texttt{davos} package consists of two interdependent subpackages. The first, \texttt{davos.core}, comprises a set of modules that implement\comment{provide?} the bulk of the package's core functionality, including pipelines for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section \ref{subsec:smuggle}) and onion comment (see Section \ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section \ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementation approaches depending on various properties of the notebook environment in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython \cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions'' in the \texttt{davos.implementations} subpackage. This second subpackage defines multiple, interchangeable versions of each helper function, organized into\comment{per-environment} modules by the conditions that trigger their use. At runtime, \texttt{davos} detects various features in the notebook environment and selectively imports a single version of each helper function into the top-level \texttt{davos.implementations} namespace, allowing \texttt{davos.core} modules to access the correct implementations for the current notebook environment from a single, constant location. An additional benefit of this design pattern is that it allows maintainers or contributors to extend \texttt{davos} to support new, updated, or custom notebook variants simply by creating a new \texttt{davos.implementations} module with any necessary tweaks to existing helper functions.
 
-%The package also includes stub files (\texttt{.pyi} files) for each module for use with a static type checker, as well as a custom GitHub Actions-based CI test suite that uses 
+%The package also includes stub files (\texttt{.pyi} files) for each module for use with a static type checker, as well as a custom GitHub Actions-based CI test suite that uses
 
 \comment{
 - js_functions.py?
@@ -277,8 +278,13 @@ The \texttt{davos} package consists of two interdependent subpackages. The first
 - test suite?
 - packaged with new PEP \_\_\_ standard (pyproject.toml + setup.cfg; no setup.py)?
 }
-% Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
 
+\begin{figure}[tp]
+\centering
+\includegraphics[width=\textwidth]{figs/package_structure}
+\caption{\small \textbf{Package structure.}}
+\label{fig:package-structure}
+\end{figure}
 
 \subsection{Software functionalities}
 
@@ -348,17 +354,17 @@ Onion comments are useful when smuggling a package whose distribution name (i.e.
 \subsection{Implementation details}\label{subsec:implementation}
 Functionally, importing \texttt{davos} appears to define ``\texttt{smuggle}'' as a Python keyword, similar to ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}''. It also appears to cause comments to be parsed and potentially able to affect the code's behavior, which they normally are not. However, \texttt{davos} doesn't actually modify the rules of Python's parser or lexical analyzer---in fact, modifying the Python grammar isn't possible at runtime, as doing so would require rebuilding the interpreter. Instead, \texttt{davos} leverages the IPython notebook backend to implement the \texttt{smuggle} statement and onion comment via a combination of namespace injections and its own (far simpler) custom parser.
 
-%The \texttt{smuggle} keyword can be enabled and disabled at will by ``activating'' and ``deactivating'' \texttt{davos} (see Section \ref{subsec:config}, above). When \texttt{davos} is imported, it is automatically activated by default. Activating \texttt{davos} triggers two things: 
+%The \texttt{smuggle} keyword can be enabled and disabled at will by ``activating'' and ``deactivating'' \texttt{davos} (see Section \ref{subsec:config}, above). When \texttt{davos} is imported, it is automatically activated by default. Activating \texttt{davos} triggers two things:
 %\begin{enumerate}
-%    \item The \texttt{smuggle()} function is injected into the IPython user namespace 
+%    \item The \texttt{smuggle()} function is injected into the IPython user namespace
 %    \item The \texttt{davos} parser is registered as a custom IPython input transformer
 %\end{enumerate}
 
-The \texttt{smuggle} keyword can be enabled and disabled at any time by ``activating'' and ``deactivating'' \texttt{davos} (see Section \ref{subsec:config}, above); when \texttt{davos} is first imported, it is activated automatically. Activating \texttt{davos} triggers two things: (1) the \texttt{smuggle()} function is injected into the IPython user namespace, and (2) the \texttt{davos} parser is registered as a custom IPython input transformer. IPython preprocesses all executed code as plain text before it is sent to the Python parser, in order to handle special constructs like \texttt{\%magic} and \texttt{!shell} commands. \texttt{davos} hooks into this process to transform \texttt{smuggle} statements into syntactically valid Python code. The \texttt{davos} parser uses a complex regular expression \cite{Thom68} to match lines of code containing \texttt{smuggle} statements (and, optionally, onion comments), extract relevant information from their text, and replace them with equivalent calls to the \texttt{smuggle()} function. For example, if the code visible to the user reads 
+The \texttt{smuggle} keyword can be enabled and disabled at any time by ``activating'' and ``deactivating'' \texttt{davos} (see Section \ref{subsec:config}, above); when \texttt{davos} is first imported, it is activated automatically. Activating \texttt{davos} triggers two things: (1) the \texttt{smuggle()} function is injected into the IPython user namespace, and (2) the \texttt{davos} parser is registered as a custom IPython input transformer. IPython preprocesses all executed code as plain text before it is sent to the Python parser, in order to handle special constructs like \texttt{\%magic} and \texttt{!shell} commands. \texttt{davos} hooks into this process to transform \texttt{smuggle} statements into syntactically valid Python code. The \texttt{davos} parser uses a complex regular expression \cite{Thom68} to match lines of code containing \texttt{smuggle} statements (and, optionally, onion comments), extract relevant information from their text, and replace them with equivalent calls to the \texttt{smuggle()} function. For example, if the code visible to the user reads
 \begin{verbatim}
 smuggle numpy as np    # pip: numpy>1.16,<=1.20 -vv,
-\end{verbatim} 
-the code that is actually executed by the Python interpreter would be 
+\end{verbatim}
+the code that is actually executed by the Python interpreter would be
 \begin{verbatim}
 smuggle(name="numpy", as_="np", installer="pip", args_str="""numpy>1.16,<=1.20 -vv""", installer_kwargs={`editable': False, `spec': `numpy>1.16,<=1.20', `verbosity': 2}).
 \end{verbatim}

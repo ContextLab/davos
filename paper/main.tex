@@ -316,6 +316,17 @@ Onion comments are useful when smuggling a package whose distribution name (i.e.
 \end{figure}
 
 \subsubsection{The \texttt{davos} config}\label{subsec:config}
+The \texttt{davos} config object provides a simple, high-level interface that allows users to view and set various options that affect \texttt{davos}'s behavior. After importing \texttt{davos}, the config instance (a singleton) for the current session is available as \texttt{davos.config}, and its various fields are accessible as attributes. The config object exposes a mixture of writable and read-only fields. Writable fields include:
+\begin{itemize}
+\item \texttt{.active}: Whether or not \texttt{davos} functionality (i.e., support for \texttt{smuggle} statements and onion comments) should be enabled for subsequent code. Defaults to \texttt{True} when \texttt{davos} is first imported. See Section \ref{subsec:implementation} for additional info.
+\item \texttt{.auto\_rerun}: Controls behavior if \texttt{davos} is used to \texttt{smuggle} a new version of a package that was previously imported and cannot be reloaded (i.e., it contains C-extensions that dynamically generate code). If \texttt{True} (default: \texttt{False}), \texttt{davos} will automatically restart the notebook kernel and rerun all code up to (and including) the current \texttt{smuggle} statement. Otherwise, \texttt{davos} will issue a warning, pause execution, and prompt the user with buttons to either restart \& rerun the notebook or continue running with the imported package version. (Note: not configurable in Google Colaboratory).
+\item \texttt{.confirm\_install}: If \texttt{True} (default: \texttt{False}), \texttt{davos} will require user confirmation (\texttt{[y]es/[n]o} input) before installing a smuggled package.
+\item \texttt{.noninteractive}: Setting to \texttt{True} (default: \texttt{False}) enables non-interactive mode, in which all user input and confirmation is disabled. Note that in non-interactive mode, the \texttt{confirm\_install} option is set to \texttt{False}, and if \texttt{auto\_rerun} is \texttt{False}, \texttt{davos} will throw an error if a smuggled package cannot be reloaded.
+\item \texttt{.pip\_executable}: The path to the \texttt{pip} executable used to install smuggled packages. Default is programmatically determined from the Python environment and falls back to \texttt{sys.executable -m pip} if one can't be found.
+\item \texttt{.suppress\_stdout}: If \texttt{True} (default: \texttt{False}), suppress all unnecessary output issued by both \texttt{davos} and the installer program. Useful when smuggling packages that need to install many dependencies and/or generate extensive output. If the installer program throws an error, both stdout and stderr will be shown with the traceback.
+\end{itemize}
+
+\noindent The top-level \texttt{davos} namespace additionally defines a handful of convenience functions for setting and checking \texttt{davos}'s active/inactive state (\texttt{davos.activate()}; \texttt{davos.deactivate()}; \texttt{davos.is\_active()}) as well as the \texttt{davos.configure()} function, which allows setting multiple config fields at once.
 
 
 \subsubsection{Additional functionality}

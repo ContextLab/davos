@@ -348,3 +348,46 @@ ready-to-run code that installs dependencies automatically.
 %The \texttt{davos} package was designed to address these issues by providing an intuitive, lightweight, and Python-native way to ensure reproducibility over time and across users. With \texttt{davos} users to distribute reproducible workflows as a single, ready-to-run Jupyter notebook \cite{KluyEtal16} that specifies
 
 
+% ========================================================================================================
+
+
+%Functionally, importing \texttt{davos} appears to add "\texttt{smuggle}'' to Python's set of reserved keywords (like \texttt{import}, \texttt{def}, \texttt{return}, etc.) and cause comments to be parsed at runtime, when they're otherwise not. However, \texttt{davos} doesn't actually modify 
+
+%Functionally, importing \texttt{davos} appears to create a new reserved Python keyword (like \texttt{import}, \texttt{def}, or \texttt{return}) and cause comments affect runtime behavior, which they normally do not. However, \texttt{davos} doesn't actually modify the rules of Python's parser and lexical analyzer in order to do so---in fact, modifying the Python grammar isn't possible at runtime and would require rebuilding the interpreter. Instead, \texttt{davos} 
+% Functionally, importing \texttt{davos} appears to make "\texttt{smuggle}'' a valid Python keyword (like ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}'') as well as cause Python to  
+% Functionally, importing \texttt{davos} appears to create a new reserved Python keyword, ``\texttt{smuggle}'', similar to ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}''.
+% Functionally, importing \texttt{davos} appears to add ``\texttt{smuggle}'' to Python's reserved keywords (like ``\texttt{import}'', ``\texttt{def}'', and ``\texttt{return}''). It also appears to cause comments to be parsed, their contents to be potentially relevant to the code's behavior at runtime, which they normally are not.
+%It also appears to cause comments to be parsed and capable of affecting code behavior at runtime, which they normally are not. 
+%It also appears to cause Python to fundamentally redefine comments as potentially relevant to code behavior at runtime, which they normally are not. 
+
+
+% ========================================================================================================
+
+
+%\definecolor{backgroundgrey}{RGB}{244,246,249}
+%\definecolor{commentgrey}{RGB}{91,99,110}
+%\definecolor{keywordred}{RGB}{194,11,36}
+%
+%\lstset{
+%    backgroundcolor=\color{backgroundgrey},
+%    basicstyle=\footnotesize\fontfamily{qag}\selectfont, %\ttfamily,
+%    breaklines=true,
+%    commentstyle=\color{commentgrey},
+%    language=Python,
+%    emph={import, smuggle, from, as},
+%    emphstyle=\color{keywordred},
+%}
+%
+%\begin{lstlisting}
+%import davos
+%
+%# if numpy is not installed locally, pip-install it and display verbose output
+%smuggle numpy as np    # pip: numpy --verbose
+%
+%# pip-install pandas without using or writing to the package cache
+%smuggle pandas as pd    # pip: pandas --no-cache-dir
+%
+%# install scipy from a relative local path, in editable mode
+%from scipy.stats smuggle ttest_ind # pip: -e ../../pkgs/scipy
+%\end{lstlisting}
+

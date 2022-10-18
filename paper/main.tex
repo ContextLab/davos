@@ -295,34 +295,25 @@ If a smuggled package does not exist in the local environment, \texttt{davos} wi
 
 \subsubsection{The onion comment}\label{subsec:onion}
 For greater control over the behavior of \texttt{smuggle} statements, \texttt{davos} defines an additional construct called the ``onion comment''. An onion comment is a special type of inline comment that may be placed on a line containing a \texttt{smuggle} statement to customize how \texttt{davos} searches for the smuggled package locally and, if necessary, downloads and installs it. Onion comments follow a simple syntax based on the ``type comment'' syntax introduced in PEP 484 \cite{vanREtal14}, and are designed to make managing packages with \texttt{davos} intuitive and familiar. To construct an onion comment, simply provide the name of the installer program (e.g., \texttt{pip}) and the same arguments one would use to manually install the package as desired via the command line:
-
-\begin{centering}
+\begin{center}
 \includegraphics[width=\textwidth]{figs/snippet1.pdf}
-\end{centering}
-
-\noindent Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) is different from its top-level module name (i.e., the name used when importing it):
-
-\begin{centering}
+\end{center}
+Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) is different from its top-level module name (i.e., the name used when importing it):
+\begin{center}
 \includegraphics[width=\textwidth]{figs/snippet2.pdf}
-\end{centering}
-
-\noindent However, the most powerful use of the onion comment is making \texttt{smuggle} statements \textit{version-sensitive}. If an onion comment includes a version specifier \cite{CoghStuf13}, \texttt{davos} will ensure that the version of the package loaded into the notebook always matches the specific version requested, or satisfies the given version constraints. If the smuggled package exists locally, \texttt{davos} will extract its version info from its metadata and compare it to the specifier provided. If the two are incompatible (or no local installation is found), \texttt{davos} will install and load a suitable version of the package instead:
-
-\begin{centering}
+\end{center}
+However, the most powerful use of the onion comment is making \texttt{smuggle} statements \textit{version-sensitive}. If an onion comment includes a version specifier \cite{CoghStuf13}, \texttt{davos} will ensure that the version of the package loaded into the notebook always matches the specific version requested, or satisfies the given version constraints. If the smuggled package exists locally, \texttt{davos} will extract its version info from its metadata and compare it to the specifier provided. If the two are incompatible (or no local installation is found), \texttt{davos} will install and load a suitable version of the package instead:
+\begin{center}
 \includegraphics[width=\textwidth]{figs/snippet3.pdf}
-\end{centering}
-
-\noindent Onion comments can similarly be used to smuggle specific VCS references (e.g., Git \cite{TorvHama05}  branches, commits, tags, etc.):
-
-\begin{centering}
+\end{center}
+Onion comments can similarly be used to smuggle specific VCS references (e.g., Git \cite{TorvHama05}  branches, commits, tags, etc.):
+\begin{center}
 \includegraphics[width=\textwidth]{figs/snippet4.pdf}
-\end{centering}
-
-\noindent \texttt{davos} processes onion comments internally before forwarding arguments to the installer program. In addition to preventing onion comments from being used as a vehicle for shell injection attacks, this allows \texttt{davos} take certain logical actions when particular arguments are passed. For example, the \texttt{--force-reinstall}, \texttt{-I}/\texttt{--ignore-installed}, and \texttt{-U}/\texttt{--upgrade} flags will all cause \texttt{davos} to skip searching for a smuggled package locally before installing a new copy; \texttt{--no-input} will temporarily enable \texttt{davos}'s non-interactive mode (see Section \ref{subsec:onion}); and installing a package into \texttt{<dir>} with \texttt{--target <dir>} will cause \texttt{dir} to be prepended to the module search path (\texttt{sys.path}), if necessary, so the package can be imported:
-
-\begin{centering}
+\end{center}
+\texttt{davos} processes onion comments internally before forwarding arguments to the installer program. In addition to preventing onion comments from being used as a vehicle for shell injection attacks, this allows \texttt{davos} take certain logical actions when particular arguments are passed. For example, the \texttt{--force-reinstall}, \texttt{-I}/\texttt{--ignore-installed}, and \texttt{-U}/\texttt{--upgrade} flags will all cause \texttt{davos} to skip searching for a smuggled package locally before installing a new copy; \texttt{--no-input} will temporarily enable \texttt{davos}'s non-interactive mode (see Section \ref{subsec:onion}); and installing a package into \texttt{<dir>} with \texttt{--target <dir>} will cause \texttt{dir} to be prepended to the module search path (\texttt{sys.path}), if necessary, so the package can be imported:
+\begin{center}
 \includegraphics[width=\textwidth]{figs/snippet5.pdf}
-\end{centering}
+\end{center}
 
 \subsubsection{The \texttt{davos} config}\label{subsec:config}
 The \texttt{davos} config object provides a simple, high-level interface that allows users to view and set various options that affect \texttt{davos}'s behavior. After importing \texttt{davos}, the config instance (a singleton) for the current session is available as \texttt{davos.config}, and its various fields are accessible as attributes. The config object exposes a mixture of writable and read-only fields. Writable fields include:

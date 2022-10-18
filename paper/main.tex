@@ -288,7 +288,7 @@ The \texttt{davos} package consists of two interdependent subpackages (see Fig.~
 \subsection{Software functionalities}
 % Present the major functionalities of the software.
 \subsubsection{The \texttt{smuggle} statement}\label{subsec:smuggle}
-Importing \texttt{davos} in a Jupyter notebook enables an additional Python keyword: ``\texttt{smuggle}'' (see Section \ref{subsec:implementation} for details on how this works).
+Importing \texttt{davos} in an IPython notebook enables an additional Python keyword: ``\texttt{smuggle}'' (see Section \ref{subsec:implementation} for details on how this works).
 The \texttt{smuggle} statement can be used as a drop-in replacement for Python's built-in \texttt{import} statement to load libraries, modules, and other objects into the current namespace.
 However, whereas \texttt{import} will fail if the requested package is not installed locally, \texttt{smuggle} statements can handle missing packages on the fly.
 If a smuggled package does not exist in the local environment, \texttt{davos} will install it automatically, expose its contents to Python's \texttt{import} machinery, and load it into the namespace for immediate use.
@@ -305,7 +305,7 @@ Onion comments are useful when smuggling a package whose distribution name (i.e.
 %If an onion comment includes a version specifier \cite{CoghStuf13}, \texttt{davos} will check whether the smuggled package is installed locally (as usual), and if so, additionally parse its metadata to determine
 %Adding a version specifier \cite{CoghStuf13} to an onion comment guarantees the version loaded into the notebook will matches the version specified
 
-\texttt{davos} processes onion comments internally before forwarding arguments to the installer program. In addition to preventing onion comments from being used as a vehicle for shell injection attacks, this allows \texttt{davos} take certain logical actions when particular arguments are passed (e.g., Fig.~\ref{fig:snippets}, lines 24--28). For example, the \texttt{--force-reinstall}, \texttt{-I}/\texttt{--ignore-installed}, and \texttt{-U}/\texttt{--upgrade} flag will all cause \texttt{davos} to skip searching for a smuggled package locally before installing a new copy; \texttt{--no-input} will disable \texttt{davos}'s input prompts in addition to the installer program's; and installing a package into \texttt{<dir>} with \texttt{--target <dir>} will cause \texttt{dir} to be prepended to the module search path (\texttt{sys.path}), if necessary, so the package can be imported.
+\texttt{davos} processes onion comments internally before forwarding arguments to the installer program. In addition to preventing onion comments from being used as a vehicle for shell injection attacks, this allows \texttt{davos} take certain logical actions when particular arguments are passed (e.g., Fig.~\ref{fig:snippets}, lines 24--28). For example, the \texttt{--force-reinstall}, \texttt{-I}/\texttt{--ignore-installed}, and \texttt{-U}/\texttt{--upgrade} flags will all cause \texttt{davos} to skip searching for a smuggled package locally before installing a new copy; \texttt{--no-input} will temporarily enable \texttt{davos}'s non-interactive mode (see Section \ref{subsec:onion}); and installing a package into \texttt{<dir>} with \texttt{--target <dir>} will cause \texttt{dir} to be prepended to the module search path (\texttt{sys.path}), if necessary, so the package can be imported.
 
 
 \begin{figure}[h]

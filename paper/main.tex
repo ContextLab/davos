@@ -338,13 +338,13 @@ The \texttt{davos} config object provides a simple, high-level interface that al
 Functionally, importing \texttt{davos} appears to define ``\texttt{smuggle}'' as a Python keyword, similar to ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}''. It also appears to cause comments to be parsed, and their contents potentially able to affect code behavior, which they normally are not. However, \texttt{davos} doesn't actually modify the rules of Python's parser or lexical analyzer---in fact, modifying the Python grammar isn't possible at runtime, as doing so would require rebuilding the interpreter. Instead, \texttt{davos} leverages the IPython notebook backend to implement the \texttt{smuggle} statement and onion comment via a combination of namespace injections and its own (far simpler) custom parser.
 
 The \texttt{smuggle} keyword can be enabled and disabled at any time by ``activating'' and ``deactivating'' \texttt{davos} (see Section \ref{subsec:config}, above). When \texttt{davos} is first imported, it is activated automatically. Activating \texttt{davos} triggers two actions: (1) the \texttt{smuggle()} function is injected into the IPython user namespace, and (2) the \texttt{davos} parser is registered as a custom IPython input transformer. IPython preprocesses all executed code as plain text before it is sent to the Python parser, in order to handle special constructs like \texttt{\%magic} and \texttt{!shell} commands. \texttt{davos} hooks into this process to transform \texttt{smuggle} statements into syntactically valid Python code. The \texttt{davos} parser uses a complex regular expression \cite{Thom68} to match lines of code containing \texttt{smuggle} statements (and, optionally, onion comments), extract relevant information from their text, and replace them with equivalent calls to the \texttt{smuggle()} function. For example, if a user runs a notebook cell containing
-\begin{verbatim}
-smuggle numpy as np    # pip: numpy>1.16,<=1.20 -vv,
-\end{verbatim}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet6.pdf}
+\end{center}
 the code that is actually executed by the Python interpreter would be
-\begin{verbatim}
-smuggle(name="numpy", as_="np", installer="pip", args_str="""numpy>1.16,<=1.20 -vv""", installer_kwargs={`editable': False, `spec': `numpy>1.16,<=1.20', `verbosity': 2}).
-\end{verbatim}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet7.pdf}
+\end{center}
 Because the \texttt{smuggle()} function is defined in the notebook namespace, it is also possible (though never necessary) to call it directly. Deactivating \texttt{davos} will delete the name ``\texttt{smuggle}'' from the namespace, unless its value has been overwritten and no longer refers to the \texttt{smuggle()} function. It will also deregister the \texttt{davos} parser from the set of input transformers run when each notebook cell is executed. While the overhead added by the \texttt{davos} parser is de minimis, this may be useful, for example, when optimizing or precisely profiling code.
 
 

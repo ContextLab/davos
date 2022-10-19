@@ -330,11 +330,6 @@ The \texttt{davos} config object provides a simple, high-level interface that al
 \noindent The top-level \texttt{davos} namespace additionally defines a handful of convenience functions for setting and checking \texttt{davos}'s active/inactive state (\texttt{davos.activate()}; \texttt{davos.deactivate()}; \texttt{davos.is\_active()}) as well as the \texttt{davos.configure()} function, which allows setting multiple config fields at once.
 
 
-\subsubsection{Additional functionality}
-% - js functions
-% - complex use cases
-
-
 \subsection{Implementation details}\label{subsec:implementation}
 Functionally, importing \texttt{davos} appears to define ``\texttt{smuggle}'' as a Python keyword, similar to ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}''. It also appears to cause comments to be parsed, and their contents potentially able to affect code behavior, which they normally are not. However, \texttt{davos} doesn't actually modify the rules of Python's parser or lexical analyzer---in fact, modifying the Python grammar isn't possible at runtime, as doing so would require rebuilding the interpreter. Instead, \texttt{davos} leverages the IPython notebook backend to implement the \texttt{smuggle} statement and onion comment via a combination of namespace injections and its own (far simpler) custom parser.
 
@@ -413,11 +408,15 @@ Our work also has several more subtle ``advanced'' use cases and
 potential impacts. Whereas Python's built-in \texttt{import}
 statement is agnostic to packages' version numbers, \texttt{smuggle}
 statements (when combined with onion comments) are version-sensitive.
-This enables multiple versions of a single library to be
-imported within the same notebook. This could be useful in cases
-where specific features were added or removed from a package across
-different versions, or in comparing the performance or functionality
-of particular features across different versions of the same package.
+And because onion comments are parsed at runtime, required package and
+their specified versions are installed in a just-in-time manner. Thus, it is possible
+in most cases to \texttt{smuggle} a specific package version or revision even if
+a different version has already been loaded. This enables more complex uses
+that take advantage of multiple versions of a package within a single interpreter
+session. This could be useful in cases where specific features are added or
+removed from a package across different versions, or in comparing the
+performance or functionality of particular features across different versions of
+the same package.
 
 A second advanced use case is in providing a proof-of-concept of how
 one can add new ``keyword-like'' operators to the Python language by

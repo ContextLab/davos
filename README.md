@@ -44,7 +44,7 @@ The `davos` library provides Python with an additional keyword: **`smuggle`**.
 [`import` statement](https://docs.python.org/3/reference/import.html), with one major difference: **you can `smuggle` a
 package without installing it first**.
 
-A key use case for this package is turning standard [IPython notebooks](https://ipython.org/notebook.html) (including [Google Colaboratory notebooks](colab.research.google.com/)) into fully specified Python environments, without the need for external containers or virtualized environments like conda, docker, etc.  This can facilitate sharing, collaboration, and reproducibility.
+A key use case for this package is turning standard [IPython notebooks](https://ipython.org/notebook.html) (including [Google Colaboratory notebooks](https://colab.research.google.com/)) into fully specified Python environments, without the need for external containers or virtualized environments like conda, docker, etc.  This can facilitate sharing, collaboration, and reproducibility without the need for time-, knowledge-, and resource-intensive setup.
 
 While the simplest way to use `davos` is as a drop-in replaceemnt for `import`, the way `davos` smuggles packages can be fully controlled and customized using ["_onion comments_"](#the-onion-comment).  Onion comments can be added to lines containing `smuggle` statements to specify which
 **specific package versions** should be installed and imported, and to **fully control how missing packages are installed**.
@@ -65,33 +65,30 @@ assert np.__version__ == '1.20.2'
 ```
 
 ## Table of contents
+- [Table of contents](#table-of-contents)
 - [Installation](#installation)
   - [Latest Stable PyPI Release](#latest-stable-pypi-release)
   - [Latest GitHub Update](#latest-github-update)
+  - [Installing in Colaboratory](#installing-in-colaboratory)
 - [Overview](#overview)
   - [Smuggling Missing Packages](#smuggling-missing-packages)
   - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
   - [Use Cases](#use-cases)
-    - [Simplify Sharing Reproducible Code & Python Environments](#simplify-sharing-reproducible-code--python-environments)
+    - [Simplify sharing reproducible code & Python environments](#simplify-sharing-reproducible-code--python-environments)
     - [Guarantee your code always uses the latest version, release, or revision](#guarantee-your-code-always-uses-the-latest-version-release-or-revision)
     - [Compare behavior across package versions](#compare-behavior-across-package-versions)
 - [Usage](#usage)
   - [The `smuggle` Statement](#the-smuggle-statement)
-    - [Syntax](#smuggle-statement-syntax)
-    - [Rules](#smuggle-statement-rules)
+    - [<a name="smuggle-statement-syntax"></a>Syntax](#syntax)
+    - [<a name="smuggle-statement-rules"></a>Rules](#rules)
   - [The Onion Comment](#the-onion-comment)
-    - [Syntax](#onion-comment-syntax)
-    - [Rules](#onion-comment-rules)
+    - [<a name="onion-comment-syntax"></a>Syntax](#syntax-1)
+    - [<a name="onion-comment-rules"></a>Rules](#rules-1)
   - [The `davos` Config](#the-davos-config)
-    - [Reference](#config-reference)
-    - [Top-level Functions](#top-level-functions)
+    - [<a name="config-reference"></a>Reference](#reference)
+    - [<a name="top-level-functions"></a>Top-level Functions](#top-level-functions)
 - [How It Works: The `davos` Parser](#how-it-works-the-davos-parser)
 - [Additional Notes](#additional-notes)
-  - [Reimplementing installer programs' CLI parsers](#notes-reimplement-cli)
-  - [Installer options that affect `davos` behavior](#notes-installer-opts)
-  - [Smuggling packages with C-extensions](#notes-c-extensions)
-  - [_`from` ... `import` ..._ statements and reloading modules](#notes-from-reload)
-  - [Smuggling packages from version control systems](#notes-vcs-smuggle)
 
 
 ## Installation
@@ -110,13 +107,13 @@ pip install davos
 [![](https://img.shields.io/github/release-date/ContextLab/davos?label=last%20release)](https://github.com/ContextLab/davos/releases/latest)
 
 ```sh
-pip install git+https://github.com/ContextLab/davos.git#egg=davos
+pip install git+https://github.com/ContextLab/davos.git
 ```
 
 
 ### Installing in Colaboratory
 To use `davos` in [Google Colab](https://colab.research.google.com/), add a cell at the top of your notebook with an
-exclamation point (`!`) followed by one of the commands above (e.g., `!pip install davos`). Run the cell to install
+exclamation mark (`!`) followed by one of the commands above (e.g., `!pip install davos`). Run the cell to install
 `davos` on the runtime virtual machine.
 
 **Note**: restarting the Colab runtime does not affect installed packages. However, if the runtime is "factory reset"
@@ -147,17 +144,17 @@ You can control _how_ `davos` installs missing packages by adding a special type
 
 
 ### Smuggling Specific Package Versions
-One simple but powerful use for [onion comments](#the-onion-comment) is making `smuggle` statements version-sensitive.
+One simple but powerful use for [onion comments](#the-onion-comment) is making `smuggle` statements _version-sensitive_.
 
-Python does not provide a native, viable way to ensure a third-party package imported at runtime matches a specific
-version or fits a particular [version constraint](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
+Python doesn't provide a native, viable way to ensure a third-party package imported at runtime matches a specific
+version or satisfies a particular [version constraint](https://www.python.org/dev/peps/pep-0440/#version-specifiers).
 Many packages expose their version info via a top-level `__version__` attribute (see
 [PEP 396](https://www.python.org/dev/peps/pep-0396/)), and certain tools (such as the standard library's
 [`importlib.metadata`](https://docs.python.org/3/library/importlib.metadata.html) and
 [`setuptools`](https://setuptools.readthedocs.io/en/latest/index.html)'s
 [`pkg_resources`](https://setuptools.readthedocs.io/en/latest/pkg_resources.html)) attempt to parse version info from
 installed distributions. However, using these to constrain imported package would require writing extra code to compare
-version strings and _still_ having manually installing the desired version and restarting the interpreter any time an
+version strings and _still_ manually installing the desired version and restarting the interpreter any time an
 invalid version is caught.
 
 Additionally, for packages installed through a version control system (e.g., [git](https://git-scm.com/)), this would be
@@ -302,7 +299,7 @@ In simpler terms, **any valid syntax for `import` is also valid for `smuggle`**.
   foo = """
   smuggle matplotlib.pyplot as plt"""          # not executed
   ```
-- Because the `davos` parser is less complex than the full Python parser, there are two, fairly non-disruptive, edge
+- Because the `davos` parser is less complex than the full Python parser, there are two fairly non-disruptive edge
   cases where an `import` statement would be syntactically valid but a `smuggle` statement would not:
   1. The [exec](https://docs.python.org/3.8/library/functions.html#exec) function
      ```python

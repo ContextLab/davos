@@ -82,14 +82,14 @@
   solutions vary in how deeply these dependencies are specified,
   ranging from virtual environments, to containers, to virtual
   machines.  Each of these existing solutions requires installing or
-  setting up a system for running the desired code that must be
-  packaged alongside the primary code base.  Here we propose a
-  lighter-weight solution than virtual environments: the
+  setting up a system for running the desired code, increasing the 
+  complexity and time cost of sharing or engaging with reproducible 
+  science. Here, we propose a lighter-weight solution:  the
   \texttt{davos} library.  When used in combination with a
   notebook-based Python project, the \texttt{davos} library provides a
   mechanism for specifying (and automatically installing) the correct
-  package versions of the project's dependencies.  The \texttt{davos}
-  library also ensures that those versions are in use any time the
+  versions of the project's dependencies.  The \texttt{davos}
+  library further ensures that those packages and specific versions are used every time the
   notebook's code is executed.  This enables researchers to share a complete
   reproducible copy of their code within a single Jupyter notebook file.
 

@@ -150,18 +150,21 @@ different versions of those libraries may function differently.  Or
 when CPU or GPU instruction sets differ across machines, the same
 high-level code may be compiled into different machine instructions.
 Because executing identical code does not guarantee identical
-outcomes, code sharing in and of itself is often insufficient for
-enabling researchers to reproduce each other's work.
+outcomes, code sharing alone is often insufficient for
+enabling researchers to reproduce each other's work, or to collaborate on
+projects involving data collection or analysis.
 
 Within the Python~\cite{vanR95} community, external
 packages that are published in the most popular
 repositories~\cite{Pyth03, cond15} are associated with version numbers
-and tags that enable users to guarantee that they are installing
-exactly the same code across different computing environments.
+and tags that allow users to guarantee they are installing
+exactly the same code across different computing environments \cite{CoghStuf13}.
 Despite that it is \textit{possible} to manually install the intended
-version numbers of every dependency of a Python script or package, manually
-tracking down those dependencies can impose a substantial burden on
-the user.
+version of every dependency of a Python script or package, manually
+tracking down those dependencies can impose a substantial burden on 
+the user and make room for mistakes. Further, when dependency versions 
+are left unspecified, replicating the original computing environment 
+becomes difficult or impossible.
 
 \begin{figure}[tp]
 \centering
@@ -206,27 +209,27 @@ the user.
 \label{fig:code-sharing}
 \end{figure}
 
-Researchers, programmers, and others have developed a broad
+Computational researchers and other programmers have developed a broad
 set of approaches and tools to facilitate code sharing and
 reproducible outcomes (Fig.~\ref{fig:code-sharing}). At one
-extreme, simply publishing a set of Python scripts (\texttt{.py} files) may
+extreme, simply distributing a set of Python scripts (\texttt{.py} files) may
 enable others to use or gain insights into the relevant work. Because
 Python is installed by default on most modern operating systems, for
-some projects this may be sufficient. Another popular approach
-entails creating JSON files called Jupyter
+some projects, this may be sufficient. Another popular approach
+entails creating Jupyter
 notebooks~\cite{KluyEtal16} that comprise a mix of text, executable
 code, and embedded media. Notebooks may call or import external
-scripts or libraries in order to provide a more compact and readable
+scripts or libraries---even intersperse snippets of other programming 
+or markup languages---in order to provide a more compact and readable
 experience for users. Each of these systems (Python scripts and
 notebooks) provides a convenient means of sharing code, with the
 caveat that they do not specify the computing environment in which the
 code is executed. Therefore the functionality of code shared using
-these systems cannot be guaranteed across different computing
-environments.
+these systems cannot be guaranteed across different users or setups.
 
 At another extreme, virtual machines~\cite{Gold74, AltiEtal05,
  Rose99} provide a hardware-level simulation of the desired system.
-Virtual machines are typically isolated from the user's system, such
+Virtual machines are typically isolated such
 that installing or running software on a virtual machine does not
 impact the user's primary operating system or computing environment.
 Containers~\cite[e.g.,][]{Merk14, KurtEtal17} provide a similar

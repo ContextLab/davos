@@ -82,8 +82,8 @@
   solutions vary in how deeply these dependencies are specified,
   ranging from virtual environments, to containers, to virtual
   machines.  Each of these existing solutions requires installing or
-  setting up a system for running the desired code, increasing the 
-  complexity and time cost of sharing or engaging with reproducible 
+  setting up a system for running the desired code, increasing the
+  complexity and time cost of sharing or engaging with reproducible
   science. Here, we propose a lighter-weight solution:  the
   \texttt{davos} library.  When used in combination with a
   notebook-based Python project, \texttt{davos} provides a
@@ -161,9 +161,9 @@ and tags that allow users to guarantee they are installing
 exactly the same code across different computing environments \cite{CoghStuf13}.
 While it is \textit{possible} to manually install the intended
 version of every dependency of a Python script or package, manually
-tracking down those dependencies can impose a substantial burden on 
-the user and create room for mistakes and inconsistencies. Further, when dependency versions 
-are left unspecified, replicating the original computing environment 
+tracking down those dependencies can impose a substantial burden on
+the user and create room for mistakes and inconsistencies. Further, when dependency versions
+are left unspecified, replicating the original computing environment
 becomes difficult or impossible.
 
 \begin{figure}[tp]
@@ -182,10 +182,10 @@ becomes difficult or impossible.
   into a Jupyter notebook, the notebook's functionality is extended to
   automatically install any required external libraries (at their
   correct versions, when specified).  \textbf{Virtual environments}
-  allow users to install an isolated copy of Python and all required 
+  allow users to install an isolated copy of Python and all required
   dependencies. This typically entails distributing a configuration file
   (e.g., a \texttt{pyproject.toml}~\cite{CannEtal16} or \texttt{environment.yml})
-  that specifies all project dependencies (including version numbers of 
+  that specifies all project dependencies (including version numbers of
   external libraries) alongside the primary code base. Users can then install
   a third-praty tool~\cite[e.g.,][]{Anac12, Eust19} to read the file and build the environment.
   \textbf{Containers} provide a means of defining an isolated
@@ -221,7 +221,7 @@ some projects, this may be sufficient. Another popular approach
 entails creating Jupyter
 notebooks~\cite{KluyEtal16} that comprise a mix of text, executable
 code, and embedded media. Notebooks may call or import external
-scripts or libraries---even intersperse snippets of other programming 
+scripts or libraries---even intersperse snippets of other programming
 or markup lang\-uages---in order to provide a more compact and readable
 experience for users. Both of these systems (Python scripts and
 notebooks) provide a convenient means of sharing code, with the
@@ -249,8 +249,8 @@ guarantees (to differing degrees---at the hardware level, operating
 system level, and Python environment level, respectively) that the
 relevant code will run similarly for different users. However, each
 of these systems also relies on additional software that can be
-complex or resource-intensive to install and use, creating potential 
-barriers to both contributing to and taking advantage of open science 
+complex or resource-intensive to install and use, creating potential
+barriers to both contributing to and taking advantage of open science
 resources.
 
 We designed \texttt{davos} to occupy a ``sweet spot'' between these
@@ -270,17 +270,18 @@ dependencies, including package versions.
 % ------------------------------------------------ SOFTWARE DESCRIPTION ------------------------------------------------
 \section{Software description}
 % Describe the software in as much as is necessary to establish a vocabulary needed to explain its impact.
+The \texttt{davos} package is named after Davos Seaworth, a smuggler often referred to as ``the Onion Knight" from the series \textit{A Song of Ice and Fire} by George R. R. Martin.
 
 \begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{figs/package_structure}
-\caption{\small \textbf{Package structure.}}
+\caption{\small \textbf{Package structure.} }
 \label{fig:package-structure}
 \end{figure}
 
 \subsection{Software architecture}
 % Give a short overview of the overall software architecture; provide a pictorial component overview or similar (if possible). If necessary provide implementation details.
-The \texttt{davos} package consists of two interdependent subpackages (see Fig.~\ref{fig:package-structure}). The first, \texttt{davos.core}, comprises a set of modules that implement\comment{provide?} the bulk of the package's core functionality, including pipelines for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section~\ref{subsec:smuggle}) and onion comment (see Section~\ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section~\ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementation approaches depending on various properties of the notebook environment in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython~\cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions'' in the \texttt{davos.implementations} subpackage. This second subpackage defines multiple, interchangeable versions of each helper function, organized into modules by the conditions that trigger their use. At runtime, \texttt{davos} detects various features in the notebook environment and selectively imports a single version of each helper function into the top-level \texttt{davos.implementations} namespace, allowing \texttt{davos.core} modules to access the correct implementations for the current notebook environment in a single, consistent location. An additional benefit of this design pattern is that it allows maintainers or users to easily extend \texttt{davos} to support new, updated, or custom notebook variants simply by creating a new \texttt{davos.implementations} module with any necessary tweaks to existing helper functions.
+The \texttt{davos} package consists of two interdependent subpackages (see Fig.~\ref{fig:package-structure}). The first, \texttt{davos.core}, comprises a set of modules that implement\comment{provide?} the bulk of the package's core functionality, including pipelines for installing and validating packages, custom parsers for the \texttt{smuggle} statement (see Section~\ref{subsec:smuggle}) and onion comment (see Section~\ref{subsec:onion}), and a runtime interface for configuring \texttt{davos}'s behavior (see Section~\ref{subsec:config}). However, certain critical\comment{other important} aspects of this functionality require (often substantially) different implementations depending on properties of the notebook environment in which \texttt{davos} is used (e.g., whether the frontend is provided by Jupyter or Google Colaboratory, or which version of IPython~\cite{PereGran07} is used by the notebook kernel). To deal with this, environment-dependent parts of core features and behaviors are isolated and abstracted to ``helper functions'' in the \texttt{davos.implementations} subpackage. This second subpackage defines multiple, interchangeable versions of each helper function, organized into modules by the conditions that trigger their use. At runtime, \texttt{davos} detects various features in the notebook environment and selectively imports a single version of each helper function into the top-level \texttt{davos.implementations} namespace, allowing \texttt{davos.core} modules to access the correct implementations for the current notebook environment in a single, consistent location. An additional benefit of this design pattern is that it allows maintainers or users to easily extend \texttt{davos} to support new, updated, or custom notebook variants by creating a new \texttt{davos.implementations} module with any necessary tweaks to the existing helper functions.
 
 %The package also includes stub files (\texttt{.pyi} files) for each module for use with a static type checker, as well as a custom GitHub Actions-based CI test suite that uses
 
@@ -295,13 +296,13 @@ The \texttt{davos} package consists of two interdependent subpackages (see Fig.~
 \subsection{Software functionalities}
 % Present the major functionalities of the software.
 \subsubsection{The \texttt{smuggle} statement}\label{subsec:smuggle}
-Importing \texttt{davos} in an IPython notebook enables an additional Python keyword: ``\texttt{smuggle}'' (see Section~\ref{subsec:implementation} for details on how this works).
+Importing \texttt{davos} in an IPython notebook appears to enable an additional Python keyword: ``\texttt{smuggle}'' (see Section~\ref{subsec:implementation} for details on how this works).
 The \texttt{smuggle} statement can be used as a drop-in replacement for Python's built-in \texttt{import} statement to load libraries, modules, and other objects into the current namespace.
 However, whereas \texttt{import} will fail if the requested package is not installed locally, \texttt{smuggle} statements can handle missing packages on the fly.
 If a smuggled package does not exist in the local environment, \texttt{davos} will install it automatically, expose its contents to Python's \texttt{import} machinery, and load it into the namespace for immediate use.
 
 \subsubsection{The onion comment}\label{subsec:onion}
-For greater control over the behavior of \texttt{smuggle} statements, \texttt{davos} defines an additional construct called the ``onion comment''. An onion comment is a special type of inline comment that may be placed on a line containing a \texttt{smuggle} statement to customize how \texttt{davos} searches for the smuggled package locally and, if necessary, downloads and installs it. Onion comments follow a simple syntax based on the ``type comment'' syntax introduced in PEP 484~\cite{vanREtal14}, and are designed to make managing packages with \texttt{davos} intuitive and familiar. To construct an onion comment, simply provide the name of the installer program (e.g., \texttt{pip}) and the same arguments one would use to manually install the package as desired via the command line:
+For greater control over the behavior of \texttt{smuggle} statements, \texttt{davos} defines an additional construct called the ``onion comment.'' An onion comment is a special type of inline comment that may be placed on a line containing a \texttt{smuggle} statement to customize how \texttt{davos} searches for the smuggled package locally and, if necessary, downloads and installs it. Onion comments follow a simple format based on the ``type comment'' syntax introduced in PEP 484~\cite{vanREtal14}, and are designed to make managing packages with \texttt{davos} intuitive and familiar. To construct an onion comment, users provide the name of the installer program (e.g., \texttt{pip}) and the same arguments one would use to manually install the package as desired via the command line:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet1}
 \end{center}

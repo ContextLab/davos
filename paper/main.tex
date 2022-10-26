@@ -86,7 +86,7 @@
   complexity and time cost of sharing or engaging with reproducible 
   science. Here, we propose a lighter-weight solution:  the
   \texttt{davos} library.  When used in combination with a
-  notebook-based Python project, the \texttt{davos} library provides a
+  notebook-based Python project, \texttt{davos} provides a
   mechanism for specifying (and automatically installing) the correct
   versions of the project's dependencies.  The \texttt{davos}
   library further ensures that those packages and specific versions are used every time the
@@ -159,10 +159,10 @@ packages that are published in the most popular
 repositories~\cite{Pyth03, cond15} are associated with version numbers
 and tags that allow users to guarantee they are installing
 exactly the same code across different computing environments \cite{CoghStuf13}.
-Despite that it is \textit{possible} to manually install the intended
+While it is \textit{possible} to manually install the intended
 version of every dependency of a Python script or package, manually
 tracking down those dependencies can impose a substantial burden on 
-the user and make room for mistakes. Further, when dependency versions 
+the user and create room for mistakes and inconsistencies. Further, when dependency versions 
 are left unspecified, replicating the original computing environment 
 becomes difficult or impossible.
 
@@ -180,12 +180,14 @@ becomes difficult or impossible.
   text, executable code, and media (including rendered figures, code
   output, etc.).  When the \textbf{\texttt{davos} library} is imported
   into a Jupyter notebook, the notebook's functionality is extended to
-  automatically install the required external libraries (at their
+  automatically install any required external libraries (at their
   correct versions, when specified).  \textbf{Virtual environments}
-  install an isolated copy of Python and all required dependencies.
-  This typically requires defining a \texttt{requirements.txt} file or
-  an environment (\texttt{.yml}) file that that specifies all project
-  dependencies (including version numbers of external libraries).
+  allow users to install an isolated copy of Python and all required 
+  dependencies. This typically entails distributing a configuration file
+  (e.g., a \texttt{pyproject.toml}~\cite{CannEtal16} or \texttt{environment.yml})
+  that specifies all project dependencies (including version numbers of 
+  external libraries) alongside the primary code base. Users can then install
+  a third-praty tool~\cite[e.g.,][]{Anac12, Eust19} to read the file and build the environment.
   \textbf{Containers} provide a means of defining an isolated
   environment that includes a complete operating system (independent
   of the user's operating system), in addition to (optionally)
@@ -193,7 +195,7 @@ becomes difficult or impossible.
   provide the necessary computing environment.  Containers are
   typically defined using specification files (e.g., a plain-text
   \texttt{Dockerfile}) that instruct the virtualization engine
-  regarding how to build the virtual environment.  \textbf{Virtual
+  regarding how to build the containerized environment.  \textbf{Virtual
     machines} provide a complete hardware-level simulation of the
   computing environment.  In addition to simulating specific hardware,
   virtual machines (typically specified using binary images files)
@@ -220,9 +222,9 @@ entails creating Jupyter
 notebooks~\cite{KluyEtal16} that comprise a mix of text, executable
 code, and embedded media. Notebooks may call or import external
 scripts or libraries---even intersperse snippets of other programming 
-or markup languages---in order to provide a more compact and readable
-experience for users. Each of these systems (Python scripts and
-notebooks) provides a convenient means of sharing code, with the
+or markup lang\-uages---in order to provide a more compact and readable
+experience for users. Both of these systems (Python scripts and
+notebooks) provide a convenient means of sharing code, with the
 caveat that they do not specify the computing environment in which the
 code is executed. Therefore the functionality of code shared using
 these systems cannot be guaranteed across different users or setups.
@@ -237,7 +239,7 @@ Containers~\cite[e.g.,][]{Merk14, KurtEtal17} provide a similar
 specify hardware-level operations, they are typically packaged with a
 complete operating system, in addition to a complete copy of Python
 and any relevant package dependencies. Virtual
-environments~\cite[e.g.,][]{Anac12} also provide a computing
+environments~\cite[e.g.,][]{Anac12, Eust19} also provide a computing
 environment that is largely separated from the user's main
 environment. They incorporate a copy of Python and the target
 software's dependencies, but virtual environments do not specify or
@@ -247,12 +249,14 @@ guarantees (to differing degrees---at the hardware level, operating
 system level, and Python environment level, respectively) that the
 relevant code will run similarly for different users. However, each
 of these systems also relies on additional software that can be
-resource intensive or burdensome to install or configure.
+complex or resource-intensive to install and use, creating potential 
+barriers to both contributing to and taking advantage of open science 
+resources.
 
 We designed \texttt{davos} to occupy a ``sweet spot'' between these
 extremes.  \texttt{davos} is a notebook-installable package that adds
 functionality to the default notebook experience. Like standard
-Jupyter notebooks, \texttt{davos}-enhanced notebooks allows
+Jupyter notebooks, \texttt{davos}-enhanced notebooks allow
 researchers to include text, executable code, and media within a
 single file. No further setup or installation is required, beyond
 what is needed to run standard Jupyter notebooks. And like virtual

@@ -153,13 +153,13 @@ class DavosConfig(metaclass=SingletonConfig):
             self._environment = 'Python'
         else:
             import IPython
-            if IPython.version_info[0] < 7:
+            if IPython.version_info[0] >= 7:
                 if 'google.colab' in str(self._ipython_shell):
                     self._environment = 'Colaboratory'
                 else:
-                    self._environment = 'IPython<7.0'
+                    self._environment = 'IPython>=7.0'
             else:
-                self._environment = 'IPython>=7.0'
+                self._environment = 'IPython<7.0'
         self._conda_avail = None
         self._conda_envs_dirs = None
         self._ipy_showsyntaxerror_orig = None

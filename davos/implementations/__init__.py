@@ -70,8 +70,8 @@ else:
 
     _set_custom_showsyntaxerror()
 
-    if import_environment == 'IPython>=7.0':
-        from davos.implementations.ipython_post7 import (
+    if import_environment == 'IPython<7.0':
+        from davos.implementations.ipython_pre7 import (
             _activate_helper,
             _deactivate_helper,
             generate_parser_func
@@ -81,7 +81,7 @@ else:
             prompt_restart_rerun_buttons
         )
     else:
-        from davos.implementations.ipython_pre7 import (
+        from davos.implementations.ipython_post7 import (
             _activate_helper,
             _deactivate_helper,
             generate_parser_func

@@ -46,7 +46,7 @@
 \usepackage{breakurl}
 \usepackage[htt]{hyphenat}
 %\usepackage{listings}
-%\usepackage{xcolor}
+\usepackage{xcolor}
 %\usepackage{todonotes}
 
 % \let\oldtodo\todo
@@ -306,7 +306,9 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet1}
 \end{center}
-Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) is different from its top-level module name (i.e., the name used when importing it):
+Occasionally, a package's distribution name (i.e., the name used when installing it) may differ from its top-level module name (i.e., the name used when importing it). In such cases, an onion comment can be used to ensure \texttt{davos} installs the proper distribution if the smuggled package can't be found locally:
+%Onion comments are useful in such cases for ensuring \texttt{davos} installs the proper distribution if the smuggled package isn't installed locally:
+%Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) differs from its top-level module name (i.e., the name used when importing it). Onion comments are useful in such cases for 
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet2}
 \end{center}
@@ -314,18 +316,18 @@ However, the most powerful use of the onion comment is making \texttt{smuggle} s
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet3}
 \end{center}
-Onion comments can similarly be used to smuggle specific VCS references (e.g., Git~\cite{TorvHama05}  branches, commits, tags, etc.):
+Onion comments can also be used to smuggle specific VCS references (e.g., Git~\cite{TorvHama05}  branches, commits, tags, etc.):
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet4}
 \end{center}
-\texttt{davos} processes onion comments internally before forwarding arguments to the installer program. In addition to preventing onion comments from being used as a vehicle for shell injection attacks, this allows \texttt{davos} take certain logical actions when particular arguments are passed. For example, the \texttt{-I}/\texttt{--ignore-installed}, \texttt{-U}/\texttt{--upgrade}, and \texttt{--force-reinstall} flags will all cause \texttt{davos} to skip searching for a smuggled package locally before installing a new copy:
+\texttt{davos} processes onion comments internally before forwarding arguments to the installer program. In addition to preventing onion comments from being used as a vehicle for shell injection attacks, this allows \texttt{davos} to take certain logical actions when particular arguments are passed. For example, the \texttt{-I}/\newline\texttt{--ignore-installed}, \texttt{-U}/\texttt{--upgrade}, and \texttt{--force-reinstall} flags will all cause \texttt{davos} to skip searching for a smuggled package locally before installing a new copy:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet5}
 \end{center}
 Similarly, passing \texttt{--no-input} will temporarily enable \texttt{davos}'s non-interactive mode (see Section~\ref{subsec:onion}), and installing a smuggled package into \texttt{<dir>} with \texttt{--target <dir>} will cause \texttt{dir} to be prepended to the module search path (\texttt{sys.path}), if necessary, so the package can be imported
 
 \subsubsection{The \texttt{davos} config}\label{subsec:config}
-The \texttt{davos} config object provides a simple, high-level interface that allows users to view and set various options that affect \texttt{davos}'s behavior. After importing \texttt{davos}, the config instance (a singleton) for the current session is available as \texttt{davos.config}, and its various fields are accessible as attributes. The config object exposes a mixture of writable and read-only fields. Writable fields include:
+The \texttt{davos} config object provides a simple, high-level interface that allows users to view and set various options that affect \texttt{davos}'s behavior. After importing \texttt{davos}, the config instance (a singleton) for the current session is available as \texttt{davos.config}, and its various fields are accessible as attributes (see Fig.~\textcolor{red}{REF TO ILLUSTRATIVE EXAMPLE FIG} for example usage). The config object exposes a mixture of writable and read-only fields. Writable fields include:
 \begin{itemize}
 \item \texttt{.active}: Whether or not \texttt{davos} functionality (i.e., support for \texttt{smuggle} statements and onion comments) should be enabled for subsequent code. Defaults to \texttt{True} when \texttt{davos} is first imported. See Section~\ref{subsec:implementation} for additional info.
 \item \texttt{.auto\_rerun}: Controls behavior if \texttt{davos} is used to \texttt{smuggle} a new version of a package that was previously imported and cannot be reloaded (i.e., it contains C-extensions that dynamically generate code). If \texttt{True} (default: \texttt{False}), \texttt{davos} will automatically restart the notebook kernel and rerun all code up to (and including) the current \texttt{smuggle} statement. Otherwise, \texttt{davos} will issue a warning, pause execution, and prompt the user with buttons to either restart \& rerun the notebook or continue running with the imported package version. (Note: not configurable in Google Colaboratory).

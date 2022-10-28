@@ -296,7 +296,7 @@ The \texttt{davos} package consists of two interdependent subpackages (see Fig.~
 \subsection{Software functionalities}
 % Present the major functionalities of the software.
 \subsubsection{The \texttt{smuggle} statement}\label{subsec:smuggle}
-Importing \texttt{davos} in an IPython notebook appears to enable an additional Python keyword: ``\texttt{smuggle}'' (see Section~\ref{subsec:implementation} for details on how this works).
+Importing \texttt{davos} in an IPython notebook enables an additional Python keyword: ``\texttt{smuggle}'' (see Section~\ref{subsec:implementation} for details on how this works).
 The \texttt{smuggle} statement can be used as a drop-in replacement for Python's built-in \texttt{import} statement to load libraries, modules, and other objects into the current namespace.
 However, whereas \texttt{import} will fail if the requested package is not installed locally, \texttt{smuggle} statements can handle missing packages on the fly.
 If a smuggled package does not exist in the local environment, \texttt{davos} will install it automatically, expose its contents to Python's \texttt{import} machinery, and load it into the namespace for immediate use.
@@ -308,7 +308,7 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 \end{center}
 Occasionally, a package's distribution name (i.e., the name used when installing it) may differ from its top-level module name (i.e., the name used when importing it). In such cases, an onion comment can be used to ensure \texttt{davos} installs the proper distribution if the smuggled package can't be found locally:
 %Onion comments are useful in such cases for ensuring \texttt{davos} installs the proper distribution if the smuggled package isn't installed locally:
-%Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) differs from its top-level module name (i.e., the name used when importing it). Onion comments are useful in such cases for 
+%Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) differs from its top-level module name (i.e., the name used when importing it). Onion comments are useful in such cases for
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet2}
 \end{center}
@@ -324,7 +324,7 @@ Onion comments can also be used to smuggle specific VCS references (e.g., Git~\c
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet5}
 \end{center}
-Similarly, passing \texttt{--no-input} will temporarily enable \texttt{davos}'s non-interactive mode (see Section~\ref{subsec:onion}), and installing a smuggled package into \texttt{<dir>} with \texttt{--target <dir>} will cause \texttt{dir} to be prepended to the module search path (\texttt{sys.path}), if necessary, so the package can be imported
+Similarly, passing \texttt{--no-input} will temporarily enable \texttt{davos}'s non-interactive mode (see Section~\ref{subsec:config}), and installing a smuggled package into \texttt{<dir>} with \texttt{--target <dir>} will cause \texttt{dir} to be prepended to the module search path (\texttt{sys.path}), if necessary, so the package can be imported
 
 \subsubsection{The \texttt{davos} config}\label{subsec:config}
 The \texttt{davos} config provides a simple, high-level interface for controlling various aspects of \texttt{davos}'s behavior. After importing \texttt{davos}, the \texttt{davos.config} object (a singleton) exposes a number of configurable options as attributes that can be assigned different values, checked at runtime, and displayed in the notebook cell output (see Fig.~\textcolor{red}{INSERT REF TO ILLUSTRATIVE EXAMPLE FIG} for example usage). These include:
@@ -341,16 +341,16 @@ The \texttt{davos} config provides a simple, high-level interface for controllin
 \item \texttt{.suppress\_stdout}: If \texttt{True} (default: \texttt{False}), suppress all unnecessary output issued by both \texttt{davos} and the installer program. This can be useful when smuggling packages that need to install many dependencies and/or generate extensive output. If the installer program throws an error, both the stdout and stderr streams will be displayed with the traceback.
 \end{itemize}
 
-%\noindent The \texttt{davos.config} object also provides a few informative read-only fields, including: 
+%\noindent The \texttt{davos.config} object also provides a few informative read-only fields, including:
 %\begin{itemize}
 %\item \texttt{.environment}: This field's value is a short string describing the notebook environment in which \texttt{davos} is currently running. This is used internally may be one of \texttt{IPython<7.0} (a notebook whose frontend uses the Jupyter JavaScript library and whose backend uses an IPython version older than v7.0), \texttt{IPython>=7.0} (, or \texttt{}
 %\end{itemize}
 \noindent The top-level \texttt{davos} namespace also defines a handful of convenience functions for setting and checking \texttt{davos}'s active/inactive state (\texttt{davos.activate()}; \texttt{davos.deactivate()}; \texttt{davos.is\_active()}) as well as the \texttt{davos.configure()} function, which allows setting multiple config options at once.
 
 \subsection{Implementation details}\label{subsec:implementation}
-Functionally, importing \texttt{davos} appears to define ``\texttt{smuggle}'' as a Python keyword, similar to ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}''. It also appears to cause comments to be parsed, and their contents potentially able to affect code behavior, which they normally are not. However, \texttt{davos} doesn't actually modify the rules of Python's parser or lexical analyzer---in fact, modifying the Python grammar isn't possible at runtime, as doing so would require rebuilding the interpreter. Instead, \texttt{davos} leverages the IPython notebook backend to implement the \texttt{smuggle} statement and onion comment via a combination of namespace injections and its own (far simpler) custom parser.
+Functionally, importing \texttt{davos} appears to make ``\texttt{smuggle}'' a valid Python keyword, similar to standard keywords like ``\texttt{import}'', ``\texttt{def}'', or ``\texttt{return}''. It also appears to fundamentally change how Python treats comments, suddenly allowing them to potentially influence code behavior at runtime if they conform to a particular syntax. However, \texttt{davos} doesn't actually modify the rules of Python's parser or lexical analyzer in order to accomplish this---in fact, modifying the Python grammar isn't possible at runtime, as doing so would require rebuilding the interpreter. Instead, \texttt{davos} leverages the IPython notebook backend to implement the \texttt{smuggle} statement and onion comment via a combination of namespace injections and its own (far simpler) custom parser.
 
-The \texttt{smuggle} keyword can be enabled and disabled at any time by ``activating'' and ``deactivating'' \texttt{davos} (see Section~\ref{subsec:config}, above). When \texttt{davos} is first imported, it is activated automatically. Activating \texttt{davos} triggers two actions: (1) the \texttt{smuggle()} function is injected into the IPython user namespace, and (2) the \texttt{davos} parser is registered as a custom IPython input transformer. IPython preprocesses all executed code as plain text before it is sent to the Python parser, in order to handle special constructs like \texttt{\%magic} and \texttt{!shell} commands. \texttt{davos} hooks into this process to transform \texttt{smuggle} statements into syntactically valid Python code. The \texttt{davos} parser uses a complex regular expression~\cite{Thom68} to match lines of code containing \texttt{smuggle} statements (and, optionally, onion comments), extract relevant information from their text, and replace them with equivalent calls to the \texttt{smuggle()} function. For example, if a user runs a notebook cell containing
+The \texttt{smuggle} keyword can be enabled and disabled at any time by ``activating'' and ``deactivating'' \texttt{davos} (see Section~\ref{subsec:config}, above). When \texttt{davos} is first imported, it is activated automatically. Activating \texttt{davos} triggers two actions: (1) the \texttt{smuggle()} function is injected into the IPython user namespace, and (2) the \texttt{davos} parser is registered as a custom IPython input transformer. IPython preprocesses all executed code as plain text before it is sent to the Python compiler, in order to handle special constructs like \texttt{\%magic} and \texttt{!shell} commands. \texttt{davos} hooks into this process to transform \texttt{smuggle} statements into syntactically valid Python code. The \texttt{davos} parser uses a complex regular expression~\cite{Thom68} to match lines of code containing \texttt{smuggle} statements (and, optionally, onion comments), extract relevant information from their text, and replace them with equivalent calls to the \texttt{smuggle()} function. For example, if a user runs a notebook cell containing
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet6}
 \end{center}
@@ -358,7 +358,7 @@ the code that is actually executed by the Python interpreter would be
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet7}
 \end{center}
-Because the \texttt{smuggle()} function is defined in the notebook namespace, it is also possible (though never necessary) to call it directly. Deactivating \texttt{davos} will delete the name ``\texttt{smuggle}'' from the namespace, unless its value has been overwritten and no longer refers to the \texttt{smuggle()} function. It will also deregister the \texttt{davos} parser from the set of input transformers run when each notebook cell is executed. While the overhead added by the \texttt{davos} parser is de minimis, this may be useful, for example, when optimizing or precisely profiling code.
+The call to the \texttt{smuggle()} function then carries out \texttt{davos}'s central logic of determining whether the smuggled package should be installed, doing so if necessary, and subsequently loading it into the namespace. This process is outlined in Figure \ref{fig:flow-chart}. Because the \texttt{smuggle()} function is defined in the notebook namespace, it is also possible (though never necessary) to call it directly. Deactivating \texttt{davos} will delete the name ``\texttt{smuggle}'' from the namespace, unless its value has been overwritten and no longer refers to the \texttt{smuggle()} function. It will also deregister the \texttt{davos} parser from the set of input transformers run when each notebook cell is executed. While the overhead added by the \texttt{davos} parser is minimal, this may be useful, for example, when optimizing or precisely profiling code.
 
 
 % talk about how exceptions have to inherit from SyntaxError since that's the only thing that can be raised during parsing

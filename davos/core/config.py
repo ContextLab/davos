@@ -219,7 +219,7 @@ class DavosConfig(metaclass=SingletonConfig):
     def __repr__(self):
         cls_name = self.__class__.__name__
         base_indent = len(cls_name) + 1
-        attrs_in_repr = ['active', 'auto_rerun', 'conda_avail']
+        attrs_in_repr = ['active', 'auto_rerun']
         if self._conda_avail is not None:
             attrs_in_repr.append('conda_avail')
             if self._conda_avail is True:

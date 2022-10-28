@@ -360,6 +360,12 @@ the code that is actually executed by the Python interpreter would be
 \end{center}
 The call to the \texttt{smuggle()} function then carries out \texttt{davos}'s central logic of determining whether the smuggled package should be installed, doing so if necessary, and subsequently loading it into the namespace. This process is outlined in Figure \ref{fig:flow-chart}. Because the \texttt{smuggle()} function is defined in the notebook namespace, it is also possible (though never necessary) to call it directly. Deactivating \texttt{davos} will delete the name ``\texttt{smuggle}'' from the namespace, unless its value has been overwritten and no longer refers to the \texttt{smuggle()} function. It will also deregister the \texttt{davos} parser from the set of input transformers run when each notebook cell is executed. While the overhead added by the \texttt{davos} parser is minimal, this may be useful, for example, when optimizing or precisely profiling code.
 
+\begin{figure}[tp]
+\centering
+\includegraphics[width=\textwidth]{figs/flow_chart}
+\caption{\small \textbf{\texttt{smuggle()} function logic.} }
+\label{fig:flow-chart}
+\end{figure}
 
 % talk about how exceptions have to inherit from SyntaxError since that's the only thing that can be raised during parsing
 

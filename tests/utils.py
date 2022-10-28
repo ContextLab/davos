@@ -44,7 +44,7 @@ _E = TypeVar('_E', bound=BaseException)
 _E1 = TypeVar('_E1', bound=BaseException)
 _F = TypeVar('_F', bound=Callable[..., None])
 _InstallerKwargVals = Union[bool, int, str]
-_IpyVersions = Literal['5.5.0', '7.3.0', '7.15', '7.16', 'latest']
+_IpyVersions = Literal['5.5.0', '7.3.0', '7.15', '7.16', '7.31', 'latest']
 _StrOrListStr = TypeVar('_StrOrListStr', str, List[str])
 _NbTypes = Literal['colab', 'jupyter']
 

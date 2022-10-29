@@ -458,6 +458,8 @@ class Onion:
             args = self.args_str.replace("<", "'<'").replace(">", "'>'")
         if self.installer == 'pip':
             install_exe = config._pip_executable
+            if config.noninteractive:
+                args = f'{args} --no-input'
         else:
             install_exe = self.installer
 

@@ -382,7 +382,7 @@ The call to the \texttt{smuggle()} function then carries out \texttt{davos}'s ce
 
 Like virtual environments, containers, and virtual machines, the
 \texttt{davos} library (when used in conjunction with Jupyter
-notebooks) provides a lightweight mechanism for sharing code and
+notebooks) provides a light\-weight mechanism for sharing code and
 ensuring reproducibility across users and computing environments
 (Fig.~\ref{fig:code-sharing}). Further, \texttt{davos} enables users
 to fully specify (and install, as needed) any project dependencies
@@ -392,13 +392,13 @@ configuring the project dependencies, may be combined within a single
 notebook file.
 
 We designed \texttt{davos} for use in research applications. For
-example, in many settings \texttt{davos} may be used as a drop-in
+example, in many settings, \texttt{davos} may be used as a drop-in
 replacement for more-difficult-to-set-up virtual environments,
 containers, and/or virtual machines. For researchers, this lowers
-barriers to sharing code. By eliminating most of the setup costs
+barriers to both sharing code. By eliminating most of the setup costs
 of reconstructing the original researchers' computing environment,
 \texttt{davos} also lowers barriers to entry for members of
-the scientific community and the public who seek to \textit{benefit}
+the scientific community and the public who seek to benefit
 from shared code.
 
 Beyond research applications, \texttt{davos} is also useful in
@@ -411,7 +411,7 @@ convenient way to manage dependencies within a notebook, without
 requiring any software (beyond a web browser) to be installed on the
 students' or instructors' systems. For the same reasons,
 \texttt{davos} also provides an elegant means of sharing ready-to-run
-notebook-based demonstrations that install their dependencies
+notebook-based demonstrations or tutorials that install their dependencies
 automatically.
 
 Since its initial release, \texttt{davos} has found use in a variety
@@ -429,9 +429,9 @@ installs dependencies automatically.
 
 Our work also has several more subtle ``advanced'' use cases and
 potential impacts. Whereas Python's built-in \texttt{import}
-statement is agnostic to packages' version numbers, \texttt{smuggle}
+statement is agnostic to packages' version information, \texttt{smuggle}
 statements (when combined with onion comments) are version-sensitive.
-And because onion comments are parsed at runtime, required package and
+And because onion comments are parsed at runtime, required packages and
 their specified versions are installed in a just-in-time manner. Thus, it is possible
 in most cases to \texttt{smuggle} a specific package version or revision even if
 a different version has already been loaded. This enables more complex uses

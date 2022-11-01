@@ -308,7 +308,7 @@ For greater control over the behavior of \texttt{smuggle} statements, \texttt{da
 \end{center}
 Occasionally, a package's distribution name (i.e., the name used when installing it) may differ from its top-level module name (i.e., the name used when importing it). In such cases, an onion comment can be used to ensure \texttt{davos} installs the proper distribution if the smuggled package can't be found locally:
 %Onion comments are useful in such cases for ensuring \texttt{davos} installs the proper distribution if the smuggled package isn't installed locally:
-%Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) differs from its top-level module name (i.e., the name used when importing it). Onion comments are useful in such cases for
+%Onion comments are useful when smuggling a package whose distribution name (i.e., the name used when installing it) differs from its top-level module name (i.e., the name used when importing it). Onion comments are useful in such cases for 
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet2}
 \end{center}
@@ -341,7 +341,7 @@ The \texttt{davos} config provides a simple, high-level interface for controllin
 \item \texttt{.suppress\_stdout}: If \texttt{True} (default: \texttt{False}), suppress all unnecessary output issued by both \texttt{davos} and the installer program. This can be useful when smuggling packages that need to install many dependencies and/or generate extensive output. If the installer program throws an error, both the stdout and stderr streams will be displayed with the traceback.
 \end{itemize}
 
-%\noindent The \texttt{davos.config} object also provides a few informative read-only fields, including:
+%\noindent The \texttt{davos.config} object also provides a few informative read-only fields, including: 
 %\begin{itemize}
 %\item \texttt{.environment}: This field's value is a short string describing the notebook environment in which \texttt{davos} is currently running. This is used internally may be one of \texttt{IPython<7.0} (a notebook whose frontend uses the Jupyter JavaScript library and whose backend uses an IPython version older than v7.0), \texttt{IPython>=7.0} (, or \texttt{}
 %\end{itemize}
@@ -373,6 +373,13 @@ The call to the \texttt{smuggle()} function then carries out \texttt{davos}'s ce
 % ----------------------------------------------- ILLUSTRATIVE EXAMPLES ------------------------------------------------
 \section{Illustrative Examples}
 % Provide at least one illustrative example to demonstrate the major functions.
+
+\begin{figure}[tp]
+\centering
+\includegraphics[width=\textwidth]{figs/illustrative_example}
+\caption{\small \textbf{Example use case for \texttt{davos}'s functionality.} }
+\label{fig:illustrative-example}
+\end{figure}
 
 % Optional: you may include one explanatory video that will appear next to your article, in the right hand side panel. (Please upload any video as a single supplementary file with your article. Only one MP4 formatted, with 50MB maximum size, video is possible per article. Recommended video dimensions are 640 x 480 at a maximum of 30 frames/second. Prior to submission please test and validate your .mp4 file at $ http://elsevier-apps.sciverse.com/GadgetVideoPodcastPlayerWeb/verification$. This tool will display your video exactly in the same way as it will appear on ScienceDirect.).
 

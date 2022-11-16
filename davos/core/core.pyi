@@ -25,6 +25,7 @@ from typing import (
 __all__: list[
     Literal[
         'capture_stdout',
+        'check_conda',
         'Onion',
         'parse_line',
         'prompt_input',

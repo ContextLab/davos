@@ -153,13 +153,13 @@ class DavosConfig(metaclass=SingletonConfig):
             self._environment = 'Python'
         else:
             import IPython
-            if IPython.version_info[0] < 7:
+            if IPython.version_info[0] >= 7:
                 if 'google.colab' in str(self._ipython_shell):
                     self._environment = 'Colaboratory'
                 else:
-                    self._environment = 'IPython<7.0'
+                    self._environment = 'IPython>=7.0'
             else:
-                self._environment = 'IPython>=7.0'
+                self._environment = 'IPython<7.0'
         self._conda_avail = None
         self._conda_envs_dirs = None
         self._ipy_showsyntaxerror_orig = None
@@ -215,11 +215,12 @@ class DavosConfig(metaclass=SingletonConfig):
                     self._pip_executable = f'{sys.executable} -m pip'
             else:
                 self._pip_executable = pip_exe
+        self._pip_executable_orig = self._pip_executable
 
     def __repr__(self):
         cls_name = self.__class__.__name__
         base_indent = len(cls_name) + 1
-        attrs_in_repr = ['active', 'auto_rerun', 'conda_avail']
+        attrs_in_repr = ['active', 'auto_rerun']
         if self._conda_avail is not None:
             attrs_in_repr.append('conda_avail')
             if self._conda_avail is True:

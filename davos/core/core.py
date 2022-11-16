@@ -17,7 +17,7 @@ __all__ = [
 import importlib
 import itertools
 import sys
-from contextlib import redirect_stdout
+from contextlib import contextmanager, redirect_stdout
 from io import StringIO
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -247,6 +247,69 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
     return prev_imported_pkgs
 
 
+@contextmanager
+def handle_alternate_pip_executable(installed_name):
+    """
+    Context manager that makes it possible to load packages installed
+    into a different Python environment by changing the `pip` executable
+    (`davos.config.pip_executable`).
+
+    Parameters
+    ----------
+    installed_name : str
+        Package name as passed to the `pip install` command. This is the
+        value of self.install_name for the Onion object for the
+        just-installed package.
+
+    Notes
+    -----
+    super-duper edge case not handled by this: user has used alternate
+    pip_executable to smuggle local package from CWD and supplies
+    relative path in onion comment (i.e., "# pip: . <args>").
+    """
+    if '/' in installed_name:
+        # handle local paths, local/remote VCS, PEP 440 direct ref, etc.
+        dist_name = installed_name.split('@')[0].split('#')[0].split('/')[-1]
+    else:
+        # common case
+        dist_name = installed_name
+
+    # get install location from `pip show ___` command.
+    # In most cases, this will be davos.config.pip_executable with
+    # trailing 'bin/pip' replaced with python<major.minor>/site-packages
+    # but since this runs only if non-default pip_executable is set,
+    # it's worth the extra run time to check the safer way in order to
+    # handle various edge cases (e.g., installing from VCS, etc.)
+    pip_show_cmd = f'{config._pip_executable} show {dist_name}'
+    try:
+        pip_show_stdout = run_shell_command(pip_show_cmd, live_stdout=False)
+        location_line = next(
+            l for l in pip_show_stdout.strip().splitlines()
+            if l.startswith('Location')
+        )
+    except (CalledProcessError, StopIteration) as e:
+        msg = (
+            "Unable to locate package installed installed with non-default "
+            f"'pip' executable: {dist_name}. Package has been successfully "
+            "installed but not loaded."
+        )
+        raise SmugglerError(msg) from e
+
+    install_location = location_line.split(': ', maxsplit=1)[1].strip()
+    sys.path.insert(0, install_location)
+    try:
+        # reload pkg_resources so import system will search dir
+        # containing just-installed package
+        importlib.reload(sys.modules['pkg_resources'])
+        yield
+    finally:
+        # remove temporary dir from path
+        sys.path.pop(0)
+        # reload pkg_resources again so import system no longer searches
+        # dir used by alternate pip_executable
+        importlib.reload(sys.modules['pkg_resources'])
+
+
 def import_name(name):
     """
     Import an object by its qualified name.
@@ -458,6 +521,8 @@ class Onion:
             args = self.args_str.replace("<", "'<'").replace(">", "'>'")
         if self.installer == 'pip':
             install_exe = config._pip_executable
+            if config.noninteractive:
+                args = f'{args} --no-input'
         else:
             install_exe = self.installer
 
@@ -945,7 +1010,11 @@ def smuggle(
             else:
                 prompt_restart_rerun_buttons(failed_reloads)
 
-        smuggled_obj = import_name(name)
+        if config._pip_executable != config._pip_executable_orig:
+            with handle_alternate_pip_executable(onion.install_name):
+                smuggled_obj = import_name(name)
+        else:
+            smuggled_obj = import_name(name)
 
     # add the object name/alias to the notebook's global namespace
     if as_ is None:

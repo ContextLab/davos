@@ -28,7 +28,7 @@ defaults:
 
 jobs:
   run-tests:
-    name: "Run Colab CI Tests (Python 3.7, IPython 5.5.0)"
+    name: "Run Colab CI Tests (Python 3.7, IPython 7.9.0)"
     runs-on: ubuntu-latest
     # run if triggered by any of the following:
     #   - a workflow_dispatch event (manual or from trigger-colab-tests-pr workflow)
@@ -46,7 +46,7 @@ jobs:
       GMAIL_ADDRESS: ${{ secrets.DAVOS_GMAIL_ADDRESS }}
       GMAIL_PASSWORD: ${{ secrets.DAVOS_GMAIL_PASSWORD }}
       HEAD_FORK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.fork || github.repository_owner }}
-      IPYTHON_VERSION: 5.5.0
+      IPYTHON_VERSION: 7.9.0
       NOTEBOOK_TYPE: colab
       PYTHON_VERSION: 3.7
       RECOVERY_GMAIL_ADDRESS: ${{ secrets.DAVOS_RECOVERY_GMAIL_ADDRESS }}

@@ -215,6 +215,7 @@ class DavosConfig(metaclass=SingletonConfig):
                     self._pip_executable = f'{sys.executable} -m pip'
             else:
                 self._pip_executable = pip_exe
+        self._pip_executable_orig = self._pip_executable
 
     def __repr__(self):
         cls_name = self.__class__.__name__

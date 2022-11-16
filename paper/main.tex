@@ -373,7 +373,7 @@ The call to the \texttt{smuggle()} function then carries out \texttt{davos}'s ce
 
 
 % ----------------------------------------------- ILLUSTRATIVE EXAMPLES ------------------------------------------------
-\section{Illustrative Examples}
+\section{Illustrative Example}\label{sec:illustrative-example}
 % Provide at least one illustrative example to demonstrate the major functions.
 
 \begin{figure}[tp]
@@ -476,27 +476,13 @@ their specified versions are installed in a just-in-time manner. Thus, it is pos
 in most cases to \texttt{smuggle} a specific package version or revision even if
 a different version has already been loaded. This enables more complex uses
 that take advantage of multiple versions of a package within a single interpreter
-session. This could be useful in cases where specific features are added or
+session (e.g., see Section~\ref{sec:illustrative-example}). This could be useful in cases where specific features are added or
 removed from a package across different versions, or in comparing the
 performance or functionality of particular features across different versions of
 the same package.
 
-A second advanced use case is in providing a proof-of-concept of how
-one can add new ``keyword-like'' operators to the Python language by
-leveraging notebooks' error-handling mechanisms. This could lead to
-exciting new tools that, like \texttt{davos}, extend the Python
-language in useful ways within notebook-based environments. We note that
-our approach to adding the \texttt{smuggle} keyword to Python when
-\texttt{davos} is imported into a notebook-based environment also has
-the potential to be exploited for more nefarious purposes. For
-example, a malicious user could use a similar approach (e.g., in a
-different library) to substantially change a notebook's functionality
-by adding new \textit{unexpected} keyword-like objects (e.g., based
-around common typos). This could lead to difficult-to-predict changes
-in a notebook's behavior once the malicious library was imported.
-This highlights an important reason why security-conscious users would
-be well-served to only make use of libraries from trusted sources, or
-whose code is publicly available for review.
+A second more subtle impact of our work is in providing a proof-of-concept of how the ability to add new ``keyword-like'' operators to the Python language could be specifically useful to researchers. With \texttt{davos}, we accomplish this by leveraging IPython notebooks' internal code parsing and execution machinery. We note that, while other popular packages similarly use these mechanisms to providing notebook-specific functionality (e.g., \cite{Hunt07,HeusEtal18a}), this approach also has the potential to be exploited for more nefarious purposes. For example, a malicious user could design a Python library that, when imported, substantially changes the notebook's functionality by adding new \textit{unexpected} keyword-like objects (e.g., based around common typos). We also note that this implementation approach means \texttt{davos}'s functionality is currently restricted to IPython notebook environments, as would be that of any potential similar tools that enable user-defined keywords. However, there has been early-stage discussion of providing this sort of syntactic customizability as a core feature of the Python language, including a draft proposal \cite{Shan20}. In addition to enabling \texttt{davos} to be extended for use outside of notebooks, this could lead to exciting new tools that, like \texttt{davos}, extend the Python language in useful and more secure ways.
+
 
 % ---------------------------------------------------- CONCLUSIONS -----------------------------------------------------
 \section{Conclusions}

@@ -1,0 +1,3 @@
+[submodule "paper/CDL-bibliography"]
+	path = paper/CDL-bibliography
+	url = https://github.com/ContextLab/CDL-bibliography.git

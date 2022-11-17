@@ -34,6 +34,10 @@ paper/*.log
 paper/*.out
 paper/*.spl
 paper/*.synctex.gz
+*.aux
+*.log
+*.out
+*.synctex.gz
 
 # Illustrator source files
 paper/figs/*.ai

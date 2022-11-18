@@ -37,6 +37,7 @@ smuggler again. Would that you were an onion._
   <br>
 </div>
 
+# Introduction
 
 The `davos` library provides Python with an additional keyword: **`smuggle`**.
 
@@ -44,18 +45,37 @@ The `davos` library provides Python with an additional keyword: **`smuggle`**.
 [`import` statement](https://docs.python.org/3/reference/import.html), with one major difference: **you can `smuggle` a
 package without installing it first**.
 
-A key use case for this package is turning standard [IPython notebooks](https://ipython.org/notebook.html) (including [Google Colaboratory notebooks](https://colab.research.google.com/)) into fully specified Python environments, without the need for external containers or virtualized environments like conda, docker, etc.  This can facilitate sharing, collaboration, and reproducibility without the need for time-, knowledge-, and resource-intensive setup.
+## Why would I want to replace `import`?
 
-While the simplest way to use `davos` is as a drop-in replaceemnt for `import`, the way `davos` smuggles packages can be fully controlled and customized using ["_onion comments_"](#the-onion-comment).  Onion comments can be added to lines containing `smuggle` statements to specify which
-**specific package versions** should be installed and imported, and to **fully control how missing packages are installed**.
+In many cases, `smuggle` and `import` do the same thing-- *if you are running code in the same environment you developed it in*.  But what if you want to share your notebook with someone else?  If the user (i.e., the "someone else" in this example) doesn't have all of the packages you're importing into your notebook, Python will raise an exception and the code won't run.  It's not a huge deal, of course, but it's inconvenient (e.g., the user might need to `pip`-install the missing packages, restart their kernel, re-run the code up to the point it crashed, etc.-- possibly going through this cycle multiple times until the thing finally runs).  
 
-**To enable the `smuggle` keyword, simply `import davos`**:
+A second (and more subtle) issue arises when the developer (i.e., the person who *wrote* the code) used or assumed different versions of the imported packages than what the user has installed in their environment.  So maybe the original author was developing and testing their code using `pandas` 1.3.5, but the user hasn't upgraded their `pandas` installation since 0.25.0.  Python will happily "`import pandas`" in both cases, but any changes across those versions might change what the developer's code actually does in the user's (different) environment.
+
+The problem `davos` tries to solve is similar to the idea motivating virtual environments, containers, and virtual machines: we want a way of replicating the original developer's environment on the user's machine, to a sufficiently good approximation that we can be "reasonably confident" that the code will continue to behave as expected.
+
+When you `smuggle` packages instead of importing them, it guarantees (for whatever environment the code is running in) that the packages are importable, even if they hadn't been installed previously.  Under the hood, `davos` figures out whether the package is available, and if not it uses `pip` to download and install anything that's missing (including missing dependencies).  From that point, after having automatically handled those sorts of dependency issues, `smuggle` behaves just like `import`.
+
+The second powerful feature of `davos` comes from another construct, called "onion comments."  These are like standard Python comments, but they appear on the same line(s) as `smuggle` statements, and they are formatted in a particular way.  Onion comments provide a way of precisely controlling how, when, and where packages are installed, how (or if) the system checks for existing installations, and so on.  A key feature is the ability to specify exactly which version(s) of each package are imported into the current workspace.  When used in this way, `davos` enables authors to guarantee that the same versions of the packages they developed their code with will also be imported into the user's workspace at the appropriate times.
+
+## Why not use virtual environments, containers, and/or virtual machines instead?
+
+You can!  In fact, `davos` works great when used inside of virtual environments, containers, and virtual machines.  There are a few specific advantages to `davos`, however:
+  - `davos` is very lightweight-- importing `davos` into a notebook-based environment unlocks all of its functionality without needed to install or set up additional stuff.  There is none of the typical overhead of setting up a new virtual environment (or container, virtual machine, etc.), installing third-party tools, and so on.  All of your code *and its dependencies* may be contained in a single notebook file.
+  - using onion comments, `davos` can enable mutliple versions of the same package to be used or specified in different parts of the same notebook.  Want to use some depreciated function in `scikit-learn` in one cell, but then use one of the latest features in another?  You can!  Just add onion comments specifying which versions of the package you want to `smuggle` in which cells of your notebook.
+
+## Ok...so how do I use this thing?
+
+To turn a standard [Jupyter (IPython) notebook](https://ipython.org/), including a [Google Colaboratory notebook](colab.research.google.com), into a `davos`-enhanced notebook, just add two lines to the first cell:
 ```python
+!pip install davos
 import davos
+```
 
+This will enable the `smuggle` keyword in your notebook environment.  Then you can do things like:
+
+```python
 # pip-install numpy v1.20.2, if needed
 smuggle numpy as np    # pip: numpy==1.20.2
-
 
 # the smuggled package is fully imported and usable
 arr = np.arange(15).reshape(3, 5)
@@ -63,6 +83,8 @@ arr = np.arange(15).reshape(3, 5)
 # and the onion comment guarantees the desired version!
 assert np.__version__ == '1.20.2'
 ```
+
+Interested?  Curious? Intrigued?  Check out the table of contents for more details!  You may also want to check out our [paper](paper/main.pdf) for more formal descriptions and explanations.
 
 ## Table of contents
 - [Table of contents](#table-of-contents)

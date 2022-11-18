@@ -533,26 +533,26 @@ the \texttt{pandas} and \texttt{scikit-learn}~\cite{PedrEtal11}
 packages may be loaded in (using older versions of each package) and
 manipulated or analyzed (using more recent versions of each package).
 
-After importing \texttt{davos} (line 1), we first smuggle two
+After installing and importing \texttt{davos} (lines 1--2), we first smuggle two
 utilities for interacting with local files in the code below. The
-\texttt{smuggle} statement in line 3 loads the \texttt{is\_file()}
+\texttt{smuggle} statement in line 4 loads the \texttt{is\_file()}
 function from the Python standard library's \texttt{os.path}
 module. Standard library modules are included with all Python
 distributions, so this line is functionally equivalent to an
 \texttt{import} statement and does not need or benefit from an onion
-comment. Line 4 loads the \texttt{joblib} package~\cite{Varo10},
+comment. Line 5 loads the \texttt{joblib} package~\cite{Varo10},
 installing it first, if necessary. Since \texttt{joblib}'s I/O
 interface has historically remained stable and backwards-compatible
 across releases, requiring that users have a particular exact version
 installed would likely be unnecessarily restrictive. However, a
 \textit{future} release might introduce some breaking change.  The
-onion comment in line 4 helps ensure the analysis notebook continues
+onion comment in line 5 helps ensure the analysis notebook continues
 to run properly in the future, by limiting allowable versions to those
 already released when the code was written:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example1}
 \end{center}
-Line 6 then uses the \texttt{davos.config} object to enable
+Line 7 then uses the \texttt{davos.config} object to enable
 \texttt{davos}'s \texttt{auto\_rerun} option before smuggling the next
 two packages: \texttt{NumPy}~\cite{HarrEtal20} and
 \texttt{pandas}. Because these packages rely heavily on custom C data
@@ -572,38 +572,38 @@ lines:
 If we suppose that the data contained in \texttt{data-old.pkl} is
 stored in a \texttt{Panel} object (i.e., created in a version of
 \texttt{pandas} prior to 0.25.0), then we would not be able to load in
-that object with newer versions of \texttt{pandas}.  Line 10 ensures
+that object with newer versions of \texttt{pandas}.  Line 11 ensures
 that an older version of \texttt{pandas} will be imported, enabling
-the data to be read in (and, in line 12, saved out to a \texttt{.csv}
+the data to be read in (and, in line 13, saved out to a \texttt{.csv}
 file, which is compatible with newer versions of \texttt{pandas}).
 
 Newer versions of \texttt{pandas} have brought substantial
 performance improvements, added new functionality, fixed bugs, etc.
 Although the original dataset had to be read in using an older version
 of the package, we can take advantage of those newer changes using a
-new \texttt{smuggle} statement and onion comment on line 14 (which
+new \texttt{smuggle} statement and onion comment on line 15 (which
 specifies that version 1.3.5 should be imported).  Since
 \texttt{pandas} had already been imported into the current workspace
-(on line 10), the runtime must be restarted in order to gain access to
+(on line 11), the runtime must be restarted in order to gain access to
 the newer version of \texttt{pandas}.  The \texttt{.auto\_rerun} flag
-set on line 6 enables this process to happen automatically, and saving
-out the dataset to a \texttt{.csv} file in lines 9--12 ensures that
+set on line 7 enables this process to happen automatically, and saving
+out the dataset to a \texttt{.csv} file in lines 10--13 ensures that
 the older version of \texttt{pandas} does not need to be reinstalled.
 
-Next, line 16 uses the \texttt{davos.configure()} function to disable
+Next, line 17 uses the \texttt{davos.configure()} function to disable
 the \texttt{auto\_rerun} option and simultaneously enable two other
 options: \texttt{suppress\_stdout} and \texttt{noninteractive}. With
-these options enabled, lines 17--18 \texttt{smuggle}
+these options enabled, lines 18--19 \texttt{smuggle}
 \texttt{TensorFlow}~\cite{AbadEtal15}, a powerful end-to-end platform
 for building and working with machine learning models, and
 \texttt{UMAP}~\cite{McInEtal18b}, a package that implements a family
-of related manifold learning techniques. The onion comment in line 18
+of related manifold learning techniques. The onion comment in line 19
 also specifies that \texttt{UMAP} should be installed with the
 optional requirements needed for its ``plot'' and ``parametric\_umap''
 features. Together, these two packages depend on 36 other unique
 packages, most of which have dependencies of their own. And if many of
 these are not already installed in the user's environment, lines
-17--18 could take several minutes to run.  Enabling the
+18--19 could take several minutes to run.  Enabling the
 \texttt{noninteractive} option ensures that the installation will
 continue automatically without user input during that time.  Enabling
 \texttt{suppress\_stdout} also suppresses console outputs from the
@@ -612,14 +612,14 @@ installer that might otherwise distract from other more important outputs.
 \includegraphics[width=0.9\textwidth]{figs/example4}
 \end{center}
 
-After re-enabling these two options (line 19), we next smuggle
+After re-enabling these two options (line 20), we next smuggle
 specific versions of three plotting packages:
 \texttt{Matplotlib}~\cite{Hunt07}, \texttt{seaborn}~\cite{Wask21}, and
-\texttt{Quail}~\cite{HeusEtal17} (lines 21--23). Because the first two
+\texttt{Quail}~\cite{HeusEtal17} (lines 22--24). Because the first two
 are requirements of \texttt{UMAP}'s optional ``plot'' feature, they
-will have already been installed by line 18, though possibly as
+will have already been installed by line 19, though possibly as
 different versions than those specified in the onion comments on lines
-21 and 22. If the installed and specified versions are the same, these
+22 and 23. If the installed and specified versions are the same, these
 \texttt{smuggle} statements will function like standard \texttt{import}
 statements to load the packages into the notebook namespace. If they
 differ, \texttt{davos} will download the requested versions in place
@@ -627,14 +627,14 @@ of the installed versions before doing so.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example5}
 \end{center}
-Line 23 uses an onion comment to specify that \texttt{Quail} should be
+Line 24 uses an onion comment to specify that \texttt{Quail} should be
 installed directly from a specific GitHub commit (\texttt{6c847a4}).
 This ability to install packages directly from GitHub repositories can
 enable developers to use forked or modified versions of other
 packages in their notebooks, even if those versions have not been
 officially released.
 
-In lines 25--28, we demonstrate another aspect of \texttt{davos}'s
+In lines 26--29, we demonstrate another aspect of \texttt{davos}'s
 functionality that supports more advanced installation scenarios.  The
 \texttt{ipywidgets}~\cite{FredEtal15} package provides an API for
 creating widgets, and the \texttt{widgetsnbextension} package provides
@@ -650,7 +650,7 @@ environments are the same.  However, a common ``advanced'' approach
 entails running the notebook server from a base environment, with
 additional environments each providing their own separate,
 interchangeable IPython kernels.  To accomodate this multi-environment
-scenario, on lines 25 and 27 we control which environments each
+scenario, on lines 26 and 28 we control which environments each
 package should be installed to.  Once these two packages are installed
 and imported, line 30 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
 display progress bars to provide status updates for running code. In
@@ -661,8 +661,8 @@ importable. Therefore, to take advantage of this feature, it was
 important to \texttt{smuggle} \texttt{tqdm} after ensuring the
 \texttt{ipywidgets} package was available.
 
-Next, we load in the reformatted dataset (line 32) and pre-trained
-model (line 34) that we wish to use in our analysis.  In our
+Next, we load in the reformatted dataset (line 33) and pre-trained
+model (line 35) that we wish to use in our analysis.  In our
 hypothetical example, we can suppose that the model was provided as a
 \texttt{scikit-learn} \texttt{Pipeline} object that passes data
 through two pretrained models in succession.  First, a trained \texttt{CountVectorizer}
@@ -681,18 +681,17 @@ different \texttt{scikit-learn} versions.  For example, suppose that
 the \texttt{Pipeline} object was created using \texttt{scikit-learn}
 v0.21.3).  In that version of \texttt{scikit-learn}, the
 \texttt{LatentDirichletAllocation} class is defined in
-\texttt{sklearn.decomposition.\_lda}.  However, in version
+\texttt{sklearn.decomposition.online\_lda}.  However, in version
 0.22.0, that module was renamed to \texttt{\_online\_lda}, and in
-versions 0.22.1 and higher, the name was reverted back to
-\texttt{\_lda}.
+version 0.22.1, it was again renamed to \texttt{\_lda}.
 
-In order to correctly load the model that includes the pretrained
-\texttt{LatentDirichletAllocation} instance, in line 33, we first
+In order to correctly load the model that includes the pre-trained
+\texttt{LatentDirichletAllocation} instance, in line 34, we first
 smuggle a version of \texttt{scikit-learn} prior to v0.22.0 (i.e.,
 before the first time the relevant module's name was changed).  Once
 the model is loaded and reconstructed in memory from a compatible
-package version (line 34), we upgrade to a newer version of
-\texttt{scikit-learn} in line 35.  Taken together, the code in
+package version (line 35), we upgrade to a newer version of
+\texttt{scikit-learn} in line 36.  Taken together, the code in
 Figure~\ref{fig:illustrative-example} shows how \texttt{davos} can
 enable users to load in data and models that are incompatible with
 newer versions of \texttt{pandas} and \texttt{scikit-learn}, but still

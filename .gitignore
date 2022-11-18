@@ -27,17 +27,13 @@ tests/geckodriver
 scratch/
 
 # LaTeX generated files
-paper/*.aux
-paper/*.bbl
-paper/*.blg
-paper/*.log
-paper/*.out
-paper/*.spl
-paper/*.synctex.gz
-*.aux
-*.log
-*.out
-*.synctex.gz
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.log
+paper/**/*.out
+paper/**/*.spl
+paper/**/*.synctex.gz
 
 # Illustrator source files
 paper/figs/*.ai

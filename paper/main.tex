@@ -220,7 +220,7 @@ including package versions.
 
 The \texttt{davos} package is named after Davos Seaworth, a smuggler
 referred to as ``the Onion Knight" from the series \textit{A Song of
-  Ice and Fire} by George R. R. Martin~\citep{Mart12}.  The
+  Ice and Fire} by George R. R. Martin~\cite{Mart98}.  The
 \texttt{smuggle} keyword-like operator implemented in \texttt{davos}
 is a play on Python's \texttt{import} keyword: whereas importing can
 bring a package into the Python workspace within the existing rules
@@ -234,17 +234,17 @@ workspace.
 \begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{figs/package_structure}
-\caption{\small \textbf{Package structure.} The \texttt{davos} package
-  comprises two interdependent subpackages.  The \texttt{davos.core}
+\caption{\small \textbf{Package structure.} The \texttt{davos} package (orange)
+  comprises two interdependent subpackages (purple).  The \texttt{davos.core}
   subpackage includes modules for parsing \texttt{smuggle} statements
   and onion comments, installing and validating packages, and
   configuring \texttt{davos}'s behavior.  The
   \texttt{davos.implementations} subpackage includes
   environment-specific modifications and features that are needed to
   support the core functionality across different notebook-based
-  environments.  Individual \texttt{.py} files are represented by lime
+  environments.  Individual modules (i.e., \texttt{.py} files) are represented by lime
   rounded rectangles, and arrows denote dependencies (each arrow
-  points to a file that imports objects defined or specified at the
+  points to a module that imports objects defined in the module at the
   arrow's source).}
 \label{fig:package-structure}
 \end{figure}
@@ -468,7 +468,7 @@ The call to the \texttt{smuggle()} function carries out
 \texttt{davos}'s central logic by determining whether the smuggled
 package must be installed, carrying out the installation if necessary,
 and subsequently loading it into the namespace. This process is
-outlined in Figure \ref{fig:flow-chart}. Because the
+outlined in Figure~\ref{fig:flow-chart}. Because the
 \texttt{smuggle()} function is defined in the notebook namespace, it
 is also possible (though never necessary) to call it
 directly. Deactivating \texttt{davos} will delete the name
@@ -667,7 +667,7 @@ hypothetical example, we can suppose that the model was provided as a
 \texttt{scikit-learn} \texttt{Pipeline} object that passes data
 through two pretrained models in succession.  First, a trained \texttt{CountVectorizer}
 instance converts text data to an array of word counts.  Second, the
-word counts are passed to a topic model~\citep{BleiEtal03} using a
+word counts are passed to a topic model~\cite{BleiEtal03} using a
 pretrained \texttt{LatentDirichletAllocation} instance.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example7}
@@ -779,7 +779,7 @@ that this implementation approach means \texttt{davos}'s functionality
 is currently restricted to IPython notebook environments. However,
 there have been early-stage discussions of providing this sort of
 syntactic customizability as a core feature of the Python language,
-including a draft proposal \cite{Shan20}. In addition to enabling
+including a draft proposal~\cite{Shan20}. In addition to enabling
 \texttt{davos} to be extended for use outside of notebooks, this could
 lead to exciting new tools that, like \texttt{davos}, extend the
 Python language in useful and more secure ways.

@@ -6,18 +6,18 @@
   <a href="https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml">
     <img src="https://github.com/ContextLab/davos/actions/workflows/ci-tests-jupyter.yml/badge.svg?branch=main" alt="CI Tests (Jupyter)">
   </a>
-  <a href="https://github.com/ContextLab/davos/actions/workflows/ci-tests-colab.yml">
+  <!-- <a href="https://github.com/ContextLab/davos/actions/workflows/ci-tests-colab.yml">
     <img src="https://github.com/ContextLab/davos/actions/workflows/ci-tests-colab.yml/badge.svg?branch=main&event=push" alt="CI Tests (Colab)">
-  </a>
-  <img src="https://img.shields.io/codefactor/grade/github/paxtonfitzpatrick/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
-  <img src="https://img.shields.io/badge/mypy-type%20checked-blue" alt="mypy: checked">
-  <br>
+  </a> -->
   <a href="https://pypi.org/project/davos/">
     <img src="https://img.shields.io/pypi/pyversions/davos?logo=python&logoColor=white" alt="Python Versions">
   </a>
   <a href="https://pepy.tech/project/davos">
     <img src="https://static.pepy.tech/personalized-badge/davos?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads" alt="PyPI Downloads">
   </a>
+  <br>
+  <img src="https://img.shields.io/codefactor/grade/github/paxtonfitzpatrick/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
+  <img src="https://img.shields.io/badge/mypy-type%20checked-blue" alt="mypy: checked">
   <br>
   <a href="https://github.com/ContextLab/davos/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/ContextLab/davos" alt="License: MIT">
@@ -34,40 +34,69 @@ smuggler again. Would that you were an onion._
   <a href="https://en.wikipedia.org/wiki/A_Song_of_Ice_and_Fire"><i>A Clash of Kings</i></a> by
   <a href="https://en.wikipedia.org/wiki/George_R._R._Martin">George R. R. Martin</a>
   <br>
-  <br>
 </div>
 
 # Introduction
 
 The `davos` library provides Python with an additional keyword: **`smuggle`**.
 
-[The `smuggle` statement](#the-smuggle-statement) works just like the built-in
-[`import` statement](https://docs.python.org/3/reference/import.html), with one major difference: **you can `smuggle` a
-package without installing it first**.
+[The `smuggle` statement](#the-smuggle-statement) works just like the built-in [`import` statement](https://docs.python.org/3/reference/import.html), with two major differences: 
+1. You can `smuggle` a package _without installing it first_
+2. You can `smuggle` a _specific version_ of a package
 
-## Why would I want to replace `import`?
+## Why would I want an alternative to `import`?
 
-In many cases, `smuggle` and `import` do the same thing-- *if you are running code in the same environment you developed it in*.  But what if you want to share your notebook with someone else?  If the user (i.e., the "someone else" in this example) doesn't have all of the packages you're importing into your notebook, Python will raise an exception and the code won't run.  It's not a huge deal, of course, but it's inconvenient (e.g., the user might need to `pip`-install the missing packages, restart their kernel, re-run the code up to the point it crashed, etc.-- possibly going through this cycle multiple times until the thing finally runs).  
+In many cases, `smuggle` and `import` do the same thing&mdash;*if you're running code in the same environment you
+developed it in*.  But what if you want to share a [Jupyter notebook](https://jupyter.org/) containing your code with
+someone else?  If the user (i.e., the "someone else" in this example) doesn't have all of the packages your notebook
+imports, Python will raise an exception and the code won't run.  It's not a huge deal, of course, but it's inconvenient
+(e.g., the user might need to `pip`-install the missing packages, restart their kernel, re-run the code up to the point
+it crashed, etc.&mdash;possibly going through this cycle multiple times until the thing finally runs).  
 
-A second (and more subtle) issue arises when the developer (i.e., the person who *wrote* the code) used or assumed different versions of the imported packages than what the user has installed in their environment.  So maybe the original author was developing and testing their code using `pandas` 1.3.5, but the user hasn't upgraded their `pandas` installation since 0.25.0.  Python will happily "`import pandas`" in both cases, but any changes across those versions might change what the developer's code actually does in the user's (different) environment.
+A second (and more subtle) issue arises when the developer (i.e., the person who *wrote* the code) used or assumed
+different versions of the imported packages than what the user has installed in their environment.  So maybe the
+original author was developing and testing their code using `pandas` 1.3.5, but the user hasn't upgraded their `pandas`
+installation since 0.25.0.  Python will happily "`import pandas`" in both cases, but any changes across those versions
+might change what the developer's code actually does in the user's (different) environment&mdash;or cause it to fail
+altogether.
 
-The problem `davos` tries to solve is similar to the idea motivating virtual environments, containers, and virtual machines: we want a way of replicating the original developer's environment on the user's machine, to a sufficiently good approximation that we can be "reasonably confident" that the code will continue to behave as expected.
+The problem `davos` tries to solve is similar to the idea motivating virtual environments, containers, and virtual
+machines: we want a way of replicating the original developer's environment on the user's machine, to a sufficiently
+good approximation that we can be "reasonably confident" that the code will continue to behave as expected.
 
-When you `smuggle` packages instead of importing them, it guarantees (for whatever environment the code is running in) that the packages are importable, even if they hadn't been installed previously.  Under the hood, `davos` figures out whether the package is available, and if not it uses `pip` to download and install anything that's missing (including missing dependencies).  From that point, after having automatically handled those sorts of dependency issues, `smuggle` behaves just like `import`.
+When you `smuggle` packages instead of importing them, it guarantees (for whatever environment the code is running in)
+that the packages are importable, even if they hadn't been installed previously.  Under the hood, `davos` figures out
+whether the package is available, and if not, it uses `pip` to download and install anything that's missing (including
+missing dependencies).  From that point, after having automatically handled those sorts of dependency issues, `smuggle`
+behaves just like `import`.
 
-The second powerful feature of `davos` comes from another construct, called "onion comments."  These are like standard Python comments, but they appear on the same line(s) as `smuggle` statements, and they are formatted in a particular way.  Onion comments provide a way of precisely controlling how, when, and where packages are installed, how (or if) the system checks for existing installations, and so on.  A key feature is the ability to specify exactly which version(s) of each package are imported into the current workspace.  When used in this way, `davos` enables authors to guarantee that the same versions of the packages they developed their code with will also be imported into the user's workspace at the appropriate times.
+The second powerful feature of `davos` comes from another construct, called "[_onion comments_](#the-onion-comment)."
+These are like standard Python comments, but they appear on the same line(s) as `smuggle` statements, and they are
+formatted in a particular way.  Onion comments provide a way of precisely controlling how, when, and where packages are
+installed, how (or if) the system checks for existing installations, and so on.  A key feature is the ability to specify
+exactly which version(s) of each package are imported into the current workspace.  When used in this way, `davos`
+enables authors to guarantee that the same versions of the packages they developed their code with will also be imported
+into the user's workspace at the appropriate times.
 
 ## Why not use virtual environments, containers, and/or virtual machines instead?
 
-You can!  In fact, `davos` works great when used inside of virtual environments, containers, and virtual machines.  There are a few specific advantages to `davos`, however:
-  - `davos` is very lightweight-- importing `davos` into a notebook-based environment unlocks all of its functionality without needed to install or set up additional stuff.  There is none of the typical overhead of setting up a new virtual environment (or container, virtual machine, etc.), installing third-party tools, and so on.  All of your code *and its dependencies* may be contained in a single notebook file.
-  - using onion comments, `davos` can enable mutliple versions of the same package to be used or specified in different parts of the same notebook.  Want to use some depreciated function in `scikit-learn` in one cell, but then use one of the latest features in another?  You can!  Just add onion comments specifying which versions of the package you want to `smuggle` in which cells of your notebook.
+You can!  In fact, `davos` works great when used inside of virtual environments, containers, and virtual machines.
+There are a few specific advantages to `davos`, however:
+  - `davos` is very lightweight&mdash;importing `davos` into a notebook-based environment unlocks all of its
+    functionality without needed to install, set up, and learn how to use additional stuff.  There is none of the
+    typical overhead of setting up a new virtual environment (or container, virtual machine, etc.), installing
+    third-party tools, writing and sharing configuration files, and so on.  All of your code *and its dependencies* may
+    be contained in a single notebook file.
+  - using onion comments, `davos` can enable mutliple versions of the same package to be used or specified in different
+    parts of the same notebook.  Want to use some deprecated or removed function in `scikit-learn` in one cell, but then
+    use one of the latest features in another?  You can!  Just add onion comments specifying which versions of the
+    package you want to `smuggle` in which cells of your notebook.
 
-## Ok...so how do I use this thing?
+## Okay... so how do I use this thing?
 
-To turn a standard [Jupyter (IPython) notebook](https://ipython.org/), including a [Google Colaboratory notebook](colab.research.google.com), into a `davos`-enhanced notebook, just add two lines to the first cell:
+To turn a standard [Jupyter (IPython) notebook](https://jupyter.org/), including a [Google Colaboratory notebook](https://colab.research.google.com), into a `davos`-enhanced notebook, just add two lines to the first cell:
 ```python
-!pip install davos
+%pip install davos
 import davos
 ```
 
@@ -101,14 +130,14 @@ Interested?  Curious? Intrigued?  Check out the table of contents for more detai
     - [Compare behavior across package versions](#compare-behavior-across-package-versions)
 - [Usage](#usage)
   - [The `smuggle` Statement](#the-smuggle-statement)
-    - [<a name="smuggle-statement-syntax"></a>Syntax](#syntax)
-    - [<a name="smuggle-statement-rules"></a>Rules](#rules)
+    - [Syntax](#smuggle-statement-syntax)
+    - [Rules](#smuggle-statement-rules)
   - [The Onion Comment](#the-onion-comment)
-    - [<a name="onion-comment-syntax"></a>Syntax](#syntax-1)
-    - [<a name="onion-comment-rules"></a>Rules](#rules-1)
+    - [Syntax](#onion-comment-syntax)
+    - [Rules](#onion-comment-rules)
   - [The `davos` Config](#the-davos-config)
-    - [<a name="config-reference"></a>Reference](#reference)
-    - [<a name="top-level-functions"></a>Top-level Functions](#top-level-functions)
+    - [Reference](#config-reference)
+    - [Top-level Functions](#top-level-functions)
 - [How It Works: The `davos` Parser](#how-it-works-the-davos-parser)
 - [Additional Notes](#additional-notes)
 
@@ -135,7 +164,7 @@ pip install git+https://github.com/ContextLab/davos.git
 
 ### Installing in Colaboratory
 To use `davos` in [Google Colab](https://colab.research.google.com/), add a cell at the top of your notebook with an
-exclamation mark (`!`) followed by one of the commands above (e.g., `!pip install davos`). Run the cell to install
+percentage sign (`%`) followed by one of the commands above (e.g., `%pip install davos`). Run the cell to install
 `davos` on the runtime virtual machine.
 
 **Note**: restarting the Colab runtime does not affect installed packages. However, if the runtime is "factory reset"

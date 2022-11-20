@@ -5,11 +5,9 @@
 \restylefloat{table}
 \usepackage[colorlinks=true, urlcolor=blue, pdfborder={0 0 0}]{hyperref}
 \usepackage{breakurl}
-\usepackage[htt]{hyphenat}
 \usepackage{placeins}
-\newcommand{\comment}[1]{}
 \usepackage{geometry}
-\geometry{letterpaper,left=1in,right=1in,top=1in,bottom=1in,headsep=0pt,footskip=0pt}
+\geometry{left=1in,right=1in,top=1in,bottom=1in,headsep=0pt}
 
 \journal{SoftwareX}
 
@@ -110,7 +108,7 @@ they are installing exactly the same code across different computing
 environments~\cite{CoghStuf13}.  While it is \textit{possible} to
 manually install the intended version of every dependency of a Python
 script or package, manually tracking down those dependencies can
-impose a substantial burden on the user and creates room for mistakes
+impose a substantial burden on the user and create room for mistakes
 and inconsistencies. Further, when dependency versions are left
 unspecified, replicating the original computing environment becomes
 difficult or impossible.
@@ -213,7 +211,7 @@ further setup or installation is required, beyond what is needed to
 run standard Jupyter notebooks. And like virtual environments,
 \texttt{davos} provides a convenient mechanism for fully specifying
 (and installing, as needed) a complete set of Python dependencies,
-including package versions.
+including specific package versions.
 
 
 \section{Software description}
@@ -221,9 +219,9 @@ including package versions.
 The \texttt{davos} package is named after Davos Seaworth, a smuggler
 referred to as ``the Onion Knight" from the series \textit{A Song of
   Ice and Fire} by George R. R. Martin~\cite{Mart98}.  The
-\texttt{smuggle} keyword-like operator implemented in \texttt{davos}
+\texttt{smuggle} keyword provided by \texttt{davos}
 is a play on Python's \texttt{import} keyword: whereas importing can
-bring a package into the Python workspace within the existing rules
+load a package into the Python workspace within the existing rules
 and frameworks provided by the Python language, ``smuggling'' provides
 an alternative that expands the scope and reach of ``importing.''
 Like the character Davos Seaworth (who became famous for smuggling
@@ -234,8 +232,8 @@ workspace.
 \begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{figs/package_structure}
-\caption{\small \textbf{Package structure.} The \texttt{davos} package (orange)
-  comprises two interdependent subpackages (purple).  The \texttt{davos.core}
+\caption{\small \textbf{Package structure.} The \texttt{davos} package
+  comprises two interdependent subpackages.  The \texttt{davos.core}
   subpackage includes modules for parsing \texttt{smuggle} statements
   and onion comments, installing and validating packages, and
   configuring \texttt{davos}'s behavior.  The
@@ -254,13 +252,13 @@ workspace.
 The \texttt{davos} package consists of two interdependent subpackages
 (see Fig.~\ref{fig:package-structure}). The first,
 \texttt{davos.core}, comprises a set of modules that
-implement\comment{provide?} the bulk of the package's core
+implement the bulk of the package's core
 functionality, including pipelines for installing and validating
 packages, custom parsers for the \texttt{smuggle} statement (see
 Section~\ref{subsec:smuggle}) and onion comment (see
 Section~\ref{subsec:onion}), and a runtime interface for configuring
 \texttt{davos}'s behavior (see Section~\ref{subsec:config}). However,
-certain critical\comment{other important} aspects of this
+certain critical aspects of this
 functionality require (often substantially) different implementations
 depending on properties of the notebook environment in which
 \texttt{davos} is used (e.g., whether the frontend is provided by
@@ -348,12 +346,12 @@ Onion comments can also be used to smuggle specific VCS references
 \texttt{davos} processes onion comments internally before forwarding
 arguments to the installer program. In addition to preventing onion
 comments from being used as a vehicle for shell injection attacks,
-this design provides the user with additional control over which
-packages are imported. For example, each of the
-\mbox{\texttt{-I}/\texttt{--ignore-installed}},
-\texttt{-U}/\texttt{--upgrade}, and \texttt{--force-reinstall} flags
-will cause \texttt{davos} to skip searching for a smuggled package
-locally before installing a new copy:
+this enables \texttt{davos} to adapt its behavior based on how particular
+flags will affect the behavior of the installer program. For example, if an
+onion comment contains either the \texttt{-I}/\texttt{--ignore-installed},
+\texttt{-U}/\texttt{--upgrade}, or \texttt{--force-reinstall} flag,
+\texttt{davos} will not bother checking for a local copy of the smuggled
+package before installing a new one:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet5}
 \end{center}
@@ -371,8 +369,8 @@ The \texttt{davos} config object provides a high-level interface for
 controlling various aspects of \texttt{davos}'s behavior. After
 importing \texttt{davos}, the \texttt{davos.con\-fig} object (a
 singleton) exposes configurable options as attributes that can be
-modified, checked at runtime, or displayed (see
-Sec.~\ref{sec:illustrative-example} for an illustrative example or
+modified, displayed in the notebook, or checked programmatically at runtime
+(see Sec.~\ref{sec:illustrative-example} for an illustrative example or
 Sec.~\ref{subsec:implementation} for implementation details and
 additional information). These include:
 
@@ -381,13 +379,13 @@ additional information). These include:
   statements and onion comments) is enabled (\texttt{True}) or
   disabled (\texttt{False}).  When \texttt{davos} is first imported),
   the \texttt{.active} attribute is set to \texttt{True}.
-  
+
 \item \texttt{.auto\_rerun}: This attribute controls how
   \texttt{davos} behaves when attempting to \texttt{smuggle} a new
   version of a package that was previously imported and cannot be
   reloaded. This can happen if the package includes extension modules
   that dynamically link C or C++ objects to the Python interpreter,
-  and if the code that generates those objects was changed between the
+  and the code that generates those objects was changed between the
   previously imported and to-be-smuggled versions.  If this attribute
   is set to \texttt{True}, \texttt{davos} will automatically restart
   the notebook kernel and rerun all code up to (and including) the
@@ -398,12 +396,12 @@ additional information). These include:
   the next time the kernel is restarted manually.  Note that, as of
   this writing, the \texttt{.auto\_rerun} attribute is not supported
   in Google Colaboratory notebooks.
-  
+
 \item \texttt{.confirm\_install}: If \texttt{True} (default:
   \texttt{False}), \texttt{davos} will require user confirmation
   before installing a smuggled package that does not yet exist in the
   user's environment.
- 
+
 \item \texttt{.noninteractive}: Setting this attribute to
   \texttt{True} (default: \texttt{False}) enables non-in\-ter\-act\-ive
   mode, in which all user interactions (prompts and dialogues) are
@@ -412,20 +410,20 @@ additional information). These include:
   \texttt{auto\_rerun} is \texttt{False} while in non-interactive
   mode, \texttt{davos} will raise an exception if a smuggled package
   cannot be reloaded, rather than prompting the user.
-  
+
 \item \texttt{.pip\_executable}: This attribute's value specifies the
   path to the \texttt{pip} executable used to install smuggled
   packages. The default is programmatically determined from the Python
   environment and falls back to \texttt{sys.executable -m pip} if no
   executable can be found.
-  
+
 \item \texttt{.suppress\_stdout}: If this attribute is set to
   \texttt{True} (default: \texttt{False}), \texttt{davos} suppresses
-  printed (console) outputs from itself and the installer program.
+  printed (console) outputs from both itself and the installer program.
   This can be useful when smuggling packages that need to install many
   dependencies and/or generate extensive output. However, if the installer
-  program throws an error, both the stdout and stderr streams will still be
-  displayed along with a stack trace.
+  program throws an error, both its stdout and stderr streams will be
+  displayed alongside the Python traceback to allow for debugging.
 \end{itemize}
 
 \noindent The top-level \texttt{davos} namespace also defines
@@ -438,11 +436,11 @@ simultaneously.
 \subsection{Implementation details}\label{subsec:implementation}
 
 Although \texttt{davos} is designed to \textit{appear} to add a new
-Python keyword to a notebook's vocabulary, this illusion is actually a
-consequence of several ``hacks'' that make use of the IPython backend
-for processing and executing notebook code.  Specifically, when
-\texttt{davos} is first imported, or when it is activated after being
-set to an inactive state, two actions are triggered.  First, the
+keyword to Python's vocabulary, this illusion is actually created through
+several ``hacks'' that make use of the notebook's IPython backend
+for processing and executing users' code.  Specifically, when
+\texttt{davos} is first imported, or when it is activated after having been
+set to an inactive state, two actions are triggered:  First, the
 \texttt{smuggle()} function is injected into the IPython user
 namespace.  Second, the \texttt{davos} parser is registered as a
 custom IPython input transformer.

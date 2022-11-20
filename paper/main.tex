@@ -255,9 +255,9 @@ The \texttt{davos} package consists of two interdependent subpackages
 implement the bulk of the package's core
 functionality, including pipelines for installing and validating
 packages, custom parsers for the \texttt{smuggle} statement (see
-Section~\ref{subsec:smuggle}) and onion comment (see
-Section~\ref{subsec:onion}), and a runtime interface for configuring
-\texttt{davos}'s behavior (see Section~\ref{subsec:config}). However,
+Sec.~\ref{subsec:smuggle}) and onion comment (see
+Sec.~\ref{subsec:onion}), and a runtime interface for configuring
+\texttt{davos}'s behavior (see Sec.~\ref{subsec:config}). However,
 certain critical aspects of this
 functionality require (often substantially) different implementations
 depending on properties of the notebook environment in which
@@ -287,7 +287,7 @@ needed.
 
 Functionally, importing \texttt{davos} in an IPython notebook enables
 an additional Python keyword: ``\texttt{smuggle}'' (see
-Section~\ref{subsec:implementation} for details on how this works).
+Sec.~\ref{subsec:implementation} for details on how this works).
 The \texttt{smuggle} keyword-like object can be used as a drop-in
 replacement for Python's built-in \texttt{import} keyword to load
 packages, modules, and other objects into the current namespace.
@@ -357,7 +357,7 @@ package before installing a new one:
 \end{center}
 Similarly, the \texttt{--no-input} flag will temporarily enable
 \texttt{davos}'s non-interactive mode (see
-Section~\ref{subsec:config}), and installing a smuggled package into a
+Sec.~\ref{subsec:config}), and installing a smuggled package into a
 custom directory (\texttt{<dir>}) using the \texttt{--target <dir>}
 flag will cause \texttt{davos} to prepend \texttt{<dir>} to the module
 search path (i.e., \texttt{sys.path}), if necessary, so the package
@@ -557,7 +557,7 @@ two packages: \texttt{NumPy}~\cite{HarrEtal20} and
 types, loading the particular versions from the onion comments may
 require restarting the notebook kernel if different versions had been previously
 imported during the same interpreter session (see
-Section~\ref{subsec:config}).
+Sec.~\ref{subsec:config}).
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example2}
 \end{center}
@@ -755,7 +755,7 @@ specific package version or revision even if a different version has
 already been loaded. This enables more complex uses that take
 advantage of multiple versions of a package within a single
 interpreter session (e.g., see
-Section~\ref{sec:illustrative-example}). This could be useful in cases
+Sec.~\ref{sec:illustrative-example} and Fig.~\ref{fig:illustrative-example}). This could be useful in cases
 where specific features are added or removed from a package across
 different versions, or in comparing the performance or functionality
 of particular features across different versions of the same package.

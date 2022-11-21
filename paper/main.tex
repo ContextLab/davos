@@ -440,7 +440,7 @@ keyword to Python's vocabulary, this illusion is actually created through
 several ``hacks'' that make use of the notebook's IPython backend
 for processing and executing users' code.  Specifically, when
 \texttt{davos} is first imported, or when it is activated after having been
-set to an inactive state, two actions are triggered:  First, the
+set to an inactive state, two actions are triggered.  First, the
 \texttt{smuggle()} function is injected into the IPython user
 namespace.  Second, the \texttt{davos} parser is registered as a
 custom IPython input transformer.
@@ -665,7 +665,7 @@ hypothetical example, we can suppose that the model was provided as a
 \texttt{scikit-learn} \texttt{Pipeline} object that passes data
 through two pretrained models in succession.  First, a trained \texttt{CountVectorizer}
 instance converts text data to an array of word counts.  Second, the
-word counts are passed to a topic model~\cite{BleiEtal03} using a
+word counts are passed to a topic model~\citep{BleiEtal03} using a
 pretrained \texttt{LatentDirichletAllocation} instance.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example7}

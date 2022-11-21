@@ -369,7 +369,7 @@ The \texttt{davos} config object provides a high-level interface for
 controlling various aspects of \texttt{davos}'s behavior. After
 importing \texttt{davos}, the \texttt{davos.con\-fig} object (a
 singleton) exposes configurable options as attributes that can be
-modified, displayed in the notebook, or checked programmatically at runtime
+modified, displayed in the notebook, or checked programmatically at runtime 
 (see Sec.~\ref{sec:illustrative-example} for an illustrative example or
 Sec.~\ref{subsec:implementation} for implementation details and
 additional information). These include:
@@ -379,7 +379,7 @@ additional information). These include:
   statements and onion comments) is enabled (\texttt{True}) or
   disabled (\texttt{False}).  When \texttt{davos} is first imported),
   the \texttt{.active} attribute is set to \texttt{True}.
-
+  
 \item \texttt{.auto\_rerun}: This attribute controls how
   \texttt{davos} behaves when attempting to \texttt{smuggle} a new
   version of a package that was previously imported and cannot be
@@ -396,12 +396,12 @@ additional information). These include:
   the next time the kernel is restarted manually.  Note that, as of
   this writing, the \texttt{.auto\_rerun} attribute is not supported
   in Google Colaboratory notebooks.
-
+  
 \item \texttt{.confirm\_install}: If \texttt{True} (default:
   \texttt{False}), \texttt{davos} will require user confirmation
   before installing a smuggled package that does not yet exist in the
   user's environment.
-
+ 
 \item \texttt{.noninteractive}: Setting this attribute to
   \texttt{True} (default: \texttt{False}) enables non-in\-ter\-act\-ive
   mode, in which all user interactions (prompts and dialogues) are
@@ -410,13 +410,13 @@ additional information). These include:
   \texttt{auto\_rerun} is \texttt{False} while in non-interactive
   mode, \texttt{davos} will raise an exception if a smuggled package
   cannot be reloaded, rather than prompting the user.
-
+  
 \item \texttt{.pip\_executable}: This attribute's value specifies the
   path to the \texttt{pip} executable used to install smuggled
   packages. The default is programmatically determined from the Python
   environment and falls back to \texttt{sys.executable -m pip} if no
   executable can be found.
-
+  
 \item \texttt{.suppress\_stdout}: If this attribute is set to
   \texttt{True} (default: \texttt{False}), \texttt{davos} suppresses
   printed (console) outputs from both itself and the installer program.
@@ -493,24 +493,20 @@ out the installation automatically if needed.  Second (right),
 
 \section{Illustrative Example}\label{sec:illustrative-example}
 
-
-
-Across different versions of a given package, functions may be
-changed, depreciated, added, or renamed.  In addition to changing the
-behaviors of active computations, saved objects created using one
-version of a package may be incompatible with another version of the
+Across different versions of a given package, particular modules, functions, and other objects 
+may be updated, removed, renamed, or otherwise altered in some manner.  In addition to changing the
+behaviors of active computations, these changes can render saved objects created using one
+version of a package incompatible with other versions of the
 same package.  For example, the popular \texttt{pandas}~\cite{McKi10}
-package prior to version 0.25.0 included the \texttt{Panel} datatype
-for storing 3-dimensional arrays.  Since version 0.20.0,
-however, the \texttt{Panel} datatype has been depreciated, and the
-datatype was removed entirely in version 0.25.0.  If one had saved a dataset in a
-\texttt{Panel} object (created using an older version of
-\texttt{pandas}), e.g., by serializing the \texttt{Panel} and saving
-it to disk using \texttt{pickle}, that dataset could not be read by
-any version of \texttt{pandas} from 0.25.0 or beyond.  These
-incompatibilities are not limited solely to traditional forms of data.
+library used to include the \texttt{Panel} data structure for storing 3-dimensional arrays.  
+Since version 0.20.0, however, the \texttt{Panel} class has been deprecated, and in 
+version 0.25.0, it was removed entirely. If a user had a dataset stored in a \texttt{Panel} object
+(created using an older version of \texttt{pandas}) and saved it to their disk (e.g., for later reuse
+or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol, 
+that dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
+incompatibilities are also not limited solely to traditional forms of data.
 For example, saved model states and other objects may reference
-functions, attributes, classes, and other objects that are not present
+modules, functions, attributes, classes, or other objects that may not be identical (or even present)
 across all versions of their associated package.
 
 \begin{figure}[tp]
@@ -526,10 +522,13 @@ The example provided in Figure~\ref{fig:illustrative-example}
 demonstrates how the \texttt{davos} package can be used to circumvent
 these incompatibilities by carefully controlling which versions of
 each package are used in different parts of the notebook.  The example
-shows how data and a model saved using since-depreciated components of
+shows how a dataset and model that require now-incompatible components of
 the \texttt{pandas} and \texttt{scikit-learn}~\cite{PedrEtal11}
-packages may be loaded in (using older versions of each package) and
-manipulated or analyzed (using more recent versions of each package).
+packages may be loaded in (using older versions of each package) and used
+alongside more recent versions of each package that provide new and improved functionality.
+When included at the top of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
+ensures that these objects will be loaded successfully and analyzed using the same set
+of package versions, no matter when or by whom the notebook is run.
 
 After installing and importing \texttt{davos} (lines 1--2), we first smuggle two
 utilities for interacting with local files in the code below. The
@@ -545,7 +544,7 @@ across releases, requiring that users have a particular exact version
 installed would likely be unnecessarily restrictive. However, a
 \textit{future} release might introduce some breaking change.  The
 onion comment in line 5 helps ensure the analysis notebook continues
-to run properly in the future, by limiting allowable versions to those
+to run properly in the future by limiting allowable versions to those
 already released when the code was written:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example1}
@@ -561,16 +560,16 @@ Sec.~\ref{subsec:config}).
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example2}
 \end{center}
-Setting the \texttt{auto\_rerun} attribute to \texttt{True} also
-benefits the (potential) installation of \texttt{pandas} on the next
+Setting the \texttt{auto\_rerun} attribute to \texttt{True} is particularly useful
+for the installation of \texttt{pandas} in the next
 lines:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example3}
 \end{center}
 If we suppose that the data contained in \texttt{data-old.pkl} is
-stored in a \texttt{Panel} object (i.e., created in a version of
-\texttt{pandas} prior to 0.25.0), then we would not be able to load in
-that object with newer versions of \texttt{pandas}.  Line 11 ensures
+stored in a \texttt{Panel} object, then we must use a version of 
+\texttt{pandas} prior to 0.25.0 (i.e., the version in which the \texttt{Panel} 
+class was removed) to be able to load it in. Line 11 ensures
 that an older version of \texttt{pandas} will be imported, enabling
 the data to be read in (and, in line 13, saved out to a \texttt{.csv}
 file, which is compatible with newer versions of \texttt{pandas}).

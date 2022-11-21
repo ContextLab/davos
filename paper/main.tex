@@ -561,7 +561,7 @@ Sec.~\ref{subsec:config}).
 \includegraphics[width=0.9\textwidth]{figs/example2}
 \end{center}
 Setting the \texttt{auto\_rerun} attribute to \texttt{True} is particularly useful
-for the installation of \texttt{pandas} in the next
+for managing the installation of \texttt{pandas} in the next
 lines:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example3}
@@ -571,20 +571,21 @@ stored in a \texttt{Panel} object, then we must use a version of
 \texttt{pandas} prior to 0.25.0 (i.e., the version in which the \texttt{Panel} 
 class was removed) to be able to load it in. Line 11 ensures
 that an older version of \texttt{pandas} will be imported, enabling
-the data to be read in (and, in line 13, saved out to a \texttt{.csv}
+the data to be read in (and, in line 13, written to a CSV
 file, which is compatible with newer versions of \texttt{pandas}).
 
 Newer versions of \texttt{pandas} have brought substantial
-performance improvements, added new functionality, fixed bugs, etc.
+improvements including better performance, bug fixes, and additional functionality.
 Although the original dataset had to be read in using an older version
-of the package, we can take advantage of those newer changes using a
-new \texttt{smuggle} statement and onion comment on line 15 (which
-specifies that version 1.3.5 should be imported).  Since
-\texttt{pandas} had already been imported into the current workspace
-(on line 11), the runtime must be restarted in order to gain access to
-the newer version of \texttt{pandas}.  The \texttt{.auto\_rerun} flag
-set on line 7 enables this process to happen automatically, and saving
-out the dataset to a \texttt{.csv} file in lines 10--13 ensures that
+of the package, we can take advantage of these more recent updates 
+by smuggling \texttt{pandas} a second time on line 15 (whose onion comment
+specifies that version 1.3.5 should be installed and loaded).  Since
+a different version of \texttt{pandas} had already been loaded by the Python interpreter
+(on line 11), the notebook kernel must be restarted in order to replace the old 
+version's custom C extensions with those from the new version.  The \texttt{auto\_rerun} flag
+set on line 7 enables \texttt{davos} to trigger this process automatically so that
+the code can continue running without user intervention, and converting
+the dataset to a CSV file in lines 10--13 ensures that
 the older version of \texttt{pandas} does not need to be reinstalled.
 
 Next, line 17 uses the \texttt{davos.configure()} function to disable
@@ -603,8 +604,8 @@ these are not already installed in the user's environment, lines
 18--19 could take several minutes to run.  Enabling the
 \texttt{noninteractive} option ensures that the installation will
 continue automatically without user input during that time.  Enabling
-\texttt{suppress\_stdout} also suppresses console outputs from the
-installer that might otherwise distract from other more important outputs.
+\texttt{suppress\_stdout} also suppresses console outputs while installing 
+these packages and their many dependencies to prevent other potentially important outputs from being buried.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example4}
 \end{center}
@@ -626,15 +627,15 @@ of the installed versions before doing so.
 \end{center}
 Line 24 uses an onion comment to specify that \texttt{Quail} should be
 installed directly from a specific GitHub commit (\texttt{6c847a4}).
-This ability to install packages directly from GitHub repositories can
-enable developers to use forked or modified versions of other
+This ability to load packages directly from GitHub repositories can
+enable developers to more easily use forked or modified versions of other
 packages in their notebooks, even if those versions have not been
 officially released.
 
 In lines 26--29, we demonstrate another aspect of \texttt{davos}'s
 functionality that supports more advanced installation scenarios.  The
 \texttt{ipywidgets}~\cite{FredEtal15} package provides an API for
-creating widgets, and the \texttt{widgetsnbextension} package provides
+creating various JavaScript widgets with Python code, and the \texttt{widgetsnbextension} package provides
 the machinery needed by the notebook frontend to display them.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example6}
@@ -642,17 +643,17 @@ the machinery needed by the notebook frontend to display them.
 A complication is that \texttt{ipywidgets} must be installed in the
 same environment as the IPython kernel, whereas
 \texttt{widgetsnbextension} must be installed in the environment that
-houses the Jupyter notebook server. In standard setups, these two
+houses the Jupyter notebook server. In many basic setups, these two
 environments are the same.  However, a common ``advanced'' approach
 entails running the notebook server from a base environment, with
 additional environments each providing their own separate,
 interchangeable IPython kernels.  To accomodate this multi-environment
-scenario, on lines 26 and 28 we control which environments each
+scenario, on lines 26 and 28, we use the \texttt{pip\_executable} option to control which environments each
 package should be installed to.  Once these two packages are installed
 and imported, line 30 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
 display progress bars to provide status updates for running code. In
 Jupyter notebooks, the \texttt{tqdm.notebook} module can be imported
-to enable aesthetically pleasing progress bars that are displayed via
+to enable more aesthetically pleasing progress bars that are displayed via
 \texttt{ipywidgets}, if that package is installed and
 importable. Therefore, to take advantage of this feature, it was
 important to \texttt{smuggle} \texttt{tqdm} after ensuring the
@@ -676,15 +677,15 @@ original creator using the \texttt{joblib} package, as
 ability to save and load pre-trained models is not guaranteed across
 different \texttt{scikit-learn} versions.  For example, suppose that
 the \texttt{Pipeline} object was created using \texttt{scikit-learn}
-v0.21.3).  In that version of \texttt{scikit-learn}, the
-\texttt{LatentDirichletAllocation} class is defined in
+v0.21.3.  In that version of \texttt{scikit-learn}, the
+\texttt{LatentDirichletAllocation} class was defined in
 \texttt{sklearn.decomposition.online\_lda}.  However, in version
 0.22.0, that module was renamed to \texttt{\_online\_lda}, and in
 version 0.22.1, it was again renamed to \texttt{\_lda}.
 
 In order to correctly load the model that includes the pre-trained
-\texttt{LatentDirichletAllocation} instance, in line 34, we first
-smuggle a version of \texttt{scikit-learn} prior to v0.22.0 (i.e.,
+\texttt{LatentDirichlet\-Allocation} instance, in line 34, we first
+\texttt{smuggle} a version of \texttt{scikit-learn} prior to v0.22.0 (i.e.,
 before the first time the relevant module's name was changed).  Once
 the model is loaded and reconstructed in memory from a compatible
 package version (line 35), we upgrade to a newer version of

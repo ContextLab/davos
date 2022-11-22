@@ -500,10 +500,12 @@ version of a package incompatible with other versions of the
 same package.  For example, the popular \texttt{pandas}~\cite{McKi10}
 library used to include the \texttt{Panel} data structure for storing 3-dimensional arrays.  
 Since version 0.20.0, however, the \texttt{Panel} class has been deprecated, and in 
-version 0.25.0, it was removed entirely. If a user had a dataset stored in a \texttt{Panel} object
-(created using an older version of \texttt{pandas}) and saved it to their disk (e.g., for later reuse
-or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol, 
-that dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
+version 0.25.0, it was removed entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
+(created using an older version of \texttt{pandas}) and had saved it to their disk (e.g., for later reuse
+or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol.
+The \texttt{pickle} protocol is a popular choice for persisting data in Python, allowing users to save, share, and load arbitrary objects, though with an important caveat:
+In order to successfully ``unpickle'' (i.e., load and restore) a ``pickled'' object, its class must be defined in and importable from the same module as when it was saved.
+Thus, because of the \texttt{Panel} class's removal, the user's dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
 incompatibilities are also not limited solely to traditional forms of data.
 For example, saved model states and other objects may reference
 modules, functions, attributes, classes, or other objects that may not be identical (or even present)

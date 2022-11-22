@@ -5,6 +5,7 @@
 % for more information.
 %
 \documentclass[11pt,stdletter,orderfromtodate,sigleft]{newlfm}
+\let\geometry\relax
 \usepackage{hyperref, pxfonts, geometry}
 
   \setlength{\voffset}{0in}
@@ -25,7 +26,7 @@
 \addrto{}
 \dateset{\today}
  
-\greetto{To the editors of \textit{Software X}:}
+\greetto{To the editors of \textit{SoftwareX}:}
 
 
  
@@ -41,7 +42,7 @@
   We have enclosed our manuscript entitled \textit{\texttt{davos}: a
     Python package ``smuggler'' for constructing lightweight
     reproducible notebooks} to be considered for publication as
-  an \textit{Article}.
+  an \textit{Original Software Publication}.
 
   Our manuscript describes a new Python package, \texttt{davos}.  When
   used in combination with a notebook-based Python project, the
@@ -50,37 +51,36 @@
   dependencies.  Our library also ensures that the correct versions of
   those dependencies are in use any time the notebook's code is
   executed.  This enables researchers to share a complete reproducible
-  copy of their code within a single Jupyter notebook (.ipynb) file.
+  copy of their code within a single Jupyter notebook (\texttt{.ipynb}) file.
 
   Broadly, we designed the \texttt{davos} library to target a ``sweet
   spot'' along a continuum of existing approaches to facilitating reproducible
   code-based research.  At one end of this continuum, ``lightweight''
-  approaches entail simply sharing raw code (e.g., plain-text python
-  scripts) or Jupyter notebooks (e.g., JSON files that comprise a mix
+  approaches entail simply sharing raw code (i.e., plain-text Python
+  scripts) or Jupyter notebooks (which can contain a mix
   of text, code, and embedded media).  These lightweight solutions
   benefit from very low setup costs (which increase accessibility),
   but they typically do not make any attempt to manage or constrain
   the computing environment in which the shared code is executed.
   At best, when dependencies are missing on the end user's system, shared code
  may fail to run entirely.  And when the \textit{versions} of a
- project's dependencies differ across the original author's system and
+ project's dependencies differ between the original author's system and
  the end user's system, shared code may (at worst) behave in
  unexpected ways or even cause damage.
 
  At the other end of this continuum, ``heavyweight'' approaches entail
  simulating or replicating, to varying depths, the original computing
- environment that the shared code was developed for.  For example,
+ environment in which the shared code was developed.  For example,
  virtual environments, containerized systems, and virtual machines
  reproduce (respectively) a complete Python environment, operating system, and/or
  full hardware simulation of the original environment.  Each of these
  systems guarantees, to varying degrees, that shared code will behave
  as expected for the end user.  A downside to these approaches is that
  they are often effort- and/or resource-intensive, since they require
- installing additional tools (e.g., Anaconda, Docker, machine
- emulators, etc.) and
+ installing and learning additional tools (e.g., Anaconda, Docker, machine
+ emulators, etc.), as well as writing and distributing additional
  configuration files (e.g., environment configuration files,
- Dockerfiles, system images, etc.), alongside the to-be-shared code
- itself.
+ Dockerfiles, system images, etc.), in order to share and run reproducible code.
 
  The \texttt{davos} library is lightweight in the sense that it does
  not require any setup beyond that required to run standard Jupyter
@@ -96,8 +96,7 @@
  demonstrations.
 
  Thank you for considering our manuscript, and we
- hope you will find it suitable for publication in \textit{Software
-   X}.
+ hope you will find it suitable for publication in \textit{SoftwareX}.
 
 
 \end{newlfm}

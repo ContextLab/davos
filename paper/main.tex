@@ -73,10 +73,10 @@ C4 & Legal Code License & MIT \\
 \hline
 C5 & Code versioning system used & git \\
 \hline
-C6 & Software code languages, tools, and services used & Python, JavaScript, PyPI/pip, IPython, Jupyter, Ipykernel, PyZMQ. Additional tools used for tests: pytest, Selenium, Requests, mypy, GitHub Actions \\
+C6 & Software code languages, tools, and services used & Python, JavaScript, PyPI/pip, IPython, Jupyter, ipykernel, PyZMQ. Additional tools used for tests: pytest, Selenium, Requests, Mypy, GitHub Actions \\
 \hline
 C7 & Compilation requirements, operating environments, and
-     dependencies & Dependencies:~Python $\geq 3.6$, packaging, setuptools.~Supported OSes: MacOS, Linux, Unix-like.~Supported IPython environments: Jupyter notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors. \\
+     dependencies & Dependencies:~Python $\geq 3.6$, packaging, setuptools.~Supported OSes: MacOS, Linux, Unix-like.~Supported IPython environments: Jupyter Notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors. \\
 \hline
 C8 & Link to developer documentation/manual & \url{https://github.com/ContextLab/davos\#readme} \\
 \hline
@@ -369,7 +369,7 @@ The \texttt{davos} config object provides a high-level interface for
 controlling various aspects of \texttt{davos}'s behavior. After
 importing \texttt{davos}, the \texttt{davos.con\-fig} object (a
 singleton) exposes configurable options as attributes that can be
-modified, displayed in the notebook, or checked programmatically at runtime 
+modified, displayed in the notebook, or checked programmatically at runtime
 (see Sec.~\ref{sec:illustrative-example} for an illustrative example or
 Sec.~\ref{subsec:implementation} for implementation details and
 additional information). These include:
@@ -379,7 +379,7 @@ additional information). These include:
   statements and onion comments) is enabled (\texttt{True}) or
   disabled (\texttt{False}).  When \texttt{davos} is first imported),
   the \texttt{.active} attribute is set to \texttt{True}.
-  
+
 \item \texttt{.auto\_rerun}: This attribute controls how
   \texttt{davos} behaves when attempting to \texttt{smuggle} a new
   version of a package that was previously imported and cannot be
@@ -396,12 +396,12 @@ additional information). These include:
   the next time the kernel is restarted manually.  Note that, as of
   this writing, the \texttt{.auto\_rerun} attribute is not supported
   in Google Colaboratory notebooks.
-  
+
 \item \texttt{.confirm\_install}: If \texttt{True} (default:
   \texttt{False}), \texttt{davos} will require user confirmation
   before installing a smuggled package that does not yet exist in the
   user's environment.
- 
+
 \item \texttt{.noninteractive}: Setting this attribute to
   \texttt{True} (default: \texttt{False}) enables non-in\-ter\-act\-ive
   mode, in which all user interactions (prompts and dialogues) are
@@ -410,13 +410,13 @@ additional information). These include:
   \texttt{auto\_rerun} is \texttt{False} while in non-interactive
   mode, \texttt{davos} will raise an exception if a smuggled package
   cannot be reloaded, rather than prompting the user.
-  
+
 \item \texttt{.pip\_executable}: This attribute's value specifies the
   path to the \texttt{pip} executable used to install smuggled
   packages. The default is programmatically determined from the Python
   environment and falls back to \texttt{sys.executable -m pip} if no
   executable can be found.
-  
+
 \item \texttt{.suppress\_stdout}: If this attribute is set to
   \texttt{True} (default: \texttt{False}), \texttt{davos} suppresses
   printed (console) outputs from both itself and the installer program.
@@ -493,22 +493,6 @@ out the installation automatically if needed.  Second (right),
 
 \section{Illustrative Example}\label{sec:illustrative-example}
 
-Across different versions of a given package, particular modules, functions, and other objects 
-may be updated, removed, renamed, or otherwise altered in some manner.  In addition to changing the
-behaviors of active computations, these changes can render saved objects created using one
-version of a package incompatible with other versions of the
-same package.  For example, the popular \texttt{pandas}~\cite{McKi10}
-library used to include the \texttt{Panel} data structure for storing 3-dimensional arrays.  
-Since version 0.20.0, however, the \texttt{Panel} class has been deprecated, and in 
-version 0.25.0, it was removed entirely. If a user had a dataset stored in a \texttt{Panel} object
-(created using an older version of \texttt{pandas}) and saved it to their disk (e.g., for later reuse
-or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol, 
-that dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
-incompatibilities are also not limited solely to traditional forms of data.
-For example, saved model states and other objects may reference
-modules, functions, attributes, classes, or other objects that may not be identical (or even present)
-across all versions of their associated package.
-
 \begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{figs/illustrative_example}
@@ -517,6 +501,24 @@ across all versions of their associated package.
   Section~\ref{sec:illustrative-example}.}
 \label{fig:illustrative-example}
 \end{figure}
+
+Across different versions of a given package, particular modules, functions, and other objects
+may be updated, removed, renamed, or otherwise altered in some manner.  In addition to changing the
+behaviors of active computations, these changes can render saved objects created using one
+version of a package incompatible with other versions of the
+same package.  For example, the popular \texttt{pandas}~\cite{McKi10}
+library used to include the \texttt{Panel} data structure for storing 3-dimensional arrays.
+Since version 0.20.0, however, the \texttt{Panel} class has been deprecated, and in
+version 0.25.0, it was removed entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
+(created using an older version of \texttt{pandas}) and had saved it to their disk (e.g., for later reuse
+or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol.
+The \texttt{pickle} protocol is a popular, built-in method of persisting data in Python, allowing users to save, share, and load arbitrary objects.
+However, in order to successfully ``unpickle'' (i.e., load and restore) a ``pickled'' object, the object's class must be defined in and importable from the same module as when it was saved.
+Thus, because of the \texttt{Panel} class's removal, the user's dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
+incompatibilities are also not limited solely to traditional forms of data.
+For example, saved model states and other objects may reference
+modules, functions, attributes, classes, or other objects that may not be identical (or even present)
+across all versions of their associated package.
 
 The example provided in Figure~\ref{fig:illustrative-example}
 demonstrates how the \texttt{davos} package can be used to circumvent
@@ -567,21 +569,21 @@ lines:
 \includegraphics[width=0.9\textwidth]{figs/example3}
 \end{center}
 If we suppose that the data contained in \texttt{data-old.pkl} is
-stored in a \texttt{Panel} object, then we must use a version of 
-\texttt{pandas} prior to 0.25.0 (i.e., the version in which the \texttt{Panel} 
+stored in a pickled \texttt{Panel} object, then we must use a version of
+\texttt{pandas} prior to 0.25.0 (i.e., the version in which the \texttt{Panel}
 class was removed) to be able to load it in. Line 11 ensures
 that an older version of \texttt{pandas} will be imported, enabling
 the data to be read in (and, in line 13, written to a CSV
-file, which is compatible with newer versions of \texttt{pandas}).
+file, which is compatible with newer \texttt{pandas} versions).
 
 Newer versions of \texttt{pandas} have brought substantial
 improvements including better performance, bug fixes, and additional functionality.
 Although the original dataset had to be read in using an older version
-of the package, we can take advantage of these more recent updates 
+of the package, we can take advantage of these more recent updates
 by smuggling \texttt{pandas} a second time on line 15 (whose onion comment
 specifies that version 1.3.5 should be installed and loaded).  Since
 a different version of \texttt{pandas} had already been loaded by the Python interpreter
-(on line 11), the notebook kernel must be restarted in order to replace the old 
+(on line 11), the notebook kernel must be restarted in order to replace the old
 version's custom C extensions with those from the new version.  The \texttt{auto\_rerun} flag
 set on line 7 enables \texttt{davos} to trigger this process automatically so that
 the code can continue running without user intervention, and converting
@@ -604,7 +606,7 @@ these are not already installed in the user's environment, lines
 18--19 could take several minutes to run.  Enabling the
 \texttt{noninteractive} option ensures that the installation will
 continue automatically without user input during that time.  Enabling
-\texttt{suppress\_stdout} also suppresses console outputs while installing 
+\texttt{suppress\_stdout} also suppresses console outputs while installing
 these packages and their many dependencies to prevent other potentially important outputs from being buried.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example4}
@@ -785,11 +787,11 @@ Python language in useful and more secure ways.
 \section{Conclusions}
 
 The \texttt{davos} package supports reproducible research by providing
-a novel lightweight system for sharing notebook-based code. But
+a novel, lightweight system for sharing notebook-based code. But
 perhaps the most exciting uses of the \texttt{davos} package are those
 that we have \textit{not} yet considered or imagined. We hope that the
-Python community will find \texttt{davos} to provide a convenient
-means of managing project dependencies to facilitate code sharing. We
+research and scientific Python communities will find \texttt{davos} to provide a convenient
+means of managing project dependencies to facilitate code sharing and collaboration. We
 also hope that some of the more advanced applications of our package
 might lead to new insights or discoveries.
 
@@ -799,7 +801,7 @@ might lead to new insights or discoveries.
 \textbf{Paxton C. Fitzpatrick}: Conceptualization, Methodology,
 Software, Validation, Writing - Original Draft,
 Visualization. \textbf{Jeremy R. Manning}: Conceptualization,
-Resources, Validation, Writing - Review \& Editing, Supervision,
+Resources, Validation, Writing - Review \& Editing, Visualization, Supervision,
 Funding acquisition.
 
 \section*{Funding}
@@ -825,7 +827,7 @@ JRM's \textit{Storytelling with Data} course (Winter, 2022 offering)
 who used preliminary versions of our package in several assignments.
 
 \bibliographystyle{elsarticle-num}
-\bibliography{CDL-bibliography/cdl}
+\bibliography{main}
 
 \end{document}
 

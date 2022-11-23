@@ -338,7 +338,7 @@ version of the package instead:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet3}
 \end{center}
-Onion comments can also be used to smuggle specific VCS references
+Onion comments can also be used to \texttt{smuggle} specific VCS references
 (e.g., Git~\cite{TorvHama05} branches, commits, tags, etc.):
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/snippet4}
@@ -389,7 +389,7 @@ additional information). These include:
   previously imported and to-be-smuggled versions.  If this attribute
   is set to \texttt{True}, \texttt{davos} will automatically restart
   the notebook kernel and rerun all code up to (and including) the
-  current \texttt{smuggle} statement. If \texttt{False} (the default),
+  current \texttt{smuggle} statement. If set to \texttt{False} (the default),
   \texttt{davos} will instead issue a warning, pause execution, and
   prompt the user to either restart and rerun the notebook, or
   continue running with the previously imported package version until
@@ -397,7 +397,7 @@ additional information). These include:
   this writing, the \texttt{.auto\_rerun} attribute is not supported
   in Google Colaboratory notebooks.
 
-\item \texttt{.confirm\_install}: If \texttt{True} (default:
+\item \texttt{.confirm\_install}: If set to \texttt{True} (default:
   \texttt{False}), \texttt{davos} will require user confirmation
   before installing a smuggled package that does not yet exist in the
   user's environment.
@@ -407,7 +407,7 @@ additional information). These include:
   mode, in which all user interactions (prompts and dialogues) are
   disabled. Note that in non-interactive mode, the
   \texttt{confirm\_install} option is set to \texttt{False}.  If
-  \texttt{auto\_rerun} is \texttt{False} while in non-interactive
+  \texttt{auto\_rerun} is set to \texttt{False} while in non-interactive
   mode, \texttt{davos} will raise an exception if a smuggled package
   cannot be reloaded, rather than prompting the user.
 
@@ -503,7 +503,7 @@ out the installation automatically if needed.  Second (right),
 \end{figure}
 
 Across different versions of a given package, particular modules, functions, and other objects
-may be updated, removed, renamed, or otherwise altered in some manner.  In addition to changing the
+may be updated, removed, renamed, or otherwise altered.  In addition to changing the
 behaviors of active computations, these changes can render saved objects created using one
 version of a package incompatible with other versions of the
 same package.  For example, the popular \texttt{pandas}~\cite{McKi10}
@@ -512,8 +512,8 @@ Since version 0.20.0, however, the \texttt{Panel} class has been deprecated, and
 version 0.25.0, it was removed entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
 (created using an older version of \texttt{pandas}) and had saved it to their disk (e.g., for later reuse
 or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol.
-The \texttt{pickle} protocol is a popular, built-in method of persisting data in Python, allowing users to save, share, and load arbitrary objects.
-However, in order to successfully ``unpickle'' (i.e., load and restore) a ``pickled'' object, the object's class must be defined in and importable from the same module as when it was saved.
+The \texttt{pickle} protocol is a popular built-in method of persisting data in Python, allowing users to save, share, and load arbitrary objects.
+However, in order to successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., saved) object, the object's class must be defined in and importable from the same module as when it was saved.
 Thus, because of the \texttt{Panel} class's removal, the user's dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
 incompatibilities are also not limited solely to traditional forms of data.
 For example, saved model states and other objects may reference
@@ -532,7 +532,7 @@ When included at the top of a Jupyter notebook, the code in Figure~\ref{fig:illu
 ensures that these objects will be loaded successfully and analyzed using the same set
 of package versions, no matter when or by whom the notebook is run.
 
-After installing and importing \texttt{davos} (lines 1--2), we first smuggle two
+After installing and importing \texttt{davos} (lines 1--2), we first \texttt{smuggle} two
 utilities for interacting with local files in the code below. The
 \texttt{smuggle} statement in line 4 loads the \texttt{is\_file()}
 function from the Python standard library's \texttt{os.path}
@@ -612,7 +612,7 @@ these packages and their many dependencies to prevent other potentially importan
 \includegraphics[width=0.9\textwidth]{figs/example4}
 \end{center}
 
-After re-enabling these two options (line 20), we next smuggle
+After re-enabling these two options (line 20), we next \texttt{smuggle}
 specific versions of three plotting packages:
 \texttt{Matplotlib}~\cite{Hunt07}, \texttt{seaborn}~\cite{Wask21}, and
 \texttt{Quail}~\cite{HeusEtal17} (lines 22--24). Because the first two
@@ -652,7 +652,7 @@ additional environments each providing their own separate,
 interchangeable IPython kernels.  To accomodate this multi-environment
 scenario, on lines 26 and 28, we use the \texttt{pip\_executable} option to control which environments each
 package should be installed to.  Once these two packages are installed
-and imported, line 30 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
+and imported, line 31 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
 display progress bars to provide status updates for running code. In
 Jupyter notebooks, the \texttt{tqdm.notebook} module can be imported
 to enable more aesthetically pleasing progress bars that are displayed via

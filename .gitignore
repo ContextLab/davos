@@ -37,3 +37,5 @@ paper/**/*.synctex.gz
 
 # Illustrator source files
 paper/figs/*.ai
+paper/main.fdb_latexmk
+paper/main.fls

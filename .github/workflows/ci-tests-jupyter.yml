@@ -78,7 +78,7 @@ jobs:
           sudo apt-get install firefox
 
           # install python packages
-          pip install pytest==6.2 "selenium>=3.141" geckodriver-autoinstaller
+          pip install pytest==6.2 "selenium==3.141" geckodriver-autoinstaller
 
           # install geckodriver
           driver_path=$(python -c '
@@ -112,7 +112,7 @@ jobs:
               pip install typing-extensions
           fi
           [[ "$PYTHON_VERSION" == "3.6" ]] || pip install numpy==1.20.3	
-          pip install "ipykernel==5.0.0" ipython-genutils requests scipy fastdtw==0.3.4 tqdm==4.41.1
+          pip install "ipykernel==5.0.0" ipython-genutils requests "scipy<=1.7.3" fastdtw==0.3.4 tqdm==4.41.1
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython
           else

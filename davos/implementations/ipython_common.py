@@ -221,8 +221,8 @@ def _showsyntaxerror_davos(
     The `running_compiled_code` argument was added in `IPython` 6.1.0,
     and setting it to `True` accomplishes (something close to) the same
     thing this workaround does. However, since `davos` needs to support
-    `IPython` versions back to v5.5.0 (which is used by Colab), we can't
-    rely on it being available.
+    `IPython` versions back to v5.5.0, we can't rely on it being
+    available.
     """
     etype, value, tb = ipy_shell._get_exc_info()
     if issubclass(etype, DavosParserError):

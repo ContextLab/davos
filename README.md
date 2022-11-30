@@ -17,7 +17,7 @@
   </a>
   <br>
   <a href="https://arxiv.org/abs/2211.15445">
-    <img src="https://img.shields.io/badge/arXiv-2211.15445-9cf" alt="link to arXiv paper">
+    <img src="https://img.shields.io/badge/arXiv-2211.15445-b31b1b" alt="link to arXiv paper">
   </a>
   <img src="https://img.shields.io/codefactor/grade/github/paxtonfitzpatrick/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
   <img src="https://img.shields.io/badge/mypy-type%20checked-blue" alt="mypy: checked">

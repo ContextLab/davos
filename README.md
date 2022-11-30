@@ -19,7 +19,9 @@
   <a href="https://arxiv.org/abs/2211.15445">
     <img src="https://img.shields.io/badge/arXiv-2211.15445-b31b1b" alt="link to arXiv paper">
   </a>
-  <img src="https://img.shields.io/codefactor/grade/github/paxtonfitzpatrick/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
+  <a href="https://www.codefactor.io/repository/github/contextlab/davos">
+    <img src="https://img.shields.io/codefactor/grade/github/ContextLab/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
+  </a>
   <img src="https://img.shields.io/badge/mypy-type%20checked-blue" alt="mypy: checked">
   <br>
   <a href="https://github.com/ContextLab/davos/blob/main/LICENSE">

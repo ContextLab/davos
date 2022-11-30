@@ -16,8 +16,8 @@
     <img src="https://static.pepy.tech/personalized-badge/davos?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Downloads" alt="PyPI Downloads">
   </a>
   <br>
-  <a href="https://github.com/ContextLab/davos/blob/main/paper/main.pdf">
-    <img src="https://img.shields.io/badge/paper-PDF-9cf" alt="paper (PDF)">
+  <a href="https://arxiv.org/abs/2211.15445">
+    <img src="https://img.shields.io/badge/arXiv-2211.15445-9cf" alt="link to arXiv paper">
   </a>
   <img src="https://img.shields.io/codefactor/grade/github/paxtonfitzpatrick/davos/main?logo=codefactor&logoColor=brightgreen" alt="code quality (CodeFactor)">
   <img src="https://img.shields.io/badge/mypy-type%20checked-blue" alt="mypy: checked">

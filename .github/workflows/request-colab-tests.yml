@@ -5,6 +5,8 @@ on:
     paths-ignore:
       - 'paper/**'
       - '.gitattributes'
+      - '.gitmodules'
+      - 'CITATION.cff'
       - 'LICENSE'
       - 'README.md'
 

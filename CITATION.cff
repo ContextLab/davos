@@ -43,7 +43,7 @@ preferred-citation:
     - "Other Computer Science (cs.OH)"
     - "FOS: Computer and information sciences"
   month: 11
-  title: "$\texttt{davos}$: a Python package \"smuggler\" for constructing lightweight reproducible notebooks"
+  title: "$\\texttt{davos}$: a Python package \"smuggler\" for constructing lightweight reproducible notebooks"
   type: article
   url: "https://arxiv.org/abs/2211.15445"
   year: "2022"

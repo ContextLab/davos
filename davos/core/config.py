@@ -357,6 +357,24 @@ class DavosConfig(metaclass=SingletonConfig):
             self._pip_executable = str(exe_path)
 
     @property
+    def project(self):
+        return self._project
+
+    @project.setter
+    def project(self, proj):
+        if isinstance(proj, str):
+            # validation happens during Project instantiation, so
+            # self._project won't be affected in case of error
+            self._project = Project(proj)
+        elif proj is None or isinstance(proj, Project):
+            self._project = proj
+        else:
+            raise DavosConfigError(
+                'project',
+                'field may be a string, davos.Project instance, or None'
+            )
+
+    @property
     def smuggled(self):
         return self._smuggled
 

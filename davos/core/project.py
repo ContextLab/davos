@@ -22,7 +22,42 @@ class Project:
 
 
 def get_notebook_path():
-    """get the path to the current notebook"""
+    # TODO: add docstring
+    """get the absolute path to the current notebook"""
+    kernel_filepath = ipykernel.connect.get_connection_file()
+    kernel_id = kernel_filepath.split('/kernel-')[-1].split('.json')[0]
+
+    running_nbservers_stdout = run_shell_command('jupyter notebook list',
+                                                 live_stdout=False)
+    for line in running_nbservers_stdout.splitlines():
+        # should only need to exclude first line ("Currently running
+        # servers:"), but handle safely in case output format changes in
+        # the future
+        if not line.strip().startswith('http'):
+            continue
+
+        nbserver_url, nbserver_root_dir = line.split('::')
+        nbserver_url = nbserver_url.strip()
+        nbserver_root_dir = nbserver_root_dir.strip()
+
+        notebook_api_url = urljoin(nbserver_url, '/api/sessions')
+        parsed_url = urlparse(nbserver_url)
+        if parsed_url.query:
+            params = {'token': parsed_url.query.removeprefix('token=')}
+        else:
+            params = None
+
+        # TODO: add exception handling, 403 handling, etc.
+        response = requests.get(notebook_api_url, params=params)
+        for session in response.json():
+            if session['kernel']['id'] == kernel_id:
+                if config.environment == 'Colaboratory':
+                    # Colab notebooks don't actually live on Colab VM
+                    # filesystem, so just use notebook name
+                    return session['notebook']['name']
+                else:
+                    notebook_relpath = session['notebook']['path']
+                    return Path(nbserver_root_dir, notebook_relpath)
 
 
 def prune_projects():

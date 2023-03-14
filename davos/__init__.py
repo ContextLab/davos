@@ -3,6 +3,7 @@ Top-level `davos` module. Initializes the global `davos` config object
 and defines some convenience functions for accessing/setting
 `davos.config` values.
 """
+# TODO: implement module-level .projects property?
 
 
 import pkg_resources
@@ -27,6 +28,9 @@ config = DavosConfig()
 
 import davos.implementations
 from davos.core.core import smuggle
+# TODO: refactor to find a cleaner way of setting this during __init__,
+#  also possibly defer lazily?
+from davos.core.project import use_default_project
 
 
 def activate():
@@ -133,4 +137,5 @@ def is_active():
     return config.active
 
 
+use_default_project()
 activate()

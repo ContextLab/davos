@@ -197,3 +197,13 @@ def prune_projects():
 
 def prune_project(proj):
     """delete a single project by its name"""
+
+
+def use_default_project():
+    """
+    TODO: add docstring -- use the default project for the current
+     notebook
+    """
+    nb_path = get_notebook_path()
+    default_project = Project(nb_path)
+    config.project = default_project

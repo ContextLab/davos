@@ -189,6 +189,10 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError):
     """
 
 
+class DavosProjectError(DavosError):
+    """Class for errors related to `davos.Project` objects."""
+
+
 class SmugglerError(DavosError):
     """Base class for errors raised during the smuggle phase"""
 

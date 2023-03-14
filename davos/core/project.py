@@ -11,7 +11,44 @@ class Project:
     A pseudo-environment associated with a particular (set of)
     davos-enhanced notebook(s)
     """
-    def __int__(self, name=None): ...
+
+    def __new__(cls, name):
+        # TODO: add docstring explaining subclass customization
+        """
+        if name is a file path
+            ((decided based on having a '/' in it))
+                ((means that relative path to file in CWD must be prefixed with ./))
+            ((use case: user wants notebook to use same environment as existing notebook))
+            convert to pathlib.Path, resolve, sub variables, expanduser, etc.
+            if path points to real, existing *.ipynb* file
+                OK, sure
+            else
+                raise error
+        else
+            treat name as just a name
+        """
+        if isinstance(name, Path):
+            # convert Paths to strings so they can be properly expanded,
+            # substituted, resolved, etc. below
+            name = str(name)
+        # convert safe dirname replacement to os.sep (to handle reading
+        # project directory names from DAVOS_PROJECT_DIR)
+        name = name.replace(PATHSEP_REPLACEMENT, PATHSEP)
+        child_cls_to_init = ConcreteProject
+        if PATHSEP in name:
+            # name is a file path
+            name_path = Path(expandvars(name)).expanduser().resolve()
+            if name_path.suffix != '.ipynb':
+                raise DavosProjectError('')
+
+
+        if isinstance(name, str):
+            name = name.replace(PATHSEP, PATHSEP_REPLACEMENT)
+
+
+    def __init__(self, name):
+        self.name = name
+        self.path = Path.home().joinpath
 
     @property
     def installed_packages(self):

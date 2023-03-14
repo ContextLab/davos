@@ -1,5 +1,7 @@
 # TODO: add module docstring
 import os
+import shutil
+import sys
 from os.path import expandvars
 from pathlib import Path
 
@@ -8,7 +10,7 @@ import requests
 from urllib.parse import urljoin, urlparse
 
 from davos import config
-from davos.core.core import run_shell_command
+from davos.core.core import prompt_input, run_shell_command
 from davos.core.exceptions import DavosProjectError
 
 
@@ -19,6 +21,11 @@ DAVOS_CONFIG_DIR = Path.home().joinpath('.davos')
 DAVOS_PROJECT_DIR = DAVOS_CONFIG_DIR.joinpath('projects')
 PATHSEP = os.sep               # '/' for Unix, '\' for Windows
 PATHSEP_REPLACEMENT = "___"    # safe replacement for os.sep in dir name
+SITE_PACKAGES_SUFFIX = PATHSEP.join((
+    'lib',
+    f'python{sys.version_info.major}.{sys.version_info.minor}',
+    'site-packages'
+))
 
 
 class ProjectChecker(type):
@@ -75,7 +82,7 @@ class Project(metaclass=ProjectChecker):
         TODO: add docstring, note difference between what name can be
          passed as vs what it is when __init__ is run due to metaclass
         """
-        self.name = name
+        self._set_names(name)
 
     def __del__(self):
         """
@@ -87,27 +94,33 @@ class Project(metaclass=ProjectChecker):
     def __repr__(self):
         return f"Project('{self.name}')"
 
-    @property
-    def safe_name(self):
+    def _set_names(self, name):
         """
-        TODO: add docstring
-        Project named formatted for use as project directory name in
-        DAVOS_PROJECT_DIR name
+        TODO: add docstring -- separate method so it can be called when
+         renaming project to update names
         """
-        return self.name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+        self.name = name
+        self.safe_name = name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+        self.project_dir = DAVOS_PROJECT_DIR.joinpath(self.safe_name)
+        self.site_packages_dir = self.project_dir.joinpath(SITE_PACKAGES_SUFFIX)
 
-    def remove(self, confirm=False):
-        """delete the project directory"""
-        # should prompt for confirmation, but accept "confirm" arg to
-        # bypass
-        raise NotImplementedError
+    def remove(self, yes=False):
+        """
+        TODO: add docstring remove the project and all installed
+         packages. should prompt for confirmation, but accept "yes" arg
+         to bypass
+        """
+        if not yes:
+            prompt = f"Remove project '{self.name} and all installed packages?"
+            confirmed = prompt_input(prompt, default='n')
+            if not confirmed:
+                print(f"{self.name} not removed")
+                return
+        print(f"Removing {self.project_dir}...")
+        shutil.rmtree(self.project_dir)
 
     def rename(self, new_name):
         """rename the project directory, possibly due to renaming/moving notebook"""
-        raise NotImplementedError
-
-    def use_default(self):
-        """reset davos.config.project to the default project (named for"""
         raise NotImplementedError
 
     def update_name(self):

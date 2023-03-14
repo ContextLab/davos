@@ -14,6 +14,7 @@ __all__ = [
 ]
 
 
+import functools
 import importlib
 import itertools
 import sys
@@ -247,6 +248,42 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
     return prev_imported_pkgs
 
 
+def use_project(smuggle_func):
+    """TODO: add docstring, move this to alphabetical order"""
+
+    @functools.wraps(smuggle_func)
+    def smuggle_wrapper(*args, **kwargs):
+        project = config.project
+        if project is not None:
+            # prepend the project's site-packages directory to sys.path
+            # so project's package versions are prioritized for import
+            # over versions in "regular" environment
+            sys.path.insert(0, str(project.site_packages_dir))
+            # reload pkg_resources so the global "working set" is
+            # regenerated based on the updated sys.path
+            importlib.invalidate_caches()
+            importlib.reload(sys.modules['pkg_resources'])
+            try:
+                return smuggle_func(*args, **kwargs)
+            finally:
+                # after (possibly installing and) loading the package,
+                # remove the project's site-packages directory from
+                # sys.path and reload pkg_resources again to restore the
+                # original working set.
+                # Note: can't assume the project site-packages dir is
+                # still sys.path[0] -- some install options result in
+                # other dirs being prepended to load modules installed
+                # in custom locations
+                sys.path.remove(str(project.site_packages_dir))
+                importlib.invalidate_caches()
+                importlib.reload(sys.modules['pkg_resources'])
+        else:
+            return smuggle_func(*args, **kwargs)
+
+    return smuggle_wrapper
+
+
+# TODO: remove this
 @contextmanager
 def handle_alternate_pip_executable(installed_name):
     """
@@ -304,7 +341,7 @@ def handle_alternate_pip_executable(installed_name):
         yield
     finally:
         # remove temporary dir from path
-        sys.path.pop(0)
+        sys.path.remove(install_location)
         # reload pkg_resources again so import system no longer searches
         # dir used by alternate pip_executable
         importlib.reload(sys.modules['pkg_resources'])
@@ -355,6 +392,7 @@ def import_name(name):
     return __import__(parts[0])
 
 
+# TODO: move to top?
 class Onion:
     """
     Class representing a single package to be smuggled.
@@ -523,9 +561,11 @@ class Onion:
             install_exe = config._pip_executable
             if config.noninteractive:
                 args = f'{args} --no-input'
+            if config.project is not None:
+                install_exe = f'PYTHONUSERBASE="{config.project.project_dir}" {install_exe}'
+                args = f'--user {args}'
         else:
             install_exe = self.installer
-
         return f'{install_exe} install {args}'
 
     @property
@@ -848,6 +888,7 @@ def run_shell_command(command, live_stdout=None):
     return stdout
 
 
+@use_project
 def smuggle(
         name,
         as_=None,
@@ -1010,6 +1051,7 @@ def smuggle(
             else:
                 prompt_restart_rerun_buttons(failed_reloads)
 
+        # TODO: remove this
         if config._pip_executable != config._pip_executable_orig:
             with handle_alternate_pip_executable(onion.install_name):
                 smuggled_obj = import_name(name)

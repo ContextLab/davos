@@ -1,9 +1,25 @@
 # TODO: add module docstring
+import os
+from os.path import expandvars
 from pathlib import Path
+
+import ipykernel
+import requests
+from urllib.parse import urljoin, urlparse
+
+from davos import config
+from davos.core.core import run_shell_command
+from davos.core.exceptions import DavosProjectError
+
+
+__all__ = ['Project']
 
 
 DAVOS_CONFIG_DIR = Path.home().joinpath('.davos')
 DAVOS_PROJECT_DIR = DAVOS_CONFIG_DIR.joinpath('projects')
+PATHSEP = os.sep               # '/' for Unix, '\' for Windows
+PATHSEP_REPLACEMENT = "___"    # safe replacement for os.sep in dir name
+
 
 class ProjectChecker(type):
     """TODO: add metaclass docstring"""
@@ -47,21 +63,80 @@ class ProjectChecker(type):
         # or a fully substituted path to a .ipynb file
         return type.__call__(cls_to_init, name)
 
-class Project:
+
+class Project(metaclass=ProjectChecker):
     """
+    # TODO: add docstring
     A pseudo-environment associated with a particular (set of)
     davos-enhanced notebook(s)
     """
     def __init__(self, name):
+        """
+        TODO: add docstring, note difference between what name can be
+         passed as vs what it is when __init__ is run due to metaclass
+        """
         self.name = name
-        self.path = Path.home().joinpath
+
+    def __del__(self):
+        """
+        TODO: add docstring -- if project dir is empty, remove when
+         reference count drops to 0, including at end of session
+         """
+        raise NotImplementedError
+
+    def __repr__(self):
+        return f"Project('{self.name}')"
+
+    @property
+    def safe_name(self):
+        """
+        TODO: add docstring
+        Project named formatted for use as project directory name in
+        DAVOS_PROJECT_DIR name
+        """
+        return self.name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+
+    def remove(self, confirm=False):
+        """delete the project directory"""
+        # should prompt for confirmation, but accept "confirm" arg to
+        # bypass
+        raise NotImplementedError
+
+    def rename(self, new_name):
+        """rename the project directory, possibly due to renaming/moving notebook"""
+        raise NotImplementedError
+
+    def use_default(self):
+        """reset davos.config.project to the default project (named for"""
+        raise NotImplementedError
+
+    def update_name(self):
+        """update the project's name to the current notebook name"""
+        raise NotImplementedError
+
+
+class AbstractProject(Project):
+    """TODO: add docstring"""
+    def __getattr__(self, item):
+        if hasattr(ConcreteProject, item):
+            msg = f"'{item}' is not supported for abstract projects"
+        else:
+            msg = f"'{self.__class__.__name__}' object has no attribute '{item}'"
+        raise AttributeError(msg)
+
+    def __repr__(self):
+        return f"AbstractProject('{self.name}')"
+
+
+class ConcreteProject(Project):
+    """TODO: add docstring"""
+    def __init__(self, name):
+        super().__init__(name)
 
     @property
     def installed_packages(self):
         """pip-freeze-like list of installed packages"""
-
-    def update_name(self):
-        """update the project's name to the current notebook name"""
+        raise NotImplementedError
 
 
 def get_notebook_path():

@@ -5,6 +5,9 @@ config consists of public fields that may be set by the user to affect
 store information about the context into which the package was imported
 and available functionality.
 """
+# TODO: standardize single vs double quotes (just for style consistency)
+# TODO: standardize line breaks in function calls -- first arg on same
+#  line or new line?
 
 
 __all__ = ['DavosConfig']
@@ -19,7 +22,11 @@ from io import StringIO
 from os.path import expandvars
 from subprocess import CalledProcessError, check_output
 
-from davos.core.exceptions import DavosConfigError, DavosError
+from davos.core.exceptions import (
+    DavosConfigError,
+    DavosError,
+    ProjectNotebookNotFoundError
+)
 
 
 class SingletonConfig(type):
@@ -69,6 +76,8 @@ class DavosConfig(metaclass=SingletonConfig):
                 The path to the `pip` executable that should be used.
                 Must be a path to a real file. Defaults to automatically
                 discovered executable, if available.
+            project : davos.core.project.Project
+                # TODO: document new attribute
             suppress_stdout: bool
                 If `True` (default: `False`), suppress all unnecessary
                 output issued by the program. This is often useful when
@@ -177,6 +186,7 @@ class DavosConfig(metaclass=SingletonConfig):
         self._conda_env = None
         self._confirm_install = False
         self._noninteractive = False
+        self._project = None
         self._suppress_stdout = False
         # re: see ContextLab/davos#10
         # reference pip executable using full path so IPython shell
@@ -231,6 +241,7 @@ class DavosConfig(metaclass=SingletonConfig):
             'ipython_shell',
             'noninteractive',
             'pip_executable',
+            'project',
             'suppress_stdout',
             'smuggled'
         ])
@@ -342,6 +353,8 @@ class DavosConfig(metaclass=SingletonConfig):
 
     @pip_executable.setter
     def pip_executable(self, exe_path):
+        # TODO: separate this off into some sort of "resolve path"
+        #  utility function?
         exe_path = pathlib.Path(expandvars(exe_path)).expanduser()
         try:
             exe_path = exe_path.resolve(strict=True)
@@ -362,16 +375,31 @@ class DavosConfig(metaclass=SingletonConfig):
 
     @project.setter
     def project(self, proj):
-        if isinstance(proj, str):
-            # validation happens during Project instantiation, so
-            # self._project won't be affected in case of error
-            self._project = Project(proj)
-        elif proj is None or isinstance(proj, Project):
+        # TODO: refactor to move this import out of here...
+        from davos.core.project import AbstractProject, ConcreteProject, Project
+        if proj is None or isinstance(proj, ConcreteProject):
+            self._project = proj
+        elif isinstance(proj, AbstractProject):
+            raise ProjectNotebookNotFoundError(
+                "The notebook associated with this Project does not exist: "
+                f"'{proj.name}'. If the notebook has been moved or renamed, "
+                "you can point the Project to its new location with:\n\t"
+                "`<project>.rename('<new_notebook_path>')`\n or remove it "
+                "fully with:\n\t`<project>.remove()`"
+            )
+        elif isinstance(proj, (str, pathlib.Path)):
+            proj = Project(proj)
+            if isinstance(proj, AbstractProject):
+                raise ProjectNotebookNotFoundError(
+                    "Cannot associate a Project with a notebook that does not "
+                    f"exist (no such notebook: '{proj.name}')."
+                )
             self._project = proj
         else:
             raise DavosConfigError(
                 'project',
-                'field may be a string, davos.Project instance, or None'
+                "the project may be set using a str, pathlib.Path, "
+                "davos.Project instance, or None"
             )
 
     @property

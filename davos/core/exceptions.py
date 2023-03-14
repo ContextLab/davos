@@ -190,7 +190,11 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError):
 
 
 class DavosProjectError(DavosError):
-    """Class for errors related to `davos.Project` objects."""
+    """Base class for errors related to `davos.Project` objects."""
+
+
+class ProjectNotebookNotFoundError(DavosProjectError, FileNotFoundError):
+    """Class for errors related to projects missing associated notebooks"""
 
 
 class SmugglerError(DavosError):
@@ -198,7 +202,7 @@ class SmugglerError(DavosError):
 
 
 class TheNightIsDarkAndFullOfTerrors(SmugglerError):
-    """A little Easter egg for if someone tries to `smuggle davos`"""
+    """A little Easter egg for anyone who tries to `smuggle davos`"""
 
 
 class InstallerError(SmugglerError, CalledProcessError):

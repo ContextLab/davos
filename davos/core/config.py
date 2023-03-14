@@ -225,6 +225,7 @@ class DavosConfig(metaclass=SingletonConfig):
                     self._pip_executable = f'{sys.executable} -m pip'
             else:
                 self._pip_executable = pip_exe
+        # TODO: remove this
         self._pip_executable_orig = self._pip_executable
 
     def __repr__(self):

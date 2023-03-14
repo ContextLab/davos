@@ -1,4 +1,5 @@
 # TODO: add module docstring
+import atexit
 import os
 import shutil
 import sys
@@ -83,13 +84,18 @@ class Project(metaclass=ProjectChecker):
          passed as vs what it is when __init__ is run due to metaclass
         """
         self._set_names(name)
+        self.project_dir.mkdir(parents=False, exist_ok=True)
+        atexit.register(cleanup_project_dir_atexit, self.project_dir)
 
     def __del__(self):
         """
         TODO: add docstring -- if project dir is empty, remove when
          reference count drops to 0, including at end of session
          """
-        raise NotImplementedError
+        try:
+            self.project_dir.rmdir()
+        except OSError:
+            pass
 
     def __repr__(self):
         return f"Project('{self.name}')"
@@ -189,6 +195,20 @@ def get_notebook_path():
                 else:
                     notebook_relpath = session['notebook']['path']
                     return Path(nbserver_root_dir, notebook_relpath)
+
+
+def cleanup_project_dir_atexit(dirpath):
+    """
+    TODO: add docstring -- IPython kernel stores internal references to
+     objects, so finalizer method isn't called on kernel shutdown. This
+     handles that. Function outside class so atexit registry doesn't
+     store reference to instance unnecessarily for whole session
+    """
+    if dirpath.is_dir() and next(dirpath.iterdir(), None) is None:
+        try:
+            dirpath.rmdir()
+        except OSError:
+            pass
 
 
 def prune_projects():

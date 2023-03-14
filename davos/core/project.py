@@ -5,47 +5,53 @@ from pathlib import Path
 DAVOS_CONFIG_DIR = Path.home().joinpath('.davos')
 DAVOS_PROJECT_DIR = DAVOS_CONFIG_DIR.joinpath('projects')
 
+class ProjectChecker(type):
+    """TODO: add metaclass docstring"""
+    def __call__(cls, name):
+        cls_to_init = ConcreteProject
+        # if user passed a pathlib.Path, convert it to a str so it can
+        # be properly expanded, substituted, resolved, etc. below
+        name = str(name)
+        if PATHSEP in name:
+            # `name` is a path to a notebook file, either
+            # Project.default() (path to current notebook) or
+            # user-specified. File doesn't *have* to exist at this point
+            # (will be an AbstractProject, if not), but must at least
+            # point to what could eventually be a notebook
+            name_path = Path(expandvars(name)).expanduser().resolve(strict=False)
+            if name_path.suffix != '.ipynb' or name_path.is_dir():
+                # file doesn't have to exist at this point (can be an AbstractProject)
+                raise DavosProjectError(
+                    f"Invalid project name: '{name}' (which resolves to "
+                    f"'{name_path}'). Project names may be either a simple "
+                    f"name (without '{PATHSEP}') or a path to a Jupyter "
+                    f"notebook (.ipynb) file."
+                )
+            elif not name_path.is_file():
+                cls_to_init = AbstractProject
+            name = str(name_path)
+        elif PATHSEP_REPLACEMENT in name:
+            # `name` is a path-like project directory name read from
+            # DAVOS_PROJECT_DIR. Convert back to normal path format to
+            # check whether it exists, but don't want to do any
+            # validation here in case user somehow ended up with
+            # malformed Project dir name, since that could cause
+            # incessant errors until manually fixed. Instead, just make
+            # it an AbstractProject and let user rename or delete it
+            # via davos
+            name_path = Path(f"{name.replace(PATHSEP_REPLACEMENT, PATHSEP)}.ipynb")
+            if not name_path.is_file():
+                cls_to_init = AbstractProject
+            name = str(name_path)
+        # `name` passed to __init__ is now a str: either a simple name
+        # or a fully substituted path to a .ipynb file
+        return type.__call__(cls_to_init, name)
 
 class Project:
     """
     A pseudo-environment associated with a particular (set of)
     davos-enhanced notebook(s)
     """
-
-    def __new__(cls, name):
-        # TODO: add docstring explaining subclass customization
-        """
-        if name is a file path
-            ((decided based on having a '/' in it))
-                ((means that relative path to file in CWD must be prefixed with ./))
-            ((use case: user wants notebook to use same environment as existing notebook))
-            convert to pathlib.Path, resolve, sub variables, expanduser, etc.
-            if path points to real, existing *.ipynb* file
-                OK, sure
-            else
-                raise error
-        else
-            treat name as just a name
-        """
-        if isinstance(name, Path):
-            # convert Paths to strings so they can be properly expanded,
-            # substituted, resolved, etc. below
-            name = str(name)
-        # convert safe dirname replacement to os.sep (to handle reading
-        # project directory names from DAVOS_PROJECT_DIR)
-        name = name.replace(PATHSEP_REPLACEMENT, PATHSEP)
-        child_cls_to_init = ConcreteProject
-        if PATHSEP in name:
-            # name is a file path
-            name_path = Path(expandvars(name)).expanduser().resolve()
-            if name_path.suffix != '.ipynb':
-                raise DavosProjectError('')
-
-
-        if isinstance(name, str):
-            name = name.replace(PATHSEP, PATHSEP_REPLACEMENT)
-
-
     def __init__(self, name):
         self.name = name
         self.path = Path.home().joinpath

@@ -1039,8 +1039,9 @@ def smuggle(
                 msg = (
                     "The following packages were previously imported by the "
                     "interpreter and could not be reloaded because their C "
-                    "extensions have changed:\n\t[{', '.join(pkgs)}]\nRestart "
-                    "the kernel to use the newly installed version."
+                    "extensions have changed:\n\t"
+                    f"[{', '.join(failed_reloads)}]\nRestart the kernel to "
+                    "use the newly installed version."
                 )
                 if config.environment != 'Colaboratory':
                     msg = (

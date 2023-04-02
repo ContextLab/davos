@@ -3,10 +3,14 @@ Top-level `davos` module. Initializes the global `davos` config object
 and defines some convenience functions for accessing/setting
 `davos.config` values.
 """
-# TODO: implement module-level .projects property?
+# TODO: update f-strings throughout to use {name!r} instead of '{name}'?
 
+
+import sys
+from types import ModuleType
 
 import pkg_resources
+
 from davos.core.config import DavosConfig
 
 
@@ -29,8 +33,19 @@ config = DavosConfig()
 import davos.implementations
 from davos.core.core import smuggle
 # TODO: refactor to find a cleaner way of setting this during __init__,
-#  also possibly defer lazily?
+#  also possibly defer lazily? Or if run at import, maybe async?
 from davos.core.project import use_default_project
+
+
+class ConfigProxyModule(ModuleType):
+    # TODO: add docstring
+    @property
+    def project(self):
+        return config.project
+
+    @project.setter
+    def project(self, value):
+        config.project = value
 
 
 def activate():
@@ -90,6 +105,7 @@ def configure(
         The global `davos` Config object. Offers more detailed
         descriptions of each field.
     """
+    # TODO: add project attr to this
     # TODO: perform some value checks upfront to raise relevant errors
     #  before setting some fields and make setting values
     #  order-independent (e.g., noninteractive & confirm_install)
@@ -137,5 +153,8 @@ def is_active():
     return config.active
 
 
+sys.modules[__name__].__class__ = ConfigProxyModule
+# TODO: throws error when importing in IPython shell -- add informative
+#  error message saying not supported
 use_default_project()
 activate()

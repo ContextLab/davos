@@ -286,7 +286,6 @@ def use_project(smuggle_func):
     return smuggle_wrapper
 
 
-# TODO: remove this
 @contextmanager
 def handle_alternate_pip_executable(installed_name):
     """
@@ -876,6 +875,7 @@ def run_shell_command(command, live_stdout=None):
         command_context = capture_stdout
     else:
         command_context = redirect_stdout
+
     with command_context(StringIO()) as stdout:
         try:
             _run_shell_command_helper(command)
@@ -1055,8 +1055,13 @@ def smuggle(
             else:
                 prompt_restart_rerun_buttons(failed_reloads)
 
-        # TODO: remove this
-        if config._pip_executable != config._pip_executable_orig:
+        if (
+                config._project is None and
+                config._pip_executable != config._pip_executable_orig
+        ):
+            # setting davos.config.pip_executable to a non-default value
+            # changes the executable used in all cases, but only affects
+            # the install location if not using a davos project
             with handle_alternate_pip_executable(onion.install_name):
                 smuggled_obj = import_name(name)
         else:

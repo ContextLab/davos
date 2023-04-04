@@ -13,13 +13,16 @@ and available functionality.
 __all__ = ['DavosConfig']
 
 
-import pathlib
+import os
 import pprint
+import site
 import sys
+import sysconfig
 import traceback
 import warnings
 from io import StringIO
 from os.path import expandvars
+from pathlib import Path
 from subprocess import CalledProcessError, check_output
 
 from davos.core.exceptions import (
@@ -319,7 +322,7 @@ class DavosConfig(metaclass=SingletonConfig):
     def pip_executable(self, exe_path):
         # TODO: separate this off into some sort of "resolve path"
         #  utility function?
-        exe_path = pathlib.Path(expandvars(exe_path)).expanduser()
+        exe_path = Path(expandvars(exe_path)).expanduser()
         try:
             exe_path = exe_path.resolve(strict=True)
         except FileNotFoundError as e:
@@ -351,7 +354,7 @@ class DavosConfig(metaclass=SingletonConfig):
                 "`<project>.rename('<new_notebook_path>')`\n or remove it "
                 "fully with:\n\t`<project>.remove()`"
             )
-        elif isinstance(proj, (str, pathlib.Path)):
+        elif isinstance(proj, (str, Path)):
             proj = Project(proj)
             if isinstance(proj, AbstractProject):
                 raise ProjectNotebookNotFoundError(
@@ -543,17 +546,14 @@ def _get_stdlib_modules():
 
     Returns
     -------
-    set of str
+    frozenset of str
         names of standard library modules for the user's Python
         implementation
-
-    Notes
-    -----
-    There's actually a standard library implementation of this, but it's
-    not implemented for Python<3.10:
-    https://docs.python.org/3.10/library/sys.html#sys.stdlib_module_names
     """
-    stdlib_dir = pathlib.Path(pathlib.__file__).parent
+    if sys.version_info.minor >= 10:
+        return sys.stdlib_module_names
+
+    stdlib_dir = Path(os.__file__).parent
     stdlib_modules = []
     for p in stdlib_dir.iterdir():
         if (
@@ -561,12 +561,11 @@ def _get_stdlib_modules():
                 p.suffix == '.py'
         ):
             stdlib_modules.append(p.stem)
-    try:
-        builtins_dir = next(d for d in sys.path if d.endswith('lib-dynload'))
-    except StopIteration:
-        pass
-    else:
-        for p in pathlib.Path(builtins_dir).glob('*.cpython*.so'):
-            stdlib_modules.append(p.name.split('.')[0])
+
+    builtins_dir = stdlib_dir.joinpath('lib-dynload')
+    if builtins_dir.is_dir():
+        for p in builtins_dir.glob('*.cpython*.so'):
+            stdlib_modules.append(p.stem.split('.')[0])
+
     stdlib_modules.extend(sys.builtin_module_names)
-    return set(stdlib_modules)
+    return frozenset(stdlib_modules)

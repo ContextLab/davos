@@ -206,11 +206,14 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
 
     Notes
     -----
-    Functionally, this is a reimplementation of `colabtools`'s
-    `google.colab._pip._previously_imported_packages()`. This version
-    has some minor tweaks that make it more efficient, but is mostly
-    meant to be available when `colabtools` may not be installed (i.e.,
-    outside of Colaboratory).
+    - Functionally, this is a reimplementation of `colabtools`'s
+      `google.colab._pip._previously_imported_packages()`. This version
+      has some minor tweaks that make it more efficient, but is mostly
+      meant to be available when `colabtools` may not be installed
+      (i.e., outside of Colaboratory).
+    - There's an edge case neither this nor `colabtools`'s version
+      handles: if the user passes -q/--quiet 3x to the pip-install
+      command, there will be no stdout to parse.
     """
     if installer == 'conda':
         raise NotImplementedError(

@@ -15,6 +15,7 @@ __all__ = ['DavosConfig']
 
 import os
 import pprint
+import shutil
 import site
 import sys
 import sysconfig
@@ -23,7 +24,6 @@ import warnings
 from io import StringIO
 from os.path import expandvars
 from pathlib import Path
-from subprocess import CalledProcessError, check_output
 
 from davos.core.exceptions import (
     DavosConfigError,
@@ -178,7 +178,8 @@ class DavosConfig(metaclass=SingletonConfig):
         self._ipy_showsyntaxerror_orig = None
         self._repr_formatter = pprint.PrettyPrinter()
         if sys.version_info.minor >= 8:
-            # sort_dicts constructor param added in Python 3.8
+            # sort_dicts constructor param added in Python 3.8, defaults
+            # to True. Set it to False here for consistency.
             self._repr_formatter._sort_dicts = False
         self._smuggled = {}
         self._stdlib_modules = _get_stdlib_modules()
@@ -322,9 +323,8 @@ class DavosConfig(metaclass=SingletonConfig):
     def pip_executable(self, exe_path):
         # TODO: separate this off into some sort of "resolve path"
         #  utility function?
-        exe_path = Path(expandvars(exe_path)).expanduser()
         try:
-            exe_path = exe_path.resolve(strict=True)
+            exe_path = Path(expandvars(exe_path)).expanduser().resolve(strict=True)
         except FileNotFoundError as e:
             raise DavosConfigError(
                 'pip_executable',  f"No such file or directory: '{exe_path}'"
@@ -458,15 +458,14 @@ class DavosConfig(metaclass=SingletonConfig):
             if location.is_file():
                 return str(location)
         if self._environment == 'Colaboratory':
-            try:
-                # Can also fall back to checking $PATH in Colab, but
-                # can't assume this for a regular Jupyter notebook -- if
-                # the kernel is running in a virtual environment, this
-                # would give us the pip executable for the notebook
-                # server environment instead
-                return check_output(['which', 'pip'], encoding='utf-8').strip()
-            except CalledProcessError:
-                pass
+            # Can also fall back to checking $PATH in Colab, but can't
+            # assume this for a regular Jupyter notebook -- if the
+            # kernel is running in a virtual environment, this would
+            # give us the pip executable for the notebook server
+            # environment instead
+            pip_exe = shutil.which('pip')
+            if pip_exe is not None:
+                return pip_exe
         raise DavosError(
             "Could not locate a 'pip' executable in the current Python "
             "environment. To ensure you have 'pip' installed in your "

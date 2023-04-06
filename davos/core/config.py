@@ -1,7 +1,7 @@
 """
-This modules defines the global `davos.config` object. The `davos`
+This module defines the global `davos.config` object. The `davos`
 config consists of public fields that may be set by the user to affect
-`davos`' behavior, as well as private (internal use only) fields that
+`davos`'s behavior, as well as private (internal use only) fields that
 store information about the context into which the package was imported
 and available functionality.
 """
@@ -113,7 +113,7 @@ class DavosConfig(metaclass=SingletonConfig):
     """
 
     # noinspection PyUnusedLocal
-    # pylint: disable=unused-argument, missing-function-docstring, no-self-use
+    # pylint: disable=unused-argument, missing-function-docstring
     @staticmethod
     def __mock_sorted(__iterable, key=None, reverse=False):
         """
@@ -124,7 +124,7 @@ class DavosConfig(metaclass=SingletonConfig):
         method. `dict` items in `smuggled` field should be shown in
         insertion order, not alphabetically, because they represent a
         history of cached `smuggle` commands. However,
-        `pprint.PrettyPrinter` didn't support option to *not* sort
+        `pprint.PrettyPrinter` didn't provide the option to *not* sort
         `dict`s until Python 3.8, so for earlier versions, this is
         assigned to `pprint.sorted` so that it takes priority over the
         built-in `sorted` in module's namespace lookup chain.
@@ -147,9 +147,6 @@ class DavosConfig(metaclass=SingletonConfig):
         """
         return __iterable
 
-    # noinspection PyFinal
-    # (PyCharm doesn't differentiate between declarations here and in
-    # stub file, which it should, according to PEP 591)
     def __init__(self):
         ########################################
         #           READ-ONLY FIELDS           #
@@ -532,6 +529,7 @@ def _block_greedy_ipython_completer():
             # exception to make completer function return early.
             del sys.modules['davos.core']
             del sys.modules['davos.core.config']
+            # pylint: disable=broad-exception-raised
             raise Exception
 
 

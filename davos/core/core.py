@@ -7,10 +7,15 @@ across the environment-specific `davos` implementations.
 __all__ = [
     'capture_stdout',
     'check_conda',
+    'get_previously_imported_pkgs',
+    'handle_alternate_pip_executable',
+    'import_name',
     'Onion',
     'parse_line',
     'prompt_input',
-    'run_shell_command'
+    'run_shell_command',
+    'use_project',
+    'smuggle'
 ]
 
 
@@ -69,8 +74,10 @@ class capture_stdout:    # pylint: disable=invalid-name
         """
         Parameters
         ----------
-        streams : io.IOBase
-            stream(s) to receive data sent to `sys.stdout`
+        *streams : tuple of io.TextIOBase
+            I/O stream(s) to receive data sent to `sys.stdout`. Must be
+            subclasses of `io.TextIOBase` (i.e., support reading/writing
+            `str` data, rather than `bytes`).
         closing : bool, optional
             if `True` (default), close streams upon exiting the context
             block.
@@ -251,41 +258,6 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
     return prev_imported_pkgs
 
 
-def use_project(smuggle_func):
-    """TODO: add docstring, move this to alphabetical order"""
-
-    @functools.wraps(smuggle_func)
-    def smuggle_wrapper(*args, **kwargs):
-        project = config.project
-        if project is not None:
-            # prepend the project's site-packages directory to sys.path
-            # so project's package versions are prioritized for import
-            # over versions in "regular" environment
-            sys.path.insert(0, str(project.site_packages_dir))
-            # reload pkg_resources so the global "working set" is
-            # regenerated based on the updated sys.path
-            importlib.invalidate_caches()
-            importlib.reload(sys.modules['pkg_resources'])
-            try:
-                return smuggle_func(*args, **kwargs)
-            finally:
-                # after (possibly installing and) loading the package,
-                # remove the project's site-packages directory from
-                # sys.path and reload pkg_resources again to restore the
-                # original working set.
-                # Note: can't assume the project site-packages dir is
-                # still sys.path[0] -- some install options result in
-                # other dirs being prepended to load modules installed
-                # in custom locations
-                sys.path.remove(str(project.site_packages_dir))
-                importlib.invalidate_caches()
-                importlib.reload(sys.modules['pkg_resources'])
-        else:
-            return smuggle_func(*args, **kwargs)
-
-    return smuggle_wrapper
-
-
 @contextmanager
 def handle_alternate_pip_executable(installed_name):
     """
@@ -403,6 +375,8 @@ class Onion:
     statement (with or without an "onion comment") creates an `Onion`
     instance, which contains all the information necessary to import
     and, if necessary, install it.
+
+    # TODO: document attributes
     """
 
     @staticmethod
@@ -614,8 +588,7 @@ class Onion:
                 InvalidRequirement
             ):
                 return False
-            else:
-                return True
+            return True
         return False
 
     def _conda_install_package(self):
@@ -795,7 +768,7 @@ def prompt_input(prompt, default=None, interrupt=None):
     }
     if interrupt is not None:
         interrupt = interrupt.lower()
-        if interrupt not in response_values.keys():
+        if interrupt not in response_values:
             raise ValueError(
                 f"'interrupt' must be one of {tuple(response_values.keys())}"
             )
@@ -886,9 +859,43 @@ def run_shell_command(command, live_stdout=None):
             if e.output is None and stdout != '':
                 e.output = stdout
             raise e
-        else:
-            stdout = stdout.getvalue()
+        stdout = stdout.getvalue()
     return stdout
+
+
+def use_project(smuggle_func):
+    """TODO: add docstring"""
+
+    @functools.wraps(smuggle_func)
+    def smuggle_wrapper(*args, **kwargs):
+        project = config.project
+        if project is not None:
+            # prepend the project's site-packages directory to sys.path
+            # so project's package versions are prioritized for import
+            # over versions in "regular" environment
+            sys.path.insert(0, str(project.site_packages_dir))
+            # reload pkg_resources so the global "working set" is
+            # regenerated based on the updated sys.path
+            importlib.invalidate_caches()
+            importlib.reload(sys.modules['pkg_resources'])
+            try:
+                return smuggle_func(*args, **kwargs)
+            finally:
+                # after (possibly installing and) loading the package,
+                # remove the project's site-packages directory from
+                # sys.path and reload pkg_resources again to restore the
+                # original working set.
+                # Note: can't assume the project site-packages dir is
+                # still sys.path[0] -- some install options result in
+                # other dirs being prepended to load modules installed
+                # in custom locations
+                sys.path.remove(str(project.site_packages_dir))
+                importlib.invalidate_caches()
+                importlib.reload(sys.modules['pkg_resources'])
+        else:
+            return smuggle_func(*args, **kwargs)
+
+    return smuggle_wrapper
 
 
 @use_project
@@ -1057,7 +1064,7 @@ def smuggle(
 
         if (
                 config._project is None and
-                config._pip_executable != config._pip_executable_orig
+                config._pip_executable != config._default_pip_executable
         ):
             # setting davos.config.pip_executable to a non-default value
             # changes the executable used in all cases, but only affects

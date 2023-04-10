@@ -1,5 +1,5 @@
 """
-This modules contains implementations of helper functions specific to
+This module contains implementations of helper functions specific to
 "pure" (i.e., non-interactive) Python scripts.
 
 **Note**: `davos` does not currently support pure Python, but will begin

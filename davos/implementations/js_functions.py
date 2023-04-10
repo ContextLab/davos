@@ -1,5 +1,5 @@
 """
-This modules contains JavaScript code for various `davos` features that
+This module contains JavaScript code for various `davos` features that
 require manipulating the notebook JS object in the browser.
 
 **Note**: currently, these features are implemented for Jupyter

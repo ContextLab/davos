@@ -1,5 +1,5 @@
 """
-This modules contains implementations of helper functions common across
+This module contains implementations of helper functions common across
 all IPython versions and front-end interfaces.
 """
 

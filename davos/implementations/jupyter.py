@@ -1,5 +1,5 @@
 """
-This modules contains implementations of helper functions specific to
+This module contains implementations of helper functions specific to
 Jupyter notebooks.
 """
 

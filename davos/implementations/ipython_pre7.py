@@ -1,5 +1,5 @@
 """
-This modules contains implementations of helper functions specific to
+This module contains implementations of helper functions specific to
 versions of `IPython` before v7.0.0 (the oldest officially supported
 version is v5.5.0).
 """

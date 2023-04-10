@@ -6,11 +6,8 @@ and defines some convenience functions for accessing/setting
 
 
 __all__ = [
-    'activate',
     'config',
     'configure',
-    'deactivate',
-    'is_active',
     'smuggle',
     'use_default_project'
 ]
@@ -53,19 +50,6 @@ class ConfigProxyModule(ModuleType):
             setattr(config, name, value)
         else:
             super().__setattr__(name, value)
-
-
-# TODO: remove after making config attrs settable on top level
-#  (also remove from stub)
-def activate():
-    """
-    Activate the `davos` parser if it is not currently active.
-
-    Convenience function equivalent to running
-    `davos.config.active = True`. Enables the `davos` parser and injects
-    the `smuggle()` function into the namespace.
-    """
-    config.active = True
 
 
 # pylint: disable=unused-argument
@@ -134,41 +118,10 @@ def configure(
                 old_values[name] = old_value
 
 
-# TODO: remove after making config attrs settable on top level
-#  (also remove from stub)
-def deactivate():
-    """
-    Deactivate the `davos` parser if it is currently active.
-
-    Convenience function equivalent to running
-    `davos.config.active = False`. Disables the `davos` parser and
-    deletes the name `smuggle` from the namespace if and only if it
-    refers to the `smuggle()` function.
-    """
-    config.active = False
-
-
-# TODO: remove after making config attrs settable on top level
-#  (also remove from stub)
-def is_active():
-    """
-    Check whether the `davos` parser currently active.
-
-    Convenience function that simply returns the value of
-    `davos.config.active`.
-
-    Returns
-    -------
-    bool
-        Whether or not the `davos` parser is currently active.
-
-    """
-    return config.active
-
-
 sys.modules[__name__].__class__ = ConfigProxyModule
+
+config.active = True
 
 # TODO: throws error when importing in IPython shell -- add informative
 #  error message saying not supported
 use_default_project()
-activate()

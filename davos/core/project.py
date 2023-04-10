@@ -184,7 +184,7 @@ def get_notebook_path():
         notebook_api_url = urljoin(nbserver_url, '/api/sessions')
         parsed_url = urlparse(nbserver_url)
         if parsed_url.query:
-            params = {'token': parsed_url.query.removeprefix('token=')}
+            params = {'token': parsed_url.query.replace('token=', '')}
         else:
             params = None
 

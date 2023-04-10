@@ -37,15 +37,14 @@ implemented:
 __all__ = ['DotDict', 'JS_FUNCTIONS']
 
 
+from collections.abc import MutableMapping
 from textwrap import dedent
 
 
 class DotDict(dict):
     """Simple `dict` subclass that can be accessed like a JS object"""
-
     __delattr__ = dict.__delitem__
     __getattr__ = dict.__getitem__
-    __setattr__ = dict.__setitem__
 
     # noinspection PyMissingConstructor
     # pylint: disable=super-init-not-called
@@ -53,14 +52,20 @@ class DotDict(dict):
         """
         Parameters
         ----------
-        d : `collections.Mapping`
+        d : `collections.abc.MutableMapping`
             A `dict`-like object to be converted to a `DotDict`,
             recursively.
         """
         for k, v in d.items():
-            if isinstance(v, dict):
-                v = DotDict(v)
             self[k] = v
+
+    def __setitem__(self, key, value):
+        if isinstance(value, MutableMapping):
+            value = DotDict(value)
+        super().__setitem__(key, value)
+
+    def __setattr__(self, name, value):
+        self[name] = value
 
 
 # noinspection ThisExpressionReferencesGlobalObjectJS

@@ -40,14 +40,20 @@ from davos.core.project import use_default_project
 
 
 class ConfigProxyModule(ModuleType):
-    # TODO: add docstring
-    @property
-    def project(self):
-        return config.project
+    """TODO: add docstring"""
+    def __getattr__(self, name):
+        try:
+            return getattr(config, name)
+        except AttributeError:
+            raise AttributeError(
+                f'module {__name__!r} has no attribute {name!r}'
+            ) from None
 
-    @project.setter
-    def project(self, value):
-        config.project = value
+    def __setattr__(self, name, value):
+        if hasattr(config, name):
+            setattr(config, name, value)
+        else:
+            super().__setattr__(name, value)
 
 
 # TODO: remove after making config attrs settable on top level

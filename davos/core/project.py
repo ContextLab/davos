@@ -5,6 +5,7 @@ import shutil
 import sys
 from os.path import expandvars
 from pathlib import Path
+from urllib.parse import unquote, urljoin, urlparse
 
 import ipykernel
 import requests
@@ -194,10 +195,9 @@ def get_notebook_path():
                 if config.environment == 'Colaboratory':
                     # Colab notebooks don't actually live on Colab VM
                     # filesystem, so just use notebook name
-                    return session['notebook']['name']
-                else:
-                    notebook_relpath = session['notebook']['path']
-                    return Path(nbserver_root_dir, notebook_relpath)
+                    return unquote(session['notebook']['name'])
+                notebook_relpath = unquote(session['notebook']['path'])
+                return Path(nbserver_root_dir, notebook_relpath)
 
 
 def cleanup_project_dir_atexit(dirpath):

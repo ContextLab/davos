@@ -85,9 +85,9 @@ class DavosParserError(SyntaxError, DavosError):
             `target_text` where the error occurred. Defaults to `1` (the
             first character in `target_text`).
         """
-        # note: flot is a 4-tuple of (filename, lineno, offset, text)
-        # passed to the SyntaxError constructor.
         if target_text is None or IPython.version_info[0] >= 7:
+            # flot is a 4-tuple of (filename, lineno, offset, text)
+            # passed to the SyntaxError constructor.
             flot = (None, None, None, None)
         else:
             from davos import config
@@ -134,7 +134,7 @@ class OnionArgumentError(ArgumentError, OnionParserError):
         """
         Parameters
         ----------
-        msg : str
+        msg : str or None
             The error message to be displayed.
         argument : str, optional
             The argument responsible for the error. if `None` (default),

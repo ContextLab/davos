@@ -9,14 +9,13 @@ from urllib.parse import unquote, urljoin, urlparse
 
 import ipykernel
 import requests
-from urllib.parse import urljoin, urlparse
 
 from davos import config
 from davos.core.core import prompt_input, run_shell_command
 from davos.core.exceptions import DavosProjectError
 
 
-__all__ = ['Project']
+__all__ = ['Project', 'get_notebook_path', 'use_default_project']
 
 
 DAVOS_CONFIG_DIR = Path.home().joinpath('.davos')
@@ -36,6 +35,7 @@ DAVOS_CONFIG_DIR.mkdir(parents=False, exist_ok=True)
 class ProjectChecker(type):
     """TODO: add metaclass docstring"""
     def __call__(cls, name):
+        """TODO: add docstring"""
         cls_to_init = ConcreteProject
         # if user passed a pathlib.Path, convert it to a str so it can
         # be properly expanded, substituted, resolved, etc. below
@@ -46,16 +46,17 @@ class ProjectChecker(type):
             # user-specified. File doesn't *have* to exist at this point
             # (will be an AbstractProject, if not), but must at least
             # point to what could eventually be a notebook
+            # TODO: separate this off into some sort of "resolve path"
+            #  utility function?
             name_path = Path(expandvars(name)).expanduser().resolve(strict=False)
             if name_path.suffix != '.ipynb' or name_path.is_dir():
-                # file doesn't have to exist at this point (can be an AbstractProject)
                 raise DavosProjectError(
                     f"Invalid project name: '{name}' (which resolves to "
                     f"'{name_path}'). Project names may be either a simple "
                     f"name (without '{PATHSEP}') or a path to a Jupyter "
                     f"notebook (.ipynb) file."
                 )
-            elif not name_path.is_file():
+            if not name_path.is_file():
                 cls_to_init = AbstractProject
             name = str(name_path)
         elif PATHSEP_REPLACEMENT in name:
@@ -116,10 +117,11 @@ class Project(metaclass=ProjectChecker):
 
     def remove(self, yes=False):
         """
-        TODO: add docstring remove the project and all installed
+        TODO: add docstring -- remove the project and all installed
          packages. should prompt for confirmation, but accept "yes" arg
          to bypass
         """
+        # TODO: move to ConcreteProject?
         if not yes:
             prompt = f"Remove project '{self.name} and all installed packages?"
             confirmed = prompt_input(prompt, default='n')
@@ -141,6 +143,8 @@ class Project(metaclass=ProjectChecker):
 class AbstractProject(Project):
     """TODO: add docstring"""
     def __getattr__(self, item):
+        # Note: stdlib docs say type hint shouldn't be included here
+        # https://typing.readthedocs.io/en/latest/source/stubs.html#attribute-access
         if hasattr(ConcreteProject, item):
             msg = f"'{item}' is not supported for abstract projects"
         else:
@@ -153,18 +157,19 @@ class AbstractProject(Project):
 
 class ConcreteProject(Project):
     """TODO: add docstring"""
-    def __init__(self, name):
-        super().__init__(name)
-
     @property
     def installed_packages(self):
         """pip-freeze-like list of installed packages"""
+        # TODO: implement and add docstring
         raise NotImplementedError
 
 
 def get_notebook_path():
     # TODO: add docstring
     """get the absolute path to the current notebook"""
+    # Currently returns a str if in colab, else a pathlib.Path
+    # TODO: test in case where multiple Jupyter notebooks open on same
+    #  notebook server, using same kernel
     kernel_filepath = ipykernel.connect.get_connection_file()
     kernel_id = kernel_filepath.split('/kernel-')[-1].split('.json')[0]
 
@@ -198,13 +203,16 @@ def get_notebook_path():
                     return unquote(session['notebook']['name'])
                 notebook_relpath = unquote(session['notebook']['path'])
                 return Path(nbserver_root_dir, notebook_relpath)
+    # TODO: add exception handling here for in case for loop completes
 
 
 def cleanup_project_dir_atexit(dirpath):
     """
     TODO: add docstring -- IPython kernel stores internal references to
-     objects, so finalizer method isn't called on kernel shutdown. This
-     handles that. Function outside class so atexit registry doesn't
+     objects, so finalizer method isn't called on kernel shutdown. Also
+     stores references to objects via its output caching system
+     (https://ipython.readthedocs.io/en/stable/interactive/reference.html#output-caching-system).
+     This handles those. Function outside class so atexit registry doesn't
      store reference to instance unnecessarily for whole session
     """
     if dirpath.is_dir() and next(dirpath.iterdir(), None) is None:
@@ -214,12 +222,12 @@ def cleanup_project_dir_atexit(dirpath):
             pass
 
 
-def prune_projects():
-    """delete (auto-named) projects for which a notebook doesn't exist"""
-
-
 def prune_project(proj):
     """delete a single project by its name"""
+
+
+def prune_projects():
+    """delete (auto-named) projects for which a notebook doesn't exist"""
 
 
 def use_default_project():

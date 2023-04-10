@@ -187,7 +187,6 @@ def prompt_restart_rerun_buttons(pkgs):
                 break
             raise
 
-    # noinspection PyTypeChecker
     display(Javascript(display_button_prompt_full))
 
     while True:

@@ -6,6 +6,17 @@ and defines some convenience functions for accessing/setting
 # TODO: update f-strings throughout to use {name!r} instead of '{name}'?
 
 
+__all__ = [
+    'activate',
+    'config',
+    'configure',
+    'deactivate',
+    'is_active',
+    'smuggle',
+    'use_default_project'
+]
+
+
 import sys
 from types import ModuleType
 
@@ -13,15 +24,6 @@ import pkg_resources
 
 from davos.core.config import DavosConfig
 
-
-__all__ = [
-    'activate',
-    'config',
-    'configure',
-    'deactivate',
-    'is_active',
-    'smuggle'
-]
 
 __version__ = pkg_resources.get_distribution('davos').version
 
@@ -48,6 +50,8 @@ class ConfigProxyModule(ModuleType):
         config.project = value
 
 
+# TODO: remove after making config attrs settable on top level
+#  (also remove from stub)
 def activate():
     """
     Activate the `davos` parser if it is not currently active.
@@ -105,7 +109,7 @@ def configure(
         The global `davos` Config object. Offers more detailed
         descriptions of each field.
     """
-    # TODO: add project attr to this
+    # TODO: add project attr to this & update docstring & stub file
     # TODO: perform some value checks upfront to raise relevant errors
     #  before setting some fields and make setting values
     #  order-independent (e.g., noninteractive & confirm_install)
@@ -125,6 +129,8 @@ def configure(
                 old_values[name] = old_value
 
 
+# TODO: remove after making config attrs settable on top level
+#  (also remove from stub)
 def deactivate():
     """
     Deactivate the `davos` parser if it is currently active.
@@ -137,6 +143,8 @@ def deactivate():
     config.active = False
 
 
+# TODO: remove after making config attrs settable on top level
+#  (also remove from stub)
 def is_active():
     """
     Check whether the `davos` parser currently active.
@@ -154,6 +162,7 @@ def is_active():
 
 
 sys.modules[__name__].__class__ = ConfigProxyModule
+
 # TODO: throws error when importing in IPython shell -- add informative
 #  error message saying not supported
 use_default_project()

@@ -3,6 +3,7 @@ This module defines reimplementations of the command line parsers for
 installer programs supported by `davos`, slightly modified to parse
 arguments supplied via an Onion comment.
 """
+# TODO: update with new pip install arguments as of v23
 
 
 __all__ = ['EditableAction', 'OnionParser', 'pip_parser', 'SubtractAction']

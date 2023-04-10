@@ -41,13 +41,14 @@ __all__ = [
 ]
 
 
+from pathlib import Path
+
 from davos import config
 from davos.core.config import DavosConfig
 from davos.core.exceptions import DavosConfigError
 
 
 import_environment = config.environment
-
 
 if import_environment == 'Python':
     # noinspection PyUnresolvedReferences
@@ -171,6 +172,9 @@ def _conda_env_fset(conf, new_env):
             "conda_env",
             "cannot set conda environment. No local conda installation found"
         )
+    if isinstance(new_env, Path):
+        new_env = new_env.name
+
     if new_env != conf._conda_env:
         if (
                 conf._conda_envs_dirs is not None and

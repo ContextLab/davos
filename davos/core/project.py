@@ -188,7 +188,7 @@ def get_notebook_path():
             params = None
 
         # TODO: add exception handling, 403 handling, etc.
-        response = requests.get(notebook_api_url, params=params)
+        response = requests.get(notebook_api_url, params=params, timeout=10)
         for session in response.json():
             if session['kernel']['id'] == kernel_id:
                 if config.environment == 'Colaboratory':

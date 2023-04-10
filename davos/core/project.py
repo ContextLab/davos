@@ -29,9 +29,6 @@ SITE_PACKAGES_SUFFIX = PATHSEP.join((
 ))
 
 
-DAVOS_CONFIG_DIR.mkdir(parents=False, exist_ok=True)
-
-
 class ProjectChecker(type):
     """TODO: add metaclass docstring"""
     def __call__(cls, name):

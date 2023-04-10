@@ -32,7 +32,7 @@ import davos.implementations
 from davos.core.core import smuggle
 # TODO: refactor to find a cleaner way of setting this during __init__,
 #  also possibly defer lazily? Or if run at import, maybe async?
-from davos.core.project import use_default_project
+from davos.core.project import DAVOS_PROJECT_DIR, use_default_project
 
 
 class ConfigProxyModule(ModuleType):
@@ -121,6 +121,8 @@ def configure(
 sys.modules[__name__].__class__ = ConfigProxyModule
 
 config.active = True
+
+DAVOS_PROJECT_DIR.mkdir(parents=True, exist_ok=True)
 
 # TODO: throws error when importing in IPython shell -- add informative
 #  error message saying not supported

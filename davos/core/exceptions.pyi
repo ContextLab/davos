@@ -1,19 +1,10 @@
 from argparse import ArgumentError
 from subprocess import CalledProcessError
-from typing import Literal, Optional
+from typing import Literal
 
-__all__: list[
-    Literal[
-        'DavosError',
-        'DavosConfigError',
-        'DavosParserError',
-        'InstallerError',
-        'OnionParserError',
-        'OnionArgumentError',
-        'ParserNotImplementedError',
-        'SmugglerError'
-    ]
-]
+__all__ = list[Literal['DavosError', 'DavosConfigError', 'DavosParserError', 'DavosProjectError', 'InstallerError',
+                      'OnionParserError', 'OnionArgumentError', 'ParserNotImplementedError', 'ProjectNotebookNotFoundError',
+                      'SmugglerError']]
 
 class DavosError(Exception): ...
 
@@ -23,43 +14,27 @@ class DavosConfigError(DavosError):
     def __init__(self, field: str, msg: str) -> None: ...
 
 class DavosParserError(SyntaxError, DavosError):
-    def __init__(
-            self,
-            msg: Optional[str] = ...,
-            target_text: Optional[str] = ...,
-            target_offset: int = ...
-    ) -> None: ...
+    def __init__(self, msg: str | None = ..., target_text: str | None = ..., target_offset: int = ...) -> None: ...
 
 class OnionParserError(DavosParserError): ...
 
 class OnionArgumentError(ArgumentError, OnionParserError):
-    def __init__(
-            self,
-            msg: Optional[str] = ...,
-            argument: Optional[str] = ...,
-            onion_txt: Optional[str] = ...
-    ) -> None: ...
+    def __init__(self, msg: str | None = ..., argument: str | None = ..., onion_txt: str | None = ...) -> None: ...
 
 class ParserNotImplementedError(OnionParserError, NotImplementedError): ...
+
+class DavosProjectError(DavosError): ...
+
+class ProjectNotebookNotFoundError(DavosProjectError, FileNotFoundError): ...
 
 class SmugglerError(DavosError): ...
 
 class TheNightIsDarkAndFullOfTerrors(SmugglerError): ...
 
 class InstallerError(SmugglerError, CalledProcessError):
-    show_output: Optional[bool]
+    show_output: bool
     @classmethod
-    def from_error(
-            cls,
-            cpe: CalledProcessError,
-            show_output: Optional[bool] = ...
-    ) -> InstallerError: ...
-    def __init__(
-            self,
-            returncode: int,
-            cmd: str,
-            output: Optional[str] = ...,
-            stderr: Optional[str] = ...,
-            show_output: Optional[bool] = ...
-    ) -> None: ...
+    def from_error(cls, cpe: CalledProcessError, show_output: bool | None = ...) -> InstallerError: ...
+    def __init__(self, returncode: int, cmd: str, output: str | None = ..., stderr: str | None = ...,
+                 show_output: bool | None = ...) -> None: ...
     def __str__(self) -> str: ...

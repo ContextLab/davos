@@ -2,15 +2,18 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from io import TextIOBase
 from types import TracebackType
-from typing import Literal, NoReturn, overload, Type, TypeVar, TypedDict
+from typing import Generic, Literal, NoReturn, overload, Protocol, Type, TypeVar, TypedDict
 
-__all__: list[Literal['capture_stdout', 'check_conda', 'get_previously_imported_pkgs', 'handle_alternate_pip_executable',
+__all__ = list[Literal['capture_stdout', 'check_conda', 'get_previously_imported_pkgs', 'handle_alternate_pip_executable',
                       'import_name', 'Onion', 'parse_line', 'prompt_input', 'run_shell_command', 'use_project', 'smuggle']]
 
 _Exc = TypeVar('_Exc', bound=BaseException)
 _Streams = TypeVar('_Streams', bound=tuple[TextIOBase, ...])
 _InstallerName = Literal['conda', 'pip']
-_SmuggleFunc = Callable[[str, str | None, _InstallerName, str, PipInstallerKwargs | None], None]
+
+class SmuggleFunc(Protocol):
+    def __call__(self, name: str, as_: str | None = ..., installer: Literal['conda', 'pip'] = ..., args_str: str = ...,
+                 installer_kwargs: PipInstallerKwargs | None = ... ) -> None: ...
 
 class PipInstallerKwargs(TypedDict, total=False):
     abi: str
@@ -66,7 +69,7 @@ class PipInstallerKwargs(TypedDict, total=False):
     user: bool
     verbosity: Literal[-3, -2, -1, 0, 1, 2, 3]
 
-class capture_stdout:
+class capture_stdout(Generic[_Streams]):
     closing: bool
     streams: _Streams
     sys_stdout_write: Callable[[str], int | None]
@@ -80,7 +83,7 @@ class capture_stdout:
 
 def check_conda() -> None: ...
 def get_previously_imported_pkgs(install_cmd_stdout: str, installer: _InstallerName) -> list[str]: ...
-def handle_alternate_pip_executable(str) -> AbstractContextManager[None]: ...
+def handle_alternate_pip_executable(installed_name: str) -> AbstractContextManager[None]: ...
 def import_name(name: str) -> object: ...
 
 class Onion:
@@ -110,6 +113,6 @@ def parse_line(line: str) -> str: ...
 def prompt_input(prompt: str, default: Literal['n', 'no', 'y', 'yes'] | None = ...,
                  interrupt: Literal['n', 'no', 'y', 'yes'] | None = ...) -> bool: ...
 def run_shell_command(command: str, live_stdout: bool | None = ...) -> str: ...
-def use_project(smuggle_func: _SmuggleFunc) -> _SmuggleFunc: ...
+def use_project(smuggle_func: SmuggleFunc) -> SmuggleFunc: ...
 def smuggle(name: str, as_: str | None = ..., installer: _InstallerName = ..., args_str: str = ...,
             installer_kwargs: PipInstallerKwargs | None = ...) -> None: ...

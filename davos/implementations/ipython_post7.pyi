@@ -1,11 +1,8 @@
-from typing import Literal, Protocol
-from davos.implementations import LineParserFunc, SmuggleFunc
+from typing import Literal, TypeVar
+from davos.core.core import SmuggleFunc
+from davos.implementations import IPyPost7FullParserFunc, LineParserFunc
 
 __all__ = list[Literal['generate_parser_func']]
-
-class IPyPost7FullParserFunc(Protocol):
-    has_side_effects: Literal[True]
-    def __call__(self, line_parser: list[str]) -> list[str]: ...
 
 def _activate_helper(smuggle_func: SmuggleFunc, parser_func: IPyPost7FullParserFunc) -> None: ...
 def _deactivate_helper(smuggle_func: SmuggleFunc, parser_func: IPyPost7FullParserFunc) -> None: ...

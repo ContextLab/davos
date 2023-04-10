@@ -1,7 +1,7 @@
 from re import Pattern
 from typing import Literal, TypedDict
 
-__all__: list[Literal['pip_installed_pkgs_regex', 'smuggle_statement_regex']]
+__all__ = list[Literal['pip_installed_pkgs_regex', 'smuggle_statement_regex']]
 
 _name_re: Literal[r'[a-zA-Z_]\w*']
 

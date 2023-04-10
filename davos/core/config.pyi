@@ -6,7 +6,7 @@ from google.colab._shell import Shell    # type: ignore
 from IPython.core.interactiveshell import InteractiveShell    # type: ignore
 from davos.core.project import AbstractProject, ConcreteProject
 
-__all__: list[Literal['DavosConfig']]
+__all__ = list[Literal['DavosConfig']]
 
 _Environment = Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']
 _I= TypeVar('_I', bound=Iterable)

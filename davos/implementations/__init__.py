@@ -183,8 +183,8 @@ def _conda_env_fset(conf, new_env):
             local_envs = {"', '".join(conf._conda_envs_dirs.keys())}
             raise DavosConfigError(
                 "conda_env",
-                f"unrecognized environment name: '{new_env}'. Local "
-                f"environments are:\n\t'{local_envs}'"
+                f"unrecognized environment name: {new_env!r}. Local "
+                f"environments are:\n\t{local_envs!r}"
             )
 
         conf._conda_env = new_env

@@ -346,7 +346,7 @@ class DavosConfig(metaclass=SingletonConfig):
         elif isinstance(proj, AbstractProject):
             raise ProjectNotebookNotFoundError(
                 "The notebook associated with this Project does not exist: "
-                f"'{proj.name}'. If the notebook has been moved or renamed, "
+                f"{proj.name!r}. If the notebook has been moved or renamed, "
                 "you can point the Project to its new location with:\n\t"
                 "`<project>.rename('<new_notebook_path>')`\n or remove it "
                 "fully with:\n\t`<project>.remove()`"
@@ -356,7 +356,7 @@ class DavosConfig(metaclass=SingletonConfig):
             if isinstance(proj, AbstractProject):
                 raise ProjectNotebookNotFoundError(
                     "Cannot associate a Project with a notebook that does not "
-                    f"exist (no such notebook: '{proj.name}')."
+                    f"exist (no such notebook: {proj.name!r})."
                 )
             self._project = proj
         else:

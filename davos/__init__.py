@@ -3,7 +3,6 @@ Top-level `davos` module. Initializes the global `davos` config object
 and defines some convenience functions for accessing/setting
 `davos.config` values.
 """
-# TODO: update f-strings throughout to use {name!r} instead of '{name}'?
 
 
 __all__ = [

@@ -51,9 +51,9 @@ class ProjectChecker(type):
             name_path = Path(expandvars(name)).expanduser().resolve(strict=False)
             if name_path.suffix != '.ipynb' or name_path.is_dir():
                 raise DavosProjectError(
-                    f"Invalid project name: '{name}' (which resolves to "
-                    f"'{name_path}'). Project names may be either a simple "
-                    f"name (without '{PATHSEP}') or a path to a Jupyter "
+                    f"Invalid project name: {name!r} (which resolves to "
+                    f"{name_path!r}). Project names may be either a simple "
+                    f"name (without {PATHSEP!r}) or a path to a Jupyter "
                     f"notebook (.ipynb) file."
                 )
             if not name_path.is_file():
@@ -103,7 +103,7 @@ class Project(metaclass=ProjectChecker):
             pass
 
     def __repr__(self):
-        return f"Project('{self.name}')"
+        return f"Project({self.name!r})"
 
     def _set_names(self, name):
         """
@@ -123,7 +123,7 @@ class Project(metaclass=ProjectChecker):
         """
         # TODO: move to ConcreteProject?
         if not yes:
-            prompt = f"Remove project '{self.name} and all installed packages?"
+            prompt = f"Remove project {self.name!r} and all installed packages?"
             confirmed = prompt_input(prompt, default='n')
             if not confirmed:
                 print(f"{self.name} not removed")
@@ -146,13 +146,13 @@ class AbstractProject(Project):
         # Note: stdlib docs say type hint shouldn't be included here
         # https://typing.readthedocs.io/en/latest/source/stubs.html#attribute-access
         if hasattr(ConcreteProject, item):
-            msg = f"'{item}' is not supported for abstract projects"
+            msg = f"{item!r} is not supported for abstract projects"
         else:
-            msg = f"'{self.__class__.__name__}' object has no attribute '{item}'"
+            msg = f"{self.__class__.__name__!r} object has no attribute {item!r}"
         raise AttributeError(msg)
 
     def __repr__(self):
-        return f"AbstractProject('{self.name}')"
+        return f"AbstractProject({self.name!r})"
 
 
 class ConcreteProject(Project):

@@ -454,7 +454,7 @@ class Onion:
         else:
             # here to handle user calling smuggle() *function* directly
             raise OnionParserError(
-                f"Unsupported installer: '{installer}'. Currently supported "
+                f"Unsupported installer: {installer!r}. Currently supported "
                 "installers are:\n\t'pip'"  # and 'conda'"
             )
         self.args_str = args_str
@@ -972,13 +972,13 @@ def smuggle(
     if install_pkg:
         # TODO: for v0.2 conda implementation: bypass if -y/--yes passed
         if config.confirm_install and not installer_kwargs.get('no_input'):
-            msg = (f"package '{pkg_name}' will be installed with the "
+            msg = (f"package {pkg_name!r} will be installed with the "
                    f"following command:\n\t`{onion.install_cmd}`\n"
                    f"Proceed?")
             confirmed = prompt_input(msg, default='y')
             if not confirmed:
                 raise SmugglerError(
-                    f"package '{pkg_name}' not installed"
+                    f"package {pkg_name!r} not installed"
                 ) from None
         installer_stdout = onion.install_package()
         # invalidate sys.meta_path module finder caches. Forces import

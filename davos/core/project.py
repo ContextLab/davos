@@ -112,22 +112,6 @@ class Project(metaclass=ProjectChecker):
         self.project_dir = DAVOS_PROJECT_DIR.joinpath(self.safe_name)
         self.site_packages_dir = self.project_dir.joinpath(SITE_PACKAGES_SUFFIX)
 
-    def remove(self, yes=False):
-        """
-        TODO: add docstring -- remove the project and all installed
-         packages. should prompt for confirmation, but accept "yes" arg
-         to bypass
-        """
-        # TODO: move to ConcreteProject?
-        if not yes:
-            prompt = f"Remove project {self.name!r} and all installed packages?"
-            confirmed = prompt_input(prompt, default='n')
-            if not confirmed:
-                print(f"{self.name} not removed")
-                return
-        print(f"Removing {self.project_dir}...")
-        shutil.rmtree(self.project_dir)
-
     def rename(self, new_name):
         """rename the project directory, possibly due to renaming/moving notebook"""
         raise NotImplementedError
@@ -159,6 +143,22 @@ class ConcreteProject(Project):
         """pip-freeze-like list of installed packages"""
         # TODO: implement and add docstring
         raise NotImplementedError
+
+    def remove(self, yes=False):
+        """
+        TODO: add docstring -- remove the project and all installed
+         packages. should prompt for confirmation, but accept "yes" arg
+         to bypass
+        """
+        # TODO: move to ConcreteProject?
+        if not yes:
+            prompt = f"Remove project {self.name!r} and all installed packages?"
+            confirmed = prompt_input(prompt, default='n')
+            if not confirmed:
+                print(f"{self.name} not removed")
+                return
+        print(f"Removing {self.project_dir}...")
+        shutil.rmtree(self.project_dir)
 
 
 def get_notebook_path():

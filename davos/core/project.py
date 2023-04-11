@@ -82,6 +82,15 @@ class Project(metaclass=ProjectChecker):
         except OSError:
             pass
 
+    def __eq__(self, other):
+        return type(self) is type(other) and self.name == other.name
+
+    def __lt__(self, other):
+        # needed for sorting
+        if not isinstance(other, Project):
+            return NotImplemented
+        return self.name < other.name
+
     def __repr__(self):
         return f"Project({self.name!r})"
 

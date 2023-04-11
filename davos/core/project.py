@@ -167,10 +167,7 @@ class Project(metaclass=ProjectChecker):
             return
         new_safe_name = new_project_name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
         new_project_dir = DAVOS_PROJECT_DIR.joinpath(new_safe_name)
-        if (
-                new_project_dir.is_dir() and
-                next(new_project_dir.iterdir(), None) is not None
-        ):
+        if new_project_dir.is_dir() and not _dir_is_empty(new_project_dir):
             # new project dir exists and is non-empty
             raise DavosProjectError(
                f"a Project named {new_project_name!r} already exists and "
@@ -221,6 +218,10 @@ class AbstractProject(Project):
 
 class ConcreteProject(Project):
     """TODO: add docstring"""
+
+
+def _dir_is_empty(path):
+    return next((f for f in path.iterdir() if f.name != '.DS_Store'), None) is None
 
 
 def _get_project_name_type(name):
@@ -315,7 +316,7 @@ def cleanup_project_dir_atexit(dirpath):
      This handles those. Function outside class so atexit registry doesn't
      store reference to instance unnecessarily for whole session
     """
-    if dirpath.is_dir() and next(dirpath.iterdir(), None) is None:
+    if dirpath.is_dir() and _dir_is_empty(dirpath):
         try:
             dirpath.rmdir()
         except OSError:

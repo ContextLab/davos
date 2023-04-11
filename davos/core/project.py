@@ -32,7 +32,11 @@ SITE_PACKAGES_SUFFIX = PATHSEP.join((
 
 
 class ProjectChecker(type):
-    """TODO: add metaclass docstring"""
+    """
+    Metaclass that determines whether the object returned by the
+    `Project` constructor will be a `ConcreteProject` or an
+    `AbstractProject`
+    """
     def __call__(cls, name):
         """TODO: add docstring"""
         cls_to_init = ConcreteProject
@@ -40,11 +44,11 @@ class ProjectChecker(type):
         # be properly expanded, substituted, resolved, etc. below
         name = str(name)
         if PATHSEP in name:
-            # `name` is a path to a notebook file, either
-            # Project.default() (path to current notebook) or
-            # user-specified. File doesn't *have* to exist at this point
-            # (will be an AbstractProject, if not), but must at least
-            # point to what could eventually be a notebook
+            # `name` is a path to a notebook file, either the default
+            # project (path to the current notebook) or user-specified.
+            # File doesn't *have* to exist at this point (will be an
+            # AbstractProject, if not), but must at least point to what
+            # could eventually be a notebook
             # TODO: separate this off into some sort of "resolve path"
             #  utility function?
             name_path = Path(expandvars(name)).expanduser().resolve(strict=False)
@@ -53,7 +57,7 @@ class ProjectChecker(type):
                     f"Invalid project name: {name!r} (which resolves to "
                     f"{name_path!r}). Project names may be either a simple "
                     f"name (without {PATHSEP!r}) or a path to a Jupyter "
-                    f"notebook (.ipynb) file."
+                    f"notebook file (ending in .ipynb)."
                 )
             if not name_path.is_file():
                 cls_to_init = AbstractProject
@@ -78,7 +82,6 @@ class ProjectChecker(type):
 
 class Project(metaclass=ProjectChecker):
     """
-    # TODO: add docstring
     A pseudo-environment associated with a particular (set of)
     davos-enhanced notebook(s)
     """
@@ -88,7 +91,9 @@ class Project(metaclass=ProjectChecker):
          passed as vs what it is when __init__ is run due to metaclass
         """
         self._set_names(name)
+        # eagerly create project dir since it's low-cost
         self.project_dir.mkdir(parents=False, exist_ok=True)
+        # register atexit hook to remove project dir if empty
         atexit.register(cleanup_project_dir_atexit, self.project_dir)
         # last modified time of self.site_packages_dir
         self._site_packages_mtime = -1
@@ -98,8 +103,12 @@ class Project(metaclass=ProjectChecker):
 
     def __del__(self):
         """
-        TODO: add docstring -- if project dir is empty, remove when
-         reference count drops to 0, including at end of session
+        If the project directory (self.project_dir) is empty, remove it
+        when the Project object's reference count drops to 0. Note that
+        this can't be relied on, and specifically won't run if the
+        Project's __repr__ has appeared in any notebook cell output,
+        because IPython caches those outputs internally. The atexit hook
+        registered in the constructor takes care of these cases.
          """
         try:
             self.project_dir.rmdir()
@@ -176,7 +185,10 @@ class Project(metaclass=ProjectChecker):
 
 
 class AbstractProject(Project):
-    """TODO: add docstring"""
+    """
+    Project object variant for projects that point to a notebook file
+    that doesn't exist. Similar idea to pathlib.PurePath.
+    """
     def __getattr__(self, item):
         # Note: stdlib docs say type hint shouldn't be included here
         # https://typing.readthedocs.io/en/latest/source/stubs.html#attribute-access

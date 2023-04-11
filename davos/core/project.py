@@ -90,6 +90,11 @@ class Project(metaclass=ProjectChecker):
         self._set_names(name)
         self.project_dir.mkdir(parents=False, exist_ok=True)
         atexit.register(cleanup_project_dir_atexit, self.project_dir)
+        # last modified time of self.site_packages_dir
+        self._site_packages_mtime = -1
+        # cache of installed packages as of self._site_packages_mtime
+        # format: [(name, version), ...]
+        self._installed_packages = []
 
     def __del__(self):
         """
@@ -104,6 +109,38 @@ class Project(metaclass=ProjectChecker):
     def __repr__(self):
         return f"Project({self.name!r})"
 
+    @property
+    def installed_packages(self):
+        """list of installed packages for the Project"""
+        self._refresh_installed_pkgs()
+        return self._installed_packages
+
+    def _refresh_installed_pkgs(self):
+        """
+        update cache of installed packages if site-packages dir has
+        been modified since last check
+        """
+        try:
+            site_pkgs_mtime = self.site_packages_dir.stat().st_mtime
+        except FileNotFoundError:
+            # site-packages dir doesn't exist
+            self._installed_packages = []
+            return
+        if site_pkgs_mtime != self._site_packages_mtime:
+            cmd = f'{config.pip_executable} list --path {self.site_packages_dir} --format json'
+            pip_list_stdout = run_shell_command(cmd, live_stdout=False)
+            try:
+                pip_list_json = json.loads(pip_list_stdout)
+            except json.JSONDecodeError:
+                if pip_list_stdout == '':
+                    # no packages installed
+                    self._installed_packages = []
+                else:
+                    raise
+            else:
+                self._installed_packages = [tuple(pkg.values()) for pkg in pip_list_json]
+            self._site_packages_mtime = site_pkgs_mtime
+
     def _set_names(self, name):
         """
         TODO: add docstring -- separate method so it can be called when
@@ -114,12 +151,27 @@ class Project(metaclass=ProjectChecker):
         self.project_dir = DAVOS_PROJECT_DIR.joinpath(self.safe_name)
         self.site_packages_dir = self.project_dir.joinpath(SITE_PACKAGES_SUFFIX)
 
+    def freeze(self):
+        """pip-freeze-like output for the Project"""
+        return '\n'.join('=='.join(pkg) for pkg in self.installed_packages)
+
+    def remove(self, yes=False):
+        """
+        TODO: add docstring -- remove the project and all installed
+         packages. should prompt for confirmation, but accept "yes" arg
+         to bypass
+        """
+        if not yes:
+            prompt = f"Remove project {self.name!r} and all installed packages?"
+            confirmed = prompt_input(prompt, default='n')
+            if not confirmed:
+                print(f"{self.name} not removed")
+                return
+        print(f"Removing {self.project_dir}...")
+        shutil.rmtree(self.project_dir)
+
     def rename(self, new_name):
         """rename the project directory, possibly due to renaming/moving notebook"""
-        raise NotImplementedError
-
-    def update_name(self):
-        """update the project's name to the current notebook name"""
         raise NotImplementedError
 
 
@@ -140,29 +192,7 @@ class AbstractProject(Project):
 
 class ConcreteProject(Project):
     """TODO: add docstring"""
-    @property
-    def installed_packages(self):
-        """pip-freeze-like list of installed packages for the Project"""
-        # TODO: cache with help of stat site_packages_dir?
-        command = f'{config.pip_executable} list --path {self.site_packages_dir} --format json'
-        pip_list_output = run_shell_command(command, live_stdout=False)
-        return [pkg['name'] for pkg in json.loads(pip_list_output)]
 
-    def remove(self, yes=False):
-        """
-        TODO: add docstring -- remove the project and all installed
-         packages. should prompt for confirmation, but accept "yes" arg
-         to bypass
-        """
-        # TODO: move to ConcreteProject?
-        if not yes:
-            prompt = f"Remove project {self.name!r} and all installed packages?"
-            confirmed = prompt_input(prompt, default='n')
-            if not confirmed:
-                print(f"{self.name} not removed")
-                return
-        print(f"Removing {self.project_dir}...")
-        shutil.rmtree(self.project_dir)
 
 
 def get_notebook_path():

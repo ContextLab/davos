@@ -1,6 +1,7 @@
 """TODO: add module docstring"""
 
 import atexit
+import errno
 import json
 import os
 import shutil
@@ -79,8 +80,11 @@ class Project(metaclass=ProjectChecker):
          """
         try:
             self.project_dir.rmdir()
-        except OSError:
-            pass
+        except OSError as e:
+            if e.errno == errno.ENOTEMPTY and _dir_is_empty(self.project_dir):
+                # project_dir is empty except for a .DS_Store file
+                self.project_dir.joinpath('.DS_Store').unlink()
+                self.project_dir.rmdir()
 
     def __eq__(self, other):
         return type(self) is type(other) and self.name == other.name

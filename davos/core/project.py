@@ -1,5 +1,7 @@
-# TODO: add module docstring
+"""TODO: add module docstring"""
+
 import atexit
+import json
 import os
 import shutil
 import sys
@@ -140,9 +142,11 @@ class ConcreteProject(Project):
     """TODO: add docstring"""
     @property
     def installed_packages(self):
-        """pip-freeze-like list of installed packages"""
-        # TODO: implement and add docstring
-        raise NotImplementedError
+        """pip-freeze-like list of installed packages for the Project"""
+        # TODO: cache with help of stat site_packages_dir?
+        command = f'{config.pip_executable} list --path {self.site_packages_dir} --format json'
+        pip_list_output = run_shell_command(command, live_stdout=False)
+        return [pkg['name'] for pkg in json.loads(pip_list_output)]
 
     def remove(self, yes=False):
         """

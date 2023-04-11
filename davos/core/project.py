@@ -167,6 +167,7 @@ class Project(metaclass=ProjectChecker):
                 return
         print(f"Removing {self.project_dir}...")
         shutil.rmtree(self.project_dir)
+        self.project_dir.mkdir()
 
     def rename(self, new_name):
         """
@@ -279,11 +280,7 @@ def _get_project_name_type(name):
 
 
 def get_notebook_path():
-    # TODO: add docstring
     """get the absolute path to the current notebook"""
-    # Currently returns a str if in colab, else a pathlib.Path
-    # TODO: test in case where multiple Jupyter notebooks open on same
-    #  notebook server, using same kernel
     kernel_filepath = ipykernel.connect.get_connection_file()
     kernel_id = kernel_filepath.split('/kernel-')[-1].split('.json')[0]
 
@@ -298,7 +295,7 @@ def get_notebook_path():
 
         nbserver_url, nbserver_root_dir = line.split('::')
         nbserver_url = nbserver_url.strip()
-        nbserver_root_dir = nbserver_root_dir.strip()
+        nbserver_root_dir = nbserver_root_dir.strip().rstrip('/')
 
         notebook_api_url = urljoin(nbserver_url, '/api/sessions')
         parsed_url = urlparse(nbserver_url)
@@ -315,9 +312,12 @@ def get_notebook_path():
                     # Colab notebooks don't actually live on Colab VM
                     # filesystem, so just use notebook name
                     return unquote(session['notebook']['name'])
+
                 notebook_relpath = unquote(session['notebook']['path'])
-                return Path(nbserver_root_dir, notebook_relpath)
-    # TODO: add exception handling here for in case for loop completes
+                return f'{nbserver_root_dir}/{notebook_relpath}'
+
+    # shouldn't ever get here, but just in case
+    raise RuntimeError("Could not find notebook path for current kernel")
 
 
 def cleanup_project_dir_atexit(dirpath):

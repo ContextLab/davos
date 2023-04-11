@@ -5,12 +5,7 @@ and defines some convenience functions for accessing/setting
 """
 
 
-__all__ = [
-    'config',
-    'configure',
-    'smuggle',
-    'use_default_project'
-]
+__all__ = ['config', 'configure', 'smuggle', 'use_default_project']
 
 
 import sys
@@ -32,7 +27,7 @@ import davos.implementations
 from davos.core.core import smuggle
 # TODO: refactor to find a cleaner way of setting this during __init__,
 #  also possibly defer lazily? Or if run at import, maybe async?
-from davos.core.project import DAVOS_PROJECT_DIR, use_default_project
+from davos.core.project import DAVOS_PROJECT_DIR, Project, use_default_project
 
 
 class ConfigProxyModule(ModuleType):
@@ -61,6 +56,7 @@ def configure(
         confirm_install=...,
         noninteractive=...,
         pip_executable=...,
+        project=...,
         suppress_stdout=...
 ):
     """
@@ -81,10 +77,12 @@ def configure(
     noninteractive : bool, optional
         Value to assign to "`noninteractive`" field. Must be `False`
         (default) in Colaboratory notebooks.
-    pip_executable : str or pathlib.Path
+    pip_executable : str or pathlib.Path, optional
         Value to assign to "`pip_executable`" field. Must be a path to a
         real file.
-    suppress_stdout : bool
+    project : str, pathlib.Path, None, or davos.Project, optional
+        Value to assign to "`project`" field.
+    suppress_stdout : bool, optional
         Value to assign to "`suppress_stdout`" field.
 
     Raises
@@ -98,7 +96,6 @@ def configure(
         The global `davos` Config object. Offers more detailed
         descriptions of each field.
     """
-    # TODO: add project attr to this & update docstring & stub file
     # TODO: perform some value checks upfront to raise relevant errors
     #  before setting some fields and make setting values
     #  order-independent (e.g., noninteractive & confirm_install)
@@ -114,8 +111,7 @@ def configure(
                 for _name, old_value in old_values.items():
                     setattr(config, _name, old_value)
                 raise
-            else:
-                old_values[name] = old_value
+            old_values[name] = old_value
 
 
 sys.modules[__name__].__class__ = ConfigProxyModule

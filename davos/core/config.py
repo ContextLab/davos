@@ -348,8 +348,9 @@ class DavosConfig(metaclass=SingletonConfig):
                 "The notebook associated with this Project does not exist: "
                 f"{proj.name!r}. If the notebook has been moved or renamed, "
                 "you can point the Project to its new location with:\n\t"
-                "`<project>.rename('<new_notebook_path>')`\n or remove it "
-                "fully with:\n\t`<project>.remove()`"
+                "`<project>.rename('<new_notebook_path>')`\n\t"
+                "`<project>.reload()`\n or remove it fully with:\n\t"
+                "`<project>.remove()`"
             )
         elif isinstance(proj, (str, Path)):
             proj = Project(proj)

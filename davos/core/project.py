@@ -241,9 +241,9 @@ def _get_project_name_type(name):
         if name_path.suffix != '.ipynb' or name_path.is_dir():
             raise DavosProjectError(
                 f"Invalid project name: {name!r} (which resolves to "
-                f"{name_path!r}). Project names may be either a simple "
+                f"'{name_path}'). Project names may be either a simple "
                 f"name (without {PATHSEP!r}) or a path to a Jupyter "
-                f"notebook file (ending in .ipynb)."
+                f"notebook file (ending in '.ipynb')."
             )
         if not name_path.is_file():
             project_type = AbstractProject

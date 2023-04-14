@@ -111,7 +111,7 @@ script or package, manually tracking down those dependencies can
 impose a substantial burden on the user and create room for mistakes
 and inconsistencies. Further, when dependency versions are left
 unspecified, replicating the original computing environment becomes
-difficult or impossible.
+difficult or impossible~\citep{PimeEtal19}.
 
 \begin{figure}[tp]
 \centering
@@ -202,16 +202,16 @@ or resource-intensive to install and use, creating potential barriers
 to both contributing to and taking advantage of open science
 resources.
 
-We designed \texttt{davos} to occupy a ``sweet spot'' between these
-extremes.  \texttt{davos} is a notebook-installable package that adds
-functionality to the default notebook experience. Like standard
-Jupyter notebooks, \texttt{davos}-enhanced notebooks allow researchers
-to include text, executable code, and media within a single file. No
-further setup or installation is required, beyond what is needed to
-run standard Jupyter notebooks. And like virtual environments,
-\texttt{davos} provides a convenient mechanism for fully specifying
-(and installing, as needed) a complete set of Python dependencies,
-including specific package versions.
+We designed \texttt{davos} to occupy a ``sweet spot'' between these extremes.
+\texttt{davos} is a notebook-installable package that adds functionality to the
+default notebook experience. Like standard Jupyter notebooks,
+\texttt{davos}-enhanced notebooks allow researchers to include text, executable
+code, and media within a single file. No further setup or installation is
+required from the user, beyond what is needed to run standard Jupyter
+notebooks. And like virtual environments, \texttt{davos} provides a convenient
+mechanism for fully specifying (and installing, as needed) a complete set of
+Python dependencies, including specific package versions, which are contained
+and isolated from the rest of the user's system.
 
 
 \section{Software description}
@@ -298,66 +298,69 @@ local environment, \texttt{davos} will download and install it automatically,
 expose its contents to Python's \texttt{import} machinery, and load it
 into the namespace for immediate use.
 
+Installing new packages in a notebook using standard approaches (e.g., system
+commmands) affect the runtime environment. This could lead to undesired
+behaviors. For example, running a notebook that installs new packages in the
+user's primary system environment might alter their main system installation
+and/or containerized environment in unexpected ways (e.g., changing package
+versions, causing conflicts with other packages, etc.). To protect against
+undesired changes to the runtime environment, \texttt{davos} incorporates its
+own virtual environment for managing packages it installs. When \texttt{davos}
+is imported, a new virtual environment (folder) is created automatically. The
+folder's name may be customized to support multi-notebook projects. Any
+\texttt{smuggle}d packages that were not available in the notebook's runtime
+environment are installed to the current project folder. The runtime
+environment remains unaffected by \texttt{davos}'s behavior (see
+Sec.~\ref{subsec:project}).
+
 \subsubsection{The onion comment}\label{subsec:onion}
 
 For greater control over the behavior of \texttt{smuggle} statements,
-\texttt{davos} defines an additional construct called the ``onion
-comment.'' An onion comment is a special type of inline comment that
-may be placed on a line containing a \texttt{smuggle} statement to
-customize how \texttt{davos} searches for the smuggled package locally
-and, if necessary, downloads and installs it. Onion comments follow a
-simple format based on the ``type comment'' syntax introduced in PEP
-484~\cite{vanREtal14}, and are designed to make managing packages with
-\texttt{davos} intuitive and familiar. To construct an onion comment,
-users provide the name of the installer program (e.g., \texttt{pip})
-and the same arguments one would use to manually install the package
-as desired via the command line:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet1}
-\end{center}
-Occasionally, a package's distribution name (i.e., the name used when
-installing it) may differ from its top-level module name (i.e., the
-name used when importing it). In such cases, an onion comment may be
-used to ensure that \texttt{davos} installs the proper package if it
-cannot be found locally:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet2}
-\end{center}
-Because onion comments may be constructed to specify any aspect of the
-installer's behavior, they provide a mechanism for precisely
-controlling how, where, and when smuggled packages are installed.
-Critically, if an onion comment includes a version
-specifier~\cite{CoghStuf13}, \texttt{davos} will ensure that the
-version of the package loaded into the notebook matches the specific
-version requested, or satisfies the given version constraints. If the
-smuggled package exists locally, \texttt{davos} will extract its
-version information from its metadata and compare it to the specifier
-provided. If the two are incompatible (or no local installation is
-found), \texttt{davos} will download, install, and load a suitable
-version of the package instead:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet3}
-\end{center}
-Onion comments can also be used to \texttt{smuggle} specific VCS references
-(e.g., Git~\cite{TorvHama05} branches, commits, tags, etc.):
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet4}
-\end{center}
-\texttt{davos} processes onion comments internally before forwarding
-arguments to the installer program. In addition to preventing onion
-comments from being used as a vehicle for shell injection attacks,
-this enables \texttt{davos} to adapt its behavior based on how particular
-flags will affect the behavior of the installer program. For example, if an
-onion comment contains either the \texttt{-I}/\texttt{--ignore-installed},
-\texttt{-U}/\texttt{--upgrade}, or \texttt{--force-reinstall} flag,
-\texttt{davos} will not bother checking for a local copy of the smuggled
-package before installing a new one:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet5}
-\end{center}
-Similarly, the \texttt{--no-input} flag will temporarily enable
-\texttt{davos}'s non-interactive mode (see
-Sec.~\ref{subsec:config}), and installing a smuggled package into a
+\texttt{davos} defines an additional construct called the ``onion comment.'' An
+onion comment is a special type of inline comment that may be placed on a line
+containing a \texttt{smuggle} statement to customize how \texttt{davos}
+searches for the smuggled package locally and, if necessary, downloads and
+installs it. Onion comments follow a simple format based on the ``type
+comment'' syntax introduced in PEP 484~\cite{vanREtal14}, and are designed to
+make managing packages with \texttt{davos} intuitive and familiar. To construct
+an onion comment, users provide the name of the installer program (e.g.,
+\texttt{pip}) and the same arguments one would use to manually install the
+package as desired via the command line: \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet1} \end{center} Occasionally,
+a package's distribution name (i.e., the name used when installing it) may
+differ from its top-level module name (i.e., the name used when importing it).
+In such cases, an onion comment may be used to ensure that \texttt{davos}
+installs the proper package if it cannot be found locally: \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet2} \end{center} Because onion
+comments may be constructed to specify any aspect of the installer's behavior,
+they provide a mechanism for precisely controlling how, where, and when
+smuggled packages are installed. Critically, if an onion comment includes a
+version specifier~\cite{CoghStuf13}, \texttt{davos} will ensure that the
+version of the package loaded into the notebook matches the specific version
+requested, or satisfies the given version constraints. If the smuggled package
+exists locally, \texttt{davos} will extract its version information from its
+metadata and compare it to the specifier provided. If the two are incompatible
+(or no local installation is found), \texttt{davos} will download, install, and
+load a suitable version of the package instead: \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet3} \end{center} Onion
+comments can also be used to \texttt{smuggle} specific VCS references (e.g.,
+Git~\cite{TorvHama05} branches, commits, tags, etc.): \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet4} \end{center}
+\texttt{davos} processes onion comments internally before forwarding arguments
+to the installer program. In addition to preventing onion comments from being
+used as a vehicle for shell injection attacks, this enables \texttt{davos} to
+adapt its behavior based on how particular flags will affect the behavior of
+the installer program. For example, if an onion comment contains either the
+\texttt{-I}/\texttt{--ignore-installed}, \texttt{-U}/\texttt{--upgrade}, or
+\texttt{--force-reinstall} flag, \texttt{davos} will not bother checking for a
+local copy of the smuggled package before installing a new one: \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet5} \end{center} Similarly,
+the \texttt{--no-input} flag will temporarily enable \texttt{davos}'s
+non-interactive mode (see Sec.~\ref{subsec:config}). Installation flags that
+affect the user's system outside of the current notebook are disabled by
+default (see Sec.~\ref{subsec:projects}).
+
+, and installing a smuggled package into a
 custom directory (\texttt{<dir>}) using the \texttt{--target <dir>}
 flag will cause \texttt{davos} to prepend \texttt{<dir>} to the module
 search path (i.e., \texttt{sys.path}), if necessary, so the package
@@ -433,6 +436,43 @@ is active (\texttt{davos.activate()}; \texttt{davos.deactivate()};
 function, which allows setting multiple configuration options
 simultaneously.
 
+\subsubsection{Projects}\label{subsec:projects}
+
+Because \texttt{davos} can install new packages, running the code in a
+\texttt{davos}-enhanced notebook might (in principle) affect the behavior of
+\textit{other} Python-based software (e.g., other notebooks, scripts, etc.) by
+altering which packages are installed in the runtime environment. This could
+lead to undesired consequences. For example, suppose Person A develops a
+notebook (Notebook A) for their research project. We will assume that Notebook
+A does not use \texttt{davos} to manage project dependencies.  If Person A
+runs a \texttt{davos}-enhanced Notebook B, e.g., sent by another developer,
+might this unexpectedly affect the behavior of Notebook A?
+
+We implemented a ``project'' system in \texttt{davos} to protect against the
+above scenario. By default, importing \texttt{davos} creates a new project
+folder in the user's home directory (contained within a hidden \texttt{.davos}
+folder). The default project name is computed to uniquely identify each
+notebook according to its filename and path. Any packages that were not
+originally available in the notebook's runtime environment are installed to the
+notebook's project directory. When external libraries are \texttt{smuggle}d,
+\texttt{davos} temporally appends the current project directory to the search
+path. Because the user's system path remains unchanged, and because none of the
+runtime environment's packages are altered, the user's system and runtime
+environment remain unaffected (aside from installing the \texttt{davos} package
+itself to the runtime environment).
+
+Each notebook's project may be customized by setting \texttt{davos.project} to
+any string that can be used as a valid folder name in the user's operating
+system. By customizing the project name, users can build multi-notebook
+projects that share the same core set of dependencies without needing to
+duplicate each package for each notebook in the project.
+
+Finally, if the user \textit{does} wish to modify their runtime environment,
+this may be done by setting \texttt{davos.project} to \texttt{None}. Doing so
+will cause any packages installed by \texttt{davos} to affect the user's
+runtime environment.  This is generally not recommended, as it can lead to
+unintended consequences for other code that shares the runtime environment.
+
 \subsection{Implementation details}\label{subsec:implementation}
 
 Although \texttt{davos} is designed to \textit{appear} to add a new
@@ -502,35 +542,41 @@ out the installation automatically if needed.  Second (right),
 \label{fig:illustrative-example}
 \end{figure}
 
-Across different versions of a given package, particular modules, functions, and other objects
-may be updated, removed, renamed, or otherwise altered.  In addition to changing the
-behaviors of active computations, these changes can render saved objects created using one
-version of a package incompatible with other versions of the
-same package.  For example, the popular \texttt{pandas}~\cite{McKi10}
-library used to include the \texttt{Panel} data structure for storing 3-dimensional arrays.
-Since version 0.20.0, however, the \texttt{Panel} class has been deprecated, and in
-version 0.25.0, it was removed entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
-(created using an older version of \texttt{pandas}) and had saved it to their disk (e.g., for later reuse
-or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol.
-The \texttt{pickle} protocol is a popular built-in method of persisting data in Python, allowing users to save, share, and load arbitrary objects.
-However, in order to successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., saved) object, the object's class must be defined in and importable from the same module as when it was saved.
-Thus, because of the \texttt{Panel} class's removal, the user's dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
-incompatibilities are also not limited solely to traditional forms of data.
-For example, saved model states and other objects may reference
-modules, functions, attributes, classes, or other objects that may not be identical (or even present)
-across all versions of their associated package.
+Across different versions of a given package, particular modules, functions,
+and other objects may be updated, removed, renamed, or otherwise altered. In
+addition to changing the behaviors of active computations, these changes can
+render saved objects created using one version of a package incompatible with
+other versions of the same package. For example, the popular
+\texttt{pandas}~\cite{McKi10} library used to include the \texttt{Panel} data
+structure for storing 3-dimensional arrays. Since version 0.20.0, however, the
+\texttt{Panel} class has been deprecated, and in version 0.25.0, it was removed
+entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
+(created using an older version of \texttt{pandas}) and had saved it to their
+disk (e.g., for later reuse or to share with other users) by serializing the
+\texttt{Panel} with Python's \texttt{pickle} protocol. The \texttt{pickle}
+protocol is a popular built-in method of persisting data in Python, allowing
+users to save, share, and load arbitrary objects. However, in order to
+successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., saved)
+object, the object's class must be defined in and importable from the same
+module as when it was saved. Thus, because of the \texttt{Panel} class's
+removal, the user's dataset could not be read by any version of \texttt{pandas}
+from 0.25.0 or beyond. These incompatibilities are also not limited solely to
+traditional forms of data. For example, saved model states and other objects
+may reference modules, functions, attributes, classes, or other objects that
+may not be identical (or even present) across all versions of their associated
+package.
 
-The example provided in Figure~\ref{fig:illustrative-example}
-demonstrates how the \texttt{davos} package can be used to circumvent
-these incompatibilities by carefully controlling which versions of
-each package are used in different parts of the notebook.  The example
-shows how a dataset and model that require now-incompatible components of
-the \texttt{pandas} and \texttt{scikit-learn}~\cite{PedrEtal11}
-packages may be loaded in (using older versions of each package) and used
-alongside more recent versions of each package that provide new and improved functionality.
-When included at the top of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
-ensures that these objects will be loaded successfully and analyzed using the same set
-of package versions, no matter when or by whom the notebook is run.
+The example provided in Figure~\ref{fig:illustrative-example} demonstrates how
+the \texttt{davos} package can be used to circumvent these incompatibilities by
+carefully controlling which versions of each package are used in different
+parts of the notebook. The example shows how a dataset and model that require
+now-incompatible components of the \texttt{pandas} and
+\texttt{scikit-learn}~\cite{PedrEtal11} packages may be loaded in (using older
+versions of each package) and used alongside more recent versions of each
+package that provide new and improved functionality. When included at the top
+of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
+ensures that these objects will be loaded successfully and analyzed using the
+same set of package versions, no matter when or by whom the notebook is run.
 
 After installing and importing \texttt{davos} (lines 1--2), we first \texttt{smuggle} two
 utilities for interacting with local files in the code below. The
@@ -576,19 +622,19 @@ that an older version of \texttt{pandas} will be imported, enabling
 the data to be read in (and, in line 13, written to a CSV
 file, which is compatible with newer \texttt{pandas} versions).
 
-Newer versions of \texttt{pandas} have brought substantial
-improvements including better performance, bug fixes, and additional functionality.
-Although the original dataset had to be read in using an older version
-of the package, we can take advantage of these more recent updates
-by smuggling \texttt{pandas} a second time on line 15 (whose onion comment
-specifies that version 1.3.5 should be installed and loaded).  Since
-a different version of \texttt{pandas} had already been loaded by the Python interpreter
-(on line 11), the notebook kernel must be restarted in order to replace the old
-version's custom C extensions with those from the new version.  The \texttt{auto\_rerun} flag
-set on line 7 enables \texttt{davos} to trigger this process automatically so that
-the code can continue running without user intervention, and converting
-the dataset to a CSV file in lines 10--13 ensures that
-the older version of \texttt{pandas} does not need to be reinstalled.
+Newer versions of \texttt{pandas} have brought substantial improvements
+including better performance, bug fixes, and additional functionality. Although
+the original dataset had to be read in using an older version of the package,
+we can take advantage of these more recent updates by smuggling \texttt{pandas}
+a second time on line 15 (whose onion comment specifies that version 1.3.5
+should be installed and loaded). Since a different version of \texttt{pandas}
+had already been loaded by the Python interpreter (on line 11), the notebook
+kernel must be restarted in order to replace the old version's custom C
+extensions with those from the new version. The \texttt{auto\_rerun} flag set
+on line 7 enables \texttt{davos} to trigger this process automatically so that
+the code can continue running without user intervention, and converting the
+dataset to a CSV file in lines 10--13 ensures that the older version of
+\texttt{pandas} does not need to be reinstalled.
 
 Next, line 17 uses the \texttt{davos.configure()} function to disable
 the \texttt{auto\_rerun} option and simultaneously enable two other
@@ -733,34 +779,33 @@ reasons, \texttt{davos} also provides an elegant means of sharing
 ready-to-run notebook-based demonstrations or tutorials that install
 their dependencies automatically.
 
-Since its initial release, \texttt{davos} has found use in a variety
-of applications. In addition to managing computing environments for
-multiple ongoing research studies, \texttt{davos} is being used by
-both students and instructors in programming and methods courses such
-as Storytelling with Data~\cite{Mann21d} (an open course on data
-science, visualization, and communication) and Laboratory in
-Psychological Science~\cite{Mann22} (an open course on experimental
-and statistical methods for psychology research) to simplify
-distributing lessons and submitting assignments, as well as in online
-demos such as \texttt{abstract2paper}~\cite{Mann21e} (an example
-application of GPT-Neo~\cite{GaoEtal20, BlacEtal21}) to share
-ready-to-run code that installs dependencies automatically.
+Since its initial release, \texttt{davos} has found use in a variety of
+applications. In addition to managing computing environments for multiple prior
+and ongoing research studies~\citep{MannEtal23, OwenMann23, ZimaEtal23},
+\texttt{davos} is being used by both students and instructors in programming
+and methods courses such as Storytelling with Data~\cite{Mann21d} (an open
+course on data science, visualization, and communication) and Laboratory in
+Psychological Science~\cite{Mann22} (an open course on experimental and
+statistical methods for psychology research) to simplify distributing lessons
+and submitting assignments, as well as in online demos such as
+\texttt{abstract2paper}~\cite{Mann21e} (an example application of
+GPT-Neo~\cite{GaoEtal20, BlacEtal21}) to share ready-to-run code that installs
+dependencies automatically.
 
-Our work also has several more subtle ``advanced'' use cases and
-potential impacts. Whereas Python's built-in \texttt{import} statement
-is agnostic to packages' version information, \texttt{smuggle}
-statements (when combined with onion comments) are version-sensitive.
-And because onion comments are parsed at runtime, required packages
-and their specified versions are installed in a just-in-time
-manner. Thus, it is possible in most cases to \texttt{smuggle} a
-specific package version or revision even if a different version has
-already been loaded. This enables more complex uses that take
-advantage of multiple versions of a package within a single
-interpreter session (e.g., see
-Sec.~\ref{sec:illustrative-example} and Fig.~\ref{fig:illustrative-example}). This could be useful in cases
-where specific features are added or removed from a package across
-different versions, or in comparing the performance or functionality
-of particular features across different versions of the same package.
+Our work also has several more subtle ``advanced'' use cases and potential
+impacts. Whereas Python's built-in \texttt{import} statement is agnostic to
+packages' version information, \texttt{smuggle} statements (when combined with
+onion comments) are version-sensitive. And because onion comments are parsed at
+runtime, required packages and their specified versions are installed in a
+just-in-time manner. Thus, it is possible in most cases to \texttt{smuggle} a
+specific package version or revision even if a different version has already
+been loaded. This enables more complex uses that take advantage of multiple
+versions of a package within a single interpreter session (e.g., see
+Sec.~\ref{sec:illustrative-example} and Fig.~\ref{fig:illustrative-example}).
+This could be useful in cases where specific features are added or removed from
+a package across different versions, or in comparing the performance or
+functionality of particular features across different versions of the same
+package.
 
 A second more subtle impact of our work is in providing a
 proof-of-concept of how the ability to add new ``keyword-like''
@@ -830,4 +875,3 @@ who used preliminary versions of our package in several assignments.
 \bibliography{main}
 
 \end{document}
-

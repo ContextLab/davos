@@ -758,6 +758,16 @@ code (along with text and media) \textit{and} code for setting up and
 configuring the project dependencies, may be combined within a single
 notebook file.
 
+Although existing notebooks \textit{can} incorporate system calls that install
+project requirements, handling project requirements in the general case is
+non-trivial (e.g., see Fig.~\ref{fig:flow-chart}). Further, \texttt{davos}
+incorporates its own virtual environment system that isolates
+notebook-installed packages from the runtime environment
+(Sec.~\ref{subsec:projects}). In many setups this feature can eliminate the
+need to set up a seperate virtual environment or container (e.g., in
+conjunction with a \texttt{requirements.txt}, \texttt{project.toml}, or
+\texttt{environment.yml} file specifying the project's dependencies).
+
 We designed \texttt{davos} for use in research applications. For
 example, in many settings, \texttt{davos} may be used as a drop-in
 replacement for more-difficult-to-set-up virtual environments,
@@ -828,6 +838,42 @@ including a draft proposal~\cite{Shan20}. In addition to enabling
 lead to exciting new tools that, like \texttt{davos}, extend the
 Python language in useful and more secure ways.
 
+\subsection{Pitfalls and limitations}
+
+While \texttt{davos} enables developers to conveniently specify all project
+dependencies, there are some edge cases and limitations that are worth
+considering. Many Python packages include (in their \texttt{setup} options)
+additional dependencies that often carry their own version specifications.
+Although \texttt{davos} will check that the correct version of the requested
+top-level package is installed and imported into the workspace, the version
+numbers of any \textit{dependencies} of the request package are \textit{not}
+checked. In principle, this could lead to unexpected behavior, for example if a
+given package's dependencies (or dependencies of those dependencies, etc.) were
+left under-specified. A developer could mitigate this by explicitly smuggling
+exact version numbers of \textit{every} project dependency (e.g., obtained via
+\texttt{pip freeze}). However, for projects where the versions of dependencies
+of \texttt{smuggle}d packages also need to be precisely controlled, a lockfile
+or a \texttt{requirements.txt} file produced by \texttt{pip freeze} (i.e.,
+explicitly specifying \textit{all} package's version numbers) may provide a
+more comprehensive alternative to \texttt{davos}.
+
+Reproducibility is not solely about dependency management. In addition to
+ensuring that project dependencies are satisfied, the user running a given
+notebook must also execute the code in the indicated order. For example, the
+cells in a notebook may be manually run out of order. If different cells in a
+\texttt{davos}-enhanced notebook made use of different versions of the same
+package, this could result in \textit{more} confusion or \textit{greater}
+replication failure rates relative to standard Jupyter notebooks. Therefore an
+important consideration when using \texttt{davos} is that it is perhaps even more
+important to execute notebook cells in order than would be the case in the
+standard (non-\texttt{davos}) setup.  We suggest that developers who wish to use
+\texttt{davos} include notes regarding which cells must be executed in sequence.
+
+As of this writing, \texttt{davos} can install packages using \textt{pip}, but
+not other standard Python package management systems such as \texttt{conda}.
+Therefore packages that are not installable via \texttt{pip} are currently
+unsupported by \texttt{davos}.  We anticipate adding support for other
+package management systems, including \texttt{conda} in a future release.
 
 \section{Conclusions}
 

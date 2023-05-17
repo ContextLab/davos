@@ -85,8 +85,19 @@ into the user's workspace at the appropriate times.
 
 ## Why not use virtual environments, containers, and/or virtual machines instead?
 
-You can!  In fact, `davos` works great when used inside of virtual environments, containers, and virtual machines.
-There are a few specific advantages to `davos`, however:
+Psst-- we'll let you in on a little secret: importing `davos` *automatically* creates a virtual environment for your notebook.  However,
+setting up a virtual environment is usually left to the user, `davos` handles the pesky details for you, without you needing to think about them.
+Any packages you `smuggle` via `davos` that aren't available in the notebook's original runtime environment are installed into a new virtual environment.  This ensures that `davos` will not change the runtime environment (e.g., by installing new packages, changing existing package versions, etc.).
+
+By default, each notebook's virtual environment is stored in a hidden ".davos" folder inside the current user's home directory.  The default
+environment name is computed to uniquely identify each notebook, according to its filename and path.  However, a notebook's virtual environment may
+be customized by setting `davos.project` to any string that can be used as a valid folder name in the user's operating system.  This is useful for multi-notebook projects that share dependencies (without needing to duplicate each package installation for each notebook).
+
+If you prefer, you can also disable `davos`'s virtual environment infrastructure by setting `davos.project` to `None`.  Doing so will cause
+any packages installed by `davos` to affect the notebook's runtime environment.  This is generally not recommended, as it can lead to unintended
+consequences for other code that shares the runtime environment.  That said, `davos` also works great when used inside of (standard) virtual environments, containers, and virtual machines.
+
+There are a few additional specific advantages to `davos` that go beyond more typical virtual environments, containers, and/or virtual machines:
   - `davos` is very lightweight&mdash;importing `davos` into a notebook-based environment unlocks all of its
     functionality without needed to install, set up, and learn how to use additional stuff.  There is none of the
     typical overhead of setting up a new virtual environment (or container, virtual machine, etc.), installing

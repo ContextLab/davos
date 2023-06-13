@@ -332,12 +332,18 @@ def cleanup_project_dir_atexit(dirpath):
     if dirpath.is_dir() and _dir_is_empty(dirpath):
         try:
             dirpath.rmdir()
-        except OSError:
-            pass
-
-
-def prune_projects():
-    """delete (auto-named) projects for which a notebook doesn't exist"""
+        except OSError as e:
+            if e.errno == errno.ENOTEMPTY:
+                # dirpath is empty except for a .DS_Store file
+                try:
+                    dirpath.joinpath('.DS_Store').unlink()
+                except FileNotFoundError:
+                    # shouldn't be possible to get here, but silently
+                    # handle errors just in case so we don't interfere
+                    # with shutdown
+                    pass
+                else:
+                    dirpath.rmdir()
 
 
 def use_default_project():

@@ -235,8 +235,10 @@ class ConcreteProject(Project):
 
 
 def _dir_is_empty(path):
-    return next((f for f in path.iterdir() if f.name != '.DS_Store'), None) is None
-
+    for p in path.iterdir():
+        if p.name != '.DS_Store':
+            return False
+    return True
 
 def _get_project_name_type(name):
     """TODO: add docstring"""

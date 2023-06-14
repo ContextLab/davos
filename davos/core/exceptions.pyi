@@ -3,8 +3,8 @@ from subprocess import CalledProcessError
 from typing import Literal
 
 __all__ = list[Literal['DavosError', 'DavosConfigError', 'DavosParserError', 'DavosProjectError', 'InstallerError',
-                      'OnionParserError', 'OnionArgumentError', 'ParserNotImplementedError', 'ProjectNotebookNotFoundError',
-                      'SmugglerError']]
+                       'OnionParserError', 'OnionArgumentError', 'ParserNotImplementedError',
+                       'ProjectNotebookNotFoundError', 'SmugglerError']]
 
 class DavosError(Exception): ...
 

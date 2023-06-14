@@ -10,6 +10,8 @@ __all__ = [
     'OnionParserError',
     'OnionArgumentError',
     'ParserNotImplementedError',
+    'DavosProjectError',
+    'ProjectNotebookNotFoundError',
     'SmugglerError',
     'InstallerError'
 ]

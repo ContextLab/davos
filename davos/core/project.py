@@ -160,6 +160,11 @@ class Project(metaclass=ProjectChecker):
          to bypass
         """
         if not yes:
+            if config.noninteractive:
+                raise DavosProjectError(
+                    "To remove a project when noninteractive mode is "
+                    "enabled, you must explicitly pass 'yes=True'."
+                )
             prompt = f"Remove project {self.name!r} and all installed packages?"
             confirmed = prompt_input(prompt, default='n')
             if not confirmed:

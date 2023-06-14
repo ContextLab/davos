@@ -240,44 +240,80 @@ def _dir_is_empty(path):
             return False
     return True
 
-def _get_project_name_type(name):
-    """TODO: add docstring"""
+
+def _get_project_name_type(project_name):
+    if isinstance(project_name, Path):
+        # if user passed a pathlib.Path, convert it to a str so it can
+        # be properly expanded, substituted, resolved, etc. below
+        project_name = str(project_name)
+    elif not isinstance(project_name, str):
+        raise TypeError(
+            "Project name must be either a str or pathlib.Path, not "
+            f"{type(project_name)}"
+        )
+
+    if (
+            project_name == '' or
+            ':' in project_name or
+            # disallow backslash on non-Windows systems only
+            ('\\' in project_name and os.name != 'nt')
+    ):
+        raise DavosProjectError(
+            f"Invalid project name: '{project_name}'. Names for both Jupyter "
+            "notebooks and davos Projects must be at least one character and "
+            "may not contain ':' or '\\'."
+        )
+
     project_type = ConcreteProject
-    # if user passed a pathlib.Path, convert it to a str so it can
-    # be properly expanded, substituted, resolved, etc. below
-    project_name = str(name)
-    if PATHSEP in project_name:
-        # `name` is a path to a notebook file, either the default
-        # project (path to the current notebook) or user-specified.
-        # File doesn't *have* to exist at this point (will be an
-        # AbstractProject, if not), but must at least point to what
+    if project_name.endswith('.ipynb'):
+        # `project_name` is a path to a notebook file, either the
+        # default (absolute path to the current notebook) or
+        # user-specified (can be absolute or relative). File doesn't
+        # strictly have to exist at this point (and will be an
+        # `AbstractProject`, if not), but must at least point to what
         # could eventually be a notebook
-        # TODO: carve this off into some sort of "resolve path" utility
-        #  function?
-        name_path = Path(expandvars(project_name)).expanduser().resolve(strict=False)
-        if name_path.suffix != '.ipynb' or name_path.is_dir():
+        nb_path = Path(expandvars(project_name)).expanduser().resolve()
+        if nb_path.is_dir():
             raise DavosProjectError(
-                f"Invalid project name: {name!r} (which resolves to "
-                f"'{name_path}'). Project names may be either a simple "
-                f"name (without {PATHSEP!r}) or a path to a Jupyter "
-                f"notebook file (ending in '.ipynb')."
+                f"Invalid project name: {project_name!r}. Project names ending"
+                "in '.ipynb' must point to Jupyter notebook files, but "
+                f"'{nb_path}' is a directory."
             )
-        if not name_path.is_file():
+        if nb_path.stem == '':
+            raise DavosProjectError(
+                f"Invalid project name: {project_name!r}. '{nb_path}' cannot "
+                "be a valid path to a Jupyter notebook because notebook names "
+                "must contain at least 1 character."
+            )
+        if not nb_path.is_file():
             project_type = AbstractProject
-        project_name = str(name_path)
+        project_name = str(nb_path)
+    elif PATHSEP in project_name:
+        # if `project_name` doesn't end in '.ipynb' but does contain a
+        # PATHSEP, it's either a path to a non-notebook file/directory
+        # or a simple name containing '/' (or '\' on Windows), neither
+        # of which is valid
+        raise DavosProjectError(
+            f"Invalid project name: {project_name!r}. Project names may be "
+            "either a path to a Jupyter notebook file (ending in '.ipynb') or "
+            f"a general name not containing {PATHSEP!r}."
+        )
     elif PATHSEP_REPLACEMENT in project_name:
-        # `name` is a path-like project directory name read from
-        # DAVOS_PROJECT_DIR. Convert back to normal path format to
-        # check whether it exists, but don't want to do any
-        # validation here in case user somehow ended up with
-        # malformed Project dir name, since that could cause
-        # incessant errors until manually fixed. Instead, just make
-        # it an AbstractProject and let user rename or delete it
-        # via davos
-        name_path = Path(f"{project_name.replace(PATHSEP_REPLACEMENT, PATHSEP)}.ipynb")
-        if not name_path.is_file():
+        # `project_name` is a path-like project directory name read from
+        # `DAVOS_PROJECT_DIR`. Convert back to normal path format to
+        # check whether it exists, but don't do any validation here in
+        # case the user somehow ended up with malformed Project
+        # directory name, since that could cause impassable errors until
+        # manually fixed. Instead, just make it an AbstractProject and
+        # let the user rename or delete it via the davos interface.
+        nb_path = Path(f"{project_name.replace(PATHSEP_REPLACEMENT, PATHSEP)}.ipynb")
+        if not nb_path.is_file():
             project_type = AbstractProject
-        project_name = str(name_path)
+        project_name = str(nb_path)
+
+    # otherwise, `project_name` is a simple/general name and no
+    # formatting or validation (beyond type and valid character checks
+    # above) is needed
     return project_name, project_type
 
 

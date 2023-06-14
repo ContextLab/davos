@@ -46,6 +46,15 @@ class ConfigProxyModule(ModuleType):
         else:
             super().__setattr__(name, value)
 
+    @property
+    def all_projects(self):
+        """TODO: add docstring"""
+        projects_list = []
+        for path in DAVOS_PROJECT_DIR.iterdir():
+            if path.is_dir():
+                projects_list.append(Project(path.name))
+        return projects_list
+
 
 # pylint: disable=unused-argument
 def configure(

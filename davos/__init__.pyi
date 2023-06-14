@@ -10,7 +10,10 @@ __version__: str
 
 config: DavosConfig
 
-class ConfigProxyModule(ModuleType, DavosConfig): ...
+class ConfigProxyModule(ModuleType, DavosConfig):
+    @property
+    def all_projects(self) -> list[AbstractProject | ConcreteProject]: ...
+
 def configure(*, active: bool = ..., auto_rerun: bool = ..., conda_env: str = ..., confirm_install: bool = ...,
               noninteractive: bool = ..., pip_executable: PosixPath | str = ...,
               project: ConcreteProject | PosixPath | str | None = ..., suppress_stdout: bool = ...) -> None: ...

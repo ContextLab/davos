@@ -356,8 +356,10 @@ class DavosConfig(metaclass=SingletonConfig):
             proj = Project(proj)
             if isinstance(proj, AbstractProject):
                 raise ProjectNotebookNotFoundError(
-                    "Cannot associate a Project with a notebook that does not "
-                    f"exist (no such notebook: {proj.name!r})."
+                    "To use a project associated with a specific notebook, "
+                    "the specified path must point to an existing Jupyter "
+                    f"notebook ('.ipynb') file. {proj.name!r} could not be "
+                    f"found)."
                 )
             self._project = proj
         else:

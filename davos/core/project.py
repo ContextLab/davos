@@ -137,18 +137,6 @@ class Project(metaclass=ProjectChecker):
         """pip-freeze-like output for the Project"""
         return '\n'.join('=='.join(pkg) for pkg in self.installed_packages)
 
-    def reload(self):
-        """TODO: add docstring"""
-        # NOTE: this currently busts cache of installed packages
-        template_instance = Project(self.name)
-        self.__class__ = template_instance.__class__
-        self.__dict__ = template_instance.__dict__
-        # explicitly delete the temporary new Project instance so its
-        # __del__ method is called before this method returns and we
-        # can ensure the project directory exists after reload
-        del template_instance
-        self.project_dir.mkdir(parents=False, exist_ok=True)
-
     def remove(self, yes=False):
         """
         TODO: add docstring -- remove the project and all installed

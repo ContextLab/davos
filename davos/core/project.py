@@ -58,7 +58,10 @@ class Project(metaclass=ProjectChecker):
         TODO: add docstring, note difference between what name can be
          passed as vs what it is when __init__ is run due to metaclass
         """
-        self._set_names(name)
+        self.name = name
+        self.safe_name = name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+        self.project_dir = DAVOS_PROJECT_DIR.joinpath(self.safe_name)
+        self.site_packages_dir = self.project_dir.joinpath(SITE_PACKAGES_SUFFIX)
         # eagerly create project dir since it's low-cost
         self.project_dir.mkdir(parents=False, exist_ok=True)
         # register atexit hook to remove project dir if empty
@@ -129,13 +132,6 @@ class Project(metaclass=ProjectChecker):
             else:
                 self._installed_packages = [tuple(pkg.values()) for pkg in pip_list_json]
             self._site_packages_mtime = site_pkgs_mtime
-
-    def _set_names(self, name):
-        """set various name-related attributes given the project name"""
-        self.name = name
-        self.safe_name = name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
-        self.project_dir = DAVOS_PROJECT_DIR.joinpath(self.safe_name)
-        self.site_packages_dir = self.project_dir.joinpath(SITE_PACKAGES_SUFFIX)
 
     def freeze(self):
         """pip-freeze-like output for the Project"""

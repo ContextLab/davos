@@ -1,7 +1,15 @@
 """
-Top-level `davos` module. Initializes the global `davos` config object
-and defines some convenience functions for accessing/setting
-`davos.config` values.
+Top-level `davos` module. When imported, the code in this module:
+
+    - initializes the global `davos.config` object
+    - enables `davos` functionality in the importing notebook
+    - configures the default Project for the session
+
+This module also provides some high-level convenience functions for
+managing local Projects and `davos.config` options. Note that at
+runtime, this module's object (i.e., "`davos`", given "`import davos`")
+will be an instance of the `ConfigProxyModule` class. See that class's
+docstring for more info.
 """
 
 
@@ -25,13 +33,38 @@ config = DavosConfig()
 
 import davos.implementations
 from davos.core.core import smuggle
-# TODO: refactor to find a cleaner way of setting this during __init__,
-#  also possibly defer lazily? Or if run at import, maybe async?
 from davos.core.project import DAVOS_PROJECT_DIR, Project, use_default_project
 
 
 class ConfigProxyModule(ModuleType):
-    """TODO: add docstring"""
+    """
+    Subclass of Python's built-in `module` type that enables accessing
+    `davos.config` fields via the top-level `davos` namespace.
+
+    When imported, the top-level `davos` module object is "converted"
+    to an instance of this class (by overwriting its `__class__`
+    attribute). The `ConfigProxyModule` class tweaks the built-in
+    `module` type's attribute access behavior to:
+
+        1. forward attribute lookups that fail on the module object to
+           the `davos.config` object
+        2. preferentially forward attribute assignments to the
+           `davos.config` object if it defines the given attribute name
+        3. support dynamically computed (*and settable*) module-level
+           attributes via properties defined by the class.
+
+        This makes it possible to get and set all `davos` configuration
+        options directly from the module object itself. For example:
+    ```python
+    print(davos.config.pip_executable)
+    davos.config.project = "myproject"
+    ```
+    is equivalent to:
+    ```python
+    print(davos.pip_executable)
+    davos.project = "myproject"
+    ```
+    """
     def __getattr__(self, name):
         try:
             return getattr(config, name)
@@ -48,7 +81,14 @@ class ConfigProxyModule(ModuleType):
 
     @property
     def all_projects(self):
-        """TODO: add docstring"""
+        """
+        Get a list of all local projects.
+
+        Returns
+        -------
+        list of AbstractProject or ConcreteProject
+            A list of projects found in `DAVOS_PROJECT_DIR`.
+        """
         projects_list = []
         for path in DAVOS_PROJECT_DIR.iterdir():
             if path.is_dir():

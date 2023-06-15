@@ -539,7 +539,7 @@ class Onion:
                 args = f'{args} --no-input'
             if config.project is not None:
                 install_exe = f'PYTHONUSERBASE="{config.project.project_dir}" {install_exe}'
-                args = f'--user {args}'
+                args = f'--no-warn-script-location --user {args}'
         else:
             install_exe = self.installer
         return f'{install_exe} install {args}'

@@ -156,7 +156,8 @@ class Project(metaclass=ProjectChecker):
                 return
         print(f"Removing {self.project_dir}...")
         shutil.rmtree(self.project_dir)
-        self.project_dir.mkdir()
+        if self == config.project:
+            self.project_dir.mkdir()
 
     def rename(self, new_name):
         """

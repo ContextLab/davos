@@ -467,6 +467,33 @@ class Onion:
             self.install_name = package_name
             self.version_spec = ''
             return
+        if config._project is not None and (
+            # for this few checks, `or` is ~3x faster than `any()` and
+            # ~2x faster than `set.intersection()`
+            'target' in installer_kwargs or
+            'user' in installer_kwargs or
+            'root' in installer_kwargs or
+            'prefix' in installer_kwargs
+        ):
+            # when using a davos Project, pip-install arguments that
+            # install the package into a different location are
+            # disallowed. This check needs to happen at runtime rather
+            # than during the parsing stage in case `davos.project` is
+            # set/changed in the same cell as the `smuggle` statement.
+            msg = (
+                "When using a davos Project to isolate smuggled packages, "
+                "pip-install arguments that change the package's install "
+                "location (`-t/--target`, `--user`, `--root`, `--prefix`) "
+                "are disallowed. To disable davos project isolation, set "
+                "`davos.project = None`."
+            )
+            bad_arg = next(arg for arg in ('target', 'user', 'root', 'prefix')
+                           if arg in installer_kwargs)
+            if bad_arg == 'target':
+                bad_arg = '-t/--target'
+            else:
+                bad_arg = f'--{bad_arg}'
+            raise OnionArgumentError(msg, argument=bad_arg)
         full_spec = installer_kwargs.pop('spec').strip("'\"")
         self.is_editable = installer_kwargs.pop('editable')
         self.verbosity = installer_kwargs.pop('verbosity', 0)

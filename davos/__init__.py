@@ -13,7 +13,15 @@ docstring for more info.
 """
 
 
-__all__ = ['config', 'configure', 'smuggle', 'use_default_project']
+__all__ = [
+    'DAVOS_CONFIG_DIR',
+    'DAVOS_PROJECT_DIR',
+    'config',
+    'configure',
+    'Project',
+    'smuggle',
+    'use_default_project'
+]
 
 
 import sys
@@ -33,7 +41,12 @@ config = DavosConfig()
 
 import davos.implementations
 from davos.core.core import smuggle
-from davos.core.project import DAVOS_PROJECT_DIR, Project, use_default_project
+from davos.core.project import (
+    DAVOS_CONFIG_DIR,
+    DAVOS_PROJECT_DIR,
+    Project,
+    use_default_project
+)
 
 
 class ConfigProxyModule(ModuleType):

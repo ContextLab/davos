@@ -59,7 +59,7 @@ class Project(metaclass=ProjectChecker):
          passed as vs what it is when __init__ is run due to metaclass
         """
         self.name = name
-        self.safe_name = name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+        self.safe_name = _filepath_to_safename(name)
         self.project_dir = DAVOS_PROJECT_DIR.joinpath(self.safe_name)
         self.site_packages_dir = self.project_dir.joinpath(SITE_PACKAGES_SUFFIX)
         # eagerly create project dir since it's low-cost
@@ -169,7 +169,7 @@ class Project(metaclass=ProjectChecker):
         if new_project_name == self.name:
             # no change
             return
-        new_safe_name = new_project_name.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+        new_safe_name = _filepath_to_safename(new_project_name)
         new_project_dir = DAVOS_PROJECT_DIR.joinpath(new_safe_name)
         if new_project_dir.is_dir() and not _dir_is_empty(new_project_dir):
             # new project dir exists and is non-empty
@@ -296,7 +296,7 @@ def _get_project_name_type(project_name):
         # directory name, since that could cause impassable errors until
         # manually fixed. Instead, just make it an AbstractProject and
         # let the user rename or delete it via the davos interface.
-        nb_path = Path(f"{project_name.replace(PATHSEP_REPLACEMENT, PATHSEP)}.ipynb")
+        nb_path = Path(_safename_to_filepath(project_name))
         if not nb_path.is_file():
             project_type = AbstractProject
         project_name = str(nb_path)
@@ -305,6 +305,51 @@ def _get_project_name_type(project_name):
     # formatting or validation (beyond type and valid character checks
     # above) is needed
     return project_name, project_type
+
+
+def _filepath_to_safename(filepath):
+    """
+    Convert a filepath to a project name in "safe" format.
+
+    Takes an absolute path to a notebook file and returns it in a format
+    that can be used as a valid directory name. This is the format used
+    to name notebook-specific projects directories in
+    `davos.DAVOS_PROJECT_DIR`.
+
+    Parameters
+    ----------
+    filepath : str
+        An absolute path to a Jupyter notebook (.ipynb) file.
+
+    Returns
+    -------
+    str
+        The filepath in "safe" format.
+    """
+    return filepath.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+
+
+def _safename_to_filepath(safename):
+    """
+    Convert a project name in "safe" format to a filepath.
+
+    Takes the name of a notebook-specific project directory in
+    `davos.DAVOS_PROJECT_DIR` and returns the path to its associated
+    Jupiter notebook file. This is the inverse of
+    `_filepath_to_safename()`.
+
+    Parameters
+    ----------
+    safename : str
+        A project directory name in "safe" format.
+
+    Returns
+    -------
+    str
+        The absolute path to the Jupyter notebook (.ipynb) file
+        associated with the project.
+    """
+    return f'{safename.replace(PATHSEP_REPLACEMENT, PATHSEP)}.ipynb'
 
 
 def get_notebook_path():

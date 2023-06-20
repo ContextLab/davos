@@ -182,6 +182,4 @@ config.active = True
 
 DAVOS_PROJECT_DIR.mkdir(parents=True, exist_ok=True)
 
-# TODO: throws error when importing in IPython shell -- add informative
-#  error message saying not supported
 use_default_project()

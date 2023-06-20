@@ -376,9 +376,18 @@ def cleanup_project_dir_atexit(dirpath):
 
 def use_default_project():
     """
-    TODO: add docstring -- use the default project for the current
-     notebook
+    Switch (back) to using the default project.
+
+    Determine the default davos Project from the environment and set
+    `davos.config.project` to it. In IPython notebooks, this is a
+    notebook-specific project named for the notebook's filepath. In an
+    IPython shell, this is a project named "ipython-shell", which is
+    shared by all IPython shell instances.
     """
-    nb_path = get_notebook_path()
-    default_project = Project(nb_path)
+    if isinstance(config._ipython_shell, TerminalInteractiveShell):
+        proj_name = "ipython-shell"
+    else:
+        proj_name = get_notebook_path()
+
+    default_project = Project(proj_name)
     config.project = default_project

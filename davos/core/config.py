@@ -162,6 +162,13 @@ class DavosConfig(metaclass=SingletonConfig):
             self._environment = 'Python'
         else:
             import IPython
+            if isinstance(
+                    self._ipython_shell,
+                    IPython.terminal.interactiveshell.TerminalInteractiveShell
+            ):
+                _msg = ("davos does not officially support IPython terminal "
+                        "shells. Some features may not work as expected.")
+                warnings.warn(_msg, category=RuntimeWarning)
             if IPython.version_info[0] >= 7:
                 if 'google.colab' in str(self._ipython_shell):
                     self._environment = 'Colaboratory'

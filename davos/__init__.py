@@ -19,6 +19,7 @@ __all__ = [
     'config',
     'configure',
     'Project',
+    'prune_projects',
     'smuggle',
     'use_default_project'
 ]
@@ -47,6 +48,7 @@ from davos.core.project import (
     DAVOS_CONFIG_DIR,
     DAVOS_PROJECT_DIR,
     Project,
+    prune_projects,
     use_default_project
 )
 

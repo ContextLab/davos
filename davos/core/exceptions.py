@@ -1,6 +1,4 @@
-"""
-This module defines the set of `davos`-related exception classes.
-"""
+"""davos-specific exception classes."""
 
 
 __all__ = [
@@ -196,20 +194,20 @@ class DavosProjectError(DavosError):
 
 
 class ProjectNotebookNotFoundError(DavosProjectError, FileNotFoundError):
-    """Class for errors related to projects missing associated notebooks"""
+    """Class for errors related to projects missing associated notebooks."""
 
 
 class SmugglerError(DavosError):
-    """Base class for errors raised during the smuggle phase"""
+    """Base class for errors raised during the smuggle phase."""
 
 
 class TheNightIsDarkAndFullOfTErrors(SmugglerError):
-    """A little Easter egg for anyone who tries to `smuggle davos`"""
+    """A little Easter egg for anyone who tries to `smuggle davos`."""
 
 
 class InstallerError(SmugglerError, CalledProcessError):
     """
-    Class for errors related to the installer program
+    Class for errors related to the installer program.
 
     This exception is raised when the installer program itself (rather
     than `davos`) encounters an error (e.g., failure to connect to
@@ -220,7 +218,7 @@ class InstallerError(SmugglerError, CalledProcessError):
     @classmethod
     def from_error(cls, cpe, show_output=None):
         """
-        Create a class instance from a `subprocess.CalledProcessError`
+        Create a class instance from a `subprocess.CalledProcessError`.
 
         Parameters
         ----------

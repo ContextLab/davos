@@ -1,9 +1,16 @@
 """
-This module implements core functionality and common utilities used
-across the environment-specific `davos` implementations.
+Davos core functionality and utilities.
+
+This module implements core elements of davos's functionality and
+various utilities that are common across the various
+environment-specific implementations. This includes parsing user code to
+extract `smuggle` statements and Onion comments, parsing their contents,
+searching the local package environment, installing missing packages,
+loading them into the user's namespace, and more.
 """
 
 
+# pylint: disable=too-many-lines
 __all__ = [
     'capture_stdout',
     'check_conda',
@@ -35,6 +42,7 @@ from davos import config
 from davos.core.exceptions import (
     DavosError,
     InstallerError,
+    OnionArgumentError,
     OnionParserError,
     ParserNotImplementedError,
     SmugglerError,
@@ -261,9 +269,14 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
 @contextmanager
 def handle_alternate_pip_executable(installed_name):
     """
+    Load packages installed outside of the typical module search path.
+
     Context manager that makes it possible to load packages installed
     into a different Python environment by changing the `pip` executable
-    (`davos.config.pip_executable`).
+    (`davos.config.pip_executable`). This is done by using the `pip`
+    executable with which the package was installed to determine its
+    location, and then temporarily prepending that location to the
+    module search path.
 
     Parameters
     ----------
@@ -274,7 +287,7 @@ def handle_alternate_pip_executable(installed_name):
 
     Notes
     -----
-    super-duper edge case not handled by this: user has used alternate
+    Super-duper edge case not handled by this: user has used alternate
     pip_executable to smuggle local package from CWD and supplies
     relative path in onion comment (i.e., "# pip: . <args>").
     """
@@ -371,34 +384,37 @@ class Onion:
     """
     Class representing a single package to be smuggled.
 
-    Naturally, "`davos`" smuggles "`Onion`s". Internally, each `smuggle`
-    statement (with or without an "onion comment") creates an `Onion`
-    instance, which contains all the information necessary to import
-    and, if necessary, install it.
+    Naturally, "`davos`" smuggles "`Onion`s" [1]. Internally, each
+    `smuggle` statement (with or without an "onion comment") creates an
+    `Onion` instance, which contains all the information necessary to
+    import and, if necessary, install it.
 
-    # TODO: document attributes
+    See Also
+    --------
+    [1] https://en.wikipedia.org/wiki/Davos_Seaworth
     """
 
     @staticmethod
     def parse_onion(onion_text):
         """
-        Parse the installer name and arguments from an onion comment
+        Parse the installer name and arguments from an onion comment.
 
         Parameters
         ----------
         onion_text : str
-            an onion comment, including the leading "#"
+            An onion comment, including the leading "#".
 
         Returns
         -------
-        tuple
-            3-tuple comprised of:
-                1. The installer name, enclosed in double quotes (str)
-                2. The raw arguments to be passed to the installer,
-                   enclosed in triple-double quotes (str)
-                3. An {arg: value} of argument values parsed from the
-                  raw argument string, supplemented by default values
-                  (dict)
+        str
+            The installer name, enclosed in double quotes.
+        str
+            The raw arguments to be passed to the installer, enclosed in
+            triple-double quotes.
+        dict
+            Argument names and values parsed from the raw argument
+            string (2nd item in returned tuple), supplemented by default
+            values.
         """
         onion_text = onion_text.lstrip('# ')
         installer, args_str = onion_text.split(':', maxsplit=1)
@@ -675,11 +691,12 @@ def parse_line(line):
 
     See Also
     --------
-    regexps.smuggle_statement_regex : Regexp for `smuggle` statements
+    regexps.smuggle_statement_regex :
+        Regexp for `smuggle` statements.
     implementations.ipython_pre7.generate_parser_func :
-        Generates full parser wrapper function for `IPython<7.0`
+        Generates full parser wrapper function for `IPython<7.0`.
     implementations.ipython_post7.generate_parser_func :
-        Generates full parser wrapper function for `IPython<7.0`
+        Generates full parser wrapper function for `IPython<7.0`.
 
     Notes
     -----
@@ -891,8 +908,24 @@ def run_shell_command(command, live_stdout=None):
 
 
 def use_project(smuggle_func):
-    """TODO: add docstring"""
+    """
+    Use the configured project when smuggling a package.
 
+    Decorator that wraps the `smuggle` function and causes the smuggled
+    package to be (installed into, if necessary, and) loaded from the
+    package directory for the currently active project, if one is being
+    used (i.e., the project given by `davos.project`, if not `None`).
+
+    Parameters
+    ----------
+    smuggle_func : function
+        The `smuggle` function, `davos.core.core.smuggle`.
+
+    Returns
+    -------
+    function
+        The wrapped `smuggle` function.
+    """
     @functools.wraps(smuggle_func)
     def smuggle_wrapper(*args, **kwargs):
         project = config.project
@@ -952,14 +985,14 @@ def smuggle(
     ----------
     name : str
         The qualified name of the package, module, function, or other
-        object to be `smuggled`.
+        object to be smuggled.
     as_ : str, optional
         The alias under which to load the object into the namespace
         (e.g., "`np`" given the statement "`smuggle numpy as np`").
     installer : {'pip', 'conda'}, optional
         The name of the program used to install the package if a
         satisfactory distribution is not found locally. Defaults to
-        `'pip'` if no onion comment is present
+        `'pip'` if no onion comment is present.
     args_str : str, optional
         Raw arguments to be passed to the `installer` program's
         "install" command. Defaults to an empty string (`''`), if no
@@ -982,7 +1015,7 @@ def smuggle(
     if onion.is_installed:
         try:
             # Unlike regular import, can be called on non-module items:
-            #     ```
+            #     ```python
             #     import numpy.array`                   # fails
             #     array = import_item('numpy.array')    # succeeds
             #     ```
@@ -1095,7 +1128,7 @@ def smuggle(
         ):
             # setting davos.config.pip_executable to a non-default value
             # changes the executable used in all cases, but only affects
-            # the install location if not using a davos project
+            # the install location if not using a davos Project
             with handle_alternate_pip_executable(onion.install_name):
                 smuggled_obj = import_name(name)
         else:

@@ -1,7 +1,4 @@
-"""
-This module contains implementations of helper functions specific to
-Google Colaboratory notebooks.
-"""
+"""Helper function implementations specific to Google Colab notebooks."""
 
 
 __all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']

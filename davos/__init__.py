@@ -84,6 +84,7 @@ class ConfigProxyModule(ModuleType):
     davos.project = "myproject"
     ```
     """
+
     def __getattr__(self, name):
         try:
             return getattr(config, name)

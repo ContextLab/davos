@@ -91,6 +91,7 @@ class ProjectChecker(type):
     `Project` constructor will be a `ConcreteProject` or an
     `AbstractProject`.
     """
+
     def __call__(cls, name):
         cleaned_name, cls_to_init = _get_project_name_type(name)
         # `name` passed to __init__ is now a str: either a simple name
@@ -103,6 +104,7 @@ class Project(metaclass=ProjectChecker):
     A pseudo-environment associated with a particular (set of)
     davos-enhanced notebook(s).
     """
+
     def __init__(self, name):
         """
         Parameters
@@ -355,6 +357,7 @@ class AbstractProject(Project):
     renamed/moved notebook to continue using it to manage smuggled
     packages.
     """
+
     def __getattr__(self, item):
         if hasattr(ConcreteProject, item):
             msg = f"{item!r} is not supported for abstract projects"

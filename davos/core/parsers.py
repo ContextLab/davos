@@ -1,7 +1,9 @@
 """
-This module defines reimplementations of the command line parsers for
-installer programs supported by `davos`, slightly modified to parse
-arguments supplied via an Onion comment.
+Command line parser reimplementations for Onion comments.
+
+This module reimplements the command line parsers for installer programs
+supported by `davos` (currently, just `pip`). The reimplementations are
+slightly modified to parse arguments supplied via Onion comments.
 """
 # TODO: update with new pip install arguments as of v23
 
@@ -101,14 +103,14 @@ class OnionParser(ArgumentParser):
         """
         Raise an OnionArgumentError with a given message.
 
-        This is needed to override `argparse.ArgumentParser.error()`.
-        `argparse` is  which exits the program when called (in response
-        to an exception being raised) because it is generally intended
-        for command line interfaces. The generally idea is to affect the
-        stack trace displayed for the user as little as possible, while
-        also ensuring all exceptions raised inherit from `SyntaxError`
-        so they can be successfully raised during the notebook cell
-        pre-execution step.
+        This is needed to override `argparse.ArgumentParser.error()`,
+        which exits the program when called (in response to an exception
+        being raised) because `argparse.ArgumentParser` is generally
+        intended for command line interfaces. This version attempts to
+        affect the stack trace displayed for the user as little as
+        possible, while also ensuring all exceptions raised inherit from
+        `SyntaxError` so they can be successfully raised during the
+        notebook cell pre-execution step.
 
         Parameters
         ----------

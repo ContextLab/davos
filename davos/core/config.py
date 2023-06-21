@@ -1,9 +1,17 @@
 """
-This module defines the global `davos.config` object. The `davos`
-config consists of public fields that may be set by the user to affect
-`davos`'s behavior, as well as private (internal use only) fields that
-store information about the context into which the package was imported
-and available functionality.
+Davos's global configuration object.
+
+The `DavosConfig` class is a singleton whose instance is accessible as
+`davos.config`. The config object defines attributes whose values
+determine various aspects of the package's behavior. Most of these
+attributes can be set by the user to control how, where, and when
+smuggled packages are installed. Others are read-only fields that store
+information about the notebook environment into which `davos` was
+imported and whether or not it supports various `davos` functionality.
+The config object's repr displays the current values of all fields, and
+multiple fields can be set simultaneously via the `davos.configure()`
+function. As of v0.2, `davos.config` fields can also be accessed and set
+via attributes of the top-level `davos` module.
 """
 # TODO: standardize single vs double quotes (just for style consistency)
 # TODO: standardize line breaks in function calls -- first arg on same
@@ -61,6 +69,7 @@ class DavosConfig(metaclass=SingletonConfig):
                 reloaded (Note: currently implemented for Jupyter
                 notebooks only)
             conda_env: str or None
+                NOTE: NOT CURRENTLY SUPPORTED.
                 The name of the resident conda environment of the
                 current Python interpreter, if running within a `conda`
                 environment. Otherwise, `None`.
@@ -79,8 +88,19 @@ class DavosConfig(metaclass=SingletonConfig):
                 The path to the `pip` executable that should be used.
                 Must be a path to a real file. Defaults to automatically
                 discovered executable, if available.
-            project : davos.core.project.Project
-                # TODO: document new attribute
+            project : davos.core.project.ConcreteProject
+                The "Project" environment into which smuggled packages
+                should be installed. The default is a notebook-specific
+                Project whose name is the path to the current notebook.
+                This field may also be specified as a `str` or
+                `pathlib.Path`, which will be converted to a
+                `ConcreteProject` instance on assignment. If set to
+                `None`, smuggled packages will be installed into the
+                regular Python environment rather than isolated in a
+                Project. Projects are a virtual environment-like
+                construct specific to `davos`. For additional info, see
+                https://github.com/ContextLab/davos#readme and
+                the `davos.core.project` module.
             suppress_stdout: bool
                 If `True` (default: `False`), suppress all unnecessary
                 output issued by the program. This is often useful when
@@ -88,12 +108,14 @@ class DavosConfig(metaclass=SingletonConfig):
                 dependencies and therefore generate extensive output.
         **Read-only fields**:
             conda_avail : bool
+                NOTE: NOT CURRENTLY SUPPORTED.
                 Whether or not `conda` is installed and the `conda`
                 executable is accessible from the Python interpreter
             conda_envs_dirs : dict or None
+                NOTE: NOT CURRENTLY SUPPORTED.
                 If `conda_avail` is `True`, a mapping of conda
                 environment names to their environment directories.
-                Otherwise, `False`.
+                Otherwise, `None`.
             environment : {'Python', 'IPython<7.0', 'IPython>=7.0',
                           'Colaboratory'}
                 The environment in which `davos` is running. Determines
@@ -346,7 +368,6 @@ class DavosConfig(metaclass=SingletonConfig):
 
     @project.setter
     def project(self, proj):
-        # TODO: refactor to move this import out of here...
         from davos.core.project import AbstractProject, ConcreteProject, Project
         if proj is None or isinstance(proj, ConcreteProject):
             self._project = proj
@@ -355,9 +376,8 @@ class DavosConfig(metaclass=SingletonConfig):
                 "The notebook associated with this Project does not exist: "
                 f"{proj.name!r}. If the notebook has been moved or renamed, "
                 "you can point the Project to its new location with:\n\t"
-                "`<project>.rename('<new_notebook_path>')`\n\t"
-                "`<project>.reload()`\n or remove it fully with:\n\t"
-                "`<project>.remove()`"
+                "`<project>.rename('<new_notebook_path>')`\n or remove the "
+                "project fully with:\n\t`<project>.remove()`"
             )
         elif isinstance(proj, (str, Path)):
             proj = Project(proj)
@@ -545,7 +565,7 @@ def _block_greedy_ipython_completer():
 
 def _get_stdlib_modules():
     """
-    Get names of standard library modules
+    Get names of standard library modules.
 
     For efficiency, get standard library module names upfront. This
     allows us to skip file system checks for any smuggled stdlib
@@ -554,8 +574,8 @@ def _get_stdlib_modules():
     Returns
     -------
     frozenset of str
-        names of standard library modules for the user's Python
-        implementation
+        The names of standard library modules for the user's Python
+        implementation.
     """
     if sys.version_info.minor >= 10:
         return sys.stdlib_module_names

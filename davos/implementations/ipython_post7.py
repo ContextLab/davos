@@ -1,7 +1,4 @@
-"""
-This module contains implementations of helper functions specific to
-newer versions of `IPython`, starting with v7.0.0.
-"""
+"""Helper functions specific to IPython versions >= 7.0.0."""
 
 
 __all__ = ['generate_parser_func']

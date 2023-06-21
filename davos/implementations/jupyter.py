@@ -1,7 +1,4 @@
-"""
-This module contains implementations of helper functions specific to
-Jupyter notebooks.
-"""
+"""Helper function implementations specific to Jupyter notebooks."""
 
 
 __all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']
@@ -34,7 +31,7 @@ def auto_restart_rerun(pkgs):
 
     Parameters
     ----------
-    pkgs : list of str
+    pkgs : iterable of str
         Packages that could not be reloaded without restarting the
         kernel.
 
@@ -106,7 +103,7 @@ def prompt_restart_rerun_buttons(pkgs):
 
     Parameters
     ----------
-    pkgs : list of str
+    pkgs : iterable of str
         Packages that could not be reloaded without restarting the
         kernel.
 
@@ -126,10 +123,9 @@ def prompt_restart_rerun_buttons(pkgs):
 
     Notes
     -----
-    1. This method of blocking and waiting for user input is based on
-       `ipykernel`'s replacement for the built-in `input` function used
-       in notebook environments.
-
+    This method of blocking and waiting for user input is based on
+    `ipykernel`'s replacement for the built-in `input` function used in
+    notebook environments.
     """
     # UI: could remove warning message when "continue" button is clicked
     msg = (

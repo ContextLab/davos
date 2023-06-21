@@ -1,7 +1,11 @@
 """
-This module contains implementations of helper functions specific to
-versions of `IPython` before v7.0.0 (the oldest officially supported
-version is v5.5.0).
+Helper function implementations specific to IPython>=5.5.0,<7.0.0.
+
+Many of the IPython internals relevant to davos functionality were
+overhauled in IPython v7.0.0, so this module contains implementations of
+helper functions that allow davos to interface with IPython versions
+before that. The oldest IPython version officially supported by davos is
+v5.5.0.
 """
 
 

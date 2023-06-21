@@ -13,8 +13,8 @@ def _activate_helper(smuggle_func, parser_func):
     """
     `IPython>=7.0.0`-specific implementation of `_activate_helper`.
 
-    Helper function called when setting `davos.config.active = True` or
-    running `davos.activate()`. Registers the `davos` parser
+    Helper function called when setting `davos.active = True` (or
+    `davos.config.active = True`). Registers the `davos` parser
     (`parser_func`) as an `IPython` input transformer (in the
     `input_transformers_post` group) if it isn't one already. Injects
     `smuggle_func` into the `IPython` user namespace as `"smuggle"`.
@@ -47,8 +47,8 @@ def _deactivate_helper(smuggle_func, parser_func):
     """
     `IPython>=7.0.0`-specific implementation of `_deactivate_helper`.
 
-    Helper function called when setting `davos.config.active = False` or
-    running `davos.deactivate()`. Removes the `davos` parser
+    Helper function called when setting `davos.active = False` (or
+    `davos.config.active = False`). Removes the `davos` parser
     (`parser_func`) from the set of `IPython` input transformers and
     deletes the variable named "`smuggle`" from the `IPython` user
     namespace if it (a) exists and (b) holds a reference to
@@ -72,7 +72,7 @@ def _deactivate_helper(smuggle_func, parser_func):
 
     Notes
     -----
-    1. Any `smuggle` statements following a call to `davos.deactivate()`
+    1. Any `smuggle` statements following setting `davos.active = False`
        will result in `SyntaxError`s unless the parser is reactivated
        first.
     2. The `davos` parser adds minimal overhead to cell execution.

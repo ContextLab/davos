@@ -183,7 +183,7 @@ def check_conda():
         raise DavosError(
             "Failed to programmatically determine path to conda environment "
             "directory. If you want to install smuggled packages using conda, "
-            "you can either:\n\t1. set `davos.config.conda_env_path` to your "
+            "you can either:\n\t1. set `davos.conda_env_path` to your "
             "environment's path (e.g., $CONDA_PREFIX/envs/this_env)\n\t2. "
             "pass the environment path to `-p`/`--prefix` in each onion "
             "comment\n\t3. pass your environment's name to `-n`/`--name` in "
@@ -273,10 +273,9 @@ def handle_alternate_pip_executable(installed_name):
 
     Context manager that makes it possible to load packages installed
     into a different Python environment by changing the `pip` executable
-    (`davos.config.pip_executable`). This is done by using the `pip`
-    executable with which the package was installed to determine its
-    location, and then temporarily prepending that location to the
-    module search path.
+    (`davos.pip_executable`). This is done by using the `pip` executable
+    with which the package was installed to determine its location, and
+    then temporarily prepending that location to the module search path.
 
     Parameters
     ----------
@@ -299,7 +298,7 @@ def handle_alternate_pip_executable(installed_name):
         dist_name = installed_name
 
     # get install location from `pip show ___` command.
-    # In most cases, this will be davos.config.pip_executable with
+    # In most cases, this will be `davos.pip_executable` with
     # trailing 'bin/pip' replaced with python<major.minor>/site-packages
     # but since this runs only if non-default pip_executable is set,
     # it's worth the extra run time to check the safer way in order to
@@ -854,7 +853,7 @@ def run_shell_command(command, live_stdout=None):
         Whether to display streaming stdout from `command` execution in
         real time *in addition to* capturing and returning it. If `None`
         (default), behavior is determined by the current value of
-        `davos.config.suppress_stdout`.
+        `davos.suppress_stdout`.
 
     Returns
     -------
@@ -1116,7 +1115,7 @@ def smuggle(
                 if config.environment != 'Colaboratory':
                     msg = (
                         f"{msg}\nTo make this happen automatically, set "
-                        "'davos.config.auto_rerun = True'."
+                        "'davos.auto_rerun = True'."
                     )
                 raise SmugglerError(msg)
             else:
@@ -1126,7 +1125,7 @@ def smuggle(
                 config._project is None and
                 config._pip_executable != config._default_pip_executable
         ):
-            # setting davos.config.pip_executable to a non-default value
+            # setting `davos.pip_executable` to a non-default value
             # changes the executable used in all cases, but only affects
             # the install location if not using a davos Project
             with handle_alternate_pip_executable(onion.install_name):

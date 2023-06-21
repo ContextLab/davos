@@ -13,9 +13,9 @@ def auto_restart_rerun(pkgs):
 
     Raises `NotImplementedError` whenever called, though this should
     never happen except when done intentionally as trying to set
-    `davos.config.auto_rerun = True` should raise an error. This feature
-    is not available in Colab notebooks because it requires accessing
-    the notebook frontend through the `colab.global.notebook` JavaScript
+    `davos.auto_rerun = True` should raise an error. This feature is not
+    available in Colab notebooks because it requires accessing the
+    notebook frontend through the `colab.global.notebook` JavaScript
     object, which Colab blocks you from doing from the kernel.
 
     Parameters

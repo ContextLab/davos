@@ -23,9 +23,9 @@ def auto_restart_rerun(pkgs):
     Automatically restarts the notebook kernel and reruns all cells
     above, *including the current cell*. Called when one or more
     smuggled `pkgs` that were previously imported cannot be reloaded by
-    the current interpreter, and `davos.config.auto_rerun` is set to
-    `True`. Displays a message in the cell output area with the
-    package(s) that required the kernel restart, calls
+    the current interpreter, and `davos.auto_rerun` is set to `True`.
+    Displays a message in the cell output area with the package(s) that
+    required the kernel restart, calls
     `JS_FUNCTIONS.jupyter.restartRunCellsAbove`, and then blocks until
     the kernel is restarted.
 
@@ -43,7 +43,7 @@ def auto_restart_rerun(pkgs):
     Notes
     -----
     1. The message displayed before restarting the kernel can be
-       silenced by setting `davos.config.suppress_stdout` to `True`.
+       silenced by setting `davos.suppress_stdout` to `True`.
     2. After calling `JS_FUNCTIONS.jupyter.restartRunCellsAbove`, this
        function sleeps until the kernel restarts to prevent any further
        code in the current cell or other queued cells from executing.

@@ -827,7 +827,7 @@ def use_default_project():
     Switch (back) to using the default project.
 
     Determine the default davos Project from the environment and set
-    `davos.config.project` to it. In IPython notebooks, this is a
+    `davos.project` to it. In IPython notebooks, this is a
     notebook-specific project named for the notebook's filepath. In an
     IPython shell, this is a project named "ipython-shell", which is
     shared by all IPython shell instances.

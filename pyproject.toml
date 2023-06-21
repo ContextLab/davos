@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 # ======================================
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 disable_error_code = "override"
 disallow_any_expr = true
 disallow_untyped_calls = true
@@ -63,7 +63,7 @@ exclude-protected = [
 ]
 
 [tool.pylint.design]
-max-attributes = 15
+max-attributes = 20
 
 [tool.pylint.typecheck]
 generated-members = ["zmq.EAGAIN", "NOBLOCK"]

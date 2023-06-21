@@ -18,6 +18,7 @@ __all__ = [
     'DAVOS_PROJECT_DIR',
     'config',
     'configure',
+    'get_project',
     'Project',
     'prune_projects',
     'smuggle',
@@ -47,6 +48,7 @@ from davos.core.core import smuggle
 from davos.core.project import (
     DAVOS_CONFIG_DIR,
     DAVOS_PROJECT_DIR,
+    get_project,
     Project,
     prune_projects,
     use_default_project

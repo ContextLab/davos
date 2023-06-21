@@ -12,6 +12,8 @@ from urllib.parse import unquote, urljoin, urlparse
 
 import ipykernel
 import requests
+from IPython.display import clear_output
+from IPython.terminal.interactiveshell import TerminalInteractiveShell
 
 from davos import config
 from davos.core.core import prompt_input, run_shell_command
@@ -350,6 +352,57 @@ def _safename_to_filepath(safename):
         associated with the project.
     """
     return f'{safename.replace(PATHSEP_REPLACEMENT, PATHSEP)}.ipynb'
+
+
+def get_project(project_name, create=False):
+    """
+    Get a Project by its name.
+
+    Return the `Project` instance for the project named `project_name`,
+    optionally creating it if it doesn't already exist. If the project
+    does not exist and `create` is `False`, return `None`
+    (mirrors behavior of built-in `dict.get()`)
+
+    Parameters
+    ----------
+    project_name : str or pathlib.Path
+        The name of the project to get. As is the case when creating a
+        new `Project` or setting the `davos.project` field, project
+        names that represent notebook filepaths may be provided as an
+        absolute or relative path, or in the "safe" name format used for
+        directories in `DAVOS_PROJECT_DIR`.
+    create : bool, optional
+        Whether to create the project if it doesn't already exist
+        (default: `False`).
+
+    Returns
+    -------
+    davos.core.project.Project or None
+        The `Project` instance for the project named `project_name`, or
+        `None` if the project does not exist and `create` is `False`.
+
+    """
+    if create:
+        # if we're going to create a Project instance whether the
+        # project directory exists or not, no need to check for it first
+        return Project(project_name)
+
+    # rather than creating `Project(project_name)` and checking for it
+    # in `davos.all_projects`, determine what the project's directory
+    # *would* be named and check whether it exists. This avoids creating
+    # a bunch of `Project` instances and registering duplicate `atexit`
+    # callbacks unnecessarily
+    cleaned_name, project_cls = _get_project_name_type(project_name)
+    safe_name = _filepath_to_safename(cleaned_name)
+    project_dir = DAVOS_PROJECT_DIR.joinpath(safe_name)
+    if project_dir.is_dir():
+        # since we already got the project's name and type above, we can
+        # call `type.__call__` directly and bypass the `ProjectChecker`
+        # metaclass's `__call__` method.
+        return type.__call__(project_cls, cleaned_name)
+
+    # else, the project doesn't exist
+    return None
 
 
 def get_notebook_path():

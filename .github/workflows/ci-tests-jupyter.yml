@@ -119,7 +119,7 @@ jobs:
       - name: setup notebook kernel environment
         run: |
           # install jupyter notebooks application in base environment
-          pip install notebook "ipykernel==5.0.0"
+          pip install notebook "ipykernel==5.0.0" "jupyter_client<=7.3.2" "tornado<=6.1"
 
           # create kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION

@@ -419,6 +419,115 @@ def cleanup_project_dir_atexit(dirpath):
                     dirpath.rmdir()
 
 
+def prune_projects(yes=False):
+    """
+    Remove unused local projects.
+
+    Delete any notebook-specific projects from `davos.DAVOS_PROJECT_DIR`
+    whose corresponding notebooks no longer exist (i.e., any
+    `AbstractProject`s). See "Notes" section below for more info.
+
+    Parameters
+    ----------
+    yes : bool, optional
+        If `True` (default: `False`), don't prompt for confirmation
+        before removing each unused project.
+
+    Notes
+    -----
+    1. By default, user confirmation (y/n input) is required before
+       deleting each project, but this can be bypassed by passing
+       `yes=True`. Note that if davos's non-interactive mode is enabled
+       (i.e., `davos.noninteractive` has been set to `True`), `yes=True`
+       *must* be explicitly passed to prune projects. This serves as a
+       safeguard against unintentionally deleting projects, since
+       non-interactive mode disables all user input and confirmation.
+    2. The function will also remove any project directories (other than
+       the currently active project's) that contain no installed
+       packages. However, this is done silently since the intended
+       behavior is for empty projects to be removed automatically when
+       the interpreter is shut down -- they're only checked for and
+       dealt with here as a fallback in case one somehow sneaks through.
+    """
+    # dict of projects to remove -- keys: "safe"-formatted project
+    # directory names; values: corresponding notebook filepaths
+    to_remove = {}
+    # iterate through project directory and do checks manually rather
+    # than checking `davos.all_projects` to avoid creating a bunch of
+    # Project instances and registering duplicate `atexit` callbacks
+    # unnecessarily
+    for project_dir in DAVOS_PROJECT_DIR.iterdir():
+        if (
+                not project_dir.is_dir()
+                or project_dir.name == config._project.safe_name
+        ):
+            # skip .DS_Store files and the project currently in use
+            continue
+
+        project_dirname = project_dir.name
+        if PATHSEP_REPLACEMENT in project_dirname:
+            # if the project is notebook-specific...
+            as_filepath = _safename_to_filepath(project_dirname)
+            if not Path(as_filepath).is_file():
+                # ... and the associated notebook does not exist (i.e.,
+                # it's an "AbstractProject"), mark it for removal
+                to_remove[project_dirname] = as_filepath
+                continue
+        if _dir_is_empty(project_dir):
+            # if the project directory is somehow empty, clean it up
+            # (see "Notes" section of docstring).
+            # Uses `shutil.rmtree()` rather than `Path.rmdir()` to
+            # account for potential `.DS_Store` files if the project
+            # directory was ever opened in Finder on a Mac
+            shutil.rmtree(project_dir, ignore_errors=True)
+
+    if yes:
+        # don't list to-be-removed projects or prompt for confirmation
+        for project_dirname in to_remove:
+            shutil.rmtree(DAVOS_PROJECT_DIR.joinpath(project_dirname))
+    elif to_remove:
+        # escape codes for styled output
+        ANSI_BOLD = '\033[1m'
+        ANSI_RED = '\033[31m'
+        ANSI_GREEN = '\033[32m'
+        ANSI_BLUE = '\033[34m'
+        ANSI_YELLOW = '\033[93m'
+        ANSI_RESET = '\033[0m'
+        RIGHT_ARROW = '\u2192'
+        CURRENT_PROJECT_INDICATOR = f'{ANSI_BOLD}{ANSI_BLUE}      {RIGHT_ARROW}{ANSI_RESET}'
+        # removed/kept/failed to remove/current selection indicators for
+        # each project as they're iteratively processed
+        statuses = [CURRENT_PROJECT_INDICATOR] + ["       "] * (len(to_remove) - 1)
+        template = f"{ANSI_BOLD}Found {len(to_remove)} unused projects:{ANSI_RESET}"
+        for filepath in to_remove.values():
+            template = f"{template}\n{{}} AbstractProject({filepath})"
+
+        for i, (project_dirname, as_filepath) in enumerate(to_remove.items()):
+            prompt = (
+                f"{template.format(*statuses)}\n\n"
+                f"Remove {ANSI_BOLD}AbstractProject({as_filepath}){ANSI_RESET}?"
+            )
+            remove = prompt_input(prompt, default='y')
+            if remove:
+                try:
+                    shutil.rmtree(DAVOS_PROJECT_DIR.joinpath(project_dirname))
+                except Exception:
+                    statuses[i] = f"{ANSI_BOLD}{ANSI_YELLOW}failed to remove{ANSI_RESET}"
+                else:
+                    statuses[i] = f"{ANSI_BOLD}{ANSI_RED}removed{ANSI_RESET}"
+            else:
+                statuses[i] = f"   {ANSI_BOLD}{ANSI_GREEN}kept{ANSI_RESET}"
+
+            if i + 1 < len(to_remove):
+                statuses[i + 1] = CURRENT_PROJECT_INDICATOR
+            # update project removal statuses and prompt in place
+            clear_output(wait=False)
+        # print final status for all projects processed
+        print(template.format(*statuses))
+    else:
+        print("No unused projects found.")
+
+
 def use_default_project():
     """
     Switch (back) to using the default project.

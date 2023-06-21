@@ -1,7 +1,8 @@
 from pathlib import PosixPath
 from typing import Literal, NoReturn
 
-__all__ = list[Literal['Project', 'get_notebook_path', 'use_default_project']]
+__all__ = list[Literal['DAVOS_CONFIG_DIR', 'DAVOS_PROJECT_DIR', 'Project', 'get_notebook_path', 'get_project',
+                       'prune_projects', 'use_default_project']]
 
 DAVOS_CONFIG_DIR: PosixPath
 DAVOS_PROJECT_DIR: PosixPath

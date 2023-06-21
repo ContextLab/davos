@@ -20,7 +20,15 @@ from davos.core.core import prompt_input, run_shell_command
 from davos.core.exceptions import DavosProjectError
 
 
-__all__ = ['Project', 'get_notebook_path', 'use_default_project']
+__all__ = [
+    'DAVOS_CONFIG_DIR',
+    'DAVOS_PROJECT_DIR',
+    'Project',
+    'get_notebook_path',
+    'get_project',
+    'prune_projects',
+    'use_default_project'
+]
 
 
 DAVOS_CONFIG_DIR = Path.home().joinpath('.davos')

@@ -378,7 +378,6 @@ def import_name(name):
     return __import__(parts[0])
 
 
-# TODO: move to top?
 class Onion:
     """
     Class representing a single package to be smuggled.
@@ -1029,7 +1028,6 @@ def smuggle(
         install_pkg = True
 
     if install_pkg:
-        # TODO: for v0.2 conda implementation: bypass if -y/--yes passed
         if config.confirm_install and not installer_kwargs.get('no_input'):
             msg = (f"package {pkg_name!r} will be installed with the "
                    f"following command:\n\t`{onion.install_cmd}`\n"

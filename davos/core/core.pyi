@@ -1,47 +1,19 @@
 from collections.abc import Callable
-from io import StringIO
-from types import (
-    BuiltinFunctionType,
-    FunctionType,
-    ModuleType,
-    TracebackType
-)
-from typing import (
-    Any,
-    AnyStr,
-    Generic,
-    Literal,
-    NoReturn,
-    Optional,
-    overload,
-    TextIO,
-    Tuple,
-    Type,
-    TypedDict,
-    TypeVar,
-    Union
-)
+from contextlib import AbstractContextManager
+from io import TextIOBase
+from types import TracebackType
+from typing import Generic, Literal, NoReturn, overload, Protocol, Type, TypeVar, TypedDict
 
-__all__: list[
-    Literal[
-        'capture_stdout',
-        'check_conda',
-        'Onion',
-        'parse_line',
-        'prompt_input',
-        'run_shell_command',
-    ]
-]
+__all__ = list[Literal['capture_stdout', 'check_conda', 'get_previously_imported_pkgs', 'handle_alternate_pip_executable',
+                      'import_name', 'Onion', 'parse_line', 'prompt_input', 'run_shell_command', 'use_project', 'smuggle']]
 
-_E = TypeVar('_E', bound=BaseException)
-_StringOrFileIO = Union[StringIO, TextIO]
-_S = TypeVar('_S')
+_Exc = TypeVar('_Exc', bound=BaseException)
+_Streams = TypeVar('_Streams', bound=tuple[TextIOBase, ...])
+_InstallerName = Literal['conda', 'pip']
 
-class _SingleStream(tuple[_StringOrFileIO]):
-    def __len__(self) -> Literal[1]: ...
-
-class _MultiStream(Tuple[_StringOrFileIO, ...]):
-    def __len__(self) -> int: ...
+class SmuggleFunc(Protocol):
+    def __call__(self, name: str, as_: str | None = ..., installer: Literal['conda', 'pip'] = ..., args_str: str = ...,
+                 installer_kwargs: PipInstallerKwargs | None = ... ) -> None: ...
 
 class PipInstallerKwargs(TypedDict, total=False):
     abi: str
@@ -97,49 +69,39 @@ class PipInstallerKwargs(TypedDict, total=False):
     user: bool
     verbosity: Literal[-3, -2, -1, 0, 1, 2, 3]
 
-class capture_stdout(Generic[_S]):
+class capture_stdout(Generic[_Streams]):
     closing: bool
-    streams: _S
-    sys_stdout_write: Callable[[AnyStr], Optional[int]]
-    def __init__(self, *streams: _StringOrFileIO, closing: bool = ...) -> None: ...
-    @overload
-    def __enter__(self: capture_stdout[_SingleStream]) -> _StringOrFileIO: ...
-    @overload
-    def __enter__(self: capture_stdout[_MultiStream]) -> _MultiStream: ...
+    streams: _Streams
+    sys_stdout_write: Callable[[str], int | None]
+    def __init__(self, *streams: _Streams, closing: bool = ...) -> None: ...
+    def __enter__(self) -> _Streams: ...
     @overload
     def __exit__(self, exc_type: None, exc_value: None, exc_tb: None) -> None: ...
     @overload
-    def __exit__(self, exc_type: Type[_E], exc_value: _E, exc_tb: TracebackType) -> bool: ...
-    def _write(self, data: AnyStr) -> None: ...
+    def __exit__(self, exc_type: Type[_Exc], exc_value: _Exc, exc_tb: TracebackType) -> bool | None: ...
+    def _write(self, data: str) -> None: ...
 
 def check_conda() -> None: ...
-def get_previously_imported_pkgs(
-        install_cmd_stdout: str,
-        installer: Literal['conda', 'pip']
-) -> list[str]: ...
-def import_name(name: str) -> Union[ModuleType, FunctionType, BuiltinFunctionType, Any]: ...
+def get_previously_imported_pkgs(install_cmd_stdout: str, installer: _InstallerName) -> list[str]: ...
+def handle_alternate_pip_executable(installed_name: str) -> AbstractContextManager[None]: ...
+def import_name(name: str) -> object: ...
 
 class Onion:
     args_str: str
-    build: Optional[str]
+    build: str | None
     cache_key: str
     import_name: str
     install_name: str
     install_package: Callable[[], str]
-    installer: Literal['conda', 'pip']
+    installer: _InstallerName
     installer_kwargs: PipInstallerKwargs
     is_editable: bool
     verbosity: Literal[-3, -2, -1, 0, 1, 2, 3]
     version_spec: str
     @staticmethod
     def parse_onion(onion_text: str) -> tuple[str, str, PipInstallerKwargs]: ...
-    def __init__(
-            self,
-            package_name: str,
-            installer: Literal['conda', 'pip'],
-            args_str: str,
-            **installer_kwargs: Union[bool, float, int, str, list[str]]
-    ) -> None: ...
+    def __init__(self, package_name: str, installer: _InstallerName, args_str: str,
+                 **installer_kwargs: bool | float | str | list[str]) -> None: ...
     @property
     def install_cmd(self) -> str: ...
     @property
@@ -148,16 +110,9 @@ class Onion:
     def _pip_install_package(self) -> str: ...
 
 def parse_line(line: str) -> str: ...
-def prompt_input(
-        prompt: str,
-        default: Optional[Literal['n', 'no', 'y', 'yes']] = ...,
-        interrupt: Optional[Literal['n', 'no', 'y', 'yes']] = ...
-) -> bool: ...
-def run_shell_command(command: str, live_stdout: Optional[bool] = ...) -> str: ...
-def smuggle(
-        name: str,
-        as_: Optional[str] = ...,
-        installer: Literal['conda', 'pip'] = ...,
-        args_str: str = ...,
-        installer_kwargs: Optional[PipInstallerKwargs] = ...
-) -> None: ...
+def prompt_input(prompt: str, default: Literal['n', 'no', 'y', 'yes'] | None = ...,
+                 interrupt: Literal['n', 'no', 'y', 'yes'] | None = ...) -> bool: ...
+def run_shell_command(command: str, live_stdout: bool | None = ...) -> str: ...
+def use_project(smuggle_func: SmuggleFunc) -> SmuggleFunc: ...
+def smuggle(name: str, as_: str | None = ..., installer: _InstallerName = ..., args_str: str = ...,
+            installer_kwargs: PipInstallerKwargs | None = ...) -> None: ...

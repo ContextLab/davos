@@ -1,7 +1,11 @@
 """
-This modules contains implementations of helper functions specific to
-versions of `IPython` before v7.0.0 (the oldest officially supported
-version is v5.5.0).
+Helper function implementations specific to IPython>=5.5.0,<7.0.0.
+
+Many of the IPython internals relevant to davos functionality were
+overhauled in IPython v7.0.0, so this module contains implementations of
+helper functions that allow davos to interface with IPython versions
+before that. The oldest IPython version officially supported by davos is
+v5.5.0.
 """
 
 
@@ -17,8 +21,8 @@ def _activate_helper(smuggle_func, parser_func):
     """
     `IPython<7.0.0`-specific implementation of `_activate_helper`.
 
-    Helper function called when setting `davos.config.active = True` or
-    running `davos.activate()`. Wraps the the `davos` parser
+    Helper function called when setting `davos.active = True` (or
+    `davos.config.active = True`). Wraps the `davos` parser
     (`parser_func`) in an
     `IPython/core.inputtransformer.StatelessInputTransformer` instance
     and registers it as both an `IPython` input transformer *and* input
@@ -86,8 +90,8 @@ def _deactivate_helper(smuggle_func, parser_func):
     """
     `IPython<7.0.0`-specific implementation of `_deactivate_helper`.
 
-    Helper function called when setting `davos.config.active = False` or
-    running `davos.deactivate()`. Removes the
+    Helper function called when setting `davos.active = False` (or
+    `davos.config.active = False`). Removes the
     `IPython/core.inputtransformer.StatelessInputTransformer` instance
     whose `.func` is the `davos` parser (`parser_func`) from both the
     `.input_splitter` and `input_transformer_manager` attributes the
@@ -115,7 +119,7 @@ def _deactivate_helper(smuggle_func, parser_func):
 
     Notes
     -----
-    1. Any `smuggle` statements following a call to `davos.deactivate()`
+    1. Any `smuggle` statements following setting `davos.active = False`
        will result in `SyntaxError`s unless the parser is reactivated
        first.
     2. The `davos` parser adds minimal overhead to cell execution.

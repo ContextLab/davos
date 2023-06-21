@@ -1,54 +1,50 @@
 from collections.abc import Callable, Iterable
-from pathlib import PurePosixPath
+from pathlib import PosixPath
 from pprint import PrettyPrinter
-from typing import (
-    Any,
-    ClassVar,
-    Final,
-    Literal,
-    NoReturn,
-    Optional,
-    Protocol,
-    TypeVar,
-    Union
-)
-from google.colab._shell import Shell                            # type: ignore
-from IPython.core.interactiveshell import InteractiveShell       # type: ignore
+from typing import ClassVar, Generic, Literal, NoReturn, Protocol, Type, TypeVar
+from google.colab._shell import Shell    # type: ignore
+from IPython.core.interactiveshell import InteractiveShell    # type: ignore
+from davos.core.project import AbstractProject, ConcreteProject
 
-__all__: list[Literal['DavosConfig']]
+__all__ = list[Literal['DavosConfig']]
 
 _Environment = Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']
 _I= TypeVar('_I', bound=Iterable)
-IpythonShell = Union[InteractiveShell, Shell]
+_DC = TypeVar('_DC', bound=DavosConfig)
+IpythonShell = InteractiveShell | Shell
 
-class IpyShowSyntaxErrorPre7(Protocol):
-    def __call__(self, filename: Optional[str] = ...) -> None: ...
+class _IpyShowSyntaxErrorPre7(Protocol):
+    def __call__(self, filename: str | None = ...) -> None: ...
 
-class IpyShowSyntaxErrorPost7(Protocol):
-    def __call__(self, filename: Optional[str] = ..., running_compile_code: bool = ...) -> None: ...
+class _IpyShowSyntaxErrorPost7(Protocol):
+    def __call__(self, filename: str | None = ..., running_compile_code: bool = ...) -> None: ...
 
-class SingletonConfig(type):
-    __instance: ClassVar[Optional[DavosConfig]]
-    def __call__(cls, *args: Any, **kwargs: Any) -> DavosConfig: ...
+class SingletonConfig(type, Generic[_DC]):
+    # ignoring an overly strict mypy check that doesn't account for this
+    # use case. see https://github.com/python/mypy/issues/5144
+    __instance: ClassVar[_DC | None]    # type: ignore[misc]
+    def __call__(cls: Type[_DC], *args: object, **kwargs: object) -> _DC: ...    # type: ignore[misc]
 
 class DavosConfig(metaclass=SingletonConfig):
     _active: bool
     _auto_rerun: bool
-    _conda_avail: Optional[bool]
-    _conda_env: Optional[str]
-    _conda_envs_dirs: Optional[dict[str, str]]
+    _conda_avail: bool | None
+    _conda_env: str | None
+    _conda_envs_dirs: dict[str, str] | None
     _confirm_install: bool
-    _environment: Final[_Environment]
-    _ipy_showsyntaxerror_orig: Optional[Union[IpyShowSyntaxErrorPre7, IpyShowSyntaxErrorPost7]]
-    _ipython_shell: Final[Optional[IpythonShell]]
+    _default_pip_executable: str
+    _environment: _Environment
+    _ipy_showsyntaxerror_orig: _IpyShowSyntaxErrorPre7 | _IpyShowSyntaxErrorPost7 | None
+    _ipython_shell: IpythonShell | None
     _noninteractive: bool
     _pip_executable: str
+    _project: AbstractProject | ConcreteProject | None
     _repr_formatter: PrettyPrinter
     _smuggled: dict[str, str]
-    _stdlib_modules: Final[set[str]]
+    _stdlib_modules: frozenset[str]
     _suppress_stdout: bool
     @staticmethod
-    def __mock_sorted(__iterable: _I, key: Optional[Callable] = None, reverse: bool = False) -> _I: ...
+    def __mock_sorted(__iterable: _I, key: Callable | None = ..., reverse: bool = ...) -> _I: ...
     def __init__(self) -> None: ...
     def __repr__(self) -> str: ...
     @property
@@ -62,15 +58,15 @@ class DavosConfig(metaclass=SingletonConfig):
     @property
     def conda_avail(self) -> bool: ...
     @conda_avail.setter
-    def conda_avail(self, _: Any) -> NoReturn: ...
+    def conda_avail(self, _: object) -> NoReturn: ...
     @property
-    def conda_env(self) -> Optional[str]: ...
+    def conda_env(self) -> str | None: ...
     @conda_env.setter
     def conda_env(self, new_env: str) -> None: ...
     @property
-    def conda_envs_dirs(self) -> Optional[dict[str, str]]: ...
+    def conda_envs_dirs(self) -> dict[str, str] | None: ...
     @conda_envs_dirs.setter
-    def conda_envs_dirs(self, _: Any) -> NoReturn: ...
+    def conda_envs_dirs(self, _: object) -> NoReturn: ...
     @property
     def confirm_install(self) -> bool: ...
     @confirm_install.setter
@@ -78,11 +74,11 @@ class DavosConfig(metaclass=SingletonConfig):
     @property
     def environment(self) -> _Environment: ...
     @environment.setter
-    def environment(self, _: Any) -> NoReturn: ...
+    def environment(self, _: object) -> NoReturn: ...
     @property
-    def ipython_shell(self) -> Optional[IpythonShell]: ...
+    def ipython_shell(self) -> IpythonShell | None: ...
     @ipython_shell.setter
-    def ipython_shell(self, _: Any) -> NoReturn: ...
+    def ipython_shell(self, _: object) -> NoReturn: ...
     @property
     def noninteractive(self) -> bool: ...
     @noninteractive.setter
@@ -90,15 +86,20 @@ class DavosConfig(metaclass=SingletonConfig):
     @property
     def pip_executable(self) -> str: ...
     @pip_executable.setter
-    def pip_executable(self, exe_path: Union[PurePosixPath, str]) -> None: ...
+    def pip_executable(self, exe_path: PosixPath | str) -> None: ...
+    @property
+    def project(self) -> AbstractProject | ConcreteProject: ...
+    @project.setter
+    def project(self, proj: AbstractProject | ConcreteProject | PosixPath | str | None) -> None: ...
     @property
     def smuggled(self) -> dict[str, str]: ...
     @smuggled.setter
-    def smuggled(self, _: Any) -> NoReturn: ...
+    def smuggled(self, _: object) -> NoReturn: ...
     @property
     def suppress_stdout(self) -> bool: ...
     @suppress_stdout.setter
     def suppress_stdout(self, value: bool) -> None: ...
+    def _find_default_pip_executable(self) -> str: ...
 
 def _block_greedy_ipython_completer() -> None: ...
-def _get_stdlib_modules() -> set[str]: ...
+def _get_stdlib_modules() -> frozenset[str]: ...

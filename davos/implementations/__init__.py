@@ -1,24 +1,24 @@
 """
-This module dynamically imports and defines functions based on the
-environment into which `davos` is imported.
+Environment-specific implementations of `davos` functionality.
 
-Some `davos` functionality requires (often quite drastically) different
-implementations depending on certain properties of the importing
-environment (e.g., "regular" Python vs IPython, the IPython notebook
-front-end, etc.). To deal with this, environment-dependent parts of core
-features and behaviors (in the `davos.core` subpackage) are isolated and
-abstracted as "helper functions". Multiple, interchangeable
-implementations of each helper function are organized into
-per-environment modules within the `davos.implementations` subpackage.
-At runtime, this module selectively imports a single version of each
-helper function based on the global Python environment. `davos.core`
-modules can then access the correct implementation of each helper
-function regardless of the environment by importing it from the
-top-level `davos.implementations` module. This also allows individual
-`davos.implementations` modules to import packages that aren't
-guaranteed to be installed outside certain environments (e.g., `google`,
-`ipykernel`) without requiring them as dependencies of the overall
-`davos` package.
+This module dynamically imports and defines functions based on the
+environment into which `davos` is imported. Some `davos` functionality
+requires (often quite drastically) different implementations depending
+on certain properties of the importing environment (e.g., "regular"
+Python vs IPython, the IPython notebook front-end, etc.). To deal with
+this, environment-dependent parts of core features and behaviors (in the
+`davos.core` subpackage) are isolated and abstracted as "helper
+functions". Multiple, interchangeable implementations of each helper
+function are organized into per-environment modules within the
+`davos.implementations` subpackage. At runtime, this module selectively
+imports a single version of each helper function based on the global
+Python environment. `davos.core` modules can then access the correct
+implementation of each helper function regardless of the environment by
+importing it from the top-level `davos.implementations` module. This
+also allows individual `davos.implementations` modules to import
+packages that aren't guaranteed to be installed outside certain
+environments (e.g., `google`, `ipykernel`) without requiring them as
+dependencies of the overall `davos` package.
 
 The importing environment is determined by the value of the
 `environment` field of the global `DavosConfig` instance, so it's
@@ -41,13 +41,14 @@ __all__ = [
 ]
 
 
+from pathlib import Path
+
 from davos import config
 from davos.core.config import DavosConfig
 from davos.core.exceptions import DavosConfigError
 
 
 import_environment = config.environment
-
 
 if import_environment == 'Python':
     # noinspection PyUnresolvedReferences
@@ -171,6 +172,9 @@ def _conda_env_fset(conf, new_env):
             "conda_env",
             "cannot set conda environment. No local conda installation found"
         )
+    if isinstance(new_env, Path):
+        new_env = new_env.name
+
     if new_env != conf._conda_env:
         if (
                 conf._conda_envs_dirs is not None and
@@ -179,8 +183,8 @@ def _conda_env_fset(conf, new_env):
             local_envs = {"', '".join(conf._conda_envs_dirs.keys())}
             raise DavosConfigError(
                 "conda_env",
-                f"unrecognized environment name: '{new_env}'. Local "
-                f"environments are:\n\t'{local_envs}'"
+                f"unrecognized environment name: {new_env!r}. Local "
+                f"environments are:\n\t{local_envs!r}"
             )
 
         conf._conda_env = new_env

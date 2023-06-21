@@ -1,9 +1,9 @@
 """
-This modules contains implementations of helper functions specific to
-"pure" (i.e., non-interactive) Python scripts.
+Helper function implementations specific to "plain" Python environments.
 
-**Note**: `davos` does not currently support pure Python, but will begin
-to do so in a near-future version.
+NOTE: `davos` does not currently support "plain" (i.e., non-interactive)
+Python environments (scripts, the IDLE, etc.), but aims to do so in a
+future version.
 """
 
 __all__ = [

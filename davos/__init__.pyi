@@ -1,29 +1,20 @@
-from typing import Literal
+from pathlib import PosixPath
+from types import ModuleType
+from typing import Final, Literal
 from davos.core.config import DavosConfig
+from davos.core.project import AbstractProject, ConcreteProject
 
-__all__ = list[
-    Literal[
-        'activate',
-        'config',
-        'configure',
-        'deactivate',
-        'is_active',
-        'smuggle'
-    ]
-]
-__version__: str
+__all__ = list[Literal['DAVOS_CONFIG_DIR', 'DAVOS_PROJECT_DIR', 'config', 'configure', 'get_project', 'Project',
+                       'prune_projects', 'smuggle', 'use_default_project']]
+__class__: ConfigProxyModule
+__version__: Final[str]
 
 config: DavosConfig
 
-def activate() -> None: ...
-def configure(
-        *,
-        active: bool = ...,
-        auto_rerun: bool = ...,
-        conda_env: str = ...,
-        confirm_install: bool = ...,
-        noninteractive: bool = ...,
-        suppress_stdout: bool = ...
-) -> None: ...
-def deactivate() -> None: ...
-def is_active() -> bool: ...
+class ConfigProxyModule(ModuleType, DavosConfig):
+    @property
+    def all_projects(self) -> list[AbstractProject | ConcreteProject]: ...
+
+def configure(*, active: bool = ..., auto_rerun: bool = ..., confirm_install: bool = ..., noninteractive: bool = ...,
+              pip_executable: PosixPath | str = ..., project: ConcreteProject | PosixPath | str | None = ...,
+              suppress_stdout: bool = ...) -> None: ...

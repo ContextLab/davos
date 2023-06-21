@@ -1,25 +1,43 @@
 """
-This modules defines the global `davos.config` object. The `davos`
-config consists of public fields that may be set by the user to affect
-`davos`' behavior, as well as private (internal use only) fields that
-store information about the context into which the package was imported
-and available functionality.
+Davos's global configuration object.
+
+The `DavosConfig` class is a singleton whose instance is accessible as
+`davos.config`. The config object defines attributes whose values
+determine various aspects of the package's behavior. Most of these
+attributes can be set by the user to control how, where, and when
+smuggled packages are installed. Others are read-only fields that store
+information about the notebook environment into which `davos` was
+imported and whether or not it supports various `davos` functionality.
+The config object's repr displays the current values of all fields, and
+multiple fields can be set simultaneously via the `davos.configure()`
+function. As of v0.2, `davos.config` fields can also be accessed and set
+via attributes of the top-level `davos` module.
 """
+# TODO: standardize single vs double quotes (just for style consistency)
+# TODO: standardize line breaks in function calls -- first arg on same
+#  line or new line?
 
 
 __all__ = ['DavosConfig']
 
 
-import pathlib
+import os
 import pprint
+import shutil
+import site
 import sys
+import sysconfig
 import traceback
 import warnings
 from io import StringIO
 from os.path import expandvars
-from subprocess import CalledProcessError, check_output
+from pathlib import Path
 
-from davos.core.exceptions import DavosConfigError, DavosError
+from davos.core.exceptions import (
+    DavosConfigError,
+    DavosError,
+    ProjectNotebookNotFoundError
+)
 
 
 class SingletonConfig(type):
@@ -51,6 +69,7 @@ class DavosConfig(metaclass=SingletonConfig):
                 reloaded (Note: currently implemented for Jupyter
                 notebooks only)
             conda_env: str or None
+                NOTE: NOT CURRENTLY SUPPORTED.
                 The name of the resident conda environment of the
                 current Python interpreter, if running within a `conda`
                 environment. Otherwise, `None`.
@@ -69,6 +88,19 @@ class DavosConfig(metaclass=SingletonConfig):
                 The path to the `pip` executable that should be used.
                 Must be a path to a real file. Defaults to automatically
                 discovered executable, if available.
+            project : davos.core.project.ConcreteProject
+                The "Project" environment into which smuggled packages
+                should be installed. The default is a notebook-specific
+                Project whose name is the path to the current notebook.
+                This field may also be specified as a `str` or
+                `pathlib.Path`, which will be converted to a
+                `ConcreteProject` instance on assignment. If set to
+                `None`, smuggled packages will be installed into the
+                regular Python environment rather than isolated in a
+                Project. Projects are a virtual environment-like
+                construct specific to `davos`. For additional info, see
+                https://github.com/ContextLab/davos#readme and
+                the `davos.core.project` module.
             suppress_stdout: bool
                 If `True` (default: `False`), suppress all unnecessary
                 output issued by the program. This is often useful when
@@ -76,12 +108,14 @@ class DavosConfig(metaclass=SingletonConfig):
                 dependencies and therefore generate extensive output.
         **Read-only fields**:
             conda_avail : bool
+                NOTE: NOT CURRENTLY SUPPORTED.
                 Whether or not `conda` is installed and the `conda`
                 executable is accessible from the Python interpreter
             conda_envs_dirs : dict or None
+                NOTE: NOT CURRENTLY SUPPORTED.
                 If `conda_avail` is `True`, a mapping of conda
                 environment names to their environment directories.
-                Otherwise, `False`.
+                Otherwise, `None`.
             environment : {'Python', 'IPython<7.0', 'IPython>=7.0',
                           'Colaboratory'}
                 The environment in which `davos` is running. Determines
@@ -101,7 +135,7 @@ class DavosConfig(metaclass=SingletonConfig):
     """
 
     # noinspection PyUnusedLocal
-    # pylint: disable=unused-argument, missing-function-docstring, no-self-use
+    # pylint: disable=unused-argument, missing-function-docstring
     @staticmethod
     def __mock_sorted(__iterable, key=None, reverse=False):
         """
@@ -112,7 +146,7 @@ class DavosConfig(metaclass=SingletonConfig):
         method. `dict` items in `smuggled` field should be shown in
         insertion order, not alphabetically, because they represent a
         history of cached `smuggle` commands. However,
-        `pprint.PrettyPrinter` didn't support option to *not* sort
+        `pprint.PrettyPrinter` didn't provide the option to *not* sort
         `dict`s until Python 3.8, so for earlier versions, this is
         assigned to `pprint.sorted` so that it takes priority over the
         built-in `sorted` in module's namespace lookup chain.
@@ -135,9 +169,6 @@ class DavosConfig(metaclass=SingletonConfig):
         """
         return __iterable
 
-    # noinspection PyFinal
-    # (PyCharm doesn't differentiate between declarations here and in
-    # stub file, which it should, according to PEP 591)
     def __init__(self):
         ########################################
         #           READ-ONLY FIELDS           #
@@ -153,6 +184,13 @@ class DavosConfig(metaclass=SingletonConfig):
             self._environment = 'Python'
         else:
             import IPython
+            if isinstance(
+                    self._ipython_shell,
+                    IPython.terminal.interactiveshell.TerminalInteractiveShell
+            ):
+                _msg = ("davos does not officially support IPython terminal "
+                        "shells. Some features may not work as expected.")
+                warnings.warn(_msg, category=RuntimeWarning)
             if IPython.version_info[0] >= 7:
                 if 'google.colab' in str(self._ipython_shell):
                     self._environment = 'Colaboratory'
@@ -162,10 +200,12 @@ class DavosConfig(metaclass=SingletonConfig):
                 self._environment = 'IPython<7.0'
         self._conda_avail = None
         self._conda_envs_dirs = None
+        self._default_pip_executable = self._find_default_pip_executable()
         self._ipy_showsyntaxerror_orig = None
         self._repr_formatter = pprint.PrettyPrinter()
         if sys.version_info.minor >= 8:
-            # sort_dicts constructor param added in Python 3.8
+            # sort_dicts constructor param added in Python 3.8, defaults
+            # to True. Set it to False here for consistency.
             self._repr_formatter._sort_dicts = False
         self._smuggled = {}
         self._stdlib_modules = _get_stdlib_modules()
@@ -177,45 +217,9 @@ class DavosConfig(metaclass=SingletonConfig):
         self._conda_env = None
         self._confirm_install = False
         self._noninteractive = False
+        self._project = None
         self._suppress_stdout = False
-        # re: see ContextLab/davos#10
-        # reference pip executable using full path so IPython shell
-        # commands install packages in the notebook kernel environment,
-        # not the notebook server environment
-        #
-        # pip is assumed to be installed -- been included by default
-        # with Python binary installers since 3.4
-        if (
-                self._environment != 'Colaboratory' and
-                pathlib.Path(f'{sys.exec_prefix}/bin/pip').is_file()
-        ):
-            self._pip_executable = f'{sys.exec_prefix}/bin/pip'
-        else:
-            # pip exe wasn't in expected location (or it's colab, where
-            # things are all over the place)
-            try:
-                pip_exe = check_output(['which', 'pip'], encoding='utf-8').strip()
-            except CalledProcessError:
-                # try one more thing before we just throw up our hands...
-                try:
-                    check_output([sys.executable, '-c', 'import pip'])
-                except CalledProcessError as e:
-                    raise DavosError(
-                        "Could not find 'pip' executable in $PATH or package "
-                        "in 'sys.modules'"
-                    ) from e
-                else:
-                    warnings.warn(
-                        "Could not find 'pip' executable in $PATH. Falling "
-                        f"back to module invokation ('{sys.executable} -m "
-                        "pip'). You can fix this by setting "
-                        "'davos.config.pip_executable' to your 'pip' "
-                        "executable's path."
-                    )
-                    self._pip_executable = f'{sys.executable} -m pip'
-            else:
-                self._pip_executable = pip_exe
-        self._pip_executable_orig = self._pip_executable
+        self._pip_executable = self._default_pip_executable
 
     def __repr__(self):
         cls_name = self.__class__.__name__
@@ -231,6 +235,7 @@ class DavosConfig(metaclass=SingletonConfig):
             'ipython_shell',
             'noninteractive',
             'pip_executable',
+            'project',
             'suppress_stdout',
             'smuggled'
         ])
@@ -342,9 +347,10 @@ class DavosConfig(metaclass=SingletonConfig):
 
     @pip_executable.setter
     def pip_executable(self, exe_path):
-        exe_path = pathlib.Path(expandvars(exe_path)).expanduser()
+        # TODO: separate this off into some sort of "resolve path"
+        #  utility function?
         try:
-            exe_path = exe_path.resolve(strict=True)
+            exe_path = Path(expandvars(exe_path)).expanduser().resolve(strict=True)
         except FileNotFoundError as e:
             raise DavosConfigError(
                 'pip_executable',  f"No such file or directory: '{exe_path}'"
@@ -355,6 +361,40 @@ class DavosConfig(metaclass=SingletonConfig):
                     'pip_executable', f"'{exe_path}' is not an executable file"
                 )
             self._pip_executable = str(exe_path)
+
+    @property
+    def project(self):
+        return self._project
+
+    @project.setter
+    def project(self, proj):
+        from davos.core.project import AbstractProject, ConcreteProject, Project
+        if proj is None or isinstance(proj, ConcreteProject):
+            self._project = proj
+        elif isinstance(proj, AbstractProject):
+            raise ProjectNotebookNotFoundError(
+                "The notebook associated with this Project does not exist: "
+                f"{proj.name!r}. If the notebook has been moved or renamed, "
+                "you can point the Project to its new location with:\n\t"
+                "`<project>.rename('<new_notebook_path>')`\n or remove the "
+                "project fully with:\n\t`<project>.remove()`"
+            )
+        elif isinstance(proj, (str, Path)):
+            proj = Project(proj)
+            if isinstance(proj, AbstractProject):
+                raise ProjectNotebookNotFoundError(
+                    "To use a project associated with a specific notebook, "
+                    "the specified path must point to an existing Jupyter "
+                    f"notebook ('.ipynb') file. {proj.name!r} could not be "
+                    f"found)."
+                )
+            self._project = proj
+        else:
+            raise DavosConfigError(
+                'project',
+                "the project may be set using a str, pathlib.Path, "
+                "davos.Project instance, or None"
+            )
 
     @property
     def smuggled(self):
@@ -374,6 +414,91 @@ class DavosConfig(metaclass=SingletonConfig):
             raise DavosConfigError('suppress_stdout',
                                    "field may be 'True' or 'False'")
         self._suppress_stdout = value
+
+    def _find_default_pip_executable(self):
+        """
+        Finds the pip executable that should be used to install smuggled
+        packages that don't exist locally and returns its path.
+
+        If the notebook kernel lives inside some sort of virtual
+        environment, running `pip install <pkg>` in a subshell would
+        install <pkg> in the wrong place (see ContextLab/davos#10), so
+        shell commands used to install smuggled packages need to
+        reference the pip executable by its full path.
+
+        Can pretty safely assume pip is installed -- been included with
+        all Python binary installers since v3.4. Could include a bunch
+        of additional fallback checks here if we can't find the
+        executable (check f'{site.getuserbase()}/bin/pip', see if pip
+        module is importable, fall back to f'{sys.executable} -m pip',
+        etc.) but not worth the extra complexity since this is
+        sufficient in nearly all cases... and in those where it's not,
+        the user has manually altered their environment in some way and
+        we *should* throw an error.
+
+        Returns
+        -------
+        str
+            absolute path to the default pip executable
+        """
+        if self._environment == 'Colaboratory':
+            # Colab currently has a custom `pip` executable installed in
+            # a non-standard location, so check that (hard-coded) first,
+            # but still check the other locations after in case they
+            # ever update it.
+            expected_pip_exe_colab = '/usr/local/bin/pip'
+            if Path(expected_pip_exe_colab).is_file():
+                return expected_pip_exe_colab
+        # possible locations for pip executable in standard setups.
+        # These are based on how pip internally locates its executable
+        # in order to uninstall itself, plus a few additional
+        # possibilities to handle edge cases. See:
+        #   - https://github.com/pypa/pip/pull/10358
+        #   - https://discuss.python.org/t/proper-way-to-determine-install-location-of-console-scripts/7188
+        #   - https://github.com/pypa/pip/blob/3fe826c/src/pip/_internal/locations.py#L63-L91
+        #   - https://github.com/pypa/pip/blob/7ff4da6/src/pip/_internal/locations/__init__.py
+        locations_to_check = [
+            # normal install, newer pip versions
+            Path(sysconfig.get_path('scripts'), 'pip'),
+            # normal install, older pip versions
+            Path(sys.prefix, 'bin', 'pip'),
+            Path(sys.exec_prefix, 'bin', 'pip'),
+            # prefixes can be configured when building the interpreter,
+            # so also try checking another way on the off chance the
+            # user has an unusual/custom Python build
+            Path(sys.executable).with_name('pip'),
+            # check possible locations for user-level installation only
+            # if a "normal" interpreter-specific installation isn't
+            # found, since user install is non-default and generally a
+            # fallback solution for when user doesn't have access to the
+            # part of the filesystem where the interpreter lives
+            # user install, newer pip versions
+            Path(sysconfig.get_path('scripts', f'{os.name}_user'), 'pip'),
+            # user install, older pip versions
+            Path(site.getuserbase(), 'bin', 'pip'),
+            # some linux distros patch console script locations in weird
+            # ways...
+            Path(site.getusersitepackages(), 'bin', 'pip')
+            # ^note: in many cases, some of these will be duplicates
+        ]
+        for location in locations_to_check:
+            if location.is_file():
+                return str(location)
+        if self._environment == 'Colaboratory':
+            # Can also fall back to checking $PATH in Colab, but can't
+            # assume this for a regular Jupyter notebook -- if the
+            # kernel is running in a virtual environment, this would
+            # give us the pip executable for the notebook server
+            # environment instead
+            pip_exe = shutil.which('pip')
+            if pip_exe is not None:
+                return pip_exe
+        raise DavosError(
+            "Could not locate a 'pip' executable in the current Python "
+            "environment. To ensure you have 'pip' installed in your "
+            "environment (and install it, if not), run\n\t"
+            f"`{sys.executable} -m ensurepip`"
+        )
 
 
 def _block_greedy_ipython_completer():
@@ -434,12 +559,13 @@ def _block_greedy_ipython_completer():
             # exception to make completer function return early.
             del sys.modules['davos.core']
             del sys.modules['davos.core.config']
+            # pylint: disable=broad-exception-raised
             raise Exception
 
 
 def _get_stdlib_modules():
     """
-    Get names of standard library modules
+    Get names of standard library modules.
 
     For efficiency, get standard library module names upfront. This
     allows us to skip file system checks for any smuggled stdlib
@@ -447,17 +573,14 @@ def _get_stdlib_modules():
 
     Returns
     -------
-    set of str
-        names of standard library modules for the user's Python
-        implementation
-
-    Notes
-    -----
-    There's actually a standard library implementation of this, but it's
-    not implemented for Python<3.10:
-    https://docs.python.org/3.10/library/sys.html#sys.stdlib_module_names
+    frozenset of str
+        The names of standard library modules for the user's Python
+        implementation.
     """
-    stdlib_dir = pathlib.Path(pathlib.__file__).parent
+    if sys.version_info.minor >= 10:
+        return sys.stdlib_module_names
+
+    stdlib_dir = Path(os.__file__).parent
     stdlib_modules = []
     for p in stdlib_dir.iterdir():
         if (
@@ -465,12 +588,11 @@ def _get_stdlib_modules():
                 p.suffix == '.py'
         ):
             stdlib_modules.append(p.stem)
-    try:
-        builtins_dir = next(d for d in sys.path if d.endswith('lib-dynload'))
-    except StopIteration:
-        pass
-    else:
-        for p in pathlib.Path(builtins_dir).glob('*.cpython*.so'):
-            stdlib_modules.append(p.name.split('.')[0])
+
+    builtins_dir = stdlib_dir.joinpath('lib-dynload')
+    if builtins_dir.is_dir():
+        for p in builtins_dir.glob('*.cpython*.so'):
+            stdlib_modules.append(p.stem.split('.')[0])
+
     stdlib_modules.extend(sys.builtin_module_names)
-    return set(stdlib_modules)
+    return frozenset(stdlib_modules)

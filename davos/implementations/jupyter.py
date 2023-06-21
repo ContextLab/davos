@@ -1,7 +1,4 @@
-"""
-This modules contains implementations of helper functions specific to
-Jupyter notebooks.
-"""
+"""Helper function implementations specific to Jupyter notebooks."""
 
 
 __all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']
@@ -26,15 +23,15 @@ def auto_restart_rerun(pkgs):
     Automatically restarts the notebook kernel and reruns all cells
     above, *including the current cell*. Called when one or more
     smuggled `pkgs` that were previously imported cannot be reloaded by
-    the current interpreter, and `davos.config.auto_rerun` is set to
-    `True`. Displays a message in the cell output area with the
-    package(s) that required the kernel restart, calls
+    the current interpreter, and `davos.auto_rerun` is set to `True`.
+    Displays a message in the cell output area with the package(s) that
+    required the kernel restart, calls
     `JS_FUNCTIONS.jupyter.restartRunCellsAbove`, and then blocks until
     the kernel is restarted.
 
     Parameters
     ----------
-    pkgs : list of str
+    pkgs : iterable of str
         Packages that could not be reloaded without restarting the
         kernel.
 
@@ -46,7 +43,7 @@ def auto_restart_rerun(pkgs):
     Notes
     -----
     1. The message displayed before restarting the kernel can be
-       silenced by setting `davos.config.suppress_stdout` to `True`.
+       silenced by setting `davos.suppress_stdout` to `True`.
     2. After calling `JS_FUNCTIONS.jupyter.restartRunCellsAbove`, this
        function sleeps until the kernel restarts to prevent any further
        code in the current cell or other queued cells from executing.
@@ -106,7 +103,7 @@ def prompt_restart_rerun_buttons(pkgs):
 
     Parameters
     ----------
-    pkgs : list of str
+    pkgs : iterable of str
         Packages that could not be reloaded without restarting the
         kernel.
 
@@ -126,10 +123,9 @@ def prompt_restart_rerun_buttons(pkgs):
 
     Notes
     -----
-    1. This method of blocking and waiting for user input is based on
-       `ipykernel`'s replacement for the built-in `input` function used
-       in notebook environments.
-
+    This method of blocking and waiting for user input is based on
+    `ipykernel`'s replacement for the built-in `input` function used in
+    notebook environments.
     """
     # UI: could remove warning message when "continue" button is clicked
     msg = (
@@ -187,7 +183,6 @@ def prompt_restart_rerun_buttons(pkgs):
                 break
             raise
 
-    # noinspection PyTypeChecker
     display(Javascript(display_button_prompt_full))
 
     while True:

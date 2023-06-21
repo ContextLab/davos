@@ -1,19 +1,32 @@
 """
-This module implements core functionality and common utilities used
-across the environment-specific `davos` implementations.
+Davos core functionality and utilities.
+
+This module implements core elements of davos's functionality and
+various utilities that are common across the various
+environment-specific implementations. This includes parsing user code to
+extract `smuggle` statements and Onion comments, parsing their contents,
+searching the local package environment, installing missing packages,
+loading them into the user's namespace, and more.
 """
 
 
+# pylint: disable=too-many-lines
 __all__ = [
     'capture_stdout',
     'check_conda',
+    'get_previously_imported_pkgs',
+    'handle_alternate_pip_executable',
+    'import_name',
     'Onion',
     'parse_line',
     'prompt_input',
-    'run_shell_command'
+    'run_shell_command',
+    'use_project',
+    'smuggle'
 ]
 
 
+import functools
 import importlib
 import itertools
 import sys
@@ -29,10 +42,11 @@ from davos import config
 from davos.core.exceptions import (
     DavosError,
     InstallerError,
+    OnionArgumentError,
     OnionParserError,
     ParserNotImplementedError,
     SmugglerError,
-    TheNightIsDarkAndFullOfTerrors
+    TheNightIsDarkAndFullOfTErrors
 )
 from davos.core.parsers import pip_parser
 from davos.core.regexps import (
@@ -68,8 +82,10 @@ class capture_stdout:    # pylint: disable=invalid-name
         """
         Parameters
         ----------
-        streams : io.IOBase
-            stream(s) to receive data sent to `sys.stdout`
+        *streams : tuple of io.TextIOBase
+            I/O stream(s) to receive data sent to `sys.stdout`. Must be
+            subclasses of `io.TextIOBase` (i.e., support reading/writing
+            `str` data, rather than `bytes`).
         closing : bool, optional
             if `True` (default), close streams upon exiting the context
             block.
@@ -167,7 +183,7 @@ def check_conda():
         raise DavosError(
             "Failed to programmatically determine path to conda environment "
             "directory. If you want to install smuggled packages using conda, "
-            "you can either:\n\t1. set `davos.config.conda_env_path` to your "
+            "you can either:\n\t1. set `davos.conda_env_path` to your "
             "environment's path (e.g., $CONDA_PREFIX/envs/this_env)\n\t2. "
             "pass the environment path to `-p`/`--prefix` in each onion "
             "comment\n\t3. pass your environment's name to `-n`/`--name` in "
@@ -205,11 +221,14 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
 
     Notes
     -----
-    Functionally, this is a reimplementation of `colabtools`'s
-    `google.colab._pip._previously_imported_packages()`. This version
-    has some minor tweaks that make it more efficient, but is mostly
-    meant to be available when `colabtools` may not be installed (i.e.,
-    outside of Colaboratory).
+    - Functionally, this is a reimplementation of `colabtools`'s
+      `google.colab._pip._previously_imported_packages()`. This version
+      has some minor tweaks that make it more efficient, but is mostly
+      meant to be available when `colabtools` may not be installed
+      (i.e., outside of Colaboratory).
+    - There's an edge case neither this nor `colabtools`'s version
+      handles: if the user passes -q/--quiet 3x to the pip-install
+      command, there will be no stdout to parse.
     """
     if installer == 'conda':
         raise NotImplementedError(
@@ -250,9 +269,13 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
 @contextmanager
 def handle_alternate_pip_executable(installed_name):
     """
+    Load packages installed outside of the typical module search path.
+
     Context manager that makes it possible to load packages installed
     into a different Python environment by changing the `pip` executable
-    (`davos.config.pip_executable`).
+    (`davos.pip_executable`). This is done by using the `pip` executable
+    with which the package was installed to determine its location, and
+    then temporarily prepending that location to the module search path.
 
     Parameters
     ----------
@@ -263,7 +286,7 @@ def handle_alternate_pip_executable(installed_name):
 
     Notes
     -----
-    super-duper edge case not handled by this: user has used alternate
+    Super-duper edge case not handled by this: user has used alternate
     pip_executable to smuggle local package from CWD and supplies
     relative path in onion comment (i.e., "# pip: . <args>").
     """
@@ -275,7 +298,7 @@ def handle_alternate_pip_executable(installed_name):
         dist_name = installed_name
 
     # get install location from `pip show ___` command.
-    # In most cases, this will be davos.config.pip_executable with
+    # In most cases, this will be `davos.pip_executable` with
     # trailing 'bin/pip' replaced with python<major.minor>/site-packages
     # but since this runs only if non-default pip_executable is set,
     # it's worth the extra run time to check the safer way in order to
@@ -304,7 +327,7 @@ def handle_alternate_pip_executable(installed_name):
         yield
     finally:
         # remove temporary dir from path
-        sys.path.pop(0)
+        sys.path.remove(install_location)
         # reload pkg_resources again so import system no longer searches
         # dir used by alternate pip_executable
         importlib.reload(sys.modules['pkg_resources'])
@@ -355,36 +378,42 @@ def import_name(name):
     return __import__(parts[0])
 
 
+# TODO: move to top?
 class Onion:
     """
     Class representing a single package to be smuggled.
 
-    Naturally, "`davos`" smuggles "`Onion`s". Internally, each `smuggle`
-    statement (with or without an "onion comment") creates an `Onion`
-    instance, which contains all the information necessary to import
-    and, if necessary, install it.
+    Naturally, "`davos`" smuggles "`Onion`s" [1]. Internally, each
+    `smuggle` statement (with or without an "onion comment") creates an
+    `Onion` instance, which contains all the information necessary to
+    import and, if necessary, install it.
+
+    See Also
+    --------
+    [1] https://en.wikipedia.org/wiki/Davos_Seaworth
     """
 
     @staticmethod
     def parse_onion(onion_text):
         """
-        Parse the installer name and arguments from an onion comment
+        Parse the installer name and arguments from an onion comment.
 
         Parameters
         ----------
         onion_text : str
-            an onion comment, including the leading "#"
+            An onion comment, including the leading "#".
 
         Returns
         -------
-        tuple
-            3-tuple comprised of:
-                1. The installer name, enclosed in double quotes (str)
-                2. The raw arguments to be passed to the installer,
-                   enclosed in triple-double quotes (str)
-                3. An {arg: value} of argument values parsed from the
-                  raw argument string, supplemented by default values
-                  (dict)
+        str
+            The installer name, enclosed in double quotes.
+        str
+            The raw arguments to be passed to the installer, enclosed in
+            triple-double quotes.
+        dict
+            Argument names and values parsed from the raw argument
+            string (2nd item in returned tuple), supplemented by default
+            values.
         """
         onion_text = onion_text.lstrip('# ')
         installer, args_str = onion_text.split(':', maxsplit=1)
@@ -440,7 +469,7 @@ class Onion:
         else:
             # here to handle user calling smuggle() *function* directly
             raise OnionParserError(
-                f"Unsupported installer: '{installer}'. Currently supported "
+                f"Unsupported installer: {installer!r}. Currently supported "
                 "installers are:\n\t'pip'"  # and 'conda'"
             )
         self.args_str = args_str
@@ -453,6 +482,33 @@ class Onion:
             self.install_name = package_name
             self.version_spec = ''
             return
+        if config._project is not None and (
+            # for this few checks, `or` is ~3x faster than `any()` and
+            # ~2x faster than `set.intersection()`
+            'target' in installer_kwargs or
+            'user' in installer_kwargs or
+            'root' in installer_kwargs or
+            'prefix' in installer_kwargs
+        ):
+            # when using a davos Project, pip-install arguments that
+            # install the package into a different location are
+            # disallowed. This check needs to happen at runtime rather
+            # than during the parsing stage in case `davos.project` is
+            # set/changed in the same cell as the `smuggle` statement.
+            msg = (
+                "When using a davos Project to isolate smuggled packages, "
+                "pip-install arguments that change the package's install "
+                "location (`-t/--target`, `--user`, `--root`, `--prefix`) "
+                "are disallowed. To disable davos project isolation, set "
+                "`davos.project = None`."
+            )
+            bad_arg = next(arg for arg in ('target', 'user', 'root', 'prefix')
+                           if arg in installer_kwargs)
+            if bad_arg == 'target':
+                bad_arg = '-t/--target'
+            else:
+                bad_arg = f'--{bad_arg}'
+            raise OnionArgumentError(msg, argument=bad_arg)
         full_spec = installer_kwargs.pop('spec').strip("'\"")
         self.is_editable = installer_kwargs.pop('editable')
         self.verbosity = installer_kwargs.pop('verbosity', 0)
@@ -523,9 +579,11 @@ class Onion:
             install_exe = config._pip_executable
             if config.noninteractive:
                 args = f'{args} --no-input'
+            if config.project is not None:
+                install_exe = f'PYTHONUSERBASE="{config.project.project_dir}" {install_exe}'
+                args = f'--no-warn-script-location --user {args}'
         else:
             install_exe = self.installer
-
         return f'{install_exe} install {args}'
 
     @property
@@ -572,8 +630,7 @@ class Onion:
                 InvalidRequirement
             ):
                 return False
-            else:
-                return True
+            return True
         return False
 
     def _conda_install_package(self):
@@ -633,11 +690,12 @@ def parse_line(line):
 
     See Also
     --------
-    regexps.smuggle_statement_regex : Regexp for `smuggle` statements
+    regexps.smuggle_statement_regex :
+        Regexp for `smuggle` statements.
     implementations.ipython_pre7.generate_parser_func :
-        Generates full parser wrapper function for `IPython<7.0`
+        Generates full parser wrapper function for `IPython<7.0`.
     implementations.ipython_post7.generate_parser_func :
-        Generates full parser wrapper function for `IPython<7.0`
+        Generates full parser wrapper function for `IPython<7.0`.
 
     Notes
     -----
@@ -753,7 +811,7 @@ def prompt_input(prompt, default=None, interrupt=None):
     }
     if interrupt is not None:
         interrupt = interrupt.lower()
-        if interrupt not in response_values.keys():
+        if interrupt not in response_values:
             raise ValueError(
                 f"'interrupt' must be one of {tuple(response_values.keys())}"
             )
@@ -795,7 +853,7 @@ def run_shell_command(command, live_stdout=None):
         Whether to display streaming stdout from `command` execution in
         real time *in addition to* capturing and returning it. If `None`
         (default), behavior is determined by the current value of
-        `davos.config.suppress_stdout`.
+        `davos.suppress_stdout`.
 
     Returns
     -------
@@ -833,6 +891,7 @@ def run_shell_command(command, live_stdout=None):
         command_context = capture_stdout
     else:
         command_context = redirect_stdout
+
     with command_context(StringIO()) as stdout:
         try:
             _run_shell_command_helper(command)
@@ -843,11 +902,62 @@ def run_shell_command(command, live_stdout=None):
             if e.output is None and stdout != '':
                 e.output = stdout
             raise e
-        else:
-            stdout = stdout.getvalue()
+        stdout = stdout.getvalue()
     return stdout
 
 
+def use_project(smuggle_func):
+    """
+    Use the configured project when smuggling a package.
+
+    Decorator that wraps the `smuggle` function and causes the smuggled
+    package to be (installed into, if necessary, and) loaded from the
+    package directory for the currently active project, if one is being
+    used (i.e., the project given by `davos.project`, if not `None`).
+
+    Parameters
+    ----------
+    smuggle_func : function
+        The `smuggle` function, `davos.core.core.smuggle`.
+
+    Returns
+    -------
+    function
+        The wrapped `smuggle` function.
+    """
+    @functools.wraps(smuggle_func)
+    def smuggle_wrapper(*args, **kwargs):
+        project = config.project
+        if project is not None:
+            # prepend the project's site-packages directory to sys.path
+            # so project's package versions are prioritized for import
+            # over versions in "regular" environment
+            sys.path.insert(0, str(project.site_packages_dir))
+            # reload pkg_resources so the global "working set" is
+            # regenerated based on the updated sys.path
+            importlib.invalidate_caches()
+            importlib.reload(sys.modules['pkg_resources'])
+            try:
+                return smuggle_func(*args, **kwargs)
+            finally:
+                # after (possibly installing and) loading the package,
+                # remove the project's site-packages directory from
+                # sys.path and reload pkg_resources again to restore the
+                # original working set.
+                # Note: can't assume the project site-packages dir is
+                # still sys.path[0] -- some install options result in
+                # other dirs being prepended to load modules installed
+                # in custom locations
+                sys.path.remove(str(project.site_packages_dir))
+                importlib.invalidate_caches()
+                importlib.reload(sys.modules['pkg_resources'])
+        else:
+            return smuggle_func(*args, **kwargs)
+
+    return smuggle_wrapper
+
+
+@use_project
 def smuggle(
         name,
         as_=None,
@@ -874,14 +984,14 @@ def smuggle(
     ----------
     name : str
         The qualified name of the package, module, function, or other
-        object to be `smuggled`.
+        object to be smuggled.
     as_ : str, optional
         The alias under which to load the object into the namespace
         (e.g., "`np`" given the statement "`smuggle numpy as np`").
     installer : {'pip', 'conda'}, optional
         The name of the program used to install the package if a
         satisfactory distribution is not found locally. Defaults to
-        `'pip'` if no onion comment is present
+        `'pip'` if no onion comment is present.
     args_str : str, optional
         Raw arguments to be passed to the `installer` program's
         "install" command. Defaults to an empty string (`''`), if no
@@ -896,7 +1006,7 @@ def smuggle(
     pkg_name = name.split('.')[0]
 
     if pkg_name == 'davos':
-        raise TheNightIsDarkAndFullOfTerrors("Don't do that.")
+        raise TheNightIsDarkAndFullOfTErrors("Don't do that.")
 
     onion = Onion(pkg_name, installer=installer,
                   args_str=args_str, **installer_kwargs)
@@ -904,7 +1014,7 @@ def smuggle(
     if onion.is_installed:
         try:
             # Unlike regular import, can be called on non-module items:
-            #     ```
+            #     ```python
             #     import numpy.array`                   # fails
             #     array = import_item('numpy.array')    # succeeds
             #     ```
@@ -921,13 +1031,13 @@ def smuggle(
     if install_pkg:
         # TODO: for v0.2 conda implementation: bypass if -y/--yes passed
         if config.confirm_install and not installer_kwargs.get('no_input'):
-            msg = (f"package '{pkg_name}' will be installed with the "
+            msg = (f"package {pkg_name!r} will be installed with the "
                    f"following command:\n\t`{onion.install_cmd}`\n"
                    f"Proceed?")
             confirmed = prompt_input(msg, default='y')
             if not confirmed:
                 raise SmugglerError(
-                    f"package '{pkg_name}' not installed"
+                    f"package {pkg_name!r} not installed"
                 ) from None
         installer_stdout = onion.install_package()
         # invalidate sys.meta_path module finder caches. Forces import
@@ -998,19 +1108,26 @@ def smuggle(
                 msg = (
                     "The following packages were previously imported by the "
                     "interpreter and could not be reloaded because their C "
-                    "extensions have changed:\n\t[{', '.join(pkgs)}]\nRestart "
-                    "the kernel to use the newly installed version."
+                    "extensions have changed:\n\t"
+                    f"[{', '.join(failed_reloads)}]\nRestart the kernel to "
+                    "use the newly installed version."
                 )
                 if config.environment != 'Colaboratory':
                     msg = (
                         f"{msg}\nTo make this happen automatically, set "
-                        "'davos.config.auto_rerun = True'."
+                        "'davos.auto_rerun = True'."
                     )
                 raise SmugglerError(msg)
             else:
                 prompt_restart_rerun_buttons(failed_reloads)
 
-        if config._pip_executable != config._pip_executable_orig:
+        if (
+                config._project is None and
+                config._pip_executable != config._default_pip_executable
+        ):
+            # setting `davos.pip_executable` to a non-default value
+            # changes the executable used in all cases, but only affects
+            # the install location if not using a davos Project
             with handle_alternate_pip_executable(onion.install_name):
                 smuggled_obj = import_name(name)
         else:

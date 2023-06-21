@@ -1,26 +1,32 @@
 """
-This modules contains JavaScript code for various `davos` features that
-require manipulating the notebook JS object in the browser.
+JavaScript code for interacting with the Jupyter notebook frontend.
 
-**Note**: currently, these features are implemented for Jupyter
+This module contains JavaScript code for various `davos` features that
+require manipulating with the `Jupyter.notebook` JS object in the
+browser. Note that these features are implemented for Jupyter
 notebooks only, as Colaboratory heavily restricts communication between
-the Python kernel and notebook frontend. However, within Jupyter, they
-are implemented for all `IPython` versions supported by `davos`.
+the IPython kernel and notebook frontend. However, they are implemented
+for Jupyter notebooks running all `IPython` versions supported by
+`davos`.
 
 JavaScript functions in this module are organized in a `DotDict`
 instance (see class docstring below) whose keys are function names and
 whose values are function definitions.  Two functions are currently
 implemented:
 
-`JS_FUNCTIONS.jupyter.restartRunCellsAbove`
-    Restarts the notebook kernel and queues all cells above for
-    execution, including the current (highlighted) cell. In `davos`,
-    this is generally useful when a smuggled package that was previously
-    imported cannot be reloaded by the current interpreter.
+- `JS_FUNCTIONS.jupyter.restartRunCellsAbove`
+    Restarts the notebook kernel, and queues all cells above and
+    including the current (highlighted) cell for execution upon restart.
+    When using `davos`, this is generally useful when a different
+    version of a smuggled package was previously imported during the
+    current interpreter session and cannot be reloaded -- this can
+    happen when the package includes extension modules that dynamically
+    link C or C++ objects to the interpreter, and those modules were
+    changed between the previously-loaded and just-smuggled versions.
 
-`JS_FUNCTIONS.jupyter.displayButtonPrompt`
+- `JS_FUNCTIONS.jupyter.displayButtonPrompt`
     Displays any number of buttons in the output area of the current
-    cell for user selection and (together with
+    cell for user selection and (in tandem with
     `davos.implementations.jupyter.prompt_restart_rerun_buttons`) blocks
     further code execution until one is clicked. Each button can
     optionally trigger a JavaScript-based callback when clicked, and/or
@@ -37,6 +43,7 @@ implemented:
 __all__ = ['DotDict', 'JS_FUNCTIONS']
 
 
+from collections.abc import MutableMapping
 from textwrap import dedent
 
 
@@ -45,7 +52,6 @@ class DotDict(dict):
 
     __delattr__ = dict.__delitem__
     __getattr__ = dict.__getitem__
-    __setattr__ = dict.__setitem__
 
     # noinspection PyMissingConstructor
     # pylint: disable=super-init-not-called
@@ -53,14 +59,20 @@ class DotDict(dict):
         """
         Parameters
         ----------
-        d : `collections.Mapping`
+        d : collections.abc.MutableMapping
             A `dict`-like object to be converted to a `DotDict`,
             recursively.
         """
         for k, v in d.items():
-            if isinstance(v, dict):
-                v = DotDict(v)
             self[k] = v
+
+    def __setitem__(self, key, value):
+        if isinstance(value, MutableMapping):
+            value = DotDict(value)
+        super().__setitem__(key, value)
+
+    def __setattr__(self, name, value):
+        self[name] = value
 
 
 # noinspection ThisExpressionReferencesGlobalObjectJS
@@ -198,7 +210,7 @@ JS_FUNCTIONS = DotDict({
                     }
                 })
             
-            // when passed to Ipython.display.display(Ipython.display.Javascript()), 
+            // when passed to IPython.display.display(Ipython.display.Javascript()), 
             // "this" will be the [class=]"output" element of the cell from 
             // which it's displayed
             }.bind(this)

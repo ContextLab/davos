@@ -1,7 +1,9 @@
 """
-This modules contains implementations of helper functions common across
-all IPython versions and front-end interfaces.
+Helper function implementations common across all IPython versions and
+front-end interfaces.
 """
+
+__all__ = []
 
 
 import sys
@@ -174,7 +176,6 @@ def _showsyntaxerror_davos(
     """
     Show `davos` library `SyntaxError` subclasses with full tracebacks.
 
-
     Replaces global IPython interactive shell object's
     `.showsyntaxerror()` method during initialization as a way to hook
     into `IPython`'s exception handling machinery for errors raised
@@ -214,7 +215,6 @@ def _showsyntaxerror_davos(
         Generates unique names for each cell used in `linecache.cache`.
     IPython.core.interactiveshell.InteractiveShell.showsyntaxerror :
         The original `.showsyntaxerror()` method this function replaces.
-
 
     Notes
     -----

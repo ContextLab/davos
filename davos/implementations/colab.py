@@ -1,7 +1,4 @@
-"""
-This modules contains implementations of helper functions specific to
-Google Colaboratory notebooks.
-"""
+"""Helper function implementations specific to Google Colab notebooks."""
 
 
 __all__ = ['auto_restart_rerun', 'prompt_restart_rerun_buttons']
@@ -16,9 +13,9 @@ def auto_restart_rerun(pkgs):
 
     Raises `NotImplementedError` whenever called, though this should
     never happen except when done intentionally as trying to set
-    `davos.config.auto_rerun = True` should raise an error. This feature
-    is not available in Colab notebooks because it requires accessing
-    the notebook frontend through the `colab.global.notebook` JavaScript
+    `davos.auto_rerun = True` should raise an error. This feature is not
+    available in Colab notebooks because it requires accessing the
+    notebook frontend through the `colab.global.notebook` JavaScript
     object, which Colab blocks you from doing from the kernel.
 
     Parameters

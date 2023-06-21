@@ -1,6 +1,4 @@
-"""
-This module defines the set of `davos`-related exception classes.
-"""
+"""davos-specific exception classes."""
 
 
 __all__ = [
@@ -10,6 +8,8 @@ __all__ = [
     'OnionParserError',
     'OnionArgumentError',
     'ParserNotImplementedError',
+    'DavosProjectError',
+    'ProjectNotebookNotFoundError',
     'SmugglerError',
     'InstallerError'
 ]
@@ -85,9 +85,9 @@ class DavosParserError(SyntaxError, DavosError):
             `target_text` where the error occurred. Defaults to `1` (the
             first character in `target_text`).
         """
-        # note: flot is a 4-tuple of (filename, lineno, offset, text)
-        # passed to the SyntaxError constructor.
         if target_text is None or IPython.version_info[0] >= 7:
+            # flot is a 4-tuple of (filename, lineno, offset, text)
+            # passed to the SyntaxError constructor.
             flot = (None, None, None, None)
         else:
             from davos import config
@@ -134,7 +134,7 @@ class OnionArgumentError(ArgumentError, OnionParserError):
         """
         Parameters
         ----------
-        msg : str
+        msg : str or None
             The error message to be displayed.
         argument : str, optional
             The argument responsible for the error. if `None` (default),
@@ -189,17 +189,25 @@ class ParserNotImplementedError(OnionParserError, NotImplementedError):
     """
 
 
+class DavosProjectError(DavosError):
+    """Base class for errors related to `davos.Project` objects."""
+
+
+class ProjectNotebookNotFoundError(DavosProjectError, FileNotFoundError):
+    """Class for errors related to projects missing associated notebooks."""
+
+
 class SmugglerError(DavosError):
-    """Base class for errors raised during the smuggle phase"""
+    """Base class for errors raised during the smuggle phase."""
 
 
-class TheNightIsDarkAndFullOfTerrors(SmugglerError):
-    """A little Easter egg for if someone tries to `smuggle davos`"""
+class TheNightIsDarkAndFullOfTErrors(SmugglerError):
+    """A little Easter egg for anyone who tries to `smuggle davos`."""
 
 
 class InstallerError(SmugglerError, CalledProcessError):
     """
-    Class for errors related to the installer program
+    Class for errors related to the installer program.
 
     This exception is raised when the installer program itself (rather
     than `davos`) encounters an error (e.g., failure to connect to
@@ -210,7 +218,7 @@ class InstallerError(SmugglerError, CalledProcessError):
     @classmethod
     def from_error(cls, cpe, show_output=None):
         """
-        Create a class instance from a `subprocess.CalledProcessError`
+        Create a class instance from a `subprocess.CalledProcessError`.
 
         Parameters
         ----------

@@ -78,8 +78,22 @@ jobs:
           # install Python 3.9 (used to run notebooks via selenium, not the tests themselves)
           conda install python=3.9
 
-          # install Firefox browser
-          sudo apt-get install firefox
+          # install Firefox browser:
+          # - remove pre-installed snap package
+          sudo snap remove firefox
+          
+          # - add Mozilla PPA as a repository
+          sudo add-apt-repository ppa:mozillateam/ppa
+          
+          # - alter Firefox package priority to prefer the deb package from the PPA
+          echo '
+          Package: *
+          Pin: release o=LP-PPA-mozillateam
+          Pin-Priority: 1001
+          ' | sudo tee /etc/apt/preferences.d/mozilla-firefox
+          
+          # - install the proper version
+          sudo apt install --allow-downgrades firefox
 
           # install python packages
           pip install pytest==6.2 "selenium==3.141" geckodriver-autoinstaller

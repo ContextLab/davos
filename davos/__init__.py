@@ -121,7 +121,6 @@ def configure(
         *,
         active=...,
         auto_rerun=...,
-        conda_env=...,
         confirm_install=...,
         noninteractive=...,
         pip_executable=...,
@@ -138,9 +137,6 @@ def configure(
     auto_rerun : bool, optional
         Value to assign to "`auto_rerun`" field. Must be `False`
         (default) in Colaboratory notebooks.
-    conda_env : str, optional
-        Value to assign to "`conda_env`" field. Not settable if `conda`
-        is not installed (defaults to `None`).
     confirm_install : bool, optional
         Value to assign to "`confirm_install`" field.
     noninteractive : bool, optional

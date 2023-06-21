@@ -497,7 +497,7 @@ class JupyterDriver(NotebookDriver):
 
 
 class NotebookFile(pytest.File):
-    test_func_pattern = re.compile(r'(?:^@.+\n)*def test_[^(]+\(.*\):', re.M)
+    test_func_pattern = re.compile(r'(?:^@.+\n)*^def test_[^(]+\(.*\):', re.M)
 
     @staticmethod
     def process_decorators(

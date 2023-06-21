@@ -13,9 +13,6 @@ multiple fields can be set simultaneously via the `davos.configure()`
 function. As of v0.2, `davos.config` fields can also be accessed and set
 via attributes of the top-level `davos` module.
 """
-# TODO: standardize single vs double quotes (just for style consistency)
-# TODO: standardize line breaks in function calls -- first arg on same
-#  line or new line?
 
 
 __all__ = ['DavosConfig']
@@ -347,8 +344,6 @@ class DavosConfig(metaclass=SingletonConfig):
 
     @pip_executable.setter
     def pip_executable(self, exe_path):
-        # TODO: separate this off into some sort of "resolve path"
-        #  utility function?
         try:
             exe_path = Path(expandvars(exe_path)).expanduser().resolve(strict=True)
         except FileNotFoundError as e:

@@ -5,7 +5,6 @@ This module reimplements the command line parsers for installer programs
 supported by `davos` (currently, just `pip`). The reimplementations are
 slightly modified to parse arguments supplied via Onion comments.
 """
-# TODO: update with new pip install arguments as of v23
 
 
 __all__ = ['EditableAction', 'OnionParser', 'pip_parser', 'SubtractAction']
@@ -417,6 +416,32 @@ pep_517_subgroup.add_argument(
 )
 
 pip_install_opts.add_argument(
+    '--check-build-dependencies',
+    action='store_true',
+    help="Check the build dependencies when PEP517 is used."
+)
+
+# see PEP 668: https://peps.python.org/pep-0668/
+pip_install_opts.add_argument(
+    '--break-system-packages',
+    action='store_true',
+    help="Allow pip to modify an EXTERNALLY-MANAGED Python installation."
+)
+
+pip_install_opts.add_argument(
+    '-C',
+    '--config-settings',
+    action='append',
+    metavar='<settings>',
+    help="Configuration settings to be passed to the PEP 517 build backend. "
+         "Settings take the form KEY=VALUE. Use multiple --config-settings "
+         "options to pass multiple keys to the backend."
+)
+
+# NOTE: this option was deprecated in pip v22.3 and removed in v23.1.
+# davos is continuing to support it for now to maintain compatibility
+# with older `pip` versions, but it will be removed in a future release.
+pip_install_opts.add_argument(
     '--install-option',
     action='append',
     metavar='<options>',
@@ -426,6 +451,7 @@ pip_install_opts.add_argument(
          'setup.py install. If you are using an option with a directory path, '
          'be sure to use absolute path.'
 )
+
 pip_install_opts.add_argument(
     '--global-option',
     action='append',
@@ -494,6 +520,8 @@ pip_install_opts.add_argument(
          "installs. This option is implied when any package in a requirements "
          "file has a --hash option."
 )
+
+# NOTE: recent pip versions support only "off" and "on" for this option
 pip_install_opts.add_argument(
     '--progress-bar',
     choices=('off', 'on', 'ascii', 'pretty', 'emoji'),
@@ -501,6 +529,15 @@ pip_install_opts.add_argument(
     help="Specify type of progress to be displayed "
          "[off|on|ascii|pretty|emoji] (default: on)"
 )
+
+pip_install_opts.add_argument(
+    '--root-user-action',
+    choices=('warn', 'ignore'),
+    metavar='<root_user_action>',
+    help="Action if pip is run as a root user. By default, a warning message "
+         "is shown."
+)
+
 pip_install_opts.add_argument(
     '--no-clean',
     action='store_true',

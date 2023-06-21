@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from pathlib import PosixPath
-from typing import Literal, NoReturn, Protocol
+from typing import Final, Literal, NoReturn, Protocol
 from davos.core.config import DavosConfig
 from davos.core.core import SmuggleFunc
 
@@ -21,6 +21,7 @@ _set_custom_showsyntaxerror: Callable[[], None]
 auto_restart_rerun: Callable[[list[str]], NoReturn]
 full_parser: FullParserFunc
 generate_parser_func: Callable[[LineParserFunc], FullParserFunc]
+import_environment: Final[Literal['Colaboratory', 'IPython<7.0', 'IPython>=7.0', 'Python']]
 prompt_restart_rerun_buttons: Callable[[list[str]], object | None]
 
 def _active_fget(conf: DavosConfig) -> bool: ...

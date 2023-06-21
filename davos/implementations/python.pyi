@@ -2,13 +2,7 @@ from typing import Literal, NoReturn
 from davos.core.core import SmuggleFunc
 from davos.implementations import LineParserFunc
 
-__all__ = list[
-    Literal[
-        'auto_restart_rerun',
-        'generate_parser_func',
-        'prompt_restart_rerun_buttons'
-    ]
-]
+__all__ = list[Literal['auto_restart_rerun', 'generate_parser_func', 'prompt_restart_rerun_buttons']]
 
 def _activate_helper(smuggle_func: SmuggleFunc, parser_func: LineParserFunc) -> NoReturn: ...
 def _check_conda_avail_helper() -> str | None: ...

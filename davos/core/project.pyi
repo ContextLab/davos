@@ -1,15 +1,15 @@
 from pathlib import PosixPath
 from types import NotImplementedType
-from typing import Any, Literal, NoReturn, overload, TypeVar
+from typing import Any, Final, Literal, NoReturn, overload, TypeVar
 
 __all__ = list[Literal['DAVOS_CONFIG_DIR', 'DAVOS_PROJECT_DIR', 'Project', 'get_notebook_path', 'get_project',
                        'prune_projects', 'use_default_project']]
 
-DAVOS_CONFIG_DIR: PosixPath
-DAVOS_PROJECT_DIR: PosixPath
-PATHSEP: Literal['/', '\\']
-PATHSEP_REPLACEMENT: Literal['___']
-SITE_PACKAGES_SUFFIX: str
+DAVOS_CONFIG_DIR: Final[PosixPath]
+DAVOS_PROJECT_DIR: Final[PosixPath]
+PATHSEP: Final[Literal['/', '\\']]
+PATHSEP_REPLACEMENT: Final[Literal['___']]
+SITE_PACKAGES_SUFFIX: Final[str]
 
 _P = TypeVar('_P', bound=Project)
 _InstalledPkgs = list[tuple[str, str]]
@@ -40,7 +40,7 @@ class Project(metaclass=ProjectChecker):
     def _refresh_installed_pkgs(self) -> None: ...
     def freeze(self) -> str: ...
     def remove(self, yes: bool = ...) -> None: ...
-    def rename(self, new_name: PosixPath | str) -> NoReturn: ...
+    def rename(self, new_name: PosixPath | str) -> None: ...
 
 class AbstractProject(Project):
     def __getattr__(self, item: str) -> NoReturn: ...

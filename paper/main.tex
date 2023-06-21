@@ -7,14 +7,15 @@
 \usepackage{breakurl}
 \usepackage{placeins}
 \usepackage{geometry}
-\geometry{left=1in,right=1in,top=1in,bottom=1in,headsep=0pt}
+
+\geometry{left=1in, right=1in, top=1in, bottom=1in, headsep=0pt}
 
 \journal{SoftwareX}
 
 \begin{document}
 \begin{frontmatter}
 
-\title{\texttt{davos}: a Python package ``smuggler'' for constructing
+\title{Davos: a Python package ``smuggler'' for constructing
   lightweight reproducible notebooks}
 \author{Paxton C. Fitzpatrick}
 \author{Jeremy R. Manning\corref{cor}}
@@ -35,10 +36,10 @@
   setting up a system for running the desired code, increasing the
   complexity and time cost of sharing or engaging with reproducible
   science. Here, we propose a lighter-weight solution: the
-  \texttt{davos} package.  When used in combination with a
-  notebook-based Python project, \texttt{davos} provides a mechanism
+  Davos package.  When used in combination with a
+  notebook-based Python project, Davos provides a mechanism
   for specifying (and automatically installing) the correct versions
-  of the project's dependencies.  The \texttt{davos} package further
+  of the project's dependencies.  The Davos package further
   ensures that those packages and specific versions are used every
   time the notebook's code is executed.  This enables researchers to
   share a complete reproducible copy of their code within a single
@@ -111,7 +112,7 @@ script or package, manually tracking down those dependencies can
 impose a substantial burden on the user and create room for mistakes
 and inconsistencies. Further, when dependency versions are left
 unspecified, replicating the original computing environment becomes
-difficult or impossible.
+difficult or impossible~\citep{PimeEtal19}.
 
 \begin{figure}[tp]
 \centering
@@ -125,7 +126,7 @@ difficult or impossible.
   those packages were installed must also be performed manually.
   \textbf{Jupyter notebooks} (\texttt{.ipynb} files) comprise embedded
   text, executable code, and media (including rendered figures, code
-  output, etc.).  When the \textbf{\texttt{davos} package} is imported
+  output, etc.).  When the \textbf{Davos package} is imported
   into a Jupyter notebook, the notebook's functionality is extended to
   automatically install any required external packages (at their
   correct versions, when specified).  \textbf{Virtual environments}
@@ -153,7 +154,7 @@ difficult or impossible.
   with no additional installation or configuration needed to run the
   target code.  Systems to the right of the red vertical line support
   precise control over dependencies and versioning.  Notebooks
-  enhanced using the \texttt{davos} package are easily shareable and
+  enhanced using the Davos package are easily shareable and
   require minimal setup costs, while also facilitating high
   reproducibility by enabling precise control over project
   dependencies.}
@@ -202,41 +203,39 @@ or resource-intensive to install and use, creating potential barriers
 to both contributing to and taking advantage of open science
 resources.
 
-We designed \texttt{davos} to occupy a ``sweet spot'' between these
-extremes.  \texttt{davos} is a notebook-installable package that adds
-functionality to the default notebook experience. Like standard
-Jupyter notebooks, \texttt{davos}-enhanced notebooks allow researchers
-to include text, executable code, and media within a single file. No
-further setup or installation is required, beyond what is needed to
-run standard Jupyter notebooks. And like virtual environments,
-\texttt{davos} provides a convenient mechanism for fully specifying
-(and installing, as needed) a complete set of Python dependencies,
-including specific package versions.
+We designed Davos to occupy a ``sweet spot'' between these extremes.
+Davos is a notebook-installable package that adds functionality to the
+default notebook experience. Like standard Jupyter notebooks,
+Davos-enhanced notebooks allow researchers to include text, executable
+code, and media within a single file. No further setup or installation is
+required from the user, beyond what is needed to run standard Jupyter
+notebooks. And like virtual environments, Davos provides a convenient
+mechanism for fully specifying (and installing, as needed) a complete set of
+Python dependencies, including specific package versions, which are contained
+and isolated from the rest of the user's system.
 
 
 \section{Software description}
 
-The \texttt{davos} package is named after Davos Seaworth, a smuggler
-referred to as ``the Onion Knight" from the series \textit{A Song of
-  Ice and Fire} by George R. R. Martin~\cite{Mart98}.  The
-\texttt{smuggle} keyword provided by \texttt{davos}
-is a play on Python's \texttt{import} keyword: whereas importing can
-load a package into the Python workspace within the existing rules
-and frameworks provided by the Python language, ``smuggling'' provides
-an alternative that expands the scope and reach of ``importing.''
-Like the character Davos Seaworth (who became famous for smuggling
-onions through a blockade on his homeland), we use ``onion'' comments
-to precisely control how packages are smuggled into the Python
-workspace.
+The Davos package is named after Davos Seaworth, a smuggler referred
+to as ``the Onion Knight" from the series \textit{A Song of Ice and Fire} by
+George R. R. Martin~\cite{Mart98}. The \texttt{smuggle} keyword provided by
+Davos is a play on Python's \texttt{import} keyword: whereas importing
+can load a package into the Python workspace within the existing rules and
+frameworks provided by the Python language, ``smuggling'' provides an
+alternative that expands the scope and reach of ``importing.'' Like the
+character Davos Seaworth (who became famous for smuggling onions through a
+blockade on his homeland), we use ``onion'' comments to precisely control how
+packages are smuggled into the Python workspace.
 
 \begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{figs/package_structure}
-\caption{\small \textbf{Package structure.} The \texttt{davos} package
+\caption{\small \textbf{Package structure.} The Davos package
   comprises two interdependent subpackages.  The \texttt{davos.core}
   subpackage includes modules for parsing \texttt{smuggle} statements
   and onion comments, installing and validating packages, and
-  configuring \texttt{davos}'s behavior.  The
+  configuring Davos's behavior.  The
   \texttt{davos.implementations} subpackage includes
   environment-specific modifications and features that are needed to
   support the core functionality across different notebook-based
@@ -249,7 +248,7 @@ workspace.
 
 \subsection{Software architecture}
 
-The \texttt{davos} package consists of two interdependent subpackages
+The Davos package consists of two interdependent subpackages
 (see Fig.~\ref{fig:package-structure}). The first,
 \texttt{davos.core}, comprises a set of modules that
 implement the bulk of the package's core
@@ -257,11 +256,11 @@ functionality, including pipelines for installing and validating
 packages, custom parsers for the \texttt{smuggle} statement (see
 Sec.~\ref{subsec:smuggle}) and onion comment (see
 Sec.~\ref{subsec:onion}), and a runtime interface for configuring
-\texttt{davos}'s behavior (see Sec.~\ref{subsec:config}). However,
+Davos's behavior (see Sec.~\ref{subsec:config}). However,
 certain critical aspects of this
 functionality require (often substantially) different implementations
 depending on properties of the notebook environment in which
-\texttt{davos} is used (e.g., whether the frontend is provided by
+Davos is used (e.g., whether the frontend is provided by
 Jupyter or Google Colaboratory, or which version of
 IPython~\cite{PereGran07} is used by the notebook kernel). To deal
 with this, environment-dependent parts of core features and behaviors
@@ -269,13 +268,13 @@ are isolated and abstracted to ``helper functions'' in the
 \texttt{davos.implementations} subpackage. This second subpackage
 defines multiple, interchangeable versions of each helper function,
 organized into modules by the conditions that trigger their use. At
-runtime, \texttt{davos} detects various features in the notebook
+runtime, Davos detects various features in the notebook
 environment and selectively imports a single version of each helper
 function into the top-level \texttt{davos.implementations} namespace,
 allowing \texttt{davos.core} modules to access the proper
 implementations for the current notebook environment in a single,
 consistent location. An additional benefit of this design is that it
-allows maintainers, developers, and users to extend \texttt{davos} to
+allows maintainers, developers, and users to extend Davos to
 support new, updated, or custom notebook variants by creating new
 \texttt{davos.implementations} modules that define their own versions
 of each helper function, modified from existing implementations as
@@ -285,7 +284,7 @@ needed.
 
 \subsubsection{The \texttt{smuggle} statement}\label{subsec:smuggle}
 
-Functionally, importing \texttt{davos} in an IPython notebook enables
+Functionally, importing Davos in an IPython notebook enables
 an additional Python keyword: ``\texttt{smuggle}'' (see
 Sec.~\ref{subsec:implementation} for details on how this works).
 The \texttt{smuggle} keyword-like object can be used as a drop-in
@@ -294,80 +293,79 @@ packages, modules, and other objects into the current namespace.
 However, whereas \texttt{import} will fail if the requested package is
 not installed locally, \texttt{smuggle} statements can handle missing
 packages on the fly.  If a smuggled package does not exist in the
-local environment, \texttt{davos} will download and install it automatically,
+local environment, Davos will download and install it automatically,
 expose its contents to Python's \texttt{import} machinery, and load it
 into the namespace for immediate use.
 
+Installing new packages in a notebook using standard approaches (e.g., system
+commmands) affect the runtime environment. This could lead to undesired
+behaviors. For example, running a notebook that installs new packages in the
+user's primary system environment might alter their main system installation
+and/or containerized environment in unexpected ways (e.g., changing package
+versions, causing conflicts with other packages, etc.). To protect against
+undesired changes to the runtime environment, Davos incorporates its
+own virtual environment for managing packages it installs. When Davos
+is imported, a new virtual environment (folder) is created automatically. The
+folder's name may be customized to support multi-notebook projects. Any
+\texttt{smuggle}d packages that were not available in the notebook's runtime
+environment are installed to the current project folder. The runtime
+environment remains unaffected by Davos's behavior (see
+Sec.~\ref{subsec:projects}).
+
 \subsubsection{The onion comment}\label{subsec:onion}
 
-For greater control over the behavior of \texttt{smuggle} statements,
-\texttt{davos} defines an additional construct called the ``onion
-comment.'' An onion comment is a special type of inline comment that
-may be placed on a line containing a \texttt{smuggle} statement to
-customize how \texttt{davos} searches for the smuggled package locally
-and, if necessary, downloads and installs it. Onion comments follow a
-simple format based on the ``type comment'' syntax introduced in PEP
-484~\cite{vanREtal14}, and are designed to make managing packages with
-\texttt{davos} intuitive and familiar. To construct an onion comment,
-users provide the name of the installer program (e.g., \texttt{pip})
-and the same arguments one would use to manually install the package
-as desired via the command line:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet1}
-\end{center}
-Occasionally, a package's distribution name (i.e., the name used when
-installing it) may differ from its top-level module name (i.e., the
-name used when importing it). In such cases, an onion comment may be
-used to ensure that \texttt{davos} installs the proper package if it
-cannot be found locally:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet2}
-\end{center}
-Because onion comments may be constructed to specify any aspect of the
-installer's behavior, they provide a mechanism for precisely
-controlling how, where, and when smuggled packages are installed.
-Critically, if an onion comment includes a version
-specifier~\cite{CoghStuf13}, \texttt{davos} will ensure that the
-version of the package loaded into the notebook matches the specific
-version requested, or satisfies the given version constraints. If the
-smuggled package exists locally, \texttt{davos} will extract its
-version information from its metadata and compare it to the specifier
-provided. If the two are incompatible (or no local installation is
-found), \texttt{davos} will download, install, and load a suitable
-version of the package instead:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet3}
-\end{center}
-Onion comments can also be used to \texttt{smuggle} specific VCS references
-(e.g., Git~\cite{TorvHama05} branches, commits, tags, etc.):
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet4}
-\end{center}
-\texttt{davos} processes onion comments internally before forwarding
-arguments to the installer program. In addition to preventing onion
-comments from being used as a vehicle for shell injection attacks,
-this enables \texttt{davos} to adapt its behavior based on how particular
-flags will affect the behavior of the installer program. For example, if an
-onion comment contains either the \texttt{-I}/\texttt{--ignore-installed},
-\texttt{-U}/\texttt{--upgrade}, or \texttt{--force-reinstall} flag,
-\texttt{davos} will not bother checking for a local copy of the smuggled
-package before installing a new one:
-\begin{center}
-\includegraphics[width=0.9\textwidth]{figs/snippet5}
-\end{center}
-Similarly, the \texttt{--no-input} flag will temporarily enable
-\texttt{davos}'s non-interactive mode (see
-Sec.~\ref{subsec:config}), and installing a smuggled package into a
-custom directory (\texttt{<dir>}) using the \texttt{--target <dir>}
-flag will cause \texttt{davos} to prepend \texttt{<dir>} to the module
-search path (i.e., \texttt{sys.path}), if necessary, so the package
-can be imported.
+For greater control over the behavior of \texttt{smuggle} statements, Davos
+defines an additional construct called the ``onion comment.'' An onion comment
+is a special type of inline comment that may be placed on a line containing a
+\texttt{smuggle} statement to customize how Davos searches for the smuggled
+package locally and, if necessary, downloads and installs it. Onion comments
+follow a simple format based on the ``type comment'' syntax introduced in PEP
+484~\cite{vanREtal14}, and are designed to make managing packages with Davos
+intuitive and familiar. To construct an onion comment, users provide the name
+of the installer program (e.g., \texttt{pip}) and the same arguments one would
+use to manually install the package as desired via the command line:
+\begin{center} \includegraphics[width=0.9\textwidth]{figs/snippet1}
+\end{center} Occasionally, a package's distribution name (i.e., the name used
+when installing it) may differ from its top-level module name (i.e., the name
+used when importing it). In such cases, an onion comment may be used to ensure
+that Davos installs the proper package if it cannot be found locally:
+\begin{center} \includegraphics[width=0.9\textwidth]{figs/snippet2}
+\end{center} Because onion comments may be constructed to specify any aspect of
+the installer's behavior, they provide a mechanism for precisely controlling
+how, where, and when smuggled packages are installed. Critically, if an onion
+comment includes a version specifier~\cite{CoghStuf13}, Davos will ensure that
+the version of the package loaded into the notebook matches the specific
+version requested, or satisfies the given version constraints. If the smuggled
+package exists locally, Davos will extract its version information from its
+metadata and compare it to the specifier provided. If the two are incompatible
+(or no local installation is found), Davos will download, install, and load a
+suitable version of the package instead: \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet3} \end{center} Onion
+comments can also be used to \texttt{smuggle} specific VCS references (e.g.,
+Git~\cite{TorvHama05} branches, commits, tags, etc.): \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet4} \end{center} Davos
+processes onion comments internally before forwarding arguments to the
+installer program. In addition to preventing onion comments from being used as
+a vehicle for shell injection attacks, this enables Davos to adapt its behavior
+based on how particular flags will affect the behavior of the installer
+program. For example, if an onion comment contains either the
+\texttt{-I}/\texttt{--ignore-installed}, \texttt{-U}/\texttt{--upgrade}, or
+\texttt{--force-reinstall} flag, Davos will not bother checking for a local
+copy of the smuggled package before installing a new one: \begin{center}
+\includegraphics[width=0.9\textwidth]{figs/snippet5} \end{center} Similarly,
+the \texttt{--no-input} flag will temporarily enable Davos's non-interactive
+mode (see Sec.~\ref{subsec:config}). Installation flags that affect the user's
+system outside of the current notebook are disabled by default (see
+Sec.~\ref{subsec:projects}), and installing a smuggled package into a custom
+directory (\texttt{<dir>}) using the \texttt{--target <dir>} flag will cause
+Davos to prepend \texttt{<dir>} to the module search path (i.e.,
+\texttt{sys.path}), if necessary, so the package can be imported.
 
-\subsubsection{The \texttt{davos} config object}\label{subsec:config}
+\subsubsection{The Davos config object}\label{subsec:config}
 
-The \texttt{davos} config object provides a high-level interface for
-controlling various aspects of \texttt{davos}'s behavior. After
-importing \texttt{davos}, the \texttt{davos.con\-fig} object (a
+The Davos config object provides a high-level interface for
+controlling various aspects of Davos's behavior. After
+importing Davos, the \texttt{davos.con\-fig} object (a
 singleton) exposes configurable options as attributes that can be
 modified, displayed in the notebook, or checked programmatically at runtime
 (see Sec.~\ref{sec:illustrative-example} for an illustrative example or
@@ -377,20 +375,20 @@ additional information). These include:
 \begin{itemize}
 \item \texttt{.active}: This attribute controls whether support for \texttt{smuggle}
   statements and onion comments is enabled (\texttt{True}) or
-  disabled (\texttt{False}).  When \texttt{davos} is first imported,
+  disabled (\texttt{False}).  When Davos is first imported,
   the \texttt{.active} attribute is set to \texttt{True}.
 
 \item \texttt{.auto\_rerun}: This attribute controls how
-  \texttt{davos} behaves when attempting to \texttt{smuggle} a new
+  Davos behaves when attempting to \texttt{smuggle} a new
   version of a package that was previously imported and cannot be
   reloaded. This can happen if the package includes extension modules
   that dynamically link C or C++ objects to the Python interpreter,
   and the code that generates those objects was changed between the
   previously imported and to-be-smuggled versions.  If this attribute
-  is set to \texttt{True}, \texttt{davos} will automatically restart
+  is set to \texttt{True}, Davos will automatically restart
   the notebook kernel and rerun all code up to (and including) the
   current \texttt{smuggle} statement. If set to \texttt{False} (the default),
-  \texttt{davos} will instead issue a warning, pause execution, and
+  Davos will instead issue a warning, pause execution, and
   prompt the user to either restart and rerun the notebook, or
   continue running with the previously imported package version until
   the next time the kernel is restarted manually.  Note that, as of
@@ -398,7 +396,7 @@ additional information). These include:
   in Google Colaboratory notebooks.
 
 \item \texttt{.confirm\_install}: If set to \texttt{True} (default:
-  \texttt{False}), \texttt{davos} will require user confirmation
+  \texttt{False}), Davos will require user confirmation
   before installing a smuggled package that does not yet exist in the
   user's environment.
 
@@ -408,7 +406,7 @@ additional information). These include:
   disabled. Note that in non-interactive mode, the
   \texttt{confirm\_install} option is set to \texttt{False}.  If
   \texttt{auto\_rerun} is set to \texttt{False} while in non-interactive
-  mode, \texttt{davos} will raise an exception if a smuggled package
+  mode, Davos will raise an exception if a smuggled package
   cannot be reloaded, rather than prompting the user.
 
 \item \texttt{.pip\_executable}: This attribute's value specifies the
@@ -418,7 +416,7 @@ additional information). These include:
   executable can be found.
 
 \item \texttt{.suppress\_stdout}: If this attribute is set to
-  \texttt{True} (default: \texttt{False}), \texttt{davos} suppresses
+  \texttt{True} (default: \texttt{False}), Davos suppresses
   printed (console) outputs from both itself and the installer program.
   This can be useful when smuggling packages that need to install many
   dependencies and/or generate extensive output. However, if the installer
@@ -426,30 +424,67 @@ additional information). These include:
   displayed alongside the Python traceback to allow for debugging.
 \end{itemize}
 
-\noindent The top-level \texttt{davos} namespace also defines
-convenience functions for setting and checking whether \texttt{davos}
+\noindent The top-level Davos namespace also defines
+convenience functions for setting and checking whether Davos
 is active (\texttt{davos.activate()}; \texttt{davos.deactivate()};
 \texttt{davos.is\_active()}) as well as the \texttt{davos.configure()}
 function, which allows setting multiple configuration options
 simultaneously.
 
+\subsubsection{Projects}\label{subsec:projects}
+
+Because Davos can install new packages, running the code in a
+Davos-enhanced notebook might (in principle) affect the behavior of
+\textit{other} Python-based software (e.g., other notebooks, scripts, etc.) by
+altering which packages are installed in the runtime environment. This could
+lead to undesired consequences. For example, suppose Person A develops a
+notebook (Notebook A) for their research project. We will assume that Notebook
+A does not use Davos to manage project dependencies.  If Person A
+runs a Davos-enhanced Notebook B, e.g., sent by another developer,
+might this unexpectedly affect the behavior of Notebook A?
+
+We implemented a ``project'' system in Davos to protect against the
+above scenario. By default, importing Davos creates a new project
+folder in the user's home directory (contained within a hidden \texttt{.davos}
+folder). The default project name is computed to uniquely identify each
+notebook according to its filename and path. Any packages that were not
+originally available in the notebook's runtime environment are installed to the
+notebook's project directory. When external libraries are \texttt{smuggle}d,
+Davos temporally appends the current project directory to the search
+path. Because the user's system path remains unchanged, and because none of the
+runtime environment's packages are altered, the user's system and runtime
+environment remain unaffected (aside from installing the Davos package
+itself to the runtime environment).
+
+Each notebook's project may be customized by setting \texttt{davos.project} to
+any string that can be used as a valid folder name in the user's operating
+system. By customizing the project name, users can build multi-notebook
+projects that share the same core set of dependencies without needing to
+duplicate each package for each notebook in the project.
+
+Finally, if the user \textit{does} wish to modify their runtime environment,
+this may be done by setting \texttt{davos.project} to \texttt{None}. Doing so
+will cause any packages installed by Davos to affect the user's
+runtime environment.  This is generally not recommended, as it can lead to
+unintended consequences for other code that shares the runtime environment.
+
 \subsection{Implementation details}\label{subsec:implementation}
 
-Although \texttt{davos} is designed to \textit{appear} to add a new
+Although Davos is designed to \textit{appear} to add a new
 keyword to Python's vocabulary, this illusion is actually created through
 several ``hacks'' that make use of the notebook's IPython backend
 for processing and executing users' code.  Specifically, when
-\texttt{davos} is first imported, or when it is activated after having been
+Davos is first imported, or when it is activated after having been
 set to an inactive state, two actions are triggered.  First, the
 \texttt{smuggle()} function is injected into the IPython user
-namespace.  Second, the \texttt{davos} parser is registered as a
+namespace.  Second, the Davos parser is registered as a
 custom IPython input transformer.
 
 IPython preprocesses all executed code as plain text before it is sent
 to the Python compiler, in order to handle special constructs like
-\texttt{\%magic} and \texttt{!shell} commands. \texttt{davos} uses
+\texttt{\%magic} and \texttt{!shell} commands. Davos uses
 this process to transform \texttt{smuggle} statements into
-syntactically valid Python code. The \texttt{davos} parser uses a
+syntactically valid Python code. The Davos parser uses a
 regular expression to match lines of code containing \texttt{smuggle}
 statements (and, optionally, onion comments), extract relevant
 information from their text, and replace them with equivalent calls to
@@ -463,18 +498,18 @@ the code that is actually executed by the Python interpreter would be
 \includegraphics[width=0.9\textwidth]{figs/snippet7}
 \end{center}
 The call to the \texttt{smuggle()} function carries out
-\texttt{davos}'s central logic by determining whether the smuggled
+Davos's central logic by determining whether the smuggled
 package must be installed, carrying out the installation if necessary,
 and subsequently loading it into the namespace. This process is
 outlined in Figure~\ref{fig:flow-chart}. Because the
 \texttt{smuggle()} function is defined in the notebook namespace, it
 is also possible (though never necessary) to call it
-directly. Deactivating \texttt{davos} will delete the name
+directly. Deactivating Davos will delete the name
 ``\texttt{smuggle}'' from the namespace, unless its value has been
 overwritten and no longer refers to the \texttt{smuggle()}
-function. It will also deregister the \texttt{davos} parser from the
+function. It will also deregister the Davos parser from the
 set of input transformers run when each notebook cell is
-executed. While the overhead added by the \texttt{davos} parser is
+executed. While the overhead added by the Davos parser is
 minimal, this may be useful, for example, when optimizing or precisely
 profiling code.
 
@@ -483,10 +518,10 @@ profiling code.
 \includegraphics[width=\textwidth]{figs/flow_chart}
 \caption{\small \textbf{\texttt{smuggle()} function algorithm.}  At a
   high level, the \texttt{smuggle()} function may be conceptualized as
-following two basic steps.  First (left), \texttt{davos} ensures that the
+following two basic steps.  First (left), Davos ensures that the
 correct version of the desired package has been installed, carrying
 out the installation automatically if needed.  Second (right),
-\texttt{davos} imports the package and updates the current runtime environment.}
+Davos imports the package and updates the current runtime environment.}
 \label{fig:flow-chart}
 \end{figure}
 
@@ -496,43 +531,49 @@ out the installation automatically if needed.  Second (right),
 \begin{figure}[tp]
 \centering
 \includegraphics[width=\textwidth]{figs/illustrative_example}
-\caption{\small \textbf{Example use case for \texttt{davos}.}
+\caption{\small \textbf{Example use case for Davos.}
   Snippets from this example are also excerpted in the main text of
   Section~\ref{sec:illustrative-example}.}
 \label{fig:illustrative-example}
 \end{figure}
 
-Across different versions of a given package, particular modules, functions, and other objects
-may be updated, removed, renamed, or otherwise altered.  In addition to changing the
-behaviors of active computations, these changes can render saved objects created using one
-version of a package incompatible with other versions of the
-same package.  For example, the popular \texttt{pandas}~\cite{McKi10}
-library used to include the \texttt{Panel} data structure for storing 3-dimensional arrays.
-Since version 0.20.0, however, the \texttt{Panel} class has been deprecated, and in
-version 0.25.0, it was removed entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
-(created using an older version of \texttt{pandas}) and had saved it to their disk (e.g., for later reuse
-or to share with other users) by serializing the \texttt{Panel} with Python's \texttt{pickle} protocol.
-The \texttt{pickle} protocol is a popular built-in method of persisting data in Python, allowing users to save, share, and load arbitrary objects.
-However, in order to successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., saved) object, the object's class must be defined in and importable from the same module as when it was saved.
-Thus, because of the \texttt{Panel} class's removal, the user's dataset could not be read by any version of \texttt{pandas} from 0.25.0 or beyond. These
-incompatibilities are also not limited solely to traditional forms of data.
-For example, saved model states and other objects may reference
-modules, functions, attributes, classes, or other objects that may not be identical (or even present)
-across all versions of their associated package.
+Across different versions of a given package, particular modules, functions,
+and other objects may be updated, removed, renamed, or otherwise altered. In
+addition to changing the behaviors of active computations, these changes can
+render saved objects created using one version of a package incompatible with
+other versions of the same package. For example, the popular
+\texttt{pandas}~\cite{McKi10} library used to include the \texttt{Panel} data
+structure for storing 3-dimensional arrays. Since version 0.20.0, however, the
+\texttt{Panel} class has been deprecated, and in version 0.25.0, it was removed
+entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
+(created using an older version of \texttt{pandas}) and had saved it to their
+disk (e.g., for later reuse or to share with other users) by serializing the
+\texttt{Panel} with Python's \texttt{pickle} protocol. The \texttt{pickle}
+protocol is a popular built-in method of persisting data in Python, allowing
+users to save, share, and load arbitrary objects. However, in order to
+successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., saved)
+object, the object's class must be defined in and importable from the same
+module as when it was saved. Thus, because of the \texttt{Panel} class's
+removal, the user's dataset could not be read by any version of \texttt{pandas}
+from 0.25.0 or beyond. These incompatibilities are also not limited solely to
+traditional forms of data. For example, saved model states and other objects
+may reference modules, functions, attributes, classes, or other objects that
+may not be identical (or even present) across all versions of their associated
+package.
 
-The example provided in Figure~\ref{fig:illustrative-example}
-demonstrates how the \texttt{davos} package can be used to circumvent
-these incompatibilities by carefully controlling which versions of
-each package are used in different parts of the notebook.  The example
-shows how a dataset and model that require now-incompatible components of
-the \texttt{pandas} and \texttt{scikit-learn}~\cite{PedrEtal11}
-packages may be loaded in (using older versions of each package) and used
-alongside more recent versions of each package that provide new and improved functionality.
-When included at the top of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
-ensures that these objects will be loaded successfully and analyzed using the same set
-of package versions, no matter when or by whom the notebook is run.
+The example provided in Figure~\ref{fig:illustrative-example} demonstrates how
+the Davos package can be used to circumvent these incompatibilities by
+carefully controlling which versions of each package are used in different
+parts of the notebook. The example shows how a dataset and model that require
+now-incompatible components of the \texttt{pandas} and
+\texttt{scikit-learn}~\cite{PedrEtal11} packages may be loaded in (using older
+versions of each package) and used alongside more recent versions of each
+package that provide new and improved functionality. When included at the top
+of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
+ensures that these objects will be loaded successfully and analyzed using the
+same set of package versions, no matter when or by whom the notebook is run.
 
-After installing and importing \texttt{davos} (lines 1--2), we first \texttt{smuggle} two
+After installing and importing Davos (lines 1--2), we first \texttt{smuggle} two
 utilities for interacting with local files in the code below. The
 \texttt{smuggle} statement in line 4 loads the \texttt{is\_file()}
 function from the Python standard library's \texttt{os.path}
@@ -552,7 +593,7 @@ already released when the code was written:
 \includegraphics[width=0.9\textwidth]{figs/example1}
 \end{center}
 Line 7 then uses the \texttt{davos.config} object to enable
-\texttt{davos}'s \texttt{auto\_rerun} option before smuggling the next
+Davos's \texttt{auto\_rerun} option before smuggling the next
 two packages: \texttt{NumPy}~\cite{HarrEtal20} and
 \texttt{pandas}. Because these packages rely heavily on custom C data
 types, loading the particular versions from the onion comments may
@@ -576,19 +617,19 @@ that an older version of \texttt{pandas} will be imported, enabling
 the data to be read in (and, in line 13, written to a CSV
 file, which is compatible with newer \texttt{pandas} versions).
 
-Newer versions of \texttt{pandas} have brought substantial
-improvements including better performance, bug fixes, and additional functionality.
-Although the original dataset had to be read in using an older version
-of the package, we can take advantage of these more recent updates
-by smuggling \texttt{pandas} a second time on line 15 (whose onion comment
-specifies that version 1.3.5 should be installed and loaded).  Since
-a different version of \texttt{pandas} had already been loaded by the Python interpreter
-(on line 11), the notebook kernel must be restarted in order to replace the old
-version's custom C extensions with those from the new version.  The \texttt{auto\_rerun} flag
-set on line 7 enables \texttt{davos} to trigger this process automatically so that
-the code can continue running without user intervention, and converting
-the dataset to a CSV file in lines 10--13 ensures that
-the older version of \texttt{pandas} does not need to be reinstalled.
+Newer versions of \texttt{pandas} have brought substantial improvements
+including better performance, bug fixes, and additional functionality. Although
+the original dataset had to be read in using an older version of the package,
+we can take advantage of these more recent updates by smuggling \texttt{pandas}
+a second time on line 15 (whose onion comment specifies that version 1.3.5
+should be installed and loaded). Since a different version of \texttt{pandas}
+had already been loaded by the Python interpreter (on line 11), the notebook
+kernel must be restarted in order to replace the old version's custom C
+extensions with those from the new version. The \texttt{auto\_rerun} flag set
+on line 7 enables Davos to trigger this process automatically so that
+the code can continue running without user intervention, and converting the
+dataset to a CSV file in lines 10--13 ensures that the older version of
+\texttt{pandas} does not need to be reinstalled.
 
 Next, line 17 uses the \texttt{davos.configure()} function to disable
 the \texttt{auto\_rerun} option and simultaneously enable two other
@@ -622,7 +663,7 @@ different versions than those specified in the onion comments on lines
 22 and 23. If the installed and specified versions are the same, these
 \texttt{smuggle} statements will function like standard \texttt{import}
 statements to load the packages into the notebook namespace. If they
-differ, \texttt{davos} will download the requested versions in place
+differ, Davos will download the requested versions in place
 of the installed versions before doing so.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example5}
@@ -634,7 +675,7 @@ enable developers to more easily use forked or modified versions of other
 packages in their notebooks, even if those versions have not been
 officially released.
 
-In lines 26--29, we demonstrate another aspect of \texttt{davos}'s
+In lines 26--29, we demonstrate another aspect of Davos's
 functionality that supports more advanced installation scenarios.  The
 \texttt{ipywidgets}~\cite{FredEtal15} package provides an API for
 creating various JavaScript widgets with Python code, and the \texttt{widgetsnbextension} package provides
@@ -692,7 +733,7 @@ before the first time the relevant module's name was changed).  Once
 the model is loaded and reconstructed in memory from a compatible
 package version (line 35), we upgrade to a newer version of
 \texttt{scikit-learn} in line 36.  Taken together, the code in
-Figure~\ref{fig:illustrative-example} shows how \texttt{davos} can
+Figure~\ref{fig:illustrative-example} shows how Davos can
 enable users to load in data and models that are incompatible with
 newer versions of \texttt{pandas} and \texttt{scikit-learn}, but still
 \textit{analyze} and manipulate the data and model output using the
@@ -702,70 +743,79 @@ latest approaches and implementations.
 \section{Impact}
 
 Like virtual environments, containers, and virtual machines, the
-\texttt{davos} package (when used in conjunction with Jupyter
+Davos package (when used in conjunction with Jupyter
 notebooks) provides a light\-weight mechanism for sharing code and
 ensuring reproducibility across users and computing environments
-(Fig.~\ref{fig:code-sharing}). Further, \texttt{davos} enables users
+(Fig.~\ref{fig:code-sharing}). Further, Davos enables users
 to fully specify (and install, as needed) any project dependencies
 within the same notebook. This provides a system whereby executable
 code (along with text and media) \textit{and} code for setting up and
 configuring the project dependencies, may be combined within a single
 notebook file.
 
-We designed \texttt{davos} for use in research applications. For
-example, in many settings, \texttt{davos} may be used as a drop-in
+Although existing notebooks \textit{can} incorporate system calls that install
+project requirements, handling project requirements in the general case is
+non-trivial (e.g., see Fig.~\ref{fig:flow-chart}). Further, Davos
+incorporates its own virtual environment system that isolates
+notebook-installed packages from the runtime environment
+(Sec.~\ref{subsec:projects}). In many setups this feature can eliminate the
+need to set up a seperate virtual environment or container (e.g., in
+conjunction with a \texttt{requirements.txt}, \texttt{project.toml}, or
+\texttt{environment.yml} file specifying the project's dependencies).
+
+We designed Davos for use in research applications. For
+example, in many settings, Davos may be used as a drop-in
 replacement for more-difficult-to-set-up virtual environments,
 containers, and/or virtual machines. For researchers, this lowers
 barriers to sharing code. By eliminating most of the setup costs of
 reconstructing the original researchers' computing environment,
-\texttt{davos} also lowers barriers to entry for members of the
+Davos also lowers barriers to entry for members of the
 scientific community and the public who seek to run shared code.
 
-Beyond research applications, \texttt{davos} is also useful in
+Beyond research applications, Davos is also useful in
 pedagogical settings. For example, in programming courses, instructors
-and students may use the \texttt{davos} package to ensure their
+and students may use the Davos package to ensure their
 notebooks will run correctly on others' machines. When combined with
 online notebook-based platforms like Google Colaboratory,
-\texttt{davos} provides a convenient way to manage dependencies within
+Davos provides a convenient way to manage dependencies within
 a notebook, without requiring any software (beyond a web browser) to
 be installed on the students' or instructors' systems. For the same
-reasons, \texttt{davos} also provides an elegant means of sharing
+reasons, Davos also provides an elegant means of sharing
 ready-to-run notebook-based demonstrations or tutorials that install
 their dependencies automatically.
 
-Since its initial release, \texttt{davos} has found use in a variety
-of applications. In addition to managing computing environments for
-multiple ongoing research studies, \texttt{davos} is being used by
-both students and instructors in programming and methods courses such
-as Storytelling with Data~\cite{Mann21d} (an open course on data
-science, visualization, and communication) and Laboratory in
-Psychological Science~\cite{Mann22} (an open course on experimental
-and statistical methods for psychology research) to simplify
-distributing lessons and submitting assignments, as well as in online
-demos such as \texttt{abstract2paper}~\cite{Mann21e} (an example
-application of GPT-Neo~\cite{GaoEtal20, BlacEtal21}) to share
-ready-to-run code that installs dependencies automatically.
+Since its initial release, Davos has found use in a variety of
+applications. In addition to managing computing environments for multiple prior
+and ongoing research studies~\citep{MannEtal23, OwenMann23, ZimaEtal23},
+Davos is being used by both students and instructors in programming
+and methods courses such as Storytelling with Data~\cite{Mann21d} (an open
+course on data science, visualization, and communication) and Laboratory in
+Psychological Science~\cite{Mann22} (an open course on experimental and
+statistical methods for psychology research) to simplify distributing lessons
+and submitting assignments, as well as in online demos such as
+\texttt{abstract2paper}~\cite{Mann21e} (an example application of
+GPT-Neo~\cite{GaoEtal20, BlacEtal21}) to share ready-to-run code that installs
+dependencies automatically.
 
-Our work also has several more subtle ``advanced'' use cases and
-potential impacts. Whereas Python's built-in \texttt{import} statement
-is agnostic to packages' version information, \texttt{smuggle}
-statements (when combined with onion comments) are version-sensitive.
-And because onion comments are parsed at runtime, required packages
-and their specified versions are installed in a just-in-time
-manner. Thus, it is possible in most cases to \texttt{smuggle} a
-specific package version or revision even if a different version has
-already been loaded. This enables more complex uses that take
-advantage of multiple versions of a package within a single
-interpreter session (e.g., see
-Sec.~\ref{sec:illustrative-example} and Fig.~\ref{fig:illustrative-example}). This could be useful in cases
-where specific features are added or removed from a package across
-different versions, or in comparing the performance or functionality
-of particular features across different versions of the same package.
+Our work also has several more subtle ``advanced'' use cases and potential
+impacts. Whereas Python's built-in \texttt{import} statement is agnostic to
+packages' version information, \texttt{smuggle} statements (when combined with
+onion comments) are version-sensitive. And because onion comments are parsed at
+runtime, required packages and their specified versions are installed in a
+just-in-time manner. Thus, it is possible in most cases to \texttt{smuggle} a
+specific package version or revision even if a different version has already
+been loaded. This enables more complex uses that take advantage of multiple
+versions of a package within a single interpreter session (e.g., see
+Sec.~\ref{sec:illustrative-example} and Fig.~\ref{fig:illustrative-example}).
+This could be useful in cases where specific features are added or removed from
+a package across different versions, or in comparing the performance or
+functionality of particular features across different versions of the same
+package.
 
 A second more subtle impact of our work is in providing a
 proof-of-concept of how the ability to add new ``keyword-like''
 operators to the Python language could be specifically useful to
-researchers. With \texttt{davos}, we accomplish this by leveraging
+researchers. With Davos, we accomplish this by leveraging
 IPython notebooks' internal code parsing and execution machinery. We
 note that, while other popular packages similarly use these mechanisms
 to providing notebook-specific functionality (e.g.,
@@ -774,23 +824,59 @@ exploited for more nefarious purposes. For example, a malicious user
 could design a Python package that, when imported, substantially
 changes the notebook's functionality by adding new \textit{unexpected}
 keyword-like objects (e.g., based around common typos). We also note
-that this implementation approach means \texttt{davos}'s functionality
+that this implementation approach means Davos's functionality
 is currently restricted to IPython notebook environments. However,
 there have been early-stage discussions of providing this sort of
 syntactic customizability as a core feature of the Python language,
 including a draft proposal~\cite{Shan20}. In addition to enabling
-\texttt{davos} to be extended for use outside of notebooks, this could
-lead to exciting new tools that, like \texttt{davos}, extend the
+Davos to be extended for use outside of notebooks, this could
+lead to exciting new tools that, like Davos, extend the
 Python language in useful and more secure ways.
 
+\subsection{Pitfalls and limitations}
+
+While Davos enables developers to conveniently specify all project
+dependencies, there are some edge cases and limitations that are worth
+considering. Many Python packages include (in their \texttt{setup} options)
+additional dependencies that often carry their own version specifications.
+Although Davos will check that the correct version of the requested
+top-level package is installed and imported into the workspace, the version
+numbers of any \textit{dependencies} of the request package are \textit{not}
+checked. In principle, this could lead to unexpected behavior, for example if a
+given package's dependencies (or dependencies of those dependencies, etc.) were
+left under-specified. A developer could mitigate this by explicitly smuggling
+exact version numbers of \textit{every} project dependency (e.g., obtained via
+\texttt{pip freeze}). However, for projects where the versions of dependencies
+of \texttt{smuggle}d packages also need to be precisely controlled, a lockfile
+or a \texttt{requirements.txt} file produced by \texttt{pip freeze} (i.e.,
+explicitly specifying \textit{all} package's version numbers) may provide a
+more comprehensive alternative to Davos.
+
+Reproducibility is not solely about dependency management. In addition to
+ensuring that project dependencies are satisfied, the user running a given
+notebook must also execute the code in the indicated order. For example, the
+cells in a notebook may be manually run out of order. If different cells in a
+Davos-enhanced notebook made use of different versions of the same
+package, this could result in \textit{more} confusion or \textit{greater}
+replication failure rates relative to standard Jupyter notebooks. Therefore an
+important consideration when using Davos is that it is perhaps even more
+important to execute notebook cells in order than would be the case in the
+standard (non-Davos) setup.  We suggest that developers who wish to use
+Davos include notes regarding which cells must be executed in sequence.
+
+As of this writing, Davos can install packages using \textt{pip}, but
+not other standard Python package management systems such as \texttt{conda}.
+Therefore packages that are not installable via \texttt{pip} are currently
+unsupported by Davos.  We anticipate adding support for other
+package management systems, including \texttt{conda} in a future release.
 
 \section{Conclusions}
 
-The \texttt{davos} package supports reproducible research by providing
+The Davos package supports reproducible research by providing
 a novel, lightweight system for sharing notebook-based code. But
-perhaps the most exciting uses of the \texttt{davos} package are those
+perhaps the most exciting uses of the Davos package are those
 that we have \textit{not} yet considered or imagined. We hope that the
-research and scientific Python communities will find \texttt{davos} to provide a convenient
+research and scientific Python communities will find Davos to provide a convenient
 means of managing project dependencies to facilitate code sharing and collaboration. We
 also hope that some of the more advanced applications of our package
 might lead to new insights or discoveries.
@@ -830,4 +916,3 @@ who used preliminary versions of our package in several assignments.
 \bibliography{main}
 
 \end{document}
-

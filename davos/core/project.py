@@ -409,6 +409,28 @@ def _dir_is_empty(path):
     return True
 
 
+def _filepath_to_safename(filepath):
+    """
+    Convert a filepath to a project name in "safe" format.
+
+    Takes an absolute path to a notebook file and returns it in a format
+    that can be used as a valid directory name. This is the format used
+    to name notebook-specific projects directories in
+    `davos.DAVOS_PROJECT_DIR`.
+
+    Parameters
+    ----------
+    filepath : str
+        An absolute path to a Jupyter notebook (.ipynb) file.
+
+    Returns
+    -------
+    str
+        The filepath in "safe" format.
+    """
+    return filepath.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
+
+
 def _get_project_name_type(project_name):
     """
     Normalize the project name and determine the project type.
@@ -515,28 +537,6 @@ def _get_project_name_type(project_name):
     return project_name, project_type
 
 
-def _filepath_to_safename(filepath):
-    """
-    Convert a filepath to a project name in "safe" format.
-
-    Takes an absolute path to a notebook file and returns it in a format
-    that can be used as a valid directory name. This is the format used
-    to name notebook-specific projects directories in
-    `davos.DAVOS_PROJECT_DIR`.
-
-    Parameters
-    ----------
-    filepath : str
-        An absolute path to a Jupyter notebook (.ipynb) file.
-
-    Returns
-    -------
-    str
-        The filepath in "safe" format.
-    """
-    return filepath.replace(PATHSEP, PATHSEP_REPLACEMENT).replace('.ipynb', '')
-
-
 def _safename_to_filepath(safename):
     """
     Convert a project name in "safe" format to a filepath.
@@ -560,55 +560,49 @@ def _safename_to_filepath(safename):
     return f'{safename.replace(PATHSEP_REPLACEMENT, PATHSEP)}.ipynb'
 
 
-def get_project(project_name, create=False):
+def cleanup_project_dir_atexit(dirpath):
     """
-    Get a Project by its name.
+    Remove project directory on interpreter termination, if empty.
 
-    Return the `Project` instance for the project named `project_name`,
-    optionally creating it if it doesn't already exist. If the project
-    does not exist and `create` is `False`, return `None`
-    (mirrors behavior of built-in `dict.get()`)
+    Each Project instance eagerly creates its `.project_dir` on
+    instantiation so it's available for use, then if it isn't used,
+    removes it in its finalizer method (`Project.__del__`) to avoid
+    cluttering up the user's `DAVOS_PROJECT_DIR` with empty directories.
+    However, IPython stores its own internal references to objects in
+    the user namespace and releases them after the kernel shuts down and
+    this module is unloaded, so Projects that exist at interpreter
+    shutdown can't be cleaned up. IPython also stores references to any
+    objects that appear in cell outputs via its output caching system
+    (https://ipython.readthedocs.io/en/stable/interactive/reference.html#output-caching-system)
+    so any Project whose repr is displayed in the notebook also won't
+    have its reference count drop to zero before shutdown.
+
+    As a backup, each Project instance registers a call to this function
+    with `atexit.register()`, so any empty project dirs that still exist
+    at shutdown will be caught and removed. This function is defined
+    outside the Project class so the atexit registry doesn't store a
+    reference to the instance unnecessarily for the whole session.
 
     Parameters
     ----------
-    project_name : str or pathlib.Path
-        The name of the project to get. As is the case when creating a
-        new `Project` or setting the `davos.project` field, project
-        names that represent notebook filepaths may be provided as an
-        absolute or relative path, or in the "safe" name format used for
-        directories in `DAVOS_PROJECT_DIR`.
-    create : bool, optional
-        Whether to create the project if it doesn't already exist
-        (default: `False`).
-
-    Returns
-    -------
-    davos.core.project.Project or None
-        The `Project` instance for the project named `project_name`, or
-        `None` if the project does not exist and `create` is `False`.
-
+    dirpath : pathlib.Path
+        The path to the project directory to be removed.
     """
-    if create:
-        # if we're going to create a Project instance whether the
-        # project directory exists or not, no need to check for it first
-        return Project(project_name)
-
-    # rather than creating `Project(project_name)` and checking for it
-    # in `davos.all_projects`, determine what the project's directory
-    # *would* be named and check whether it exists. This avoids creating
-    # a bunch of `Project` instances and registering duplicate `atexit`
-    # callbacks unnecessarily
-    cleaned_name, project_cls = _get_project_name_type(project_name)
-    safe_name = _filepath_to_safename(cleaned_name)
-    project_dir = DAVOS_PROJECT_DIR.joinpath(safe_name)
-    if project_dir.is_dir():
-        # since we already got the project's name and type above, we can
-        # call `type.__call__` directly and bypass the `ProjectChecker`
-        # metaclass's `__call__` method.
-        return type.__call__(project_cls, cleaned_name)
-
-    # else, the project doesn't exist
-    return None
+    if dirpath.is_dir() and _dir_is_empty(dirpath):
+        try:
+            dirpath.rmdir()
+        except OSError as e:
+            if e.errno == errno.ENOTEMPTY:
+                # dirpath is empty except for a .DS_Store file
+                try:
+                    dirpath.joinpath('.DS_Store').unlink()
+                except FileNotFoundError:
+                    # shouldn't be possible to get here, but silently
+                    # handle errors just in case so we don't interfere
+                    # with shutdown
+                    pass
+                else:
+                    dirpath.rmdir()
 
 
 def get_notebook_path():
@@ -665,49 +659,55 @@ def get_notebook_path():
     raise RuntimeError("Could not find notebook path for current kernel")
 
 
-def cleanup_project_dir_atexit(dirpath):
+def get_project(project_name, create=False):
     """
-    Remove project directory on interpreter termination, if empty.
+    Get a Project by its name.
 
-    Each Project instance eagerly creates its `.project_dir` on
-    instantiation so it's available for use, then if it isn't used,
-    removes it in its finalizer method (`Project.__del__`) to avoid
-    cluttering up the user's `DAVOS_PROJECT_DIR` with empty directories.
-    However, IPython stores its own internal references to objects in
-    the user namespace and releases them after the kernel shuts down and
-    this module is unloaded, so Projects that exist at interpreter
-    shutdown can't be cleaned up. IPython also stores references to any
-    objects that appear in cell outputs via its output caching system
-    (https://ipython.readthedocs.io/en/stable/interactive/reference.html#output-caching-system)
-    so any Project whose repr is displayed in the notebook also won't
-    have its reference count drop to zero before shutdown.
-
-    As a backup, each Project instance registers a call to this function
-    with `atexit.register()`, so any empty project dirs that still exist
-    at shutdown will be caught and removed. This function is defined
-    outside the Project class so the atexit registry doesn't store a
-    reference to the instance unnecessarily for the whole session.
+    Return the `Project` instance for the project named `project_name`,
+    optionally creating it if it doesn't already exist. If the project
+    does not exist and `create` is `False`, return `None`
+    (mirrors behavior of built-in `dict.get()`)
 
     Parameters
     ----------
-    dirpath : pathlib.Path
-        The path to the project directory to be removed.
+    project_name : str or pathlib.Path
+        The name of the project to get. As is the case when creating a
+        new `Project` or setting the `davos.project` field, project
+        names that represent notebook filepaths may be provided as an
+        absolute or relative path, or in the "safe" name format used for
+        directories in `DAVOS_PROJECT_DIR`.
+    create : bool, optional
+        Whether to create the project if it doesn't already exist
+        (default: `False`).
+
+    Returns
+    -------
+    davos.core.project.Project or None
+        The `Project` instance for the project named `project_name`, or
+        `None` if the project does not exist and `create` is `False`.
+
     """
-    if dirpath.is_dir() and _dir_is_empty(dirpath):
-        try:
-            dirpath.rmdir()
-        except OSError as e:
-            if e.errno == errno.ENOTEMPTY:
-                # dirpath is empty except for a .DS_Store file
-                try:
-                    dirpath.joinpath('.DS_Store').unlink()
-                except FileNotFoundError:
-                    # shouldn't be possible to get here, but silently
-                    # handle errors just in case so we don't interfere
-                    # with shutdown
-                    pass
-                else:
-                    dirpath.rmdir()
+    if create:
+        # if we're going to create a Project instance whether the
+        # project directory exists or not, no need to check for it first
+        return Project(project_name)
+
+    # rather than creating `Project(project_name)` and checking for it
+    # in `davos.all_projects`, determine what the project's directory
+    # *would* be named and check whether it exists. This avoids creating
+    # a bunch of `Project` instances and registering duplicate `atexit`
+    # callbacks unnecessarily
+    cleaned_name, project_cls = _get_project_name_type(project_name)
+    safe_name = _filepath_to_safename(cleaned_name)
+    project_dir = DAVOS_PROJECT_DIR.joinpath(safe_name)
+    if project_dir.is_dir():
+        # since we already got the project's name and type above, we can
+        # call `type.__call__` directly and bypass the `ProjectChecker`
+        # metaclass's `__call__` method.
+        return type.__call__(project_cls, cleaned_name)
+
+    # else, the project doesn't exist
+    return None
 
 
 def prune_projects(yes=False):

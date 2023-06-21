@@ -1,4 +1,47 @@
-"""TODO: add module docstring"""
+"""
+"Project" system for isolating smuggled dependencies.
+
+This module implements davos's "Project" scheme for isolating packages
+smuggled in a davos-enhanced notebook from the main Python environment,
+as well as from those smuggled in other davos-enhanced notebooks.
+Functionally, a davos project is similar to Python virtual environment,
+with a few main differences:
+    - davos projects do not need to be set up, activated, or deactivated
+      manually; they are automatically created and used when
+      davos-enhanced notebooks are run.
+    - davos projects *extend*, rather than replace, the main Python
+      environment; they contain only the dependencies of davos-enhanced
+      notebooks that are not already satisfied by the packages available
+      in those notebooks' "normal" Python environments.
+    - davos projects do not contain their own Python or pip executables;
+      packages are installed into them using the pip executable from the
+      Python environment used to run the notebook kernel.
+All davos projects are stored in `davos.DAVOS_PROJECT_DIR`
+(`~/.davos/projects/`). By default, each davos-enhanced notebook will
+create and use a notebook-specific project named for the path to the
+notebook file. Any packages (or specific package versions) smuggled in
+that notebook that are not already available in the main Python
+environment will be installed into and loaded from the project's
+isolated package directory (along with any dependencies of those
+packages not already available in the main environment). This way, davos
+automatically ensures all smuggled packages and specific package
+versions are available at runtime without altering the main Python
+environment.
+
+davos projects can also be shared by multiple notebooks. The project
+used by the current notebook can be accessed and set via the
+`davos.project` (or `davos.config.project`) attribute. When accessed,
+the value of `davos.project` will always be a
+`davos.core.project.ConcreteProject` instance, but the attribute can
+also be assigned either a `str` or `pathlib.Path`, which will be
+converted to a `ConcreteProject` internally on assignment. The same
+project can be used by multiple notebooks simply by setting
+`davos.project` to the same value at the top of each one. While
+notebook-specific projects are typically (and by default) named for the
+notebook's path, notebook-agnostic projects can be given arbitrary names
+(that are not file paths), e.g., `davos.project = "my-project"`.
+"""
+
 
 import atexit
 import errno
@@ -46,10 +89,9 @@ class ProjectChecker(type):
     """
     Metaclass that determines whether the object returned by the
     `Project` constructor will be a `ConcreteProject` or an
-    `AbstractProject`
+    `AbstractProject`.
     """
     def __call__(cls, name):
-        """TODO: add docstring"""
         cleaned_name, cls_to_init = _get_project_name_type(name)
         # `name` passed to __init__ is now a str: either a simple name
         # or a fully substituted path to a .ipynb file
@@ -59,14 +101,30 @@ class ProjectChecker(type):
 class Project(metaclass=ProjectChecker):
     """
     A pseudo-environment associated with a particular (set of)
-    davos-enhanced notebook(s)
-    # TODO: future feature: automatic conversion between ConcreteProject
-       and AbstractProject reference notebook is moved/created/deleted
+    davos-enhanced notebook(s).
     """
     def __init__(self, name):
         """
-        TODO: add docstring, note difference between what name can be
-         passed as vs what it is when __init__ is run due to metaclass
+        Parameters
+        ----------
+        name : str or pathlib.Path
+            Name of the project. This can be either a simple/general
+            name (e.g., "my-project") or a valid path for a Jupyter
+            notebook (the path doesn't have to exist, but must end in
+            .ipynb). Relative paths, environment variables, symlinks,
+            etc. are permitted in paths and will be resolved. Notebook
+            paths may also be specified in their "safe" form as they
+            appear in `davos.DAVOS_PROJECT_DIR` (i.e., with '/' replaced
+            by '___' and '.ipynb' removed).
+
+        Notes
+        -----
+        The "Parameters" section above describes the valid types and
+        formats that may be *passed* to the `Project` constructor to
+        specify a path-based name. However, the `ProjectChecker`
+        metaclass ensures that when the constructor is actually *run*,
+        path-based `name`s will always be a string denoting an absolute
+        path.
         """
         self.name = name
         self.safe_name = _filepath_to_safename(name)
@@ -113,14 +171,24 @@ class Project(metaclass=ProjectChecker):
 
     @property
     def installed_packages(self):
-        """list of installed packages for the Project"""
+        """
+        List packages and versions installed in the project environment.
+
+        Returns a list of all packages installed in the project
+        directory as (<pkg_name>, <pkg_version>) tuples. Note that this
+        is not necessarily the same as the packages smuggled into the
+        current notebook -- it does not include smuggled packages that
+        were found in and loaded from the user's main environment, and
+        does include dependencies of smuggled packages installed into
+        the project directory.
+        """
         self._refresh_installed_pkgs()
         return self._installed_packages
 
     def _refresh_installed_pkgs(self):
         """
-        update cache of installed packages if site-packages dir has
-        been modified since last check
+        Update cache of installed packages if site-packages dir has
+        been modified since last check.
         """
         try:
             site_pkgs_mtime = self.site_packages_dir.stat().st_mtime
@@ -144,14 +212,38 @@ class Project(metaclass=ProjectChecker):
             self._site_packages_mtime = site_pkgs_mtime
 
     def freeze(self):
-        """pip-freeze-like output for the Project"""
+        """Return pip-freeze-like output for the Project."""
         return '\n'.join('=='.join(pkg) for pkg in self.installed_packages)
 
     def remove(self, yes=False):
         """
-        TODO: add docstring -- remove the project and all installed
-         packages. should prompt for confirmation, but accept "yes" arg
-         to bypass
+        Delete the project and all installed packages.
+
+        Remove the project's directory from `DAVOS_PROJECT_DIR` along
+        with all packages installed into it. If the removed project is
+        currently in use (i.e., is the Project assigned to
+        `davos.project`), the empty project directory is left in place
+        rather than deleted immediately so that subsequent `smuggle`
+        statements can still install packages into it, if desired. If
+        the project directory is still empty when the interpreter
+        session ends (or `davos.project` is set to a new value), it is
+        then removed.
+
+        Parameters
+        ----------
+        yes : bool, optional
+            If `True` (default: `False`), do not prompt for yes/no
+            confirmation before removing the project.
+
+        Notes
+        -----
+        By default, user confirmation (y/n input) is required before
+        deleting a project, but can be bypassed by passing `yes=True`.
+        Note that if davos's non-interactive mode is enabled (i.e.,
+        `davos.noninteractive` has been set to `True`), `yes=True`
+        *must* be explicitly passed to delete the project. This serves
+        as a safeguard against unintentionally deleting a project, since
+        non-interactive mode disables all user input and confirmation.
         """
         if not yes:
             if config.noninteractive:
@@ -164,16 +256,46 @@ class Project(metaclass=ProjectChecker):
             if not confirmed:
                 print(f"{self.name} not removed")
                 return
-        print(f"Removing {self.project_dir}...")
         shutil.rmtree(self.project_dir)
-        if self == config.project:
+        if self == config._project:
             self.project_dir.mkdir()
 
     def rename(self, new_name):
         """
-        rename the project and its directory accordingly, possibly
-        converting from a ConcreteProject to an AbstractProject or vice
-        versa
+        Rename the project to `new_name`.
+
+        Change the name of the project to `new_name` and rename its
+        directory in `DAVOS_PROJECT_DIR` accordingly. The Project's
+        Python object is then "reloaded" so these updates are reflected
+        in its attribute values, and potentially its type as well.
+
+        Renaming a project has two main use cases:
+            1. Editing the name of a non-notebook-specific project
+               (i.e., a project with a notebook-agnostic name like
+               "stats101-notebooks"), if desired.
+            2. Re-linking a notebook-specific project with its
+               associated notebook after that notebook has been
+               moved or renamed.
+        Notebook-specific projects (which davos-enhanced notebooks use
+        by default) are named for the path to the notebook whose
+        smuggled packages they contain. If that notebook is moved or
+        renamed, its associated project will become an `AbstractProject`
+        because the path it's associated with (i.e., named for) no
+        longer exists. And running the moved/renamed notebook would
+        create a new project and reinstall all packages, because there
+        would be no project associated with its new path. Instead, the
+        existing project can continue to be used by renaming it to match
+        the notebook's new path. The project's name, package directory,
+        and Python object will be updated to reflect the notebook's
+        `new_name`, including converting its type from an
+        `AbstractProject` to a `ConcreteProject`.
+
+        Parameters
+        ----------
+        new_name : str or pathlib.Path
+            The new name for the project. This name must not already be
+            in use by another project unless that project is empty
+            (i.e., no packages have been installed into it).
         """
         new_project_name, new_project_type = _get_project_name_type(new_name)
         if new_project_name == self.name:
@@ -214,12 +336,26 @@ class Project(metaclass=ProjectChecker):
 
 class AbstractProject(Project):
     """
-    Project object variant for projects that point to a notebook file
-    that doesn't exist. Similar idea to pathlib.PurePath.
+    A Project associated with a notebook file that does not exist.
+
+    davos Projects can be either notebook-specific or notebook-agnostic.
+    Notebook-specific projects are named for the absolute path to the
+    notebook whose smuggled packages they contain. This serves as a
+    convenient, human-readable, unique identifier for linking projects
+    to specific notebooks. However, it also means that if a notebook is
+    moved, renamed, or deleted, its associated project will point to a
+    path that no longer exists. A project in this state is an
+    `AbstractProject`. `AbstractProject`s can be created and interacted
+    with (e.g., renamed, removed, inspected, etc.) just like "regular"
+    projects (i.e., `ConcreteProject`s). However, they cannot be
+    assigned to `davos.project` (or `davos.config.project`) and made the
+    active project in the current notebook. After moving or renaming a
+    notebook, renaming its associated `AbstractProject` to match its new
+    filepath will convert it back to a `ConcreteProject`, and cause the
+    renamed/moved notebook to continue using it to manage smuggled
+    packages.
     """
     def __getattr__(self, item):
-        # Note: stdlib docs say type hint shouldn't be included here
-        # https://typing.readthedocs.io/en/latest/source/stubs.html#attribute-access
         if hasattr(ConcreteProject, item):
             msg = f"{item!r} is not supported for abstract projects"
         else:
@@ -231,10 +367,42 @@ class AbstractProject(Project):
 
 
 class ConcreteProject(Project):
-    """TODO: add docstring"""
+    """
+    The "normal" Project variant, as opposed to an `AbstractProject`.
+
+    Regular, "non-abstract" projects are instances of this class. It
+    mainly exists so that "regular" and "abstract" projects are
+    "siblings" on the same level of the class hierarchy, rather than
+    `AbstractProject`s being subtypes of "regular" projects.
+    Functionally, this makes it easier to dynamically select a `Project`
+    class to be instantiated at runtime, and convert existing objects
+    between the two types when projects are renamed.
+
+    In conceptualizing davos "projects", the term `ConcreteProject` is
+    not used and its instances are simply referred to as "projects".
+    Note that unlike the `AbstractProject` class, `ConcreteProject` does
+    not redefine the parent `Project` class's `__repr__`, so instances
+    of it appear as `Project(<project_name>)`. This is not ambiguous
+    with the parent class since instances of it are never actually
+    created due the behavior of the `ProjectChecker` metaclass.
+    """
 
 
 def _dir_is_empty(path):
+    """
+    Check whether a directory is empty, excluding .DS_Store files.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+       The path to the directory to check.
+
+    Returns
+    -------
+    bool
+        Whether the directory is empty (except for possibly a
+        `.DS_Store` file).
+    """
     for p in path.iterdir():
         if p.name != '.DS_Store':
             return False
@@ -242,6 +410,36 @@ def _dir_is_empty(path):
 
 
 def _get_project_name_type(project_name):
+    """
+    Normalize the project name and determine the project type.
+
+    Handles the various formats in which a project name might be
+    specified (e.g., a "simple" name, a path to a notebook file,
+    the "safe" name format used for directories in `DAVOS_PROJECT_DIR`,
+    etc.) and coerces them into a common format (simple name or absolute
+    path, as a string). Determines based on this whether the project
+    will be a `ConcreteProject` or `AbstractProject` instance. Also does
+    some quick validation of user-specified project names.
+
+    Parameters
+    ----------
+    project_name : str or pathlib.Path
+        The name for the project, as specified by the user or read from
+        `DAVOS_PROJECT_DIR`.
+
+    Returns
+    -------
+    str
+        The valid project name in a standardized format: a fully
+        substituted, OS-specific, absolute path to a Jupyter notebook
+        (.ipynb) file, or a simple/general project name.
+    type
+        The class of the Project object to be instantiated. If the
+        project's name is a path to a notebook file that is
+        syntactically valid but does not (yet) exist, the returned class
+        will be `AbstractProject`. Otherwise, it will be
+        `ConcreteProject`.
+    """
     if isinstance(project_name, Path):
         # if user passed a pathlib.Path, convert it to a str so it can
         # be properly expanded, substituted, resolved, etc. below
@@ -414,7 +612,21 @@ def get_project(project_name, create=False):
 
 
 def get_notebook_path():
-    """get the absolute path to the current notebook"""
+    """
+    Get the absolute path to the current notebook.
+
+    Use the Jupyter Server REST API and a smidge of the notebook CLI to
+    get the path to the current notebook. If running in a Jupyter
+    notebook, this returns the absolute path to the notebook file. If
+    running in Google Colab notebook, however, this returns just the
+    name of the notebook since Colab notebooks don't actually exist on
+    the Colab VM filesystem.
+
+    Returns
+    -------
+    str
+        The absolute path (Jupyter) or name (Colab) of the current
+    """
     kernel_filepath = ipykernel.connect.get_connection_file()
     kernel_id = kernel_filepath.split('/kernel-')[-1].split('.json')[0]
 
@@ -438,7 +650,6 @@ def get_notebook_path():
         else:
             params = None
 
-        # TODO: add exception handling, 403 handling, etc.
         response = requests.get(notebook_api_url, params=params, timeout=10)
         for session in response.json():
             if session['kernel']['id'] == kernel_id:
@@ -456,12 +667,31 @@ def get_notebook_path():
 
 def cleanup_project_dir_atexit(dirpath):
     """
-    TODO: add docstring -- IPython kernel stores internal references to
-     objects, so finalizer method isn't called on kernel shutdown. Also
-     stores references to objects via its output caching system
-     (https://ipython.readthedocs.io/en/stable/interactive/reference.html#output-caching-system).
-     This handles those. Function outside class so atexit registry doesn't
-     store reference to instance unnecessarily for whole session
+    Remove project directory on interpreter termination, if empty.
+
+    Each Project instance eagerly creates its `.project_dir` on
+    instantiation so it's available for use, then if it isn't used,
+    removes it in its finalizer method (`Project.__del__`) to avoid
+    cluttering up the user's `DAVOS_PROJECT_DIR` with empty directories.
+    However, IPython stores its own internal references to objects in
+    the user namespace and releases them after the kernel shuts down and
+    this module is unloaded, so Projects that exist at interpreter
+    shutdown can't be cleaned up. IPython also stores references to any
+    objects that appear in cell outputs via its output caching system
+    (https://ipython.readthedocs.io/en/stable/interactive/reference.html#output-caching-system)
+    so any Project whose repr is displayed in the notebook also won't
+    have its reference count drop to zero before shutdown.
+
+    As a backup, each Project instance registers a call to this function
+    with `atexit.register()`, so any empty project dirs that still exist
+    at shutdown will be caught and removed. This function is defined
+    outside the Project class so the atexit registry doesn't store a
+    reference to the instance unnecessarily for the whole session.
+
+    Parameters
+    ----------
+    dirpath : pathlib.Path
+        The path to the project directory to be removed.
     """
     if dirpath.is_dir() and _dir_is_empty(dirpath):
         try:

@@ -45,6 +45,7 @@ config = DavosConfig()
 
 import davos.implementations
 from davos.core.core import smuggle
+from davos.core.exceptions import DavosConfigError
 from davos.core.project import (
     DAVOS_CONFIG_DIR,
     DAVOS_PROJECT_DIR,
@@ -161,11 +162,59 @@ def configure(
         The global `davos` Config object. Offers more detailed
         descriptions of each field.
     """
-    # TODO: perform some value checks upfront to raise relevant errors
-    #  before setting some fields and make setting values
-    #  order-independent (e.g., noninteractive & confirm_install)
     kwargs = locals()
     old_values = {}
+    # deal with incompatible arguments separately and upfront so that
+    # (A) the function fails early rather than having to undo multiple
+    # assignments, and (B) the order in which assignments are undone in
+    # the event that a *different* assignment fails doesn't cause an
+    # incompatibility error.
+    # Need to explicitly check if value is True since Ellipsis evaluates
+    # to True.
+    if kwargs['confirm_install'] is True:
+        if kwargs['noninteractive'] is True:
+            # passed both `confirm_install=True` and `noninteractive=True`
+            raise DavosConfigError(
+                'confirm_install',
+                "confirm_install=True is incompatible with noninteractive=True"
+            )
+        if config._noninteractive:
+            if kwargs['noninteractive'] is False:
+                # if simultaneously disabling non-interactive mode and
+                # enabling the confirm_install option (i.e.,
+                # `config.noninteractive` is currently `True`,
+                # `noninteractive=False` is passed, and
+                # `confirm_install=True` is passed), then
+                # `config.noninteractive` must be set to `False` before
+                # `config.confirm_install` is set to `True`, since both
+                # options may not be `True` at the same time. The loop
+                # below sets config values based on the `kwargs` dict's
+                # insertion order, so simply removing `confirm_install`
+                # and re-adding it as the most recent entry ensures that
+                # `config.noninteractive` is set first.
+                kwargs['confirm_install'] = kwargs.pop('confirm_install')
+            else:
+                # if `confirm_install=True` is passed,
+                # `config.noninteractive` is currently `True`, and
+                # `noninteractive=False` is *not* passed, then the
+                # resulting values will be incompatible
+                raise DavosConfigError(
+                    'confirm_install',
+                    "field may not be 'True' in noninteractive mode"
+                )
+    elif (
+            kwargs['noninteractive'] is True and
+            kwargs['confirm_install'] is False
+    ):
+        # if simultaneously enabling non-interactive mode and disabling
+        # the `confirm_install` option, `config.confirm_install` should
+        # be set to `False` before `config.noninteractive` is set to
+        # `True` to avoid the spurious warning issued when enabling
+        # non-interactive mode when `config.confirm_install` is `True`.
+        # Can use the same `dict` insertion order trick as above to
+        # ensure this happens.
+        kwargs['noninteractive'] = kwargs.pop('noninteractive')
+
     for name, new_value in kwargs.items():
         if new_value is not Ellipsis:
             old_value = getattr(config, name)
@@ -174,7 +223,10 @@ def configure(
             except Exception:
                 # if one assignment fails, no config fields are updated
                 for _name, old_value in old_values.items():
-                    setattr(config, _name, old_value)
+                    # bypass checks when resetting fields to save time
+                    # and avoid order-dependent issues, since we know
+                    # the old values were valid
+                    setattr(config, f"_{_name}", old_value)
                 raise
             old_values[name] = old_value
 

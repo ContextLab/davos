@@ -59,6 +59,7 @@ jobs:
       HEAD_FORK: ${{ github.repository_owner }}
       HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       IPYTHON_VERSION: ${{ matrix.ipython-version }}
+      MAMBA_NO_BANNER: 1
       NOTEBOOK_TYPE: jupyter
       PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -69,14 +70,18 @@ jobs:
       - name: install miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          auto-update-conda: true
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          use-mamba: true
+          channels: conda-forge,defaults
+          channel-priority: strict
           auto-activate-base: true
           activate-environment: ""
 
       - name: setup base environment
         run: |
           # install Python 3.9 (used to run notebooks via selenium, not the tests themselves)
-          conda install python=3.9
+          mamba install python=3.9
 
           # install Firefox browser:
           # - remove pre-installed snap package
@@ -122,10 +127,10 @@ jobs:
           pip install notebook "ipykernel==5.0.0" "jupyter_client<=7.3.2" "tornado<=6.1"
 
           # create kernel environment
-          conda create -n kernel-env python=$PYTHON_VERSION
+          mamba create -n kernel-env python=$PYTHON_VERSION
 
           # install davos & various test requirements in kernel environment
-          conda activate kernel-env
+          mamba activate kernel-env
           if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
               pip install typing-extensions
           fi
@@ -140,7 +145,7 @@ jobs:
 
           # make environment available as a jupyter kernel
           python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
-          conda deactivate
+          mamba deactivate
 
       - name: launch Jupyter server
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &

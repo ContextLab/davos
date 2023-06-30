@@ -144,6 +144,21 @@ jobs:
           python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
           conda deactivate
 
+      - name: record environment
+        run: |
+          # get packages in base environment
+          printf '=%.0s' {1..20}; printf ' base '; printf '=%.0s' {1..20}; printf '\n'
+          conda env export -n base
+          
+          # get packages in kernel environment
+          printf '=%.0s' {1..20}; printf ' kernel-env '; printf '=%.0s' {1..20}; printf '\n'
+          conda env export -n kernel-env
+          
+          # get firefox browser & webdriver version
+          printf '=%.0s' {1..20}; printf ' firefox '; printf '=%.0s' {1..20}; printf '\n'
+          firefox --full-version
+          $DRIVER_PATH --version
+
       - name: launch Jupyter server
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &
 

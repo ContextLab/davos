@@ -71,7 +71,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           miniforge-variant: Mambaforge
-          miniforge-version: latest
+          miniforge-version: 4.13.0-1
           use-mamba: true
           channels: conda-forge,defaults
           channel-priority: strict
@@ -80,9 +80,6 @@ jobs:
 
       - name: setup base environment
         run: |
-          # install Python 3.9 (used to run notebooks via selenium, not the tests themselves)
-          mamba install python=3.9
-
           # install Firefox browser:
           # - remove pre-installed snap package
           [[ -x "$(command -v snap)" ]] && sudo snap remove firefox

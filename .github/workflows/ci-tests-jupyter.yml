@@ -130,7 +130,7 @@ jobs:
           mamba create -n kernel-env python=$PYTHON_VERSION
 
           # install davos & various test requirements in kernel environment
-          mamba activate kernel-env
+          conda activate kernel-env
           if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
               pip install typing-extensions
           fi
@@ -145,7 +145,7 @@ jobs:
 
           # make environment available as a jupyter kernel
           python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
-          mamba deactivate
+          conda deactivate
 
       - name: launch Jupyter server
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &

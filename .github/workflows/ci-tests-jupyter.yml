@@ -162,6 +162,9 @@ jobs:
           printf '=%.0s' {1..20}; printf ' firefox '; printf '=%.0s' {1..20}; printf '\n'
           firefox --full-version
           $DRIVER_PATH --version
+          
+          # get jupyter kernels available in base environment
+          jupyter kernelspec list
 
       - name: launch Jupyter server
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &

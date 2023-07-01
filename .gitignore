@@ -19,8 +19,8 @@ davos.egg-info/
 # Mypy daemon status file
 .dmypy.json
 
-# Selenium Firefox driver & log
-tests/geckodriver
+# Firefox WebDriver & log file for tests
+geckodriver
 **/geckodriver.log
 
 # scripts & notebooks for scratch/debugging

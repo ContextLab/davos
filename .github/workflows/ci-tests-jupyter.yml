@@ -164,6 +164,7 @@ jobs:
           $DRIVER_PATH --version
           
           # get jupyter kernels available in base environment
+          printf '=%.0s' {1..20}; printf ' jupyter kernels '; printf '=%.0s' {1..20}; printf '\n'
           jupyter kernelspec list
 
       - name: launch Jupyter server

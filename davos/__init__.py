@@ -29,15 +29,12 @@ __all__ = [
 import sys
 from types import ModuleType
 
-if sys.version_info >= (3, 8):
-    from importlib import metadata
-else:
-    import importlib_metadata as metadata
+import pkg_resources
 
 from davos.core.config import DavosConfig
 
 
-__version__ = metadata.version('davos')
+__version__ = pkg_resources.get_distribution('davos').version
 
 # config must be instantiated before importing implementations module
 config = DavosConfig()

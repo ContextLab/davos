@@ -447,6 +447,7 @@ class JupyterDriver(NotebookDriver):
         }
         with notebook_path.open('w') as nb:
             json.dump(notebook_json, nb, indent=1)
+            nb.write('\n')
 
     def __init__(
             self,

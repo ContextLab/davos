@@ -150,22 +150,25 @@ jobs:
 
       - name: record environment
         run: |
-          # get packages in base environment
-          printf '=%.0s' {1..20}; printf ' base '; printf '=%.0s' {1..20}; printf '\n'
-          conda env export -n base
+          {
+            # get packages in base environment
+            printf '=%.0s' {1..20}; printf ' base '; printf '=%.0s' {1..20}; printf '\n'
+            conda env export -n base
           
-          # get packages in kernel environment
-          printf '=%.0s' {1..20}; printf ' kernel-env '; printf '=%.0s' {1..20}; printf '\n'
-          conda env export -n kernel-env
+            # get packages in kernel environment
+            printf '=%.0s' {1..20}; printf ' kernel-env '; printf '=%.0s' {1..20}; printf '\n'
+            conda env export -n kernel-env
           
-          # get firefox browser & webdriver version
-          printf '=%.0s' {1..20}; printf ' firefox '; printf '=%.0s' {1..20}; printf '\n'
-          firefox --full-version
-          $DRIVER_PATH --version
+            # get firefox browser & webdriver version
+            printf '=%.0s' {1..20}; printf ' firefox '; printf '=%.0s' {1..20}; printf '\n'
+            firefox --full-version
+            $DRIVER_PATH --version
           
-          # get jupyter kernels available in base environment
-          printf '=%.0s' {1..20}; printf ' jupyter kernels '; printf '=%.0s' {1..20}; printf '\n'
-          jupyter kernelspec list
+            # get jupyter kernels available in base environment
+            printf '=%.0s' {1..20}; printf ' jupyter kernels '; printf '=%.0s' {1..20}; printf '\n'
+            jupyter kernelspec list
+          } > ${{ github.workspace }}/environment-info.txt
+          cat ${{ github.workspace }}/environment-info.txt
 
       - name: launch Jupyter server
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &
@@ -185,4 +188,6 @@ jobs:
         if: failure()
         with:
           name: artifacts-python${{ matrix.python-version }}-ipython${{ matrix.ipython-version }}
-          path: ${{ github.workspace }}/tests/*.ipynb
+          path: |
+            ${{ github.workspace }}/tests/*.ipynb
+            ${{ github.workspace }}/environment-info.txt

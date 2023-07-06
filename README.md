@@ -252,7 +252,7 @@ and the next time `numpy` or `pandas` is smuggled with the same constraints, val
 You can also force the state of a smuggled packages to match a specific VCS ref (branch, revision, tag, release, etc.).
 For example:
 ```python
-smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@98a3d80
+smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@564c1d4
 ```
 will load [`hypertools`](https://hypertools.readthedocs.io/en/latest/) (aliased as "`hyp`"), as the package existed
 [on GitHub](https://github.com/ContextLab/hypertools), at commit

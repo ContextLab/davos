@@ -179,3 +179,10 @@ jobs:
       - name: run pytest
         id: run-pytest
         run: pytest -sv tests/
+
+      - name: upload artifacts on failure
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: artifacts-python${{ matrix.python-version }}-ipython${{ matrix.ipython-version }}
+          path: ${{ github.workspace }}/tests/*.ipynb

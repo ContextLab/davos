@@ -102,7 +102,14 @@ jobs:
           sudo apt install -y --allow-downgrades firefox
 
           # install python packages
-          pip install pytest==6.2 selenium==3.141 geckodriver-autoinstaller
+          pip install notebook \
+              pytest==6.2 \
+              selenium==3.141 \
+              geckodriver-autoinstaller \
+              ipykernel==5.0.0 \
+              "jupyter_client<=7.3.2" \
+              "tornado<=6.1" \
+              "urllib3<2.0"
 
           # install geckodriver
           driver_path=$(python -c '
@@ -124,19 +131,18 @@ jobs:
 
       - name: setup notebook kernel environment
         run: |
-          # install jupyter notebooks application in base environment
-          pip install notebook ipykernel==5.0.0 "jupyter_client<=7.3.2" "tornado<=6.1"
-
-          # create kernel environment
+          # create & activate kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION
+          conda activate kernel-env
 
           # install davos & various test requirements in kernel environment
-          conda activate kernel-env
-          if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
-              pip install typing-extensions
-          fi
-
-          pip install "ipykernel==5.0.0" ipython-genutils requests "scipy<=1.7.3" fastdtw==0.3.4 tqdm==4.41.1
+          [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]] && pip install typing-extensions
+          pip install "ipykernel==5.0.0" \
+              ipython-genutils \
+              requests \
+              "scipy<=1.7.3" \
+              fastdtw==0.3.4 \
+              tqdm==4.41.1
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython
           else
@@ -168,6 +174,7 @@ jobs:
             printf '=%.0s' {1..20}; printf ' jupyter kernels '; printf '=%.0s' {1..20}; printf '\n'
             jupyter kernelspec list
           } > ${{ github.workspace }}/environment-info.txt
+          
           cat ${{ github.workspace }}/environment-info.txt
 
       - name: launch Jupyter server

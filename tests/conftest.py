@@ -1,3 +1,4 @@
+# pylint: skip-file
 from __future__ import annotations
 
 import ast
@@ -142,25 +143,22 @@ class js_object_is_available:
             is_ready = driver.execute_script(f"return {self.obj} != null")
         except JavascriptException:
             return False
-        else:
-            return is_ready
+        return is_ready
 
 
 class NotebookTestFailed(Exception):
     """Exception raised to convey that a notebook test failed"""
-    pass
 
 
 class NotebookTestSkipped(Exception):
     """Exception raised to convey that a notebook test was skipped"""
-    pass
 
 
 class NotebookDriver:
     def __init__(self, url: str) -> None:
         self.url = url
         options = Options()
-        options.headless = True
+        options.headless = False
         self.driver = webdriver.Firefox(
             options=options, executable_path=getenv('DRIVER_PATH')
         )
@@ -226,8 +224,6 @@ class NotebookDriver:
                             f"{__locator_or_el} was not clickable after "
                             f"{timeout} seconds"
                         ) from e
-                    else:
-                        pass
                 else:
                     return __locator_or_el
         else:
@@ -241,7 +237,7 @@ class NotebookDriver:
             element: WebElement = wait.until(element_is_clickable)
             try:
                 element.click()
-            except ElementClickInterceptedException as e:
+            except ElementClickInterceptedException:
                 # sometimes element_to_be_clickable() returns True but
                 # clicking the element fails because another element
                 # obscures it. This should usually work when that happens.
@@ -602,7 +598,7 @@ class NotebookFile(pytest.File):
 class NotebookTest(pytest.Item):
     parent: NotebookFile
 
-    def reportinfo(self) -> Tuple[Union[py.path.local, str], Optional[int], str]:
+    def reportinfo(self) -> tuple[Union[py.path.local, str], Optional[int], str]:
         return self.fspath, 0, ""
 
     def runtest(self) -> None:
@@ -610,17 +606,16 @@ class NotebookTest(pytest.Item):
         outcome = result_info[0]
         if outcome == 'PASSED':
             return None
-        elif outcome == 'SKIPPED':
+        if outcome == 'SKIPPED':
             # test was skipped due to mark.skipif/mark.xfail conditions
             # evaluating to True within the notebook context.
             # result_info[1] is the "reason" passed to the decorator
             raise NotebookTestSkipped(result_info[1])
-        elif outcome == 'FAILED':
+        if outcome == 'FAILED':
             # test failed, result_info[1] is the pre-formatted traceback to
             # be displayed
             raise NotebookTestFailed(result_info[1])
-        else:
-            raise ValueError(f"received unexpected test outcome: {outcome}")
+        raise ValueError(f"received unexpected test outcome: {outcome}")
 
     @overload
     def repr_failure(
@@ -703,5 +698,3 @@ def pytest_runtest_setup(item: pytest.Item):
 
     if missing_reqs:
         pytest.skip(f"Test requires {', '.join(missing_reqs)}")
-
-

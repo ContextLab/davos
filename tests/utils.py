@@ -6,7 +6,6 @@ import html
 import inspect
 import os
 import re
-import pkg_resources
 import signal
 import sys
 import types
@@ -30,14 +29,17 @@ from typing import (
     Union
 )
 
-if sys.version_info.minor < 8:
+if sys.version_info < (3, 8):
+    import importlib_metadata as metadata
     from typing_extensions import Literal, TypedDict
 else:
+    from importlib import metadata
     from typing import Literal, TypedDict
 
 import IPython
 from IPython.core.ultratb import FormattedTB
 from IPython.display import display_html
+from packaging.requirements import Requirement
 
 
 _E = TypeVar('_E', bound=BaseException)
@@ -199,12 +201,13 @@ def is_imported(pkg_name: str) -> bool:
 
 
 def is_installed(pkg_name: str) -> bool:
+    # Note: pkg_name may include version specifiers
+    requirement = Requirement(pkg_name)
     try:
-        pkg_resources.get_distribution(pkg_name)
-    except pkg_resources.DistributionNotFound:
+        installed_version = metadata.version(requirement.name)
+    except metadata.PackageNotFoundError:
         return False
-    else:
-        return True
+    return not requirement.specifier or installed_version in requirement.specifier
 
 
 class mark:

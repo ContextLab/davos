@@ -158,7 +158,7 @@ class NotebookDriver:
     def __init__(self, url: str) -> None:
         self.url = url
         options = Options()
-        options.headless = False
+        options.headless = True
         self.driver = webdriver.Firefox(
             options=options, executable_path=getenv('DRIVER_PATH')
         )

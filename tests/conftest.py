@@ -491,6 +491,11 @@ class JupyterDriver(NotebookDriver):
         set_cell_text_js = "Jupyter.notebook.get_cell(0).set_text(arguments[0])"
         self.driver.execute_script(set_cell_text_js, cell_contents)
 
+    def shutdown_kernel(self) -> None:
+        self.driver.execute_script("Jupyter.notebook.session.delete()")
+        # wait a few seconds for the kernel to shutdown fully
+        time.sleep(5)
+
     def wait_for_test_start(self) -> None:
         wait = WebDriverWait(self.driver, 60)
         locator = (By.CSS_SELECTOR, "#notebook-container > div:last-child .output_area")
@@ -590,6 +595,7 @@ class NotebookFile(pytest.File):
         if self.driver is not None:
             if isinstance(self.driver, JupyterDriver):
                 self.driver.save_notebook()
+                self.driver.shutdown_kernel()
             self.driver.quit()
         return super().teardown()
 

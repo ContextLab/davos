@@ -473,6 +473,11 @@ class JupyterDriver(NotebookDriver):
         self.click("#menus > div > div > ul > li:nth-child(5) > a")
         self.click("run_all_cells", By.ID)
 
+    def save_notebook(self) -> None:
+        self.driver.execute_script("Jupyter.notebook.save_notebook()")
+        # wait a few seconds for save to complete
+        time.sleep(5)
+
     def set_template_vars(
             self,
             extra_vars: Optional[dict[str, str]] = None
@@ -587,6 +592,8 @@ class NotebookFile(pytest.File):
 
     def teardown(self) -> None:
         if self.driver is not None:
+            if isinstance(self.driver, JupyterDriver):
+                self.driver.save_notebook()
             self.driver.quit()
         return super().teardown()
 

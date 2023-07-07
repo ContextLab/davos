@@ -192,10 +192,10 @@ def install_davos(
         )
 
 
-def is_imported(pkg_name: str) -> bool:
-    if pkg_name in sys.modules:
+def is_imported(dist_name: str) -> bool:
+    if dist_name in sys.modules:
         return True
-    if any(pkg.startswith(f'{pkg_name}.') for pkg in sys.modules):
+    if any(pkg.startswith(f'{dist_name}.') for pkg in sys.modules):
         return True
     return False
 

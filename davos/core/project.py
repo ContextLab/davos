@@ -199,7 +199,12 @@ class Project(metaclass=ProjectChecker):
             self._installed_packages = []
             return
         if site_pkgs_mtime != self._site_packages_mtime:
-            cmd = f'{config.pip_executable} list --path {self.site_packages_dir} --format json'
+            cmd = (
+                f'{config.pip_executable} list '
+                '--disable-pip-version-check '
+                f'--path {self.site_packages_dir} '
+                f'--format json'
+            )
             pip_list_stdout = run_shell_command(cmd, live_stdout=False)
             try:
                 pip_list_json = json.loads(pip_list_stdout)

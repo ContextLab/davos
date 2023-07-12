@@ -285,8 +285,8 @@ def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
     if python_version not in version_constraint:
         msg = (
             "The Python version installed in the environment "
-            f"({python_version}) does not satisfy the constraint "
-            f"{version_constraint}"
+            f"(v{python_version}) does not satisfy the constraint "
+            f"'{version_constraint}'"
         )
         if extra_msg is not None:
             msg = f"{msg}.\n{extra_msg}"

@@ -18,7 +18,7 @@
 \title{Davos: a Python package ``smuggler'' for constructing
   lightweight reproducible notebooks}
 \author{Paxton C. Fitzpatrick}
-\author{Jeremy R. Manning\corref{cor}}
+\author{Jeremy R. Manning\textsuperscript{\textsubscript{\scriptsize *}}}
 \ead{Jeremy.R.Manning@Dartmouth.edu}
 \cortext[cor]{Corresponding author}
 \address{Department of Psychological and Brain Sciences\\Dartmouth College, Hanover, NH 03755}
@@ -38,8 +38,10 @@
   science. Here, we propose a lighter-weight solution: the
   Davos package.  When used in combination with a
   notebook-based Python project, Davos provides a mechanism
-  for specifying (and automatically installing) the correct versions
-  of the project's dependencies.  The Davos package further
+  for specifying the correct versions of the project's 
+  dependencies directly within the code that requires them, 
+  and automatically installing them in an isolated environment 
+  when the code is run. The Davos package further
   ensures that those packages and specific versions are used every
   time the notebook's code is executed.  This enables researchers to
   share a complete reproducible copy of their code within a single
@@ -463,7 +465,7 @@ details and additional information). These include:
 \item \texttt{.project}: This attribute is a string that specifies the name of
 the ``project'' associated with the current notebook. As described in
 Section~\ref{subsec:projects}, a notebook's project determines where and how
-any \textttt{smuggle}d dependencies are installed if they are not available in
+any \texttt{smuggle}d dependencies are installed if they are not available in
 the current runtime environment. By default, this attribute is named according
 to the current notebook's absolute file path. However, the project name may be
 customized to enable shared dependency installations across notebooks (see
@@ -889,7 +891,7 @@ important to execute notebook cells in order than would be the case in the
 standard (non-Davos) setup.  We suggest that developers who wish to use
 Davos include notes regarding which cells must be executed in sequence.
 
-As of this writing, Davos can install packages using \textt{pip}, but
+As of this writing, Davos can install packages using \texttt{pip}, but
 not other standard Python package management systems such as \texttt{conda}.
 Therefore packages that are not installable via \texttt{pip} are currently
 unsupported by Davos.  We anticipate adding support for other

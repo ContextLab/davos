@@ -1,3 +1,4 @@
+# pylint: skip-file
 from __future__ import annotations
 
 import ast
@@ -142,18 +143,15 @@ class js_object_is_available:
             is_ready = driver.execute_script(f"return {self.obj} != null")
         except JavascriptException:
             return False
-        else:
-            return is_ready
+        return is_ready
 
 
 class NotebookTestFailed(Exception):
     """Exception raised to convey that a notebook test failed"""
-    pass
 
 
 class NotebookTestSkipped(Exception):
     """Exception raised to convey that a notebook test was skipped"""
-    pass
 
 
 class NotebookDriver:
@@ -226,8 +224,6 @@ class NotebookDriver:
                             f"{__locator_or_el} was not clickable after "
                             f"{timeout} seconds"
                         ) from e
-                    else:
-                        pass
                 else:
                     return __locator_or_el
         else:
@@ -241,7 +237,7 @@ class NotebookDriver:
             element: WebElement = wait.until(element_is_clickable)
             try:
                 element.click()
-            except ElementClickInterceptedException as e:
+            except ElementClickInterceptedException:
                 # sometimes element_to_be_clickable() returns True but
                 # clicking the element fails because another element
                 # obscures it. This should usually work when that happens.
@@ -446,7 +442,8 @@ class JupyterDriver(NotebookDriver):
             'name': 'kernel-env'
         }
         with notebook_path.open('w') as nb:
-            json.dump(notebook_json, nb)
+            json.dump(notebook_json, nb, indent=1)
+            nb.write('\n')
 
     def __init__(
             self,
@@ -472,6 +469,11 @@ class JupyterDriver(NotebookDriver):
         self.click("#menus > div > div > ul > li:nth-child(5) > a")
         self.click("run_all_cells", By.ID)
 
+    def save_notebook(self) -> None:
+        self.driver.execute_script("Jupyter.notebook.save_notebook()")
+        # wait a few seconds for save to complete
+        time.sleep(5)
+
     def set_template_vars(
             self,
             extra_vars: Optional[dict[str, str]] = None
@@ -489,6 +491,11 @@ class JupyterDriver(NotebookDriver):
         set_cell_text_js = "Jupyter.notebook.get_cell(0).set_text(arguments[0])"
         self.driver.execute_script(set_cell_text_js, cell_contents)
 
+    def shutdown_kernel(self) -> None:
+        self.driver.execute_script("Jupyter.notebook.session.delete()")
+        # wait a few seconds for the kernel to shutdown fully
+        time.sleep(5)
+
     def wait_for_test_start(self) -> None:
         wait = WebDriverWait(self.driver, 60)
         locator = (By.CSS_SELECTOR, "#notebook-container > div:last-child .output_area")
@@ -497,7 +504,7 @@ class JupyterDriver(NotebookDriver):
 
 
 class NotebookFile(pytest.File):
-    test_func_pattern = re.compile(r'(?:^@.+\n)*def test_[^(]+\(.*\):', re.M)
+    test_func_pattern = re.compile(r'(?:^@.+\n)*^def test_[^(]+\(.*\):', re.M)
 
     @staticmethod
     def process_decorators(
@@ -586,6 +593,9 @@ class NotebookFile(pytest.File):
 
     def teardown(self) -> None:
         if self.driver is not None:
+            if isinstance(self.driver, JupyterDriver):
+                self.driver.save_notebook()
+                self.driver.shutdown_kernel()
             self.driver.quit()
         return super().teardown()
 
@@ -594,7 +604,7 @@ class NotebookFile(pytest.File):
 class NotebookTest(pytest.Item):
     parent: NotebookFile
 
-    def reportinfo(self) -> Tuple[Union[py.path.local, str], Optional[int], str]:
+    def reportinfo(self) -> tuple[Union[py.path.local, str], Optional[int], str]:
         return self.fspath, 0, ""
 
     def runtest(self) -> None:
@@ -602,17 +612,16 @@ class NotebookTest(pytest.Item):
         outcome = result_info[0]
         if outcome == 'PASSED':
             return None
-        elif outcome == 'SKIPPED':
+        if outcome == 'SKIPPED':
             # test was skipped due to mark.skipif/mark.xfail conditions
             # evaluating to True within the notebook context.
             # result_info[1] is the "reason" passed to the decorator
             raise NotebookTestSkipped(result_info[1])
-        elif outcome == 'FAILED':
+        if outcome == 'FAILED':
             # test failed, result_info[1] is the pre-formatted traceback to
             # be displayed
             raise NotebookTestFailed(result_info[1])
-        else:
-            raise ValueError(f"received unexpected test outcome: {outcome}")
+        raise ValueError(f"received unexpected test outcome: {outcome}")
 
     @overload
     def repr_failure(
@@ -695,5 +704,3 @@ def pytest_runtest_setup(item: pytest.Item):
 
     if missing_reqs:
         pytest.skip(f"Test requires {', '.join(missing_reqs)}")
-
-

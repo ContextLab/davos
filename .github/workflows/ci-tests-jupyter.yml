@@ -59,6 +59,7 @@ jobs:
       HEAD_FORK: ${{ github.repository_owner }}
       HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       IPYTHON_VERSION: ${{ matrix.ipython-version }}
+#      MAMBA_NO_BANNER: 1
       NOTEBOOK_TYPE: jupyter
       PYTHON_VERSION: ${{ matrix.python-version }}
     steps:
@@ -70,6 +71,11 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
+#          miniforge-variant: Mambaforge
+#          miniforge-version: 4.13.0-1
+#          use-mamba: true
+#          channels: conda-forge,defaults
+#          channel-priority: strict
           auto-activate-base: true
           activate-environment: ""
 
@@ -77,12 +83,33 @@ jobs:
         run: |
           # install Python 3.9 (used to run notebooks via selenium, not the tests themselves)
           conda install python=3.9
-
-          # install Firefox browser
-          sudo apt-get install firefox
+          
+          # install Firefox browser:
+          # - remove pre-installed snap package
+          [[ -x "$(command -v snap)" ]] && sudo snap remove firefox
+          
+          # - add Mozilla PPA as a repository
+          sudo add-apt-repository -y ppa:mozillateam/ppa
+          
+          # - alter Firefox package priority to prefer the deb package from the PPA
+          echo '
+          Package: *
+          Pin: release o=LP-PPA-mozillateam
+          Pin-Priority: 1001
+          ' | sudo tee /etc/apt/preferences.d/mozilla-firefox
+          
+          # - install the proper version
+          sudo apt install -y --allow-downgrades firefox
 
           # install python packages
-          pip install pytest==6.2 "selenium==3.141" geckodriver-autoinstaller
+          pip install notebook \
+              pytest==6.2 \
+              selenium==3.141 \
+              geckodriver-autoinstaller \
+              ipykernel==5.0.0 \
+              "jupyter_client<=7.3.2" \
+              "tornado<=6.1" \
+              "urllib3<2.0"
 
           # install geckodriver
           driver_path=$(python -c '
@@ -104,19 +131,18 @@ jobs:
 
       - name: setup notebook kernel environment
         run: |
-          # install jupyter notebooks application in base environment
-          pip install notebook "ipykernel==5.0.0"
-
-          # create kernel environment
+          # create & activate kernel environment
           conda create -n kernel-env python=$PYTHON_VERSION
+          conda activate kernel-env
 
           # install davos & various test requirements in kernel environment
-          conda activate kernel-env
-          if [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]]; then
-              pip install typing-extensions
-          fi
-          [[ "$PYTHON_VERSION" == "3.6" ]] || pip install numpy==1.20.3	
-          pip install "ipykernel==5.0.0" ipython-genutils requests "scipy<=1.7.3" fastdtw==0.3.4 tqdm==4.41.1
+          [[ "$PYTHON_VERSION" =~ ^3.(6|7)$ ]] && pip install typing-extensions
+          pip install "ipykernel==5.0.0" \
+              ipython-genutils \
+              requests \
+              "scipy<=1.7.3" \
+              fastdtw==0.3.4 \
+              tqdm==4.41.1
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython
           else
@@ -127,6 +153,29 @@ jobs:
           # make environment available as a jupyter kernel
           python -m ipykernel install --prefix=/usr/share/miniconda --name=kernel-env
           conda deactivate
+
+      - name: record environment
+        run: |
+          {
+            # get packages in base environment
+            printf '=%.0s' {1..20}; printf ' base '; printf '=%.0s' {1..20}; printf '\n'
+            conda env export -n base
+          
+            # get packages in kernel environment
+            printf '=%.0s' {1..20}; printf ' kernel-env '; printf '=%.0s' {1..20}; printf '\n'
+            conda env export -n kernel-env
+          
+            # get firefox browser & webdriver version
+            printf '=%.0s' {1..20}; printf ' firefox '; printf '=%.0s' {1..20}; printf '\n'
+            firefox --full-version
+            $DRIVER_PATH --version
+          
+            # get jupyter kernels available in base environment
+            printf '=%.0s' {1..20}; printf ' jupyter kernels '; printf '=%.0s' {1..20}; printf '\n'
+            jupyter kernelspec list
+          } > ${{ github.workspace }}/environment-info.txt
+          
+          cat ${{ github.workspace }}/environment-info.txt
 
       - name: launch Jupyter server
         run: jupyter notebook --no-browser --port=8888 --NotebookApp.token= &
@@ -140,3 +189,12 @@ jobs:
       - name: run pytest
         id: run-pytest
         run: pytest -sv tests/
+
+      - name: upload artifacts on failure
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: artifacts-python${{ matrix.python-version }}-ipython${{ matrix.ipython-version }}
+          path: |
+            ${{ github.workspace }}/tests/*.ipynb
+            ${{ github.workspace }}/environment-info.txt

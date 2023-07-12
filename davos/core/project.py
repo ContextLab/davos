@@ -199,7 +199,12 @@ class Project(metaclass=ProjectChecker):
             self._installed_packages = []
             return
         if site_pkgs_mtime != self._site_packages_mtime:
-            cmd = f'{config.pip_executable} list --path {self.site_packages_dir} --format json'
+            cmd = (
+                f'{config.pip_executable} list '
+                '--disable-pip-version-check '
+                f'--path {self.site_packages_dir} '
+                f'--format json'
+            )
             pip_list_stdout = run_shell_command(cmd, live_stdout=False)
             try:
                 pip_list_json = json.loads(pip_list_stdout)
@@ -496,26 +501,30 @@ def _get_project_name_type(project_name):
         # `AbstractProject`, if not), but must at least point to what
         # could eventually be a notebook
         nb_path = Path(expandvars(project_name)).expanduser().resolve()
+        if nb_path.name == '.ipynb':
+            raise DavosProjectError(
+                f"Invalid project name: {project_name!r}. A project name "
+                "ending in '.ipynb' must be a valid path to a Jupyter "
+                "notebook file. Notebook file names must contain at least one "
+                "character."
+            )
         if nb_path.is_dir():
             raise DavosProjectError(
                 f"Invalid project name: {project_name!r}. Project names ending"
-                "in '.ipynb' must point to Jupyter notebook files, but "
+                "in '.ipynb' must point to Jupyter notebook files. "
                 f"'{nb_path}' is a directory."
-            )
-        if nb_path.stem == '':
-            raise DavosProjectError(
-                f"Invalid project name: {project_name!r}. '{nb_path}' cannot "
-                "be a valid path to a Jupyter notebook because notebook names "
-                "must contain at least 1 character."
             )
         if not nb_path.is_file():
             project_type = AbstractProject
         project_name = str(nb_path)
-    elif PATHSEP in project_name:
+    elif PATHSEP in project_name or project_name in ('.', '..'):
         # if `project_name` doesn't end in '.ipynb' but does contain a
         # PATHSEP, it's either a path to a non-notebook file/directory
         # or a simple name containing '/' (or '\' on Windows), neither
-        # of which is valid
+        # of which is valid. Also catch "." and ".." here, both of which
+        # are invalid because they're either relative paths to the CWD &
+        # parent dir (rather than a notebook file) or simple names that
+        # would be illegal directory names since they're reserved.
         raise DavosProjectError(
             f"Invalid project name: {project_name!r}. Project names may be "
             "either a path to a Jupyter notebook file (ending in '.ipynb') or "

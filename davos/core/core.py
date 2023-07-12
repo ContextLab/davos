@@ -35,8 +35,12 @@ from io import StringIO
 from pathlib import Path
 from subprocess import CalledProcessError
 
-import pkg_resources
 from packaging.requirements import InvalidRequirement
+from packaging.specifiers import SpecifierSet
+if sys.version_info < (3, 8):
+    import importlib_metadata as metadata
+else:
+    from importlib import metadata
 
 from davos import config
 from davos.core.exceptions import (
@@ -249,15 +253,21 @@ def get_previously_imported_pkgs(install_cmd_stdout, installer):
         # get the install name without the version
         pkg_name = dist_name.rsplit('-', maxsplit=1)[0]
         # use the install name to get the package distribution object
-        dist = pkg_resources.get_distribution(pkg_name)
-        try:
-            # check the distribution's metadata for a file containing
-            # top-level import names. Also includes names of namespace
-            # packages (e.g. mpl_toolkits from matplotlib), if any.
-            toplevel_names = dist.get_metadata('top_level.txt').split()
-        except FileNotFoundError:
-            # if file doesn't exist, the import name is the install name
+        dist = metadata.distribution(pkg_name)
+        # check the distribution's metadata for a file containing
+        # top-level import names. Also includes names of namespace
+        # packages (e.g. mpl_toolkits from matplotlib), if any.
+        toplevel_names = dist.read_text('top_level.txt')
+        if toplevel_names is None:
+            # importlib.metadata.PathDistribution.read_text() suppresses
+            # FileNotFoundError (also IsADirectoryError, KeyError,
+            # NotADirectoryError, and PermissionError), so if
+            # toplevel_names is None, top_level.txt doesn't exist and
+            # the import name is the install name
             toplevel_names = (pkg_name,)
+        else:
+            # file contains one name per line (with trailing newline)
+            toplevel_names = toplevel_names.split()
 
         for name in toplevel_names:
             if name in sys.modules:
@@ -321,16 +331,10 @@ def handle_alternate_pip_executable(installed_name):
     install_location = location_line.split(': ', maxsplit=1)[1].strip()
     sys.path.insert(0, install_location)
     try:
-        # reload pkg_resources so import system will search dir
-        # containing just-installed package
-        importlib.reload(sys.modules['pkg_resources'])
         yield
     finally:
         # remove temporary dir from path
         sys.path.remove(install_location)
-        # reload pkg_resources again so import system no longer searches
-        # dir used by alternate pip_executable
-        importlib.reload(sys.modules['pkg_resources'])
 
 
 def import_name(name):
@@ -378,7 +382,6 @@ def import_name(name):
     return __import__(parts[0])
 
 
-# TODO: move to top?
 class Onion:
     """
     Class representing a single package to be smuggled.
@@ -598,39 +601,67 @@ class Onion:
                 installer_kwargs.get('ignore_installed') or
                 installer_kwargs.get('upgrade')
         ):
-            # args that trigger install regardless of installed version
+            # args that trigger install regardless of existing version
             return False
         if self.args_str == config._smuggled.get(self.cache_key):
             # if the same version of the same package was smuggled from
             # the same source with all the same arguments previously in
             # the current interpreter session/notebook runtime (i.e.,
-            # line is just being rerun)
+            # a line is just being rerun with no change)
             return True
         if '/' not in self.install_name:
             # onion comment does not specify a VCS URL
-            full_spec = self.install_name + self.version_spec.replace("'", "")
             try:
-                pkg_resources.get_distribution(full_spec)
-            except pkg_resources.DistributionNotFound:
-                # noinspection PyUnresolvedReferences
-                # (suppressed due to issue with importlib stubs in
-                # typeshed repo)
+                installed_version = metadata.version(self.install_name)
+            except metadata.PackageNotFoundError:
+                # smuggled name could be a non-distribution name from a
+                # namespace package (e.g., mpl_toolkits from matplotlib,
+                # ipykernel_launcher from ipykernel, pkg_resources from
+                # setuptools, etc.) without an accompanying onion
+                # comment (so that it was also assigned to
+                # self.install_name). importlib.util.find_spec() can
+                # locate these if they exist locally.
                 module_spec = importlib.util.find_spec(self.import_name)
                 if module_spec is None:
-                    # requested package is not installed
+                    # requested package is really not installed
                     return False
-                # requested package is a namespace package
+                if self.import_name in sys.modules:
+                    # another edge case to deal with:
+                    # importlib.util.find_spec() checks for the package
+                    # in sys.modules before checking the file system, so
+                    # if the package was previously smuggled/imported,
+                    # but the user has since switched to a different
+                    # project/environment/pip executable or removed an
+                    # entry from sys.path, or the existing version was
+                    # loaded from somewhere outside sys.path, then
+                    # module_spec will be non-None even though the
+                    # package isn't actually available on the current
+                    # module search path.
+                    if not self.version_spec:
+                        # if no specific version was requested and the
+                        # module is already available, then it doesn't
+                        # matter that it's not currently on sys.path
+                        return True
+                    return False
+                # the requested package is a namespace package
                 return True
-            except (
-                # package is installed, but installed version doesn't
-                # fit requested version constraints
-                pkg_resources.VersionConflict,
-                # version_spec is invalid or pkg_resources couldn't
-                # parse it
-                InvalidRequirement
-            ):
+            except InvalidRequirement:
+                # version specifier string isn't valid, but rather than
+                # throwing an error here, let pip try to install it and
+                # show the user its likely more familiar error message
                 return False
-            return True
+            if (
+                    not self.version_spec or
+                    installed_version in SpecifierSet(self.version_spec)
+            ):
+                # include explicit `not self.version_spec` condition
+                # because `x in SpecifierSet("")` evaluates to False for
+                # prerelease versions. If the user has intentionally
+                # installed a prerelease version of a package and
+                # smuggles it without specifying any particular version
+                # constraints, we should allow it
+                return True
+            return False
         return False
 
     def _conda_install_package(self):
@@ -933,24 +964,28 @@ def use_project(smuggle_func):
             # so project's package versions are prioritized for import
             # over versions in "regular" environment
             sys.path.insert(0, str(project.site_packages_dir))
-            # reload pkg_resources so the global "working set" is
-            # regenerated based on the updated sys.path
+            # invalidate sys.meta_path finder caches so the global
+            # working set is regenerated based on the updated sys.path.
+            # Note: after pretty extensive spot checking, I haven't
+            # managed found a case where this is actually since
+            # migrating to importlib.metadata instead of pkg_resources,
+            # but the docs recommend it and the overhead is extremely
+            # minor, so probably worth including in case the user or
+            # notebook environment has implemented some unusual custom
+            # meta path finder
             importlib.invalidate_caches()
-            importlib.reload(sys.modules['pkg_resources'])
             try:
                 return smuggle_func(*args, **kwargs)
             finally:
                 # after (possibly installing and) loading the package,
                 # remove the project's site-packages directory from
-                # sys.path and reload pkg_resources again to restore the
-                # original working set.
+                # sys.path and restore the original working set.
                 # Note: can't assume the project site-packages dir is
                 # still sys.path[0] -- some install options result in
                 # other dirs being prepended to load modules installed
                 # in custom locations
                 sys.path.remove(str(project.site_packages_dir))
                 importlib.invalidate_caches()
-                importlib.reload(sys.modules['pkg_resources'])
         else:
             return smuggle_func(*args, **kwargs)
 
@@ -1029,7 +1064,6 @@ def smuggle(
         install_pkg = True
 
     if install_pkg:
-        # TODO: for v0.2 conda implementation: bypass if -y/--yes passed
         if config.confirm_install and not installer_kwargs.get('no_input'):
             msg = (f"package {pkg_name!r} will be installed with the "
                    f"following command:\n\t`{onion.install_cmd}`\n"
@@ -1043,9 +1077,6 @@ def smuggle(
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module
         importlib.invalidate_caches()
-        # reload pkg_resources so that just-installed package will be
-        # recognized when querying local versions
-        importlib.reload(sys.modules['pkg_resources'])
         # check whether the smuggled package and/or any
         # installed/updated dependencies were already imported during
         # the current runtime

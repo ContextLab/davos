@@ -21,18 +21,21 @@ __all__ = [
     'get_project',
     'Project',
     'prune_projects',
+    'require_python',
     'smuggle',
     'use_default_project'
 ]
 
 
 import sys
+import warnings
 from types import ModuleType
 
-if sys.version_info >= (3, 8):
-    from importlib import metadata
-else:
+from packaging.specifiers import SpecifierSet
+if sys.version_info < (3, 8):
     import importlib_metadata as metadata
+else:
+    from importlib import metadata
 
 from davos.core.config import DavosConfig
 
@@ -45,7 +48,7 @@ config = DavosConfig()
 
 import davos.implementations
 from davos.core.core import smuggle
-from davos.core.exceptions import DavosConfigError
+from davos.core.exceptions import DavosConfigError, DavosError
 from davos.core.project import (
     DAVOS_CONFIG_DIR,
     DAVOS_PROJECT_DIR,
@@ -229,6 +232,69 @@ def configure(
                     setattr(config, f"_{_name}", old_value)
                 raise
             old_values[name] = old_value
+
+
+def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
+    """
+    Ensure the Python version satisfies a given constraint.
+
+    Specify or constrain the Python version that should be used to run a
+    davos-enhanced notebook. Adding a call to this function before
+    smuggling packages in a notebook can be useful for communicating to
+    users that one or more smuggled packages require a particular Python
+    version or range of versions. If the user's Python version
+    isn't compatible with `version_spec`, this function will raise an
+    error. Additional information can be added to the error message
+    via the `extra_msg` argument. A "soft" or suggested constraint can
+    be specified by passing `warn=True` to issue a warning rather than
+    raise an error.
+
+    Parameters
+    ----------
+    version_spec : str
+        A version specifier string in the format described in PEP 440.
+        See https://peps.python.org/pep-0440/#version-specifiers.
+    warn : bool, optional
+        If True (default: False), issue a warning rather than raising an
+        exception.
+    extra_msg : str, optional
+        Additional message to include in the
+    prereleases : bool, optional
+        Whether to allow prerelease versions. If `None` (default), the
+        rule is autodetected from the version specifier. See
+        https://packaging.pypa.io/en/stable/specifiers.html#packaging.specifiers.SpecifierSet
+
+    Examples
+    --------
+    ```
+    import davos
+
+    pandas_message = "pandas v1.1.3 supports 3.6.1 and above, 3.7, 3.8, and 3.9"
+    davos.require_python(">=3.6.1,<3.10", extra_msg=pandas_message)
+    smuggle pandas as pd    # pip: pandas==1.1.3
+    ```
+
+    ```
+    import davos
+
+    msg = "This notebook replicates analyses originally run with Python 3.9.16"
+    davos.require_python("==3.9.16", extra_msg=msg)
+    """
+    python_version = sys.version.split()[0]
+    version_constraint = SpecifierSet(version_spec, prereleases=prereleases)
+    if python_version not in version_constraint:
+        msg = (
+            "The Python version installed in the environment "
+            f"(v{python_version}) does not satisfy the constraint "
+            f"'{version_constraint}'"
+        )
+        if extra_msg is not None:
+            msg = f"{msg}.\n{extra_msg}"
+
+        if warn:
+            warnings.warn(msg, category=RuntimeWarning)
+        else:
+            raise DavosError(msg)
 
 
 sys.modules[__name__].__class__ = ConfigProxyModule

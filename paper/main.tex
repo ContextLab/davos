@@ -38,11 +38,11 @@
   science. Here, we propose a lighter-weight solution: the
   Davos package.  When used in combination with a
   notebook-based Python project, Davos provides a mechanism
-  for specifying the correct versions of the project's 
-  dependencies directly within the code that requires them, 
-  and automatically installing them in an isolated environment 
+  for specifying the correct versions of the project's
+  dependencies directly within the code that requires them,
+  and automatically installing them in an isolated environment
   when the code is run. The Davos package further
-  ensures that those packages and specific versions are used every
+  ensures that these packages and specific versions are used every
   time the notebook's code is executed.  This enables researchers to
   share a complete reproducible copy of their code within a single
   Jupyter notebook file.
@@ -66,9 +66,9 @@
 \hline
 \textbf{Nr.} & \textbf{Code metadata description} & \textbf{Metadata value} \\
 \hline
-C1 & Current code version &  v0.1.1 \\
+C1 & Current code version &  v0.2.0 \\
 \hline
-C2 & Permanent link to code/repository used for this code version & \url{https://github.com/ContextLab/davos/tree/v0.1.1} \\
+C2 & Permanent link to code/repository used for this code version & \url{https://github.com/ContextLab/davos/tree/v0.2.0} \\
 \hline
 C3 & Code Ocean compute capsule & \\
 \hline
@@ -76,14 +76,14 @@ C4 & Legal Code License & MIT \\
 \hline
 C5 & Code versioning system used & git \\
 \hline
-C6 & Software code languages, tools, and services used & Python, JavaScript, PyPI/pip, IPython, Jupyter, ipykernel, PyZMQ. Additional tools used for tests: pytest, Selenium, Requests, Mypy, GitHub Actions \\
+C6 & Software code languages, tools, and services used & Python, JavaScript, PyPI/pip, IPython, Jupyter, ipykernel, PyZMQ.\newline Additional tools used for tests: pytest, Selenium, Requests, mypy, GitHub Actions \\
 \hline
 C7 & Compilation requirements, operating environments, and
-     dependencies & Dependencies:~Python $\geq 3.6$, packaging, setuptools.~Supported OSes: MacOS, Linux, Unix-like.~Supported IPython environments: Jupyter Notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors. \\
+     dependencies & Dependencies:~Python $\geq 3.6$, packaging, setuptools.\newline Supported OSes: MacOS, Linux, Unix-like.\newline Supported IPython environments: Jupyter Notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors. \\
 \hline
 C8 & Link to developer documentation/manual & \url{https://github.com/ContextLab/davos\#readme} \\
 \hline
-C9 & Support email for questions & contextualdynamics@gmail.com \\
+C9 & Support email for questions & \href{mailto:contextualdynamics@gmail.com}{contextualdynamics@gmail.com} \\
 \hline
 \end{tabular}
 \caption{Code metadata}
@@ -480,13 +480,13 @@ several read-only attributes that contain potentially useful information about
 the current environment or Davos's behavior:
 
 \begin{itemize}
-  
+
 \item \texttt{.environment}: This attribute's value is a string describing the notebook
 environment Davos was imported into. As of the current version (0.2.0), this
 attribute will be set to either \texttt{“IPython<7.0"}, \texttt{“IPython>=7.0”}, or \texttt{“Colaboratory”}.
-  
+
   \item \texttt{.ipython\_shell}: This attribute contains the global IPython \texttt{InteractiveShell} instance underlying the notebook kernel session.
-  
+
   \item \texttt{.smuggled}: This attribute is set to a Python dictionary that functions as a cache of any \texttt{smuggle} commands run during the current
 session.  The dictionary's keys are package names and the values are arguments passed via the corresponding smuggle statement's onion comment.
 

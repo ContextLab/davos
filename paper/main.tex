@@ -257,15 +257,16 @@ implement the bulk of the package's core
 functionality, including pipelines for installing and validating
 packages, custom parsers for the \texttt{smuggle} statement (see
 Sec.~\ref{subsec:smuggle}) and onion comment (see
-Sec.~\ref{subsec:onion}), and a runtime interface for configuring
-Davos's behavior (see Sec.~\ref{subsec:config}). However,
-certain critical aspects of this
+Sec.~\ref{subsec:onion}), a system for isolating dependencies of
+different projects (see Sec.~\ref{subsec:projects}), and a runtime
+interface for configuring Davos's behavior (see Sec.~\ref{subsec:config}).
+However, certain critical aspects of this
 functionality require (often substantially) different implementations
 depending on properties of the notebook environment in which
 Davos is used (e.g., whether the frontend is provided by
 Jupyter or Google Colaboratory, or which version of
 IPython~\cite{PereGran07} is used by the notebook kernel). To deal
-with this, environment-dependent parts of core features and behaviors
+with this, environment-dependent components of core features and behaviors
 are isolated and abstracted to ``helper functions'' in the
 \texttt{davos.implementations} subpackage. This second subpackage
 defines multiple, interchangeable versions of each helper function,

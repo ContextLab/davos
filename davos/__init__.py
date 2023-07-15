@@ -234,6 +234,79 @@ def configure(
             old_values[name] = old_value
 
 
+def require_pip(version_spec, warn=False, extra_msg=None, prereleases=None):
+    """
+    Ensure the pip version satisfies a given constraint.
+
+    Specify or constrain the pip version that should be used to install
+    smuggled packages in a davos-enhanced notebook. Adding a call to
+    this function before smuggling packages in a notebook can be useful
+    for communicating to users that installing one or more smuggled
+    packages requires a particular pip version (or, more likely, a
+    certain minimum version). This function's behavior and arguments are
+    analogous to those of davos's `require_python` function. See that
+    function's docstring for additional details.
+
+    Parameters
+    ----------
+    version_spec : str
+        A version specifier string in the format described in PEP 440.
+        See https://peps.python.org/pep-0440/#version-specifiers. Bare
+        version identifiers without a comparison operator are also
+        accepted (see the `davos.require_python` function's docstring).
+    warn : bool, optional
+        If `True`, issue a warning rather than raise an exception if the
+        user's pip version doesn't satisfy `version_spec`.
+    extra_msg : str, optional
+        Additional information to include in the error message.
+    prereleases : bool, optional
+        Whether to allow prerelease versions. If `None` (default), the
+        rule is auto-detected from the version specifier. See
+        https://packaging.pypa.io/en/stable/specifiers.html#packaging.specifiers.SpecifierSet
+
+    Examples
+    --------
+    ```
+    import davos
+
+    extra_msg = "pip>=19.0 is needed to install PEP 517-based packages"
+    davos.require_pip('>=19.0', extra_msg=extra_msg)
+    ```
+
+    See Also
+    --------
+    require_python :
+        Analogous function for constraining the user's Python version.
+    """
+    valid_specifiers = ('===', '==', '<=', '>=', '!=', '~=', '<', '>')
+    for spec in valid_specifiers:
+        if version_spec.startswith(spec):
+            break
+    else:
+        if version_spec[0].isdigit():
+            version_spec = f'~={version_spec}'
+        else:
+            raise InvalidSpecifier(
+                f"Invalid version specifier: '{version_spec}'"
+            )
+
+    version_constraint = SpecifierSet(version_spec, prereleases=prereleases)
+    pip_version = metadata.version('pip')
+    if pip_version not in version_constraint:
+        msg = (
+            "The version of pip installed in the environment "
+            f"(v{pip_version}) does not satisfy the constraint "
+            f"'{version_constraint}'"
+        )
+        if extra_msg is not None:
+            msg = f"{msg}.\n{extra_msg}"
+
+        if warn:
+            warnings.warn(msg, category=RuntimeWarning)
+        else:
+            raise DavosError(msg)
+
+
 def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
     """
     Ensure the Python version satisfies a given constraint.
@@ -291,6 +364,13 @@ def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
 
     msg = "This notebook replicates analyses originally run with Python 3.9.16"
     davos.require_python("==3.9.16", extra_msg=msg)
+    ```
+
+    See Also
+    --------
+    require_pip :
+        Analogous function for constraining the pip version used to
+        install missing packages.
     """
     valid_specifiers = ('===', '==', '<=', '>=', '!=', '~=', '<', '>')
     for spec in valid_specifiers:

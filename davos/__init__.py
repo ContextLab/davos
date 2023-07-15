@@ -292,7 +292,7 @@ def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
     msg = "This notebook replicates analyses originally run with Python 3.9.16"
     davos.require_python("==3.9.16", extra_msg=msg)
     """
-    valid_specifiers = ('==', '<=', '>=', '!=', '~=', '<', '>')
+    valid_specifiers = ('===', '==', '<=', '>=', '!=', '~=', '<', '>')
     for spec in valid_specifiers:
         if version_spec.startswith(spec):
             break

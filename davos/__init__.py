@@ -31,7 +31,7 @@ import sys
 import warnings
 from types import ModuleType
 
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 if sys.version_info < (3, 8):
     import importlib_metadata as metadata
 else:
@@ -249,19 +249,31 @@ def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
     be specified by passing `warn=True` to issue a warning rather than
     raise an error.
 
+    `version_spec` may be any valid version specifier defined by PEP
+    440 (see https://peps.python.org/pep-0440/#version-specifiers).
+    Additionally, passing just a version identifier *without* a
+    comparison operator (e.g., "3.9") will be interpreted as a
+    "compatible release" specifier. For example,
+    `davos.require_python("3.9")` is equivalent to
+    `davos.require_python("~=3.9")` and will accept any Python
+    patch/macro version in the 3.9 series (i.e., >=3.9.0,<3.10.0).
+
+
     Parameters
     ----------
     version_spec : str
         A version specifier string in the format described in PEP 440.
-        See https://peps.python.org/pep-0440/#version-specifiers.
+        See https://peps.python.org/pep-0440/#version-specifiers. Bare
+        version identifiers without a comparison operator are also
+        accepted (see above).
     warn : bool, optional
         If True (default: False), issue a warning rather than raising an
         exception.
     extra_msg : str, optional
-        Additional message to include in the
+        Additional text to include in the error or warning message.
     prereleases : bool, optional
         Whether to allow prerelease versions. If `None` (default), the
-        rule is autodetected from the version specifier. See
+        rule is auto-detected from the version specifier. See
         https://packaging.pypa.io/en/stable/specifiers.html#packaging.specifiers.SpecifierSet
 
     Examples
@@ -280,8 +292,20 @@ def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
     msg = "This notebook replicates analyses originally run with Python 3.9.16"
     davos.require_python("==3.9.16", extra_msg=msg)
     """
-    python_version = sys.version.split()[0]
+    valid_specifiers = ('==', '<=', '>=', '!=', '~=', '<', '>')
+    for spec in valid_specifiers:
+        if version_spec.startswith(spec):
+            break
+    else:
+        if version_spec[0].isdigit():
+            version_spec = f'~={version_spec}'
+        else:
+            raise InvalidSpecifier(
+                f"Invalid version specifier: '{version_spec}'"
+            )
+
     version_constraint = SpecifierSet(version_spec, prereleases=prereleases)
+    python_version = sys.version.split()[0]
     if python_version not in version_constraint:
         msg = (
             "The Python version installed in the environment "

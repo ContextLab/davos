@@ -21,6 +21,7 @@ __all__ = [
     'get_project',
     'Project',
     'prune_projects',
+    'require_pip',
     'require_python',
     'smuggle',
     'use_default_project'
@@ -330,7 +331,6 @@ def require_python(version_spec, warn=False, extra_msg=None, prereleases=None):
     `davos.require_python("3.9")` is equivalent to
     `davos.require_python("~=3.9")` and will accept any Python
     patch/macro version in the 3.9 series (i.e., >=3.9.0,<3.10.0).
-
 
     Parameters
     ----------

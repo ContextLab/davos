@@ -5,7 +5,7 @@ from davos.core.config import DavosConfig
 from davos.core.project import AbstractProject, ConcreteProject
 
 __all__ = list[Literal['DAVOS_CONFIG_DIR', 'DAVOS_PROJECT_DIR', 'config', 'configure', 'get_project', 'Project',
-                       'prune_projects', 'require_python', 'smuggle', 'use_default_project']]
+                       'prune_projects', 'require_pip', 'require_python', 'smuggle', 'use_default_project']]
 __class__: ConfigProxyModule
 __version__: Final[str]
 

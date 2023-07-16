@@ -50,10 +50,18 @@ jobs:
           - python-version: 3.8
             ipython-version: 7.3.0    # earliest version to support Python 3.8
           - python-version: 3.8
-            ipython-version: latest
+            ipython-version: 8.12.2   # latest version to support Python 3.8
           - python-version: 3.9
             ipython-version: 7.15     # earliest version to support Python 3.9
           - python-version: 3.9
+            ipython-version: latest
+          - python-version: 3.10
+            ipython-version: 8.0      # earliest version to support Python 3.10
+          - python-version: 3.10
+            ipython-version: latest
+          - python-version: 3.11
+            ipython-version: 8.8.0    # earliest version to support Python 3.11
+          - python-version: 3.11
             ipython-version: latest
     env:
       HEAD_FORK: ${{ github.repository_owner }}

@@ -552,7 +552,7 @@ class Onion:
 
             # split on ',' to handle multiple specs ('pkg>=1.0,<=2.0')
             first_subspec = full_spec.split(',')[0]
-            for spec_delim in ('==', '<=', '>=', '!=', '~=', '<', '>', '='):
+            for spec_delim in ('===', '==', '<=', '>=', '!=', '~=', '<', '>', '='):
                 if spec_delim in first_subspec:
                     self.install_name = full_spec[:full_spec.index(spec_delim)]
                     ver_spec = full_spec[full_spec.index(spec_delim):]

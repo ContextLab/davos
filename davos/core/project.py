@@ -51,10 +51,10 @@ import shutil
 import sys
 from os.path import expandvars
 from pathlib import Path
-from urllib.parse import unquote, urljoin, urlparse
+from urllib.request import urlopen
+from urllib.parse import parse_qs, unquote, urlencode, urljoin, urlparse
 
 import ipykernel
-import requests
 from IPython.display import clear_output
 from IPython.terminal.interactiveshell import TerminalInteractiveShell
 
@@ -652,12 +652,15 @@ def get_notebook_path():
         notebook_api_url = urljoin(nbserver_url, '/api/sessions')
         parsed_url = urlparse(nbserver_url)
         if parsed_url.query:
-            params = {'token': parsed_url.query.replace('token=', '')}
-        else:
-            params = None
+            # get just the NotebookApp token in case there are multiple parts
+            token_param = {'token': parse_qs(parsed_url.query)['token'][0]}
+            notebook_api_url = f'{notebook_api_url}?{urlencode(token_param)}'
 
-        response = requests.get(notebook_api_url, params=params, timeout=10)
-        for session in response.json():
+        with urlopen(notebook_api_url, timeout=10) as response:
+            response_data = response.read().decode('utf-8')
+
+        response_json = json.loads(response_data)
+        for session in response_json:
             if session['kernel']['id'] == kernel_id:
                 if config.environment == 'Colaboratory':
                     # Colab notebooks don't actually live on Colab VM

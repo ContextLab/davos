@@ -304,18 +304,19 @@ expose its contents to Python's \texttt{import} machinery, and load it
 into the notebook for immediate use.
 
 Importantly, packages installed by Davos are made available for use in the
-notebook without affecting the user's Python environment. By default,
-\texttt{smuggle} statements install missing packages (and any missing
-dependencies of those packages) into a notebook-specific, virtual
+notebook without affecting the user's Python environment or existing packages.
+By default, \texttt{smuggle} statements will install missing packages (and any
+missing dependencies of those packages) into a notebook-specific, virtual
 environment-like directory called a ``project'' (see
-Sec.~\ref{subsec:projects}). When a \texttt{smuggle} statement in a particular
-notebook is executed, Davos will first check for the smuggled package in that
-notebook's corresponding project directory before searching the user's main
-Python environment. In this way, \texttt{smuggle} statements can be substituted
-for \texttt{import} statements to automatically ensure that all packages needed
-to run a notebook are installed and available at runtime without risking
-interfering with dependencies of the user's other Python programs, or other
-Davos-enhanced notebooks.
+Sec.~\ref{subsec:projects}). In turn, \texttt{smuggle} statements executed in a
+particular notebook will preferentially load packages from the notebook's
+project directory whenever they are available, rather than searching for them
+in the user's main Python environment. In this way, \texttt{smuggle}
+statements can be substituted for \texttt{import} statements to automatically
+ensure that all packages needed to run a notebook are installed and available
+at runtime each time the notebook is run, without risking interfering with
+dependencies of the user's other Python programs, or other Davos-enhanced
+notebooks.
 
 
 \subsubsection{The onion comment}\label{subsec:onion}
@@ -382,6 +383,7 @@ would change the package's installation location (such as
 the user disables project-based isolation and specifies \texttt{--target <dir>},
 Davos will ensure that \texttt{<dir>} is included in the module search path (i.e.,
 \texttt{sys.path}), prepending it if necessary, so the package can be loaded.
+
 
 \subsubsection{Projects}\label{subsec:projects}
 

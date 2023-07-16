@@ -387,15 +387,85 @@ Davos will ensure that \texttt{<dir>} is included in the module search path (i.e
 
 \subsubsection{Projects}\label{subsec:projects}
 
-Because Davos can install new packages, running the code in a
-Davos-enhanced notebook might (in principle) affect the behavior of
-\textit{other} Python-based software (e.g., other notebooks, scripts, etc.) by
-altering which packages are installed in the runtime environment. This could
-lead to undesired consequences. For example, suppose Person A develops a
-notebook (Notebook A) for their research project. We will assume that Notebook
-A does not use Davos to manage project dependencies.  If Person A
-runs a Davos-enhanced Notebook B, e.g., sent by another developer,
-might this unexpectedly affect the behavior of Notebook A?
+Standard approaches to installing new packages from within a notebook can alter the local Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies via IPython system shell commands (prefixed with ``\texttt{!}'') or magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions. This can lead to incompatibilities between packages, affect the behavior of other scripts or notebooks, or even interfere with system applications. 
+
+To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, Davos isolates packages installed via \texttt{smuggle} statements using a custom scheme called ``projects.'' Davos projects function similarly to simplified versions of standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) with a few differences: they do not need to be manually activated and deactivated, they do not contain separate Python or \texttt{pip} executables, and they \textit{extend} the main Python environment rather than replace it. 
+
+
+
+% Davos implements a custom scheme for isolating packages installed by \texttt{smuggle} statements, called ``projects.'' 
+
+%A Davos project consists of a directory 
+%
+%
+% function similarly to simplified versions of 
+%
+%
+%
+%Additionally, Davos projects \textit{extend}, rather than replace, the main Python environment. 
+%
+%
+%Davos projects function similarly to a simplified version of a virtual environment created with Python's built-in \texttt{venv} module, or a third-party tool like 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ADD THIS EITHER TO START OF PROJECTS SUBSUBSECTION OR IN IMPACT SECTION   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Standard approaches to installing new packages from within a notebook can alter a user's Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies using IPython system shell commands (prefixed with ``\texttt{!}'') or magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions. This can lead to conflicts between package versions, affect the behavior of the user's other scripts or notebooks, or even interfere with system applications. 
+%
+%A common way of avoiding this is to create a virtual environment in which to run the notebook, and instruct anyone with whom the notebook is shared to do the same. While effective, this added requirement introduces additional 
+%
+%
+%(or group of related notebooks) that require different 
+%
+%
+%\begin{itemize}
+%  \item{common solution is to use a virtual environment}
+%  \item{this introduces complexity}
+%  \item{davos's solution is projects}
+%\end{itemize}
+
+%Standard approaches to installing new packages from within a notebook (e.g., system shell commands prefixed with ``\texttt{!}'' or IPython magic commands prefixed with ``\texttt{\%}'') can alter the local Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies in the user's main environment may cause other existing packages to be uninstalled and replaced with alternate versions. This can lead to conflicts between package versions, affect the behavior of the user's other scripts or notebooks, or even break system applications. 
+
+%To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, Davos implements its own virtual environment-like scheme for isolating packages it installs. 
+
+
+
+
+\bigskip\bigskip\textcolor{red}{\textbf{========== TODO: finish editing from here to end ==========}}\bigskip\bigskip
+
+%Because Davos can install new packages, running the code in a
+%Davos-enhanced notebook might (in principle) affect the behavior of
+%\textit{other} Python-based software (e.g., other notebooks, scripts, etc.) by
+%altering which packages are installed in the runtime environment. This could
+%lead to undesired consequences. For example, suppose Person A develops a
+%notebook (Notebook A) for their research project. We will assume that Notebook
+%A does not use Davos to manage project dependencies.  If Person A
+%runs a Davos-enhanced Notebook B, e.g., sent by another developer,
+%might this unexpectedly affect the behavior of Notebook A?
+
+%To prevent unwanted
+%changes to the user's Python environment, Davos incorporates its
+%own virtual environment-like scheme for isolating packages it installs. When Davos
+%is imported, a new virtual environment (folder) is created automatically. The
+%folder's name may be customized to support multi-notebook projects. Any
+%\texttt{smuggle}d packages that were not available in the notebook's runtime
+%environment are installed to the current project folder. The runtime
+%environment remains unaffected by Davos's behavior (see
+%Sec.~\ref{subsec:projects}).
+%By default, projects are notebook-specific, but can also be shared by multiple notebooks, and can be managed interactively from within a Davos-enhanced notebook.
+
+%%%%%%%% JEREMY VERSION %%%%%%%%%
+%Installing new packages in a notebook using standard approaches (e.g., system commmands) affect the
+%runtime environment. This could lead to undesired behaviors. For example, running a notebook that
+%installs new packages in the user’s primary system environment might alter their main system installation
+%and/or containerized environment in unexpected ways (e.g., changing package versions, causing conflicts
+%with other packages, etc.). To protect against undesired changes to the runtime environment, Davos
+%incorporates its own virtual environment for managing packages it installs. When Davos is imported,
+%a new virtual environment (folder) is created automatically. The folder’s name may be customized to
+%support multi-notebook projects. Any smuggled packages that were not available in the notebook’s
+%runtime environment are installed to the current project folder. The runtime environment remains unaffected
+%by Davos’s behavior (see Sec. 2.2.3).
 
 We implemented a ``project'' system in Davos to protect against the
 above scenario. By default, importing Davos creates a new project

@@ -149,7 +149,8 @@ jobs:
               ipython-genutils \
               requests \
               fastdtw==0.3.4 \
-              tqdm==4.41.1
+              tqdm==4.41.1 \
+              "numpy<=1.23.5"
           [[ "$PYTHON_VERSION" =~ ^3.11$ ]] && pip install scipy==1.11.1 || pip install "scipy<=1.7.3"
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython

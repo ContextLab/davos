@@ -148,10 +148,9 @@ jobs:
           pip install "ipykernel==5.0.0" \
               ipython-genutils \
               requests \
-              "scipy<=1.7.3" \
               fastdtw==0.3.4 \
               tqdm==4.41.1
-          [[ "$PYTHON_VERSION" =~ ^3.(6|7|8|9)$ ]] && pip install "scipy<=1.7.3" || pip install scipy
+          [[ "$PYTHON_VERSION" =~ ^3.11$ ]] && pip install scipy || pip install "scipy<=1.7.3"
           if [[ "$IPYTHON_VERSION" == "latest" ]]; then
               pip install --upgrade IPython
           else

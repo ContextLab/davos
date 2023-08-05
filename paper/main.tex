@@ -309,7 +309,7 @@ By default, \texttt{smuggle} statements will install missing packages (and any
 missing dependencies of those packages) into a notebook-specific, virtual
 environment-like directory called a ``project'' (see
 Sec.~\ref{subsec:projects}). In turn, \texttt{smuggle} statements executed in a
-particular notebook will preferentially load packages from the notebook's
+particular notebook will preferentially load packages from that notebook's
 project directory whenever they are available, rather than searching for them
 in the user's main Python environment. In this way, \texttt{smuggle}
 statements can be substituted for \texttt{import} statements to automatically
@@ -387,36 +387,27 @@ Davos will ensure that \texttt{<dir>} is included in the module search path (i.e
 
 \subsubsection{Projects}\label{subsec:projects}
 
-Standard approaches to installing new packages from within a notebook can alter the local Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies via IPython system shell commands (prefixed with ``\texttt{!}'') or magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions. This can lead to incompatibilities between packages, affect the behavior of other scripts or notebooks, or even interfere with system applications.
+Standard approaches to installing packages from within a notebook can alter the local Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies via system shell commands (prefixed with ``\texttt{!}'') or IPython magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions. This can lead to incompatibilities between installed packages, affect the behavior of the user's other scripts or notebooks, or even interfere with system applications.
 
-To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, Davos isolates packages installed via \texttt{smuggle} statements using a custom scheme called ``projects.'' Davos projects function similarly to simplified versions of standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) with a few differences: they do not need to be manually activated and deactivated, they do not contain separate Python or \texttt{pip} executables, and they \textit{extend} the main Python environment rather than replace it.
+To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, Davos automatically isolates packages installed via \texttt{smuggle} statements using a custom scheme called ``projects.'' Functionally, a Davos project is similar to a standard Python virtual environment (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}): it consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular project or task. However, Davos projects do not need to be manually activated and deactivated, do not contain separate Python or \texttt{pip} executables, and \textit{extend} the user's main Python environment rather than replace it. 
+
+When Davos is imported into a notebook, a notebook-specific project directory is automatically created (if it does not exist already). 
+%When Davos is imported into a notebook, a notebook-specific project directory is automatically created (if it does not exist already), named for the absolute path to the notebook file. 
 
 
+Notebook-specific projects are named for the absolute path to the notebook file. 
 
-% Davos implements a custom scheme for isolating packages installed by \texttt{smuggle} statements, called ``projects.''
 
-%A Davos project consists of a directory
-%
-%
-% function similarly to simplified versions of
-%
-%
-%
-%Additionally, Davos projects \textit{extend}, rather than replace, the main Python environment.
-%
-%
-%Davos projects function similarly to a simplified version of a virtual environment created with Python's built-in \texttt{venv} module, or a third-party tool like
+ %Davos projects function similarly to simplified versions of standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) with a few differences: they do not need to be manually activated and deactivated, they do not contain separate Python or \texttt{pip} executables, and they \textit{extend} the main Python environment rather than replace it. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ADD THIS EITHER TO START OF PROJECTS SUBSUBSECTION OR IN IMPACT SECTION   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Standard approaches to installing new packages from within a notebook can alter a user's Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies using IPython system shell commands (prefixed with ``\texttt{!}'') or magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions. This can lead to conflicts between package versions, affect the behavior of the user's other scripts or notebooks, or even interfere with system applications.
-%
-%A common way of avoiding this is to create a virtual environment in which to run the notebook, and instruct anyone with whom the notebook is shared to do the same. While effective, this added requirement introduces additional
+%A common way of avoiding this is to create a virtual environment in which to run the notebook, and instruct anyone with whom the notebook is shared to do the same. While effective, this added requirement introduces additional 
 %
 %
-%(or group of related notebooks) that require different
+%(or group of related notebooks) that require different 
 %
 %
 %\begin{itemize}
@@ -424,13 +415,6 @@ To prevent Davos-enhanced notebooks from having unwanted side-effects on the use
 %  \item{this introduces complexity}
 %  \item{davos's solution is projects}
 %\end{itemize}
-
-%Standard approaches to installing new packages from within a notebook (e.g., system shell commands prefixed with ``\texttt{!}'' or IPython magic commands prefixed with ``\texttt{\%}'') can alter the local Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies in the user's main environment may cause other existing packages to be uninstalled and replaced with alternate versions. This can lead to conflicts between package versions, affect the behavior of the user's other scripts or notebooks, or even break system applications.
-
-%To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, Davos implements its own virtual environment-like scheme for isolating packages it installs.
-
-
-
 
 \bigskip\bigskip\textcolor{red}{\textbf{========== TODO: finish editing from here to end ==========}}\bigskip\bigskip
 

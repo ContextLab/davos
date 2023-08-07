@@ -493,6 +493,14 @@ def _get_project_name_type(project_name):
         )
 
     project_type = ConcreteProject
+    if config.environment == 'Colaboratory':
+        # colab name/type logic works slightly differently -- there's
+        # only ever one "real" notebook per VM session, but it doesn't
+        # exist on the VM filesystem
+        curr_notebook_name = get_notebook_path()
+        if project_name == curr_notebook_name:
+            return project_name, project_type
+        return project_name, AbstractProject
     if project_name.endswith('.ipynb'):
         # `project_name` is a path to a notebook file, either the
         # default (absolute path to the current notebook) or
@@ -849,5 +857,8 @@ def use_default_project():
     else:
         proj_name = get_notebook_path()
 
-    default_project = Project(proj_name)
+    # will always be an absolute path to a real Jupyter notebook file,
+    # or name of real Colab notebook, so we can skip project type
+    # decision logic
+    default_project = ConcreteProject(proj_name)
     config.project = default_project

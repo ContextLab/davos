@@ -1077,6 +1077,13 @@ def smuggle(
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module
         importlib.invalidate_caches()
+        # if pkg_resources module has already been loaded, reload it in
+        # case the just-installed package uses it internally to populate
+        # its __version__ attribute from its metadata, Otherwise,
+        # pkg_resources's cached working set won't include the new
+        # package
+        if 'pkg_resources' in sys.modules:
+            importlib.reload(sys.modules['pkg_resources'])
         # check whether the smuggled package and/or any
         # installed/updated dependencies were already imported during
         # the current runtime

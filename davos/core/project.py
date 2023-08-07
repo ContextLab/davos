@@ -305,17 +305,6 @@ class Project(metaclass=ProjectChecker):
             (i.e., no packages have been installed into it).
         """
         new_project_name, new_project_type = _get_project_name_type(new_name)
-        if config.environment == 'Colaboratory':
-            # colab name/type logic works slightly differently and needs
-            # to be handled separately
-            new_project_name = Path(new_project_name).name
-            # currently running notebook should be the only "real" one
-            # for the current VM session
-            curr_nb_name = get_notebook_path()
-            if new_project_name == curr_nb_name:
-                new_project_type = ConcreteProject
-            else:
-                new_project_type = AbstractProject
         if new_project_name == self.name:
             # no change
             return
@@ -504,6 +493,14 @@ def _get_project_name_type(project_name):
         )
 
     project_type = ConcreteProject
+    if config.environment == 'Colaboratory':
+        # colab name/type logic works slightly differently -- there's
+        # only ever one "real" notebook per VM session, but it doesn't
+        # exist on the VM filesystem
+        curr_notebook_name = get_notebook_path()
+        if project_name == curr_notebook_name:
+            return project_name, project_type
+        return project_name, AbstractProject
     if project_name.endswith('.ipynb'):
         # `project_name` is a path to a notebook file, either the
         # default (absolute path to the current notebook) or

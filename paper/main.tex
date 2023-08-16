@@ -440,7 +440,7 @@ Notebook-specific projects are named for the absolute path to the notebook file.
 %By default, projects are notebook-specific, but can also be shared by multiple notebooks, and can be managed interactively from within a Davos-enhanced notebook.
 
 %%%%%%%% JEREMY VERSION %%%%%%%%%
-%Installing new packages in a notebook using standard approaches (e.g., system commmands) affect the
+%Installing new packages in a notebook using standard approaches (e.g., system commands) affect the
 %runtime environment. This could lead to undesired behaviors. For example, running a notebook that
 %installs new packages in the user’s primary system environment might alter their main system installation
 %and/or containerized environment in unexpected ways (e.g., changing package versions, causing conflicts
@@ -792,7 +792,7 @@ houses the Jupyter notebook server. In many basic setups, these two
 environments are the same.  However, a common ``advanced'' approach
 entails running the notebook server from a base environment, with
 additional environments each providing their own separate,
-interchangeable IPython kernels.  To accomodate this multi-environment
+interchangeable IPython kernels.  To accommodate this multi-environment
 scenario, on lines 26 and 28, we use the \texttt{pip\_executable} option to control which environments each
 package should be installed to.  Once these two packages are installed
 and imported, line 31 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
@@ -861,7 +861,7 @@ non-trivial (e.g., see Fig.~\ref{fig:flow-chart}). Further, Davos
 incorporates its own virtual environment system that isolates
 notebook-installed packages from the runtime environment
 (Sec.~\ref{subsec:projects}). In many setups this feature can eliminate the
-need to set up a seperate virtual environment or container (e.g., in
+need to set up a separate virtual environment or container (e.g., in
 conjunction with a \texttt{requirements.txt}, \texttt{project.toml}, or
 \texttt{environment.yml} file specifying the project's dependencies).
 

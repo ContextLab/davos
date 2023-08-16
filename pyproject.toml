@@ -83,6 +83,7 @@ markers = [
 ]
 
 [tool.codespell]
-skip = '.git,*.pdf,*.svg'
+skip = '.git,*.pdf,*.svg,*.bst,*.cls'
+ignore-regex = 'doesnt/exist|Ser Davos'
 #
 # ignore-words-list = ''

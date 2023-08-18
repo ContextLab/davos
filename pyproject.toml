@@ -86,4 +86,4 @@ markers = [
 skip = '.git,*.pdf,*.svg,*.bst,*.cls'
 ignore-regex = 'doesnt/exist|Ser Davos'
 #
-# ignore-words-list = ''
+ignore-words-list = 'covert,dateset'

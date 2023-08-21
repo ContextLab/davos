@@ -81,3 +81,9 @@ markers = [
     "ipython_post7: marks tests that should run only if IPython>=7.0.0",
     "timeout: marks tests that should fail after a certain amount of time"
 ]
+
+[tool.codespell]
+skip = '.git,*.pdf,*.svg,*.bst,*.cls'
+ignore-regex = 'doesnt/exist|Ser Davos'
+#
+ignore-words-list = 'covert,dateset'

@@ -202,7 +202,7 @@ class Project(metaclass=ProjectChecker):
             cmd = (
                 f'{config.pip_executable} list '
                 '--disable-pip-version-check '
-                f'--path {self.site_packages_dir} '
+                f'--path "{self.site_packages_dir}" '
                 f'--format json'
             )
             pip_list_stdout = run_shell_command(cmd, live_stdout=False)

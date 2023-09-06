@@ -389,7 +389,7 @@ Davos will ensure that \texttt{<dir>} is included in the module search path (i.e
 
 Standard approaches to installing packages from within a notebook can alter the local Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies via system shell commands (prefixed with ``\texttt{!}'') or IPython magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions. This can lead to incompatibilities between installed packages, affect the behavior of the user's other scripts or notebooks, or even interfere with system applications.
 
-To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, Davos automatically isolates packages installed via \texttt{smuggle} statements using a custom scheme called ``projects.'' Functionally, a Davos project is similar to a standard Python virtual environment (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}): it consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular project or task. However, Davos projects do not need to be manually activated and deactivated, do not contain separate Python or \texttt{pip} executables, and \textit{extend} the user's main Python environment rather than replace it. 
+To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, Davos automatically isolates packages installed via \texttt{smuggle} statements using a custom scheme called ``projects.'' Functionally, a Davos project is similar to a standard Python virtual environment (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}): it consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular project or task. However, unlike standard virtual environments, Davos projects do not need to be manually activated and deactivated, do not contain separate Python or \texttt{pip} executables, and \textit{extend} the user's main Python environment rather than replace it. 
 
 When Davos is imported into a notebook, a notebook-specific project directory is automatically created (if it does not exist already). 
 %When Davos is imported into a notebook, a notebook-specific project directory is automatically created (if it does not exist already), named for the absolute path to the notebook file. 
@@ -537,7 +537,7 @@ details and additional information). These include:
   program throws an error, both its stdout and stderr streams will be
   displayed alongside the Python traceback to allow for debugging.
 
-\item \texttt{.project}: This attribute is a string that specifies the name of
+\item \texttt{.project}: \textcolor{red}{\textbf{TODO: fix this}} This attribute is a string that specifies the name of
 the ``project'' associated with the current notebook. As described in
 Section~\ref{subsec:projects}, a notebook's project determines where and how
 any \texttt{smuggle}d dependencies are installed if they are not available in

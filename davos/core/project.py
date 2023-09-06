@@ -49,6 +49,7 @@ import json
 import os
 import shutil
 import sys
+import warnings
 from os.path import expandvars
 from pathlib import Path
 from urllib.request import urlopen
@@ -202,7 +203,7 @@ class Project(metaclass=ProjectChecker):
             cmd = (
                 f'{config.pip_executable} list '
                 '--disable-pip-version-check '
-                f'--path {self.site_packages_dir} '
+                f'--path "{self.site_packages_dir}" '
                 f'--format json'
             )
             pip_list_stdout = run_shell_command(cmd, live_stdout=False)
@@ -678,6 +679,15 @@ def get_notebook_path():
                 notebook_relpath = unquote(session['notebook']['path'])
                 return f'{nbserver_root_dir}/{notebook_relpath}'
 
+    # VS Code doesn't actually start a Jupyter server when connecting to
+    # kernels, so the Jupyter API won't work. Fortunately, it's easy to
+    # check if the notebook is being run through VS Code, and to get its
+    # absolute path, if so.
+    # environment variable defined only if running in VS Code
+    if os.getenv('VSCODE_PID') is not None:
+        # global variable that holds absolute path to notebook file
+        return config.ipython_shell.user_ns['__vsc_ipynb_file__']
+
     # shouldn't ever get here, but just in case
     raise RuntimeError("Could not find notebook path for current kernel")
 
@@ -855,10 +865,24 @@ def use_default_project():
     if isinstance(config._ipython_shell, TerminalInteractiveShell):
         proj_name = "ipython-shell"
     else:
-        proj_name = get_notebook_path()
+        try:
+            proj_name = get_notebook_path()
+        except RuntimeError:
+            # failed to identify the notebook's name/path for some
+            # reason. This may happen if the notebook is being run
+            # through an IDE or other application that accesses the
+            # notebook kernel in a non-standard way, such that the
+            # Jupyter server is never launched. In this case, fall back
+            # to a generic project so smuggled packages are still
+            # isolated from the user's main environment
+            proj_name = "davos-fallback"
+            warnings.warn(
+                "Failed to identify notebook path. Falling back to generic "
+                "default project"
+            )
 
     # will always be an absolute path to a real Jupyter notebook file,
-    # or name of real Colab notebook, so we can skip project type
-    # decision logic
+    # name of real Colab notebook, or one of the non-path strings
+    # explicitly set above, so we can skip project type decision logic
     default_project = ConcreteProject(proj_name)
     config.project = default_project

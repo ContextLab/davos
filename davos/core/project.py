@@ -678,6 +678,15 @@ def get_notebook_path():
                 notebook_relpath = unquote(session['notebook']['path'])
                 return f'{nbserver_root_dir}/{notebook_relpath}'
 
+    # VS Code doesn't actually start a Jupyter server when connecting to
+    # kernels, so the Jupyter API won't work. Fortunately, it's easy to
+    # check if the notebook is being run through VS Code, and to get its
+    # absolute path, if so.
+    # environment variable defined only if running in VS Code
+    if os.getenv('VSCODE_PID') is not None:
+        # global variable that holds absolute path to notebook file
+        return config.ipython_shell.user_ns['__vsc_ipynb_file__']
+
     # shouldn't ever get here, but just in case
     raise RuntimeError("Could not find notebook path for current kernel")
 

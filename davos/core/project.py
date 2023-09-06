@@ -49,6 +49,7 @@ import json
 import os
 import shutil
 import sys
+import warnings
 from os.path import expandvars
 from pathlib import Path
 from urllib.request import urlopen
@@ -864,10 +865,24 @@ def use_default_project():
     if isinstance(config._ipython_shell, TerminalInteractiveShell):
         proj_name = "ipython-shell"
     else:
-        proj_name = get_notebook_path()
+        try:
+            proj_name = get_notebook_path()
+        except RuntimeError:
+            # failed to identify the notebook's name/path for some
+            # reason. This may happen if the notebook is being run
+            # through an IDE or other application that accesses the
+            # notebook kernel in a non-standard way, such that the
+            # Jupyter server is never launched. In this case, fall back
+            # to a generic project so smuggled packages are still
+            # isolated from the user's main environment
+            proj_name = "davos-fallback"
+            warnings.warn(
+                "Failed to identify notebook path. Falling back to generic "
+                "default project"
+            )
 
     # will always be an absolute path to a real Jupyter notebook file,
-    # or name of real Colab notebook, so we can skip project type
-    # decision logic
+    # name of real Colab notebook, or one of the non-path strings
+    # explicitly set above, so we can skip project type decision logic
     default_project = ConcreteProject(proj_name)
     config.project = default_project

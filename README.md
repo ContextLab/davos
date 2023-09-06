@@ -103,7 +103,7 @@ There are a few additional specific advantages to `davos` that go beyond more ty
     typical overhead of setting up a new virtual environment (or container, virtual machine, etc.), installing
     third-party tools, writing and sharing configuration files, and so on.  All of your code *and its dependencies* may
     be contained in a single notebook file.
-  - using onion comments, `davos` can enable mutliple versions of the same package to be used or specified in different
+  - using onion comments, `davos` can enable multiple versions of the same package to be used or specified in different
     parts of the same notebook.  Want to use some deprecated or removed function in `scikit-learn` in one cell, but then
     use one of the latest features in another?  You can!  Just add onion comments specifying which versions of the
     package you want to `smuggle` in which cells of your notebook.

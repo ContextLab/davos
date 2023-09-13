@@ -393,10 +393,11 @@ Standard approaches to installing packages from within a notebook can alter the 
 %Functionally, Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}), but are lighter-weight and simpler to use. 
 %Like a standard virtual environment, a Davos project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular Python-based project \textcolor{red}{[confusing reuse of ``project''?]}, workflow, or task. 
 %However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated; do not contain separate Python or \texttt{pip} executables; and function to \textit{extend} the user's main Python environment rather than replace it.
-To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, any packages installed via \texttt{smuggle} statements are automatically isolated using a custom, virtual environment-like system called ``projects.'' 
-Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) with a few important differences. Like a standard virtual environment, a Davos project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed to run a particular Python program, workflow, or task. However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and 
+To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, packages installed via \texttt{smuggle} statements are automatically isolated using a custom, virtual environment-like system called ``projects.'' 
+Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) but with a few noteworthy differences that make them generally lighter-weight and simpler to use. Like a standard virtual environment, a Davos project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular Python project, workflow, or task. However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and 
 %function to \textit{extend} 
 serve to \textit{supplement}
+%work by \textit{supplementing}
 the user's existing Python environment rather than replace it.
 %To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, any packages installed via \texttt{smuggle} statements are automatically isolated using a custom, virtual environment-like system called ``projects.'' 
 %Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}): a project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed to run a particular Python program, workflow, or task. However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and 
@@ -404,9 +405,22 @@ the user's existing Python environment rather than replace it.
 %serve to \textit{supplement}
 %the user's existing Python environment rather than replace it.
 
-When Davos is imported into a notebook, a project directory specific to that notebook is automatically created (if it does not exist already). Any packages (or specific package versions) smuggled into that notebook that are not already available in the notebook's main runtime environment will be installed into the notebook's project directory, along with any dependencies of those packages not available in the main environment.
+When Davos is imported into a notebook, a project directory for that notebook is automatically created (if it does not exist already). When \texttt{smuggle} statements within that notebook are then executed, any packages (or specific versions of packages) that are not already available in the user's Python environment will be installed into the notebook's project directory (along with any missing dependencies of those packages). 
+%Davos will also check for smuggled packages in the notebook's project directory before searching the user's main environment such that project-installed packages are always prioritized when available.
+During each \texttt{smuggle} statement's execution, Davos also temporarily prepends the notebook's project directory to the module search path (\texttt{sys.path}), so that project-installed packages are visible when searching for smuggled packages locally, and are prioritized over those in the user's main environment whenever they are available.
 
-Additionally, when a \texttt{smuggle} statement in that notebook is executed, the notebook's project directory is temporarily prepended to the module search path/
+Thus, rather than recreating a complete package environment from scratch, Davos projects provide any additions or modifications to the user's existing package environment needed to satisfy the dependencies of a particular notebook. In some cases, 
+
+Thus, a Davos project provides any additions and modifications to the user's existing package environment needed to satisfy 
+
+
+
+By default, projects are named 
+
+
+Because \texttt{smuggle} statements are evaluated each time the notebook is run, this system ensures that all required packages and specified package versions are always available and used, even if the notebook's main runtime environment is changed. For example, if a user 
+
+
 
 %Notebook-specific projects are named for the absolute path to the notebook file. 
 
@@ -664,9 +678,9 @@ entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
 (created using an older version of \texttt{pandas}) and had saved it to their
 disk (e.g., for later reuse or to share with other users) by serializing the
 \texttt{Panel} with Python's \texttt{pickle} protocol. The \texttt{pickle}
-protocol is a popular built-in method of persisting data in Python, allowing
+protocol is a popular built-in method of persisting data in Python that allows
 users to save, share, and load arbitrary objects. However, in order to
-successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., saved)
+successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., previously saved)
 object, the object's class must be defined in and importable from the same
 module as when it was saved. Thus, because of the \texttt{Panel} class's
 removal, the user's dataset could not be read by any version of \texttt{pandas}

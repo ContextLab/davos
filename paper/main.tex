@@ -390,18 +390,103 @@ Davos will ensure that \texttt{<dir>} is included in the module search path (i.e
 Standard approaches to installing packages from within a notebook can alter the local Python environment in potentially unexpected and undesired ways. For example, running a notebook that installs its dependencies via system shell commands (prefixed with ``\texttt{!}'') or IPython magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions. This can lead to incompatibilities between installed packages, affect the behavior of the user's other scripts or notebooks, or even interfere with system applications.
 
 To prevent Davos-enhanced notebooks from having unwanted side-effects on the user's environment, packages installed via \texttt{smuggle} statements are automatically isolated using a custom, virtual environment-like system called ``projects.'' 
-Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}), but with a few noteworthy differences that make them generally lighter-weight and simpler to use. Like a standard virtual environment, a Davos project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular Python project, workflow, or task. However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and serve to \textit{supplement} the user's existing Python environment rather than replace it.
+Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) but with a few noteworthy differences that make them generally lighter-weight and simpler to use. Like a standard virtual environment, a Davos project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular Python project, workflow, or task. However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and function to \textit{extend} the user's existing Python environment rather than replace it.
 
 When Davos is imported into a notebook, a project directory for that notebook is automatically created (if it does not exist already). When \texttt{smuggle} statements within that notebook are then executed, any packages (or specific versions of packages) that are not already available in the user's Python environment will be installed into the notebook's project directory (along with any missing dependencies of those packages). 
-During each \texttt{smuggle} statement's execution, Davos also temporarily prepends the notebook's project directory to the module search path so that these project-installed packages are visible when searching for smuggled packages locally, and prioritized for use over packages in the user's main environment.
+During each \texttt{smuggle} statement's execution, Davos also temporarily prepends the notebook's project directory to the module search path so that these project-installed packages are visible when searching for smuggled packages locally, and prioritized over packages in the user's main environment.
 
-Thus, rather than constructing fully separate Python environments from scratch, Davos projects work by providing any additions or modifications to the user's existing package environment needed to satisfy the dependencies of their corresponding notebooks. In some cases, this might include every package smuggled into a notebook (e.g., if the notebook is run inside a freshly created, empty virtual environment). In other cases, the existing environment may already provide all required packages, and the notebook's project directory will be unused (in which case it will be deleted automatically when the notebook kernel is shut down). But in all cases, dependencies installed by Davos are confined to the project directory and the user's existing environment will be unaffected. 
+%Thus, rather than constructing fully separate Python environments from scratch, Davos projects work by providing any additions or modifications to the user's existing package environment needed to satisfy their corresponding notebooks' dependencies.
+Thus, rather than constructing fully separate Python environments from scratch, Davos projects work by supplementing the user's existing environment with any additional packages (or specific package versions) needed to satisfy 
+%their corresponding notebooks' dependencies. 
+the dependencies of their corresponding notebooks.
+In some cases, this might include every package smuggled into a notebook (e.g., if the notebook is run inside a freshly created, empty virtual environment). In other cases, the user's environment may already contain all required packages, and the notebook's project directory will be unused (in which case it will be deleted automatically when the notebook kernel is shut down). 
+But regardless of the extent to which the existing environment is augmented, Davos's project system ensures that all smuggled packages are installed locally and 
+%loaded into the notebook successfully, 
+can be loaded successfully at runtime,
+but that the contents of the user's Python environment are never altered. Additionally, because \texttt{smuggle} statements in a given notebook are evaluated every time it is run, this system also ensures that the notebook's requirements will continue to be satisfied even if the user's Python environment changes. For example, suppose a user has \texttt{NumPy}~\cite{HarrEtal20} v1.24.3 installed in their current Python environment and runs a Davos-enhanced notebook that smuggles \texttt{NumPy} with ``\texttt{numpy==1.24.3}'' specified in an onion comment (see Sec.~\ref{subsec:onion}). Since the user's existing version of the package satisfies this requirement, Davos will happily load it into the notebook. But if the user later upgrades their environment's \texttt{NumPy} version to v1.25.0 (perhaps as a result of installing a different package that depends on it) and subsequently reruns the notebook, the local version will longer satisfy the requirement, so Davos will install \texttt{NumPy} v1.24.3 into the notebook's project directory and load that version instead. From then on, further changes to the user's \texttt{Numpy} installation would not have any effect on Davos's behavior in this particular notebook, as a satisfactory version now exists in its project directory (if the version in the onion comment were changed, Davos would install it in the project directory in place of the current version). For efficiency, Davos projects will generally avoid duplicating dependencies already satisfied by the user's Python environment. However, if desired, adding \texttt{pip}'s \texttt{--ignore-installed} flag to an onion comment in the notebook will cause the smuggled package to be installed in the project directory whether or not it already exists locally.
+
+
+
+it is possible to achieve a more ``traditional'' virtual environment-like experience by 
+
+
+
+In general, Davos will not duplicate dependencies satisfied by the existing Python environment in the project directory unless 
+
+
+
+
+.
+
+.
+
+For example, suppose a user runs a Davos-enhanced notebook that smuggles \texttt{NumPy}~\cite{HarrEtal20} with \texttt{numpy==1.24.3} specified in an onion comment (see Sec.~\ref{subsec:onion}), and happens to have \texttt{NumPy} v1.24.3 installed in their current Python environment. 
+
+.
+
+.
+
+.
+
+For example, suppose a user runs a Davos-enhanced notebook that smuggles \texttt{NumPy}~\cite{HarrEtal20} v1.24.3 (specified via an onion comment; see Sec.~\ref{subsec:onion}) and happens to have that exact version of \texttt{NumPy} installed in their current Python environment. 
+
+.
+
+.
+
+.
+
+Davos will load the user's existing \texttt{NumPy} version rather than 
+
+.
+
+.
+
+.
+
+For example, suppose a user has \texttt{NumPy}~\cite{HarrEtal20} v1.24.3 installed in their current Python environment, and runs a Davos-enhanced notebook that smuggles that exact version of \texttt{NumPy} (specified via an onion comment; see Sec.~\ref{subsec:onion}). Since this requirement 
+
+
+
+
+
+
+
+%continue to be available and properly loaded, even if the user's Python environment changes. For example, if a user 
+
+
+
+
+
+
+
+
+%But in all cases, Davos's project system ensures that all dependencies of a given notebook are satisfied, and the user's Python environment is unaffected.
+%But in all cases, Davos's project system ensures that the \textit{potential} effects of \texttt{smuggle} statements are confined to a single, isolated directory, and that all dependencies of a notebook can be satisfied while the user's Python environment remains unchanged. Additionally, because \texttt{smuggle} statements are evaluated each time the notebook is run, this system also ensures that all of its dependencies remain satisfied, even if the user's Python environment is changed. For example, 
+
+.
+
+.
+
+
+
+%But in all cases, Davos's project system ensures that the possible effects of \texttt{smuggle} statements are confined to a single, isolated directory, and that the user's Python environment remains unchanged. 
+Additionally, because \texttt{smuggle} statements in a given notebook are evaluated each time that notebook is run, this system also ensures that all specified dependencies \textit{remain} satisfied, even if the user's main environment changes. 
+
+
+
+But in all cases, Davos's project system ensures that any packages installed are confined to an isolated directory, and that the user's Python environment is not affected. Additionally, because \texttt{smuggle} statements in a given notebook are evaluated each time that notebook is run, this system also ensures that all of its specified dependencies \textit{remain} satisfied, even if the user's main environment changes. For example, if a user 
+
+
+
+
+Additionally, because \texttt{smuggle} statements are evaluated each time a notebook is run, this system ensures that all required packages and specified package versions are always available and used, even if the notebook's main runtime environment is changed. For example, if a user 
+
 
 
 By default, Davos projects are named based on the absolute path to their corresponding notebooks, and are therefore notebook-specific. 
 
 
-Because \texttt{smuggle} statements are evaluated each time the notebook is run, this system ensures that all required packages and specified package versions are always available and used, even if the notebook's main runtime environment is changed. For example, if a user 
 
 
 
@@ -567,8 +652,8 @@ the current environment or Davos's behavior:
 \begin{itemize}
 
 \item \texttt{.environment}: This attribute's value is a string describing the notebook
-environment Davos was imported into. As of the current version (0.2.0), this
-attribute will be set to either \texttt{“IPython<7.0"}, \texttt{“IPython>=7.0”}, or \texttt{“Colaboratory”}.
+environment Davos was imported into. As of the current version (0.2.0 \textcolor{red}{\textbf{TODO: fix version}}), this
+attribute will be set to either \texttt{“IPython<7.0"}, \texttt{“IPython>=7.0”}, or \texttt{“Colaboratory”} \textcolor{red}{\textbf{TODO: fix quotes}}.
 
   \item \texttt{.ipython\_shell}: This attribute contains the global IPython \texttt{InteractiveShell} instance underlying the notebook kernel session.
 
@@ -706,7 +791,7 @@ already released when the code was written:
 \end{center}
 Line 7 then uses the \texttt{davos.config} object to enable
 Davos's \texttt{auto\_rerun} option before smuggling the next
-two packages: \texttt{NumPy}~\cite{HarrEtal20} and
+two packages: \texttt{NumPy} and
 \texttt{pandas}. Because these packages rely heavily on custom C data
 types, loading the particular versions from the onion comments may
 require restarting the notebook kernel if different versions had been previously

@@ -967,8 +967,8 @@ def use_project(smuggle_func):
             # invalidate sys.meta_path finder caches so the global
             # working set is regenerated based on the updated sys.path.
             # Note: after pretty extensive spot checking, I haven't
-            # managed found a case where this is actually since
-            # migrating to importlib.metadata instead of pkg_resources,
+            # managed to find a case where this is actually necessary
+            # since migrating from pkg_resources to importlib.metadata,
             # but the docs recommend it and the overhead is extremely
             # minor, so probably worth including in case the user or
             # notebook environment has implemented some unusual custom

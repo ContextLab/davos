@@ -412,89 +412,22 @@ Additionally, because \texttt{smuggle} statements in a given notebook are evalua
 For example, suppose a user has \texttt{NumPy}~\cite{HarrEtal20} v1.24.3 installed in their current Python environment and runs a Davos-enhanced notebook that smuggles \texttt{NumPy} with ``\texttt{numpy==1.24.3}'' specified in an onion comment (see Sec.~\ref{subsec:onion}). 
 Since the user's existing version of the package satisfies this requirement, Davos will happily load it into the notebook. 
 But if the user later upgrades their environment's \texttt{NumPy} version to v1.25.0 (perhaps as a result of installing a different package that depends on it) and subsequently reruns this notebook, the local version will longer satisfy this requirement, so Davos will install \texttt{NumPy} v1.24.3 into the notebook's project directory and load that version instead. 
-From then on, any further changes to the user's \texttt{Numpy} installation would have no effect on Davos's behavior in this particular notebook, as a satisfactory version now exists in its project directory. (If the version specified in the onion comment were changed, Davos would install it in the project directory in place of the previous version.) 
+From then on, any further changes to the user's \texttt{Numpy} installation would have no effect on Davos's behavior in this particular notebook, as a satisfactory version now exists in its project directory. 
+(If the version specified in the onion comment were changed, Davos would install it in the project directory in place of the previous version.) 
 For efficiency, Davos projects will generally avoid duplicating dependencies already satisfied by the user's Python environment. 
-However, if desired, adding \texttt{pip}'s \texttt{--ignore-installed} flag to an onion comment in the notebook will cause the smuggled package to be installed into the project directory whether or not it already exists locally.
+However, if desired, adding \texttt{pip}'s \texttt{--ignore-installed} flag to an onion comment in the notebook will cause Davos to install the smuggled package into the project directory whether or not it already exists locally.
 
+By default, each Davos-enhanced notebook will create and use its own notebook-specific project named for the absolute path to the notebook file. 
+However, before smuggling its required packages, a notebook may be set to instead use an arbitrarily named, notebook-agnostic project by assigning any string (that is a valid Unix directory name) to \texttt{davos.project}.
+This provides a convenient way for multiple related notebooks that share a common set of requirements to use the same Davos project, by setting \texttt{davos.project} to the same string in each one. 
+%This provides a convenient way to share a single Davos project across multiple related notebooks that share a common set of requirements, by setting \texttt{davos.project} to the same string in each one. 
+It is also possible (though not recommended) to disable Davos's project system entirely and install smuggled packages directly into the user's Python environment by setting \texttt{davos.project} to \texttt{None}.
 
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ADD THIS EITHER TO START OF PROJECTS SUBSUBSECTION OR IN IMPACT SECTION   %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%A common way of avoiding this is to create a virtual environment in which to run the notebook, and instruct anyone with whom the notebook is shared to do the same. While effective, this added requirement introduces additional 
-%
-%
-%(or group of related notebooks) that require different 
-%
-%
-%\begin{itemize}
-%  \item{common solution is to use a virtual environment}
-%  \item{this introduces complexity}
-%  \item{davos's solution is projects}
-%\end{itemize}
+When accessed (unless its value has been set to \texttt{None}), \texttt{davos.project} will return a \texttt{Project} object that represents the project used by the current notebook (strings assigned to \texttt{davos.project} are converted to \texttt{Project}s internally). 
+This object supports methods for interacting with the current project, including locating its directory on the file system, listing all installed packages' names and versions, changing the project's name, and deleting its contents altogether.
+\texttt{Project}s can also be created and managed programmatically, and Davos provides additional top-level functions for viewing and working with all existing projects. 
 
 \bigskip\bigskip\textcolor{red}{\textbf{========== TODO: finish editing from here to end ==========}}\bigskip\bigskip
-
-%Because Davos can install new packages, running the code in a
-%Davos-enhanced notebook might (in principle) affect the behavior of
-%\textit{other} Python-based software (e.g., other notebooks, scripts, etc.) by
-%altering which packages are installed in the runtime environment. This could
-%lead to undesired consequences. For example, suppose Person A develops a
-%notebook (Notebook A) for their research project. We will assume that Notebook
-%A does not use Davos to manage project dependencies.  If Person A
-%runs a Davos-enhanced Notebook B, e.g., sent by another developer,
-%might this unexpectedly affect the behavior of Notebook A?
-
-%To prevent unwanted
-%changes to the user's Python environment, Davos incorporates its
-%own virtual environment-like scheme for isolating packages it installs. When Davos
-%is imported, a new virtual environment (folder) is created automatically. The
-%folder's name may be customized to support multi-notebook projects. Any
-%\texttt{smuggle}d packages that were not available in the notebook's runtime
-%environment are installed to the current project folder. The runtime
-%environment remains unaffected by Davos's behavior (see
-%Sec.~\ref{subsec:projects}).
-%By default, projects are notebook-specific, but can also be shared by multiple notebooks, and can be managed interactively from within a Davos-enhanced notebook.
-
-%%%%%%%% JEREMY VERSION %%%%%%%%%
-%Installing new packages in a notebook using standard approaches (e.g., system commands) affect the
-%runtime environment. This could lead to undesired behaviors. For example, running a notebook that
-%installs new packages in the user’s primary system environment might alter their main system installation
-%and/or containerized environment in unexpected ways (e.g., changing package versions, causing conflicts
-%with other packages, etc.). To protect against undesired changes to the runtime environment, Davos
-%incorporates its own virtual environment for managing packages it installs. When Davos is imported,
-%a new virtual environment (folder) is created automatically. The folder’s name may be customized to
-%support multi-notebook projects. Any smuggled packages that were not available in the notebook’s
-%runtime environment are installed to the current project folder. The runtime environment remains unaffected
-%by Davos’s behavior (see Sec. 2.2.3).
-
-We implemented a ``project'' system in Davos to protect against the
-above scenario. By default, importing Davos creates a new project
-folder in the user's home directory (contained within a hidden \texttt{.davos}
-folder). The default project name is computed to uniquely identify each
-notebook according to its filename and path. Any packages that were not
-originally available in the notebook's runtime environment are installed to the
-notebook's project directory. When external libraries are \texttt{smuggle}d,
-Davos temporally appends the current project directory to the search
-path. Because the user's system path remains unchanged, and because none of the
-runtime environment's packages are altered, the user's system and runtime
-environment remain unaffected (aside from installing the Davos package
-itself to the runtime environment).
-
-Each notebook's project may be customized by setting \texttt{davos.project} to
-any string that can be used as a valid folder name in the user's operating
-system. By customizing the project name, users can build multi-notebook
-projects that share the same core set of dependencies without needing to
-duplicate each package for each notebook in the project.
-
-Finally, if the user \textit{does} wish to modify their runtime environment,
-this may be done by setting \texttt{davos.project} to \texttt{None}. Doing so
-will cause any packages installed by Davos to affect the user's
-runtime environment.  This is generally not recommended, as it can lead to
-unintended consequences for other code that shares the runtime environment.
-
 
 \subsubsection{Configuring and querying Davos}\label{subsec:config}
 
@@ -587,6 +520,8 @@ session.  The dictionary's keys are package names and the values are arguments p
   \item \texttt{.all\_projects}: This attribute contains a list of all local projects (i.e., projects with virtual environment directories located in \texttt{\$HOME/.davos/projects}).  See Section~\ref{subsec:projects} for additional information about Davos projects.
 
 \end{itemize}
+
+% \subsubsection{Other top-level Davos functions}\label{subsec:toplevel}
 
 
 \subsection{Implementation details}\label{subsec:implementation}
@@ -992,6 +927,8 @@ other languages (e.g., in a mixed Python and R notebook), cannot be
 \texttt{smuggle}d by Davos. A notebook that utilizes or depends on non-Python
 software would therefore need to use existing non-Davos approaches to managing
 those requirements.
+
+\textcolor{red}{\textbf{TODO: add note about default/fallback project for non-traditional notebook interfaces}}
 
 \section{Conclusions}
 

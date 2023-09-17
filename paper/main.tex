@@ -425,7 +425,7 @@ It is also possible (though not recommended) to disable Davos's project system e
 
 When accessed (unless its value has been set to \texttt{None}), \texttt{davos.project} will return a \texttt{Project} object that represents the project used by the current notebook (strings assigned to \texttt{davos.project} are converted to \texttt{Project}s internally). 
 This object supports methods for interacting with the current project, including locating its directory on the file system, listing all installed packages' names and versions, changing the project's name, and deleting its contents altogether.
-\texttt{Project}s can also be created and managed programmatically, and Davos provides additional top-level functions for viewing and working with all existing projects (see Sec.~\ref{subsec:toplevel}). 
+\texttt{Project}s can also be created and managed programmatically, and Davos provides additional top-level functions for viewing and working with all existing projects (see Sec.~\ref{subsec:toplevel}).
 
 \bigskip\bigskip\textcolor{red}{\textbf{========== TODO: finish editing from here to end ==========}}\bigskip\bigskip
 
@@ -845,10 +845,12 @@ addition to managing computing environments for multiple prior and ongoing
 research studies~\citep{MannEtal23a, OwenMann23, ZimaEtal23}, Davos is being
 used by both students and instructors in programming and methods courses such
 as Storytelling with Data~\cite{Mann21a} (an open course on data science,
-visualization, and communication) and Laboratory in Psychological
+visualization, and communication), Laboratory in Psychological
 Science~\cite{Mann22} (an open course on experimental and statistical methods
-for psychology research) to simplify distributing lessons and submitting
-assignments, as well as in online demos such as
+for psychology research), and the Methods in Neuroscience at Dartmouth (MIND)
+Computational Summer School~\cite{MIND23} (a week-long intensive course on 
+computational neuroscience methods) to simplify distributing lessons 
+and submitting assignments, as well as in online demos such as
 \texttt{abstract2paper}~\cite{Mann21b} (an example application of
 GPT-Neo~\cite{GaoEtal20, BlacEtal21}) to share ready-to-run code that installs
 dependencies automatically. The 2023 offering of Neuromatch

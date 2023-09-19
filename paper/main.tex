@@ -432,7 +432,7 @@ When accessed (unless its value has been set to \texttt{None}), \texttt{davos.pr
 
 \subsubsection{Configuring and querying Davos}\label{subsec:config}
 
-After importing Davos into a notebook, the top-level \texttt{davos} module exposes a set of attributes whose values determine various aspects of Davos's behavior. Most of these attributes are writeable options that can be modified to customize how, where, and when Davos installs smuggled packages (see Sec.~\ref{sec:illustrative-example} for an illustrative example and Sec.~\ref{subsec:implementation} for implementation details and additional information). These include:
+After importing Davos into a notebook, the top-level \texttt{davos} module exposes a set of attributes whose values determine various aspects of Davos's behavior. Most of these attributes are writeable options that can be modified to customize how, where, and when Davos installs smuggled packages (see Sec.~\ref{sec:illustrative-example} for an illustrative example). These include:
 
 %After importing Davos into a notebook, the top-level \texttt{davos} module provides a set of attributes whose values may be displayed interactively, checked programmatically at runtime, or modified to customize various aspects of Davos's behavior (see Sec.~\ref{sec:illustrative-example} for an illustrative example and Sec.~\ref{subsec:implementation} for implementation details and additional information).
 %These writeable attributes include:
@@ -448,7 +448,7 @@ After importing Davos into a notebook, the top-level \texttt{davos} module expos
 \item \texttt{.active}: This attribute controls whether support for \texttt{smuggle}
   statements and onion comments is enabled (\texttt{True}) or
   disabled (\texttt{False}).  When Davos is first imported,
-  \texttt{davos.active} is set to \texttt{True}.
+  \texttt{davos.active} is set to \texttt{True} (see Sec.~\ref{subsec:implementation} for implementation details and additional information).
 
 \item \texttt{.auto\_rerun}: This attribute controls how
   Davos behaves when attempting to \texttt{smuggle} a new
@@ -516,7 +516,8 @@ After importing Davos into a notebook, the top-level \texttt{davos} module expos
 
 \begin{itemize}
 
-\item \texttt{.all\_projects}: This attribute contains a list of all Davos projects (as \texttt{Project} objects) that exist on the user's local system. See Section~\ref{subsec:projects} for more information about Davos projects.
+\item \texttt{.all\_projects}: This attribute contains a list of all Davos projects that exist on the user's local system (see Sec.~\ref{subsec:projects} for more information about Davos projects). Each item in this list is either a \texttt{Project} or \texttt{AbstractProject} instance. \texttt{AbstractProject}s represent notebook-specific projects whose associated notebooks no longer exist. They support all the same functionality as \texttt{Project} objects (including methods for inspecting, renaming, and deleting them) and serve primarily to help users identify and clean up extraneous projects left behind after deleting Davos-enhanced notebooks (e.g., see Sec.~\ref{subsec:toplevel}).
+\textcolor{red}{\textbf{TODO}: mention that project can become AbstractProject when notebook is moved/renamed, and can be re-linked by renaming project to new path?}
 
 \item \texttt{.environment}: This attribute's value is a string denoting the set of environment-dependent ``helper functions'' used by Davos in the current notebook. As described in Section \ref{sec:architecture}, Davos internally chooses between interchangeable implementations of certain core features
 %(defined in the \texttt{davos.implementations} subpackage)

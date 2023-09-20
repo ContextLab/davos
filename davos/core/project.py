@@ -256,12 +256,12 @@ class Project(metaclass=ProjectChecker):
         if not yes:
             if config.noninteractive:
                 raise DavosProjectError(
-                    "To remove a project when noninteractive mode is "
-                    "enabled, you must explicitly pass 'yes=True'."
+                    "To remove a project when noninteractive mode is enabled, "
+                    "you must explicitly pass 'yes=True'."
                 )
             prompt = f"Remove project {self.name!r} and all installed packages?"
             confirmed = prompt_input(prompt, default='n')
-            if not confirmed:
+            if not confirmed and not config.suppress_stdout:
                 print(f"{self.name} not removed")
                 return
         shutil.rmtree(self.project_dir)
@@ -773,6 +773,12 @@ def prune_projects(yes=False):
        the interpreter is shut down -- they're only checked for and
        dealt with here as a fallback in case one somehow sneaks through.
     """
+    if config.noninteractive and not yes:
+        raise DavosProjectError(
+            "To remove projects when noninteractive mode is enabled, you must "
+            "explicitly pass 'yes=True'."
+        )
+
     # dict of projects to remove -- keys: "safe"-formatted project
     # directory names; values: corresponding notebook filepaths
     to_remove = {}
@@ -848,7 +854,7 @@ def prune_projects(yes=False):
             clear_output(wait=False)
         # print final status for all projects processed
         print(template.format(*statuses))
-    else:
+    elif not config.suppress_stdout:
         print("No unused projects found.")
 
 

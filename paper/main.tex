@@ -535,13 +535,28 @@ based on various properties of the notebook's frontend and IPython kernel. As of
 \bigskip\bigskip\textcolor{red}{\textbf{========== TODO: finish editing from here to end ==========}}\bigskip\bigskip
 
 \subsubsection{Other top-level Davos functions}\label{subsec:toplevel}
-\textcolor{red}{\textbf{TODO: add content}}
+
+The Davos package also provides a handful of top-level functions for convenience and to provide additional functionality:
+
+\begin{itemize}
+
 %- .configure()
+\item \texttt{configure(**kwargs)}: This function provides an alternate way of assigning values to the writeable attributes listed in Section \ref{subsec:config} and can be used to configure multiple options at once (see Sec.~\ref{sec:illustrative-example} for example usage). The function accepts attribute names as keyword-only arguments, to which their desired values are passed. If any of the options passed are incompatible (e.g., both \texttt{confirm\_install=True} and \texttt{noninteractive=True} are passed) or assignment to any of the specified attributes fails for any reason, none of the given options will be modified.
+
 %- .get_project()
+\item \texttt{get\_project(project\_name, create=False)}: This function can be passed the name of a Davos project (\texttt{project\_name}) to get the \texttt{Project} or \texttt{AbstractProject} instance representing it. If no project with the given name exists and \texttt{create=False} (the default), the function will return \texttt{None}; if \texttt{create=True}, a project with the given name will instead be created and returned.
+
 %- .prune_projects()
+\item \texttt{prune\_projects(yes=False)}: This function allows users to quickly ``clean up'' their local Davos projects by deleting notebook-specific projects whose corresponding notebooks no longer exist (i.e., \texttt{AbstractProject}s). As with standard virtual environments, periodically removing large package directories can be useful for reclaiming disk space once they are no longer needed. By default, this function will interactively display a list of all unused projects and allow the user to choose whether or not to delete each one. Alternatively, passing \texttt{yes=True} will immediately remove all unused projects without requiring confirmation. Note that if Davos's non-interactive mode is enabled (i.e., \texttt{davos.noninteractive} has been set to \texttt{True}), \texttt{yes=True} \textit{must} be explicitly passed in order to delete projects. This serves as a safeguard against accidentally deleting projects, since non-interactive mode disables all user input and confirmation.  Also note that this function will not delete notebook-agnostic projects (i.e., manually created projects whose names are not notebook filepaths), as they are not linked to a specific notebook whose existence can be checked automatically. However, any project can be deleted individually via its \texttt{Project} object's \texttt{.remove()} method.
+
 %- .require_pip()
+\item \texttt{require\_pip(version\_spec, warn=False, extra\_msg=None, prereleases=None)}:
 %- .require_python()
+\item \texttt{require\_python(version\_spec, warn=False, extra\_msg=None, prereleases=None)}:
 %- .use_default_project()
+\item \texttt{use\_default\_project()}:
+\end{itemize}
+
 
 \subsection{Implementation details}\label{subsec:implementation}
 

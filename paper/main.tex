@@ -432,7 +432,7 @@ When accessed (unless its value has been set to \texttt{None}), \texttt{davos.pr
 
 \subsubsection{Configuring and querying Davos}\label{subsec:config}
 
-After importing Davos into a notebook, the top-level \texttt{davos} module exposes a set of attributes whose values determine various aspects of Davos's behavior. Most of these attributes are writeable options that can be modified to customize how, where, and when Davos installs smuggled packages (see Sec.~\ref{sec:illustrative-example} for an illustrative example). These include:
+After importing Davos into a notebook, the top-level \texttt{davos} module exposes a set of attributes whose values determine various aspects of Davos's behavior. The majority of these are writeable options that can be modified to customize how, where, and when Davos installs smuggled packages (see Sec.~\ref{sec:illustrative-example} for an illustrative example). These include:
 
 %After importing Davos into a notebook, the top-level \texttt{davos} module provides a set of attributes whose values may be displayed interactively, checked programmatically at runtime, or modified to customize various aspects of Davos's behavior (see Sec.~\ref{sec:illustrative-example} for an illustrative example and Sec.~\ref{subsec:implementation} for implementation details and additional information).
 %These writeable attributes include:
@@ -502,7 +502,7 @@ After importing Davos into a notebook, the top-level \texttt{davos} module expos
 
 \end{itemize}
 
-\noindent The attributes above can be modified directly or via the \texttt{davos.configure()} function, which allows setting multiple options simultaneously (see Sec.~\ref{subsec:toplevel} for more information or Sec.~\ref{sec:illustrative-example} for example usage). In addition to these writeable options, the top-level \texttt{davos} module also exposes several read-only attributes that can be displayed in the notebook or checked programmatically at runtime, and provide potentially useful information about the notebook environment or Davos's internal state:
+\noindent The attributes above can be modified directly or via the \texttt{davos.configure()} function, which allows setting multiple options simultaneously (see Sec.~\ref{subsec:toplevel} for more information or Sec.~\ref{sec:illustrative-example} for example usage). In addition to these writeable options, the top-level \texttt{davos} module also provides several read-only attributes that can be displayed in the notebook or checked programmatically at runtime, and contain potentially useful information about the notebook environment or Davos's internal state:
 
 %\noindent Davos also provides a top-level \texttt{configure()} function that allows setting multiple of the above options simultaneously (see Sec.~\ref{subsec:toplevel} or Sec.~\ref{sec:illustrative-example} for example usage). In addition to these writeable options,
 %

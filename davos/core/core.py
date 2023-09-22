@@ -50,7 +50,7 @@ from davos.core.exceptions import (
     OnionParserError,
     ParserNotImplementedError,
     SmugglerError,
-    TheNightIsDarkAndFullOfTErrors
+    TheNightIsDarkAndFullOfErrors
 )
 from davos.core.parsers import pip_parser
 from davos.core.regexps import (
@@ -967,8 +967,8 @@ def use_project(smuggle_func):
             # invalidate sys.meta_path finder caches so the global
             # working set is regenerated based on the updated sys.path.
             # Note: after pretty extensive spot checking, I haven't
-            # managed found a case where this is actually since
-            # migrating to importlib.metadata instead of pkg_resources,
+            # managed to find a case where this is actually necessary
+            # since migrating from pkg_resources to importlib.metadata,
             # but the docs recommend it and the overhead is extremely
             # minor, so probably worth including in case the user or
             # notebook environment has implemented some unusual custom
@@ -1041,7 +1041,7 @@ def smuggle(
     pkg_name = name.split('.')[0]
 
     if pkg_name == 'davos':
-        raise TheNightIsDarkAndFullOfTErrors("Don't do that.")
+        raise TheNightIsDarkAndFullOfErrors("Don't do that.")
 
     onion = Onion(pkg_name, installer=installer,
                   args_str=args_str, **installer_kwargs)
@@ -1077,6 +1077,13 @@ def smuggle(
         # invalidate sys.meta_path module finder caches. Forces import
         # machinery to notice newly installed module
         importlib.invalidate_caches()
+        # if pkg_resources module has already been loaded, reload it in
+        # case the just-installed package uses it internally to populate
+        # its __version__ attribute from its metadata, Otherwise,
+        # pkg_resources's cached working set won't include the new
+        # package
+        if 'pkg_resources' in sys.modules:
+            importlib.reload(sys.modules['pkg_resources'])
         # check whether the smuggled package and/or any
         # installed/updated dependencies were already imported during
         # the current runtime

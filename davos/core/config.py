@@ -511,7 +511,7 @@ def _block_greedy_ipython_completer():
     imports.
 
     This is particularly problematic for packages that set
-    `IPython`- or notebook-specific options or behavors on import (like
+    `IPython`- or notebook-specific options or behaviors on import (like
     `davos`) because the autocomplete mechanism imports them *outside*
     the `IPython` environment. To prevent this, `davos` parses the stack
     trace for any calls originating from IPython's autocomple module

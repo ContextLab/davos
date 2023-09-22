@@ -201,7 +201,7 @@ class SmugglerError(DavosError):
     """Base class for errors raised during the smuggle phase."""
 
 
-class TheNightIsDarkAndFullOfTErrors(SmugglerError):
+class TheNightIsDarkAndFullOfErrors(SmugglerError):
     """A little Easter egg for anyone who tries to `smuggle davos`."""
 
 

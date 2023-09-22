@@ -49,6 +49,7 @@ import json
 import os
 import shutil
 import sys
+import warnings
 from os.path import expandvars
 from pathlib import Path
 from urllib.request import urlopen
@@ -202,7 +203,7 @@ class Project(metaclass=ProjectChecker):
             cmd = (
                 f'{config.pip_executable} list '
                 '--disable-pip-version-check '
-                f'--path {self.site_packages_dir} '
+                f'--path "{self.site_packages_dir}" '
                 f'--format json'
             )
             pip_list_stdout = run_shell_command(cmd, live_stdout=False)
@@ -255,12 +256,12 @@ class Project(metaclass=ProjectChecker):
         if not yes:
             if config.noninteractive:
                 raise DavosProjectError(
-                    "To remove a project when noninteractive mode is "
-                    "enabled, you must explicitly pass 'yes=True'."
+                    "To remove a project when noninteractive mode is enabled, "
+                    "you must explicitly pass 'yes=True'."
                 )
             prompt = f"Remove project {self.name!r} and all installed packages?"
             confirmed = prompt_input(prompt, default='n')
-            if not confirmed:
+            if not confirmed and not config.suppress_stdout:
                 print(f"{self.name} not removed")
                 return
         shutil.rmtree(self.project_dir)
@@ -493,6 +494,14 @@ def _get_project_name_type(project_name):
         )
 
     project_type = ConcreteProject
+    if config.environment == 'Colaboratory':
+        # colab name/type logic works slightly differently -- there's
+        # only ever one "real" notebook per VM session, but it doesn't
+        # exist on the VM filesystem
+        curr_notebook_name = get_notebook_path()
+        if project_name == curr_notebook_name:
+            return project_name, project_type
+        return project_name, AbstractProject
     if project_name.endswith('.ipynb'):
         # `project_name` is a path to a notebook file, either the
         # default (absolute path to the current notebook) or
@@ -670,6 +679,15 @@ def get_notebook_path():
                 notebook_relpath = unquote(session['notebook']['path'])
                 return f'{nbserver_root_dir}/{notebook_relpath}'
 
+    # VS Code doesn't actually start a Jupyter server when connecting to
+    # kernels, so the Jupyter API won't work. Fortunately, it's easy to
+    # check if the notebook is being run through VS Code, and to get its
+    # absolute path, if so.
+    # environment variable defined only if running in VS Code
+    if os.getenv('VSCODE_PID') is not None:
+        # global variable that holds absolute path to notebook file
+        return config.ipython_shell.user_ns['__vsc_ipynb_file__']
+
     # shouldn't ever get here, but just in case
     raise RuntimeError("Could not find notebook path for current kernel")
 
@@ -755,6 +773,12 @@ def prune_projects(yes=False):
        the interpreter is shut down -- they're only checked for and
        dealt with here as a fallback in case one somehow sneaks through.
     """
+    if config.noninteractive and not yes:
+        raise DavosProjectError(
+            "To remove projects when noninteractive mode is enabled, you must "
+            "explicitly pass 'yes=True'."
+        )
+
     # dict of projects to remove -- keys: "safe"-formatted project
     # directory names; values: corresponding notebook filepaths
     to_remove = {}
@@ -830,7 +854,7 @@ def prune_projects(yes=False):
             clear_output(wait=False)
         # print final status for all projects processed
         print(template.format(*statuses))
-    else:
+    elif not config.suppress_stdout:
         print("No unused projects found.")
 
 
@@ -847,7 +871,24 @@ def use_default_project():
     if isinstance(config._ipython_shell, TerminalInteractiveShell):
         proj_name = "ipython-shell"
     else:
-        proj_name = get_notebook_path()
+        try:
+            proj_name = get_notebook_path()
+        except RuntimeError:
+            # failed to identify the notebook's name/path for some
+            # reason. This may happen if the notebook is being run
+            # through an IDE or other application that accesses the
+            # notebook kernel in a non-standard way, such that the
+            # Jupyter server is never launched. In this case, fall back
+            # to a generic project so smuggled packages are still
+            # isolated from the user's main environment
+            proj_name = "davos-fallback"
+            warnings.warn(
+                "Failed to identify notebook path. Falling back to generic "
+                "default project"
+            )
 
-    default_project = Project(proj_name)
+    # will always be an absolute path to a real Jupyter notebook file,
+    # name of real Colab notebook, or one of the non-path strings
+    # explicitly set above, so we can skip project type decision logic
+    default_project = ConcreteProject(proj_name)
     config.project = default_project

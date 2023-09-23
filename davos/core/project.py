@@ -52,6 +52,7 @@ import sys
 import warnings
 from os.path import expandvars
 from pathlib import Path
+from subprocess import CalledProcessError
 from urllib.request import urlopen
 from urllib.parse import parse_qs, unquote, urlencode, urljoin, urlparse
 
@@ -645,8 +646,18 @@ def get_notebook_path():
     kernel_filepath = ipykernel.connect.get_connection_file()
     kernel_id = kernel_filepath.split('/kernel-')[-1].split('.json')[0]
 
-    running_nbservers_stdout = run_shell_command('jupyter notebook list',
-                                                 live_stdout=False)
+    nbserver_list_cmd = f'jupyter {config._jupyter_interface} list'
+    try:
+        running_nbservers_stdout = run_shell_command(nbserver_list_cmd,
+                                                     live_stdout=False)
+    except CalledProcessError as e:
+        # raise RuntimeError so it's caught by `use_default_project` and
+        # the fallback project is used
+        raise RuntimeError(
+            "Shell command to get running Jupyter servers "
+            f"({nbserver_list_cmd}) failed"
+        ) from e
+
     for line in running_nbservers_stdout.splitlines():
         # should only need to exclude first line ("Currently running
         # servers:"), but handle safely in case output format changes in

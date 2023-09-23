@@ -20,6 +20,7 @@ __all__ = ['DavosConfig']
 
 import os
 import pprint
+import shlex
 import shutil
 import site
 import sys
@@ -29,6 +30,8 @@ import warnings
 from io import StringIO
 from os.path import expandvars
 from pathlib import Path
+from locale import getpreferredencoding
+from subprocess import CalledProcessError, check_output
 
 from davos.core.exceptions import (
     DavosConfigError,
@@ -199,6 +202,7 @@ class DavosConfig(metaclass=SingletonConfig):
         self._conda_envs_dirs = None
         self._default_pip_executable = self._find_default_pip_executable()
         self._ipy_showsyntaxerror_orig = None
+        self._jupyter_interface = _get_jupyter_interface()
         self._repr_formatter = pprint.PrettyPrinter()
         if sys.version_info.minor >= 8:
             # sort_dicts constructor param added in Python 3.8, defaults
@@ -556,6 +560,75 @@ def _block_greedy_ipython_completer():
             del sys.modules['davos.core.config']
             # pylint: disable=broad-exception-raised
             raise Exception
+
+
+def _get_jupyter_interface():
+    """
+    Determines whether the notebook is being run through the "classic"
+    Jupyter notebook interface or JupyterLab. Used to set the value of
+    `davos.config._jupyter_interface`.
+
+    Returns
+    -------
+    interface : str
+        "notebook" for classic Jupyter notebooks (or unknown); "lab" for
+        JupyterLab.
+
+    Notes
+    -----
+    1. This distinction is needed because recent versions of the
+       `jupyterlab` package no longer depend on `notebook`, so if the
+       user is running JupyterLab, some `jupyter notebook ...` shell
+       commands davos runs internally may not be available and will need
+       to be run as `jupyter lab ...` commands instead.
+    2. "notebook" is treated as a strong default assumption and returned
+       if the interface cannot be determined, for a few reasons:
+       - Only more recent JupyterLab versions have dropped `notebook` as
+         a dependency, so it's less likely the user will have JupyterLab
+         without `notebook` than vice versa.
+       - IDEs tend to run simple notebook servers rather than JupyterLab
+         for custom interfaces, but the command to launch the server may
+         not be the immediate parent process in that case and trying to
+         check all processes introduces a cascade of other issues.
+       - Colab notebooks also use the "classic" notebook server and make
+         up a fairly large percentage of Davos uses, but the Colab VM
+         environment is changed frequently and without notice, so it's
+         more likely to break or otherwise mess with users/packages'
+         ability to query running processes and/or the notebook server,
+         causing this function to return whatever is chosen as the
+         fallback/default value.
+    3. `subprocess.check_output` is called directly rather than using
+       `davos.core.core.run_shell_command` like most other davos
+       functions that run shell commands. In IPython environments,
+       `run_shell_command` internally calls
+       `IPython.utils.process.system`, which for some strange reason
+       truncates the stdout from this particular command at 80 columns
+       rather than wrapping it like it does with seemingly every other
+       command. The shell commands we need to get from the output
+       of `ps` can be quite long because they include multiple absolute
+       paths, and the info we care about may not be in the first 80
+       characters.
+    """
+    cmd = f'ps -o command= -p {os.getppid()}'
+    try:
+        parent_proc_cmd = check_output(shlex.split(cmd),
+                                       encoding=getpreferredencoding())
+    except (FileNotFoundError, CalledProcessError):
+        # FileNotFoundError: `ps` command not available
+        # CalledProcessError: command failed for any other reason
+        interface = 'notebook'
+    else:
+        # when launched normally from the command line, the 2nd item in
+        # the list should be the notebook/lab executable, but safer to
+        # check more generally in case the user has something unusual
+        # like a custom script they called to launch the server
+        for item in parent_proc_cmd.split():
+            if item.endswith(('notebook', 'lab')):
+                interface = item.split('-')[-1]
+                break
+        else:
+            interface = 'notebook'
+    return interface
 
 
 def _get_stdlib_modules():

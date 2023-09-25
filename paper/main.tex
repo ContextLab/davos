@@ -629,9 +629,11 @@ executed.
 \label{fig:illustrative-example}
 \end{figure}
 
-The example code throughout Section \ref{subsec:onion} illustrates how Davos is most typically used:
-By including a series of \texttt{smuggle} statements and onion comments with version specifiers or other options in an IPython notebook, researchers can share their code and its dependencies in a single file that can be easily run without any additional tools or setup, creates and manages its own isolated environment, automatically installs its required packages at runtime, and ensures that the package versions with which it is run do not change unexpectedly.
-In this section, we have contrived a more complex scenario to highlight some of Davos's more advanced features, and illustrate how they may be used to handle certain challenges that can arise when writing and sharing reproducible scientific code.
+%The example code throughout Section \ref{subsec:onion} illustrates how Davos is most typically used:
+%By including a series of \texttt{smuggle} statements and onion comments with version specifiers or other options in an IPython notebook, researchers can share their code and its dependencies in a single file that can be easily run without any additional tools or setup, creates and manages its own isolated environment, automatically installs its required packages at runtime, and ensures that the package versions with which it is run do not change unexpectedly.
+The example code throughout Section \ref{subsec:onion} illustrates how Davos is most typically used: a series of smuggle statements and onion comments with version specifiers or other options collectively describes and automatically constructs a reproducible environment for running the code that follows it.
+When added to the top of a Jupyter notebook, this allows researchers to bundle their code and its dependencies into a single file that can be easily shared and run without any additional tools or setup, automatically installs its required packages at runtime, isolates them from the user's main Python environment, and ensures their versions do not change unexpectedly over time.
+In this section, we have contrived a more complex scenario to highlight some of Davos's more advanced features, and illustrate how they may be used to handle certain challenges that can arise when writing, running, and sharing reproducible scientific code.
 
 Across different versions of a given package, various modules, functions,
 and other objects may be updated, removed, renamed, or otherwise altered. In

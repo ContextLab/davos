@@ -640,9 +640,9 @@ and other objects may be updated, removed, renamed, or otherwise altered. In
 addition to changing the behaviors of active computations, these changes can
 render saved objects created using one version of a package incompatible with
 other versions of the same package. For example, the popular
-\texttt{pandas}~\cite{McKi10} library used to include the \texttt{Panel} data
-structure for storing 3-dimensional arrays. Since version 0.20.0, however, the
-\texttt{Panel} class has been deprecated, and in version 0.25.0, it was removed
+\texttt{pandas}~\cite{McKi10} library originally included the \texttt{Panel} data
+structure for storing 3-dimensional arrays. In version 0.20.0, however, the
+\texttt{Panel} class was deprecated, and in version 0.25.0, it was removed
 entirely. Suppose a user had a dataset stored in a \texttt{Panel} object
 (created using an older version of \texttt{pandas}) and had saved it to their
 disk (e.g., for later reuse or to share with other users) by serializing the
@@ -665,28 +665,32 @@ temporarily switching between different versions of the same package within a si
 %carefully controlling which versions of each package are used in different parts of the notebook.
 The example shows how a dataset and model that require
 now-incompatible components of the \texttt{pandas} and
-\texttt{scikit-learn}~\cite{PedrEtal11} libraries may be loaded in (using older
+\texttt{scikit-learn}~\cite{PedrEtal11} libraries can be loaded in (using older
 versions of each package) and used alongside more recent versions of each
 package that provide new and improved functionality. When included at the top
-of an IPython notebook, the code in Figure~\ref{fig:illustrative-example}
+of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
 ensures that these objects will be loaded successfully and analyzed using the
-same set of package versions, no matter when or by whom the notebook is run.
+same set of package versions no matter when or by whom the notebook is run.
 
-After installing and importing Davos (lines 1--2), we first use the \texttt{davos.require\_python()} function to constrain the Python version used to run the code below (see Sec.~\ref{subsec:toplevel}).
-As described above, the example code in Figure \ref{fig:illustrative-example} uses two different versions of the \texttt{pandas} library: first, an older one needed to access a dataset saved in an outmoded format, then a newer one throughout the remainder of the notebook.
-Line 6 therefore ensures upfront that the notebook's Python version falls within the overlap between the ranges of Python versions that these two versions of \texttt{pandas} support. If it does not, the function in line 6 will raise an error that includes a message to this effect (lines 4--5).
+After installing and importing Davos (lines 1--2), we first use the \texttt{davos.require\_python()} function to constrain the Python version used to run the notebook (see Sec.~\ref{subsec:toplevel}).
+As described above, the example code in Figure \ref{fig:illustrative-example} loads two different versions of the \texttt{pandas} library: first, an older version needed to access a dataset saved in an outmoded format, then a newer one for use throughout the remainder of the notebook.
+We therefore want to make sure upfront (in line 6) that the notebook's Python version falls within the range of versions that both of these two versions of \texttt{pandas} support.
+%Line 6 therefore ensures upfront that the notebook's Python version falls within the overlap between the ranges of Python versions that these two versions of \texttt{pandas} support.
+If it does not, the function in line 6 will raise an error that includes a message to this effect (lines 4--5).
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example1}
 \end{center}
-Next, in lines 8--9 we \texttt{smuggle} two
+
+Next, in lines 8--9, we \texttt{smuggle} two
 utilities for interacting with local files in the code below. The
 \texttt{smuggle} statement in line 8 loads the \texttt{is\_file()}
 function from the Python standard library's \texttt{os.path}
-module. Since standard library modules are included with all Python
-distributions, this line is functionally equivalent to an
+module. Standard library modules are included with all Python
+distributions, so this line is functionally equivalent to an
 \texttt{import} statement and does not need or benefit from an onion
-comment. Line 9 loads the \texttt{joblib} package~\cite{Varo10},
-installing it first, if necessary. Since \texttt{joblib}'s I/O
+comment (since there is no chance it will need to be installed).
+Line 9 then loads the \texttt{joblib} package~\cite{Varo10},
+installing it into the notebook's project directory, if necessary. Since \texttt{joblib}'s I/O
 interface has historically remained stable and backwards-compatible
 across releases, requiring a particular exact version
 would likely be unnecessarily restrictive. However, it is possible a

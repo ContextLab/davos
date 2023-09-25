@@ -10,6 +10,9 @@
 
 \geometry{left=1in, right=1in, top=1in, bottom=1in, headsep=0pt}
 
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO}: #1}}
+\newcommand{\stoppedhere}{\bigskip\bigskip\textcolor{red}{\textbf{========== TODO: finish editing from here to end ==========}}\bigskip\bigskip}
+
 \journal{SoftwareX}
 
 \begin{document}
@@ -228,7 +231,7 @@ can load a package into the Python workspace within the existing rules and
 frameworks provided by the Python language, ``smuggling'' provides an
 alternative that expands the scope and reach of ``importing.'' Like the
 character Davos Seaworth (who became famous for smuggling onions through a
-blockade on his homeland), we use ``onion'' comments to precisely control how
+blockade on his homeland), the Davos package uses ``onion comments'' to precisely control how
 packages are smuggled into the Python workspace.
 
 \begin{figure}[tp]
@@ -667,23 +670,26 @@ of an IPython notebook, the code in Figure~\ref{fig:illustrative-example}
 ensures that these objects will be loaded successfully and analyzed using the
 same set of package versions, no matter when or by whom the notebook is run.
 
+After installing and importing Davos (lines 1--2), we first use the \texttt{davos.require\_python()} function to constrain the Python version used to run the code below (see Sec.~\ref{subsec:toplevel}).
+As described above, the example code in Figure \ref{fig:illustrative-example} uses two different versions of the \texttt{pandas} library: first, an older one needed to access a dataset saved in an outmoded format, then a newer one throughout the remainder of the notebook.
+Line 6 therefore ensures upfront that the notebook's Python version falls within the overlap between the ranges of Python versions that these two versions of \texttt{pandas} support. If it does not, the function in line 6 will raise an error that includes a message to this effect (lines 4--5).
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example1}
 \end{center}
 Next, in lines 8--9 we \texttt{smuggle} two
 utilities for interacting with local files in the code below. The
-\texttt{smuggle} statement in line 4 loads the \texttt{is\_file()}
+\texttt{smuggle} statement in line 8 loads the \texttt{is\_file()}
 function from the Python standard library's \texttt{os.path}
-module. Standard library modules are included with all Python
-distributions, so this line is functionally equivalent to an
+module. Since standard library modules are included with all Python
+distributions, this line is functionally equivalent to an
 \texttt{import} statement and does not need or benefit from an onion
-comment. Line 5 loads the \texttt{joblib} package~\cite{Varo10},
+comment. Line 9 loads the \texttt{joblib} package~\cite{Varo10},
 installing it first, if necessary. Since \texttt{joblib}'s I/O
 interface has historically remained stable and backwards-compatible
-across releases, requiring that users have a particular exact version
-installed would likely be unnecessarily restrictive. However, a
-\textit{future} release might introduce some breaking change.  The
-onion comment in line 5 helps ensure the analysis notebook continues
+across releases, requiring a particular exact version
+would likely be unnecessarily restrictive. However, it is possible a
+\textit{future} release could introduce some breaking change.  The
+onion comment in line 9 helps ensure the analysis notebook continues
 to run properly in the future by limiting allowable versions to those
 already released when the code was written:
 \begin{center}
@@ -700,6 +706,9 @@ Sec.~\ref{subsec:config}).
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example3}
 \end{center}
+
+\stoppedhere
+
 Setting the \texttt{auto\_rerun} attribute to \texttt{True} is particularly useful
 for managing the installation of \texttt{pandas} in the next
 lines:
@@ -835,6 +844,8 @@ enable users to load in data and models that are incompatible with
 newer versions of \texttt{pandas} and \texttt{scikit-learn}, but still
 \textit{analyze} and manipulate the data and model output using the
 latest approaches and implementations.
+
+\todo{mention notebook reproducibility, cell order, multiple package versions re: reviewer's comment; note importance of running lines 14--19 \& 38--40 in single cell; say another option is to alias one version, e.g., \texttt{smuggle pandas as pd\_old}}
 
 
 \section{Impact}

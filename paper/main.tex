@@ -667,7 +667,10 @@ of an IPython notebook, the code in Figure~\ref{fig:illustrative-example}
 ensures that these objects will be loaded successfully and analyzed using the
 same set of package versions, no matter when or by whom the notebook is run.
 
-After installing and importing Davos (lines 1--2), we first \texttt{smuggle} two
+\begin{center}
+\includegraphics[width=0.9\textwidth]{figs/example1}
+\end{center}
+Next, in lines 8--9 we \texttt{smuggle} two
 utilities for interacting with local files in the code below. The
 \texttt{smuggle} statement in line 4 loads the \texttt{is\_file()}
 function from the Python standard library's \texttt{os.path}
@@ -684,7 +687,7 @@ onion comment in line 5 helps ensure the analysis notebook continues
 to run properly in the future by limiting allowable versions to those
 already released when the code was written:
 \begin{center}
-\includegraphics[width=0.9\textwidth]{figs/example1}
+\includegraphics[width=0.9\textwidth]{figs/example2}
 \end{center}
 Line 7 then uses the \texttt{davos.config} object to enable
 Davos's \texttt{auto\_rerun} option before smuggling the next
@@ -695,13 +698,13 @@ require restarting the notebook kernel if different versions had been previously
 imported during the same interpreter session (see
 Sec.~\ref{subsec:config}).
 \begin{center}
-\includegraphics[width=0.9\textwidth]{figs/example2}
+\includegraphics[width=0.9\textwidth]{figs/example3}
 \end{center}
 Setting the \texttt{auto\_rerun} attribute to \texttt{True} is particularly useful
 for managing the installation of \texttt{pandas} in the next
 lines:
 \begin{center}
-\includegraphics[width=0.9\textwidth]{figs/example3}
+\includegraphics[width=0.9\textwidth]{figs/example4}
 \end{center}
 If we suppose that the data contained in \texttt{data-old.pkl} is
 stored in a pickled \texttt{Panel} object, then we must use a version of
@@ -744,7 +747,7 @@ continue automatically without user input during that time.  Enabling
 \texttt{suppress\_stdout} also suppresses console outputs while installing
 these packages and their many dependencies to prevent other potentially important outputs from being buried.
 \begin{center}
-\includegraphics[width=0.9\textwidth]{figs/example4}
+\includegraphics[width=0.9\textwidth]{figs/example5}
 \end{center}
 
 After re-enabling these two options (line 20), we next \texttt{smuggle}
@@ -760,7 +763,7 @@ statements to load the packages into the notebook namespace. If they
 differ, Davos will download the requested versions in place
 of the installed versions before doing so.
 \begin{center}
-\includegraphics[width=0.9\textwidth]{figs/example5}
+\includegraphics[width=0.9\textwidth]{figs/example6}
 \end{center}
 Line 24 uses an onion comment to specify that \texttt{Quail} should be
 installed directly from a specific GitHub commit (\texttt{6c847a4}).
@@ -775,7 +778,7 @@ functionality that supports more advanced installation scenarios.  The
 creating various JavaScript widgets with Python code, and the \texttt{widgetsnbextension} package provides
 the machinery needed by the notebook frontend to display them.
 \begin{center}
-\includegraphics[width=0.9\textwidth]{figs/example6}
+\includegraphics[width=0.9\textwidth]{figs/example7}
 \end{center}
 A complication is that \texttt{ipywidgets} must be installed in the
 same environment as the IPython kernel, whereas
@@ -785,7 +788,7 @@ environments are the same.  However, a common ``advanced'' approach
 entails running the notebook server from a base environment, with
 additional environments each providing their own separate,
 interchangeable IPython kernels.  To accommodate this multi-environment
-scenario, on lines 26 and 28, we use the \texttt{pip\_executable} option to control which environments each
+scenario, in lines 26 and 28, we use the \texttt{pip\_executable} option to control which environments each
 package should be installed to.  Once these two packages are installed
 and imported, line 31 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
 display progress bars to provide status updates for running code. In
@@ -805,7 +808,7 @@ instance converts text data to an array of word counts.  Second, the
 word counts are passed to a topic model~\cite{BleiEtal03} using a
 pretrained \texttt{LatentDirichletAllocation} instance.
 \begin{center}
-\includegraphics[width=0.9\textwidth]{figs/example7}
+\includegraphics[width=0.9\textwidth]{figs/example8}
 \end{center}
 Let us suppose that the \texttt{Pipeline} object had been saved by its
 original creator using the \texttt{joblib} package, as

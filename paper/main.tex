@@ -549,7 +549,7 @@ Some of these functions serve primarily as conveniences, while others provide ad
   Yet a Davos-enhanced notebook may still \texttt{smuggle} certain packages that depend on users having a particular Python version or range of versions (e.g., even just within the standard library, the \texttt{dataclass} module was first added in Python 3.7 \cite{Smit17} and at least 19 modules are slated for removal in Python 3.13 \cite{HeimCann19}).
   The \texttt{davos.require\_python()} function can be added to the top of a Davos-enhanced notebook to communicate to users that the notebook's code should be run with a specific or constrained Python version (see Sec.~\ref{sec:illustrative-example} for example usage).
   The function may be passed a version identifier (e.g., \texttt{"3.10.5"}) or any valid version specifier \cite{CoghStuf13} (e.g., \texttt{"\raisebox{0.5ex}{\texttildelow}=3.11"}, \texttt{">=3.9;<3.12"}, etc.) and will raise an exception if the user's Python version is incompatible.
-  Alternatively, a ``soft'' or suggested constraint can be specified by passing \texttt{warn=True} to issue a warning rather than raise an error.
+  Alternatively, a ``soft'' or suggested constraint can be imposed by passing \texttt{warn=True} to issue a warning rather than raise an error.
   Additional information can be added to the default error/warning message (e.g., the specific reason for this requirement) via the \texttt{extra\_msg} argument, and the optional \texttt{prereleases} argument can be used to explicitly allow (\texttt{True}) or disallow (\texttt{False}) pre-release versions (by default, the policy is determined by the value of \texttt{version\_spec}).
 
 \item \texttt{use\_default\_project()}: By default, each Davos-enhanced notebook will create and use a notebook-specific project named based on its absolute path.
@@ -607,10 +607,11 @@ executed.
 \includegraphics[width=\textwidth]{figs/flow_chart}
 \caption{\small \textbf{\texttt{smuggle()} function algorithm.}  At a
   high level, the \texttt{smuggle()} function may be conceptualized as
-following two basic steps.  First (left), Davos ensures that the
-correct version of the desired package has been installed, carrying
-out the installation automatically if needed.  Second (right),
-Davos imports the package and updates the current runtime environment.}
+  following two basic steps.  First (left), Davos ensures that the
+  correct version of the desired package is available locally, installing
+  it automatically (into the notebook's project directory) if needed.  Second (right),
+  Davos loads the package into the notebook and updates the current
+  runtime environment.}
 \label{fig:flow-chart}
 \end{figure}
 
@@ -626,10 +627,8 @@ Davos imports the package and updates the current runtime environment.}
 \end{figure}
 
 The example code throughout Section \ref{subsec:onion} illustrates how Davos is most typically used:
-By including a series of \texttt{smuggle} statements and onion comments with version specifiers or other options in an IPython notebook, researchers can share their code and its dependencies in a single file that can be easily run without any additional setup, creates and manages its own isolated environment, automatically installs its required packages at runtime, and ensures that the package versions with which it is run do not change unexpectedly.
-In this section, we have contrived a more complex scenario to highlight some of Davos's more advanced features and illustrate how they may be used to handle certain challenges that can arise with sharing reproducible scientific code.
-
-\bigskip\bigskip\textcolor{red}{\textbf{========== TODO: finish editing from here to end ==========}}\bigskip\bigskip
+By including a series of \texttt{smuggle} statements and onion comments with version specifiers or other options in an IPython notebook, researchers can share their code and its dependencies in a single file that can be easily run without any additional tools or setup, creates and manages its own isolated environment, automatically installs its required packages at runtime, and ensures that the package versions with which it is run do not change unexpectedly.
+In this section, we have contrived a more complex scenario to highlight some of Davos's more advanced features, and illustrate how they may be used to handle certain challenges that can arise when writing and sharing reproducible scientific code.
 
 Across different versions of a given package, various modules, functions,
 and other objects may be updated, removed, renamed, or otherwise altered. In
@@ -646,24 +645,25 @@ disk (e.g., for later reuse or to share with other users) by serializing the
 protocol is a popular built-in method of persisting data in Python that allows
 users to save, share, and load arbitrary objects. However, in order to
 successfully ``unpickle'' (i.e., load and restore) a ``pickled'' (i.e., previously saved)
-object, the object's class must be defined in and importable from the same
-module as when it was saved. Thus, because of the \texttt{Panel} class's
+object, that object's class must be defined in and importable from the same
+module as it was when the object was originally saved. Thus, because of the \texttt{Panel} class's
 removal, the user's dataset could not be read by any version of \texttt{pandas}
-from 0.25.0 or beyond. These incompatibilities are also not limited solely to
+from 0.25.0 onward. These incompatibilities are also not limited solely to
 traditional forms of data. For example, saved model states and other objects
 may reference modules, functions, attributes, classes, or other objects that
 may not be identical (or even present) across all versions of their associated
-package.
+packages.
 
 The example provided in Figure~\ref{fig:illustrative-example} demonstrates how
-the Davos package can be used to circumvent these incompatibilities by
-carefully controlling which versions of each package are used in different
-parts of the notebook. The example shows how a dataset and model that require
+Davos can be used to circumvent these incompatibilities by
+temporarily switching between different versions of the same package within a single runtime.
+%carefully controlling which versions of each package are used in different parts of the notebook.
+The example shows how a dataset and model that require
 now-incompatible components of the \texttt{pandas} and
-\texttt{scikit-learn}~\cite{PedrEtal11} packages may be loaded in (using older
+\texttt{scikit-learn}~\cite{PedrEtal11} libraries may be loaded in (using older
 versions of each package) and used alongside more recent versions of each
 package that provide new and improved functionality. When included at the top
-of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
+of an IPython notebook, the code in Figure~\ref{fig:illustrative-example}
 ensures that these objects will be loaded successfully and analyzed using the
 same set of package versions, no matter when or by whom the notebook is run.
 

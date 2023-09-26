@@ -1113,6 +1113,22 @@ def smuggle(
                 # run, which crashes it... (-_-* )
                 if mod_name.startswith(f'{dep_name}.'):
                     dep_modules_old[mod_name] = sys.modules.pop(mod_name)
+                    # when reloading package below, importlib.reload
+                    # doesn't seem to automatically follow and
+                    # recursively reload submodules/subpackages loaded
+                    # into the top-level module via relative import
+                    # (e.g., `from . import submodule`) based on their
+                    # *new* locations, if different from their old
+                    # locations. So if a previously smuggled package
+                    # came from the user's main Python environment, and
+                    # the just-smuggled version is now in a project
+                    # directory, the old subpackage/submodule object
+                    # will be re-used in the new top-level module's
+                    # namespace unless we explicitly remove them here
+                    # and force their loaders' paths to be recomputed
+                    submod_name = mod_name[len(dep_name) + 1:]
+                    if submod_name in sys.modules[dep_name].__dict__:
+                        del sys.modules[dep_name].__dict__[submod_name]
 
             # get (but don't pop) top-level package to that it can be
             # reloaded (must exist in sys.modules)

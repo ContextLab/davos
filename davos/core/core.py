@@ -1206,7 +1206,7 @@ def smuggle(
                     f"{failed_reloads_str} {verb} partially reloaded. "
                     f"{failed_ver_string} may be misleading."
                 )
-                warnings.warn(msg, RuntimeWarning, stacklevel=2)
+                warnings.warn(msg, RuntimeWarning, stacklevel=3)
 
         if (
                 config._project is None and

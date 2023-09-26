@@ -1102,6 +1102,7 @@ def smuggle(
         failed_reloads = []
         for dep_name in prev_imported_pkgs:
             dep_modules_old = {}
+            top_level_names_old = []
             for mod_name in tuple(sys.modules.keys()):
                 # remove submodules of previously imported packages so
                 # new versions get imported when main package is
@@ -1128,6 +1129,7 @@ def smuggle(
                     # and force their loaders' paths to be recomputed
                     submod_name = mod_name[len(dep_name) + 1:]
                     if submod_name in sys.modules[dep_name].__dict__:
+                        top_level_names_old.append(submod_name)
                         del sys.modules[dep_name].__dict__[submod_name]
 
             # get (but don't pop) top-level package to that it can be
@@ -1138,7 +1140,9 @@ def smuggle(
             except (ImportError, RuntimeError):
                 # if we aren't able to reload the module, put the old
                 # version's submodules we removed back in sys.modules
-                # for now and prepare to show a warning post-execution.
+                # for now, add their names back to the top-level
+                # module's __dict__, and prepare to show a warning
+                # post-execution.
                 # This way:
                 #   1. the user still has a working module until they
                 #      restart the runtime
@@ -1146,6 +1150,10 @@ def smuggle(
                 #      we try to reload/import other modules that
                 #      import it
                 sys.modules.update(dep_modules_old)
+                for submod_name in top_level_names_old:
+                    sys.modules[dep_name].__dict__[submod_name] = (
+                        dep_modules_old[f'{dep_name}.{submod_name}']
+                    )
                 failed_reloads.append(dep_name)
 
         if any(failed_reloads):

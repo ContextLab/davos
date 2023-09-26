@@ -411,7 +411,7 @@ But regardless of the extent to which the existing environment is augmented, Dav
 Additionally, because \texttt{smuggle} statements in a given notebook are evaluated every time it is run, this system also ensures that the notebook's requirements will remain satisfied even if the user's Python environment changes.
 For example, suppose a user has \texttt{NumPy}~\cite{HarrEtal20} v1.24.3 installed in their current Python environment and runs a Davos-enhanced notebook that smuggles \texttt{NumPy} with ``\texttt{numpy==1.24.3}'' specified in an onion comment (see Sec.~\ref{subsec:onion}).
 Since the user's existing version of the package satisfies this requirement, Davos will happily load it into the notebook.
-But if the user later upgrades their environment's \texttt{NumPy} version to v1.25.0 (perhaps as a result of installing a different package that depends on it) and subsequently reruns this notebook, the local version will longer satisfy this requirement, so Davos will install \texttt{NumPy} v1.24.3 into the notebook's project directory and load that version instead.
+But if the user later upgrades their environment's \texttt{NumPy} version to v1.25.0 (perhaps as a result of installing a different package that depends on it) and subsequently re-runs this notebook, the local version will longer satisfy this requirement, so Davos will install \texttt{NumPy} v1.24.3 into the notebook's project directory and load that version instead.
 From then on, any further changes to the user's \texttt{Numpy} installation would have no effect on Davos's behavior in this particular notebook, as a satisfactory version now exists in its project directory.
 (If the version specified in the onion comment were changed, Davos would update the version installed in the project directory accordingly.)
 For efficiency, Davos projects will generally not duplicate dependencies already satisfied by the user's Python environment.
@@ -446,10 +446,10 @@ These include:
   and the code that generates those objects was changed between the
   previously loaded and to-be-smuggled versions.  If this attribute
   is set to \texttt{True}, Davos will automatically restart
-  the notebook kernel and rerun all code up to (and including) the
+  the notebook kernel and re-run all code up to (and including) the
   current \texttt{smuggle} statement. If set to \texttt{False} (the default),
   Davos will instead issue a warning, pause execution, and
-  prompt the user to either restart and rerun the notebook, or
+  prompt the user to either restart and re-run the notebook, or
   continue running with the previously loaded package version until
   the next time the kernel is restarted manually.  Note that, as of
   this writing, setting \texttt{davos.auto\_rerun} to \texttt{True} is not
@@ -673,7 +673,7 @@ ensures that these objects will be loaded successfully and analyzed using the
 same set of package versions no matter when or by whom the notebook is run.
 
 After installing and importing Davos (lines 1--2), we first use the \texttt{davos.require\_python()} function to constrain the Python version used to run the notebook (see Sec.~\ref{subsec:toplevel}).
-As described above, the example code in Figure \ref{fig:illustrative-example} loads two different versions of the \texttt{pandas} library: first, an older version needed to access a dataset saved in an outmoded format, then a newer one for use throughout the remainder of the notebook.
+As described above, the example code in Figure \ref{fig:illustrative-example} loads two different versions of the \texttt{pandas} library: first, an older version needed to access a dataset saved in an outmoded format, then a newer one to use throughout the remainder of the notebook.
 We therefore want to make sure upfront (in line 6) that the notebook's Python version falls within the range of versions that both of these two versions of \texttt{pandas} support.
 %Line 6 therefore ensures upfront that the notebook's Python version falls within the overlap between the ranges of Python versions that these two versions of \texttt{pandas} support.
 If it does not, the function in line 6 will raise an error that includes a message to this effect (lines 4--5).
@@ -688,60 +688,67 @@ function from the Python standard library's \texttt{os.path}
 module. Standard library modules are included with all Python
 distributions, so this line is functionally equivalent to an
 \texttt{import} statement and does not need or benefit from an onion
-comment (since there is no chance it will need to be installed).
+comment (since there is no chance the module will need to be installed).
 Line 9 then loads the \texttt{joblib} package~\cite{Varo10},
-installing it into the notebook's project directory, if necessary. Since \texttt{joblib}'s I/O
+installing it into the notebook's project directory if necessary. Since \texttt{joblib}'s I/O
 interface has historically remained stable and backwards-compatible
 across releases, requiring a particular exact version
 would likely be unnecessarily restrictive. However, it is possible a
 \textit{future} release could introduce some breaking change.  The
-onion comment in line 9 helps ensure the analysis notebook continues
+onion comment in line 9 helps ensure that the analysis notebook will continue
 to run properly in the future by limiting allowable versions to those
 already released when the code was written:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example2}
 \end{center}
-Line 7 then uses the \texttt{davos.config} object to enable
-Davos's \texttt{auto\_rerun} option before smuggling the next
+It is worth noting, however, that beyond illustrative purposes, the benefit of specifying only a maximum version for \texttt{joblib} rather than an exact version is relatively minor.
+The main advantage to relaxing a version constraint in an onion comment (when a package's behavior does not differ meaningfully between versions) is that doing so increases the likelihood that a satisfactory version will already be available in the user's Python environment, and therefore Davos will not need to install a new copy in the notebook's project directory.
+For large packages, this can be a worthwhile consideration; however \texttt{joblib} is very lightweight---less than 0.5 MB pre-built, with no required dependencies.
+Thus a more conservative approach that guarantees an exact version is used would also be reasonable in this case.
+
+Line 11 then enables
+Davos's \texttt{auto\_rerun} option (see Sec.~\ref{subsec:config}) before smuggling the next
 two packages: \texttt{NumPy} and
 \texttt{pandas}. Because these packages rely heavily on custom C data
-types, loading the particular versions from the onion comments may
-require restarting the notebook kernel if different versions had been previously
-imported during the same interpreter session (see
-Sec.~\ref{subsec:config}).
+types, loading the particular versions specified in their onion comments may
+require restarting the notebook kernel if different versions were previously
+imported during the same interpreter session---including internally by other packages.
+Enabling \texttt{auto\_rerun} allows Davos to handle kernel restarts automatically and continue running the code seamlessly without user intervention.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example3}
 \end{center}
+In the case of \texttt{NumPy}, whether or not a kernel restart is necessary will depend on the user's existing Python environment.
+The \texttt{joblib} package has an optional dependency on \texttt{NumPy} for memoizing and parallelizing array operations, and will \texttt{import numpy} internally to enable these features if the package is available.
+If the user already has \texttt{NumPy} installed in their Python environment when \texttt{joblib} is smuggled in line 9, their installed version is different from the one specified in the onion comment on line 12, and there were changes made to \texttt{NumPy}'s C extensions between those two versions, then Davos will automatically restart the kernel and re-run the lines above.
+The newly smuggled version would then be used both in the notebook itself and by \texttt{joblib} internally.
+% (Note that outside the context of an illustrative example, one could avoid a kernel restart here altogether simply by smuggling \texttt{NumPy} before \texttt{joblib}.)
 
-\stoppedhere
-
-Setting the \texttt{auto\_rerun} attribute to \texttt{True} is particularly useful
-for managing the installation of \texttt{pandas} in the next
-lines:
+The primary reason for enabling the \texttt{auto\_rerun} option, however, is to manage the installation of \texttt{pandas} in the next set of lines:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example4}
 \end{center}
-If we suppose that the data contained in \texttt{data-old.pkl} is
+If we suppose that the ``\texttt{data-old.pkl}'' file contains a dataset
 stored in a pickled \texttt{Panel} object, then we must use a version of
-\texttt{pandas} prior to 0.25.0 (i.e., the version in which the \texttt{Panel}
-class was removed) to be able to load it in. Line 11 ensures
-that an older version of \texttt{pandas} will be imported, enabling
-the data to be read in (and, in line 13, written to a CSV
-file, which is compatible with newer \texttt{pandas} versions).
+\texttt{pandas} prior to v0.25.0 (i.e., the version in which the \texttt{Panel}
+class was removed) to be able to read it. Line 15 ensures
+that a sufficiently old version of \texttt{pandas} will be imported, enabling
+the data to be successfully loaded in line 16 and (in line 17) written to a CSV
+file, which can be read by any \texttt{pandas} version.
 
 Newer versions of \texttt{pandas} have brought substantial improvements
-including better performance, bug fixes, and additional functionality. Although
+including performance enhancements, bug fixes, and additional functionality. Although
 the original dataset had to be read in using an older version of the package,
 we can take advantage of these more recent updates by smuggling \texttt{pandas}
-a second time on line 15 (whose onion comment specifies that version 1.3.5
-should be installed and loaded). Since a different version of \texttt{pandas}
-had already been loaded by the Python interpreter (on line 11), the notebook
-kernel must be restarted in order to replace the old version's custom C
-extensions with those from the new version. The \texttt{auto\_rerun} flag set
-on line 7 enables Davos to trigger this process automatically so that
-the code can continue running without user intervention, and converting the
-dataset to a CSV file in lines 10--13 ensures that the older version of
-\texttt{pandas} does not need to be reinstalled.
+a second time in line 19 (whose onion comment specifies that version 1.3.5
+should be installed and loaded). Since a different \texttt{pandas} version
+has already been loaded by the Python interpreter (line 15) and there have been
+substantial changes to the library (including its extension modules)
+between that version and v1.3.5, the notebook
+kernel must be restarted in order to fully unload the old version in favor of
+the new one. 
+When Davos automatically does so and re-runs the code above, having now converted the dataset to a CSV file means the old version does not need to be reinstalled (line 14). 
+
+\stoppedhere
 
 Next, line 17 uses the \texttt{davos.configure()} function to disable
 the \texttt{auto\_rerun} option and simultaneously enable two other

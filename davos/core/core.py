@@ -30,6 +30,7 @@ import functools
 import importlib
 import itertools
 import sys
+import warnings
 from contextlib import contextmanager, redirect_stdout
 from io import StringIO
 from pathlib import Path
@@ -1182,6 +1183,30 @@ def smuggle(
                 raise SmugglerError(msg)
             else:
                 prompt_restart_rerun_buttons(failed_reloads)
+                # if the function above returns, the user has chosen to
+                # continue running the notebook rather than restarting
+                # to properly reload the package. Issue a warning to let
+                # them know to proceed with caution
+                if len(failed_reloads) == 1:
+                    failed_reloads_str = failed_reloads[0]
+                    verb = 'was'
+                    failed_ver_string = f'{failed_reloads_str}.__version__'
+                else:
+                    verb = 'were'
+                    failed_ver_string = "These packages' '__version__' attributes"
+                    if len(failed_reloads) == 2:
+                        failed_reloads_str = " and ".join(failed_reloads)
+                    else:
+                        failed_reloads_str = (
+                            f"{', '.join(failed_reloads[:-1])}, and "
+                            f"{failed_reloads[-1]}"
+                        )
+
+                msg = (
+                    f"{failed_reloads_str} {verb} partially reloaded. "
+                    f"{failed_ver_string} may be misleading."
+                )
+                warnings.warn(msg, RuntimeWarning, stacklevel=2)
 
         if (
                 config._project is None and

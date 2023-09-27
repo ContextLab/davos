@@ -420,7 +420,7 @@ However, if desired, adding \texttt{pip}'s \texttt{--ignore-installed} flag to a
 By default, each Davos-enhanced notebook will create and use its own notebook-specific project named for the absolute path to the notebook file.
 However, before smuggling its required packages, a notebook may be set to instead use an arbitrarily named, notebook-agnostic project by assigning any (non-empty) string to \texttt{davos.project} (see Sec.~\ref{subsec:config}).
 This provides a convenient way for multiple related notebooks that share a common set of requirements to use the same Davos project, by setting \texttt{davos.project} to the same string in each one.
-It is also possible (though not recommended) to disable Davos's project system entirely and install smuggled packages directly into the user's Python environment by setting \texttt{davos.project} to \texttt{None}.
+It is also possible (though typically not recommended) to disable Davos's project system entirely and install smuggled packages directly into the user's Python environment by setting \texttt{davos.project} to \texttt{None}.
 
 When accessed (unless its value has been set to \texttt{None}), \texttt{davos.project} will return a \texttt{Project} object that represents the project used by the current notebook (strings assigned to \texttt{davos.project} are converted to \texttt{Project}s internally). This object supports methods for interacting with the current project, including locating its directory on the file system, listing all installed packages' names and versions, changing the project's name, and deleting its contents altogether.
 \texttt{Project} instances can also be created and managed programmatically, and Davos provides additional utilities for viewing and working with all existing projects (see Secs.~\ref{subsec:config} and \ref{subsec:toplevel}).
@@ -748,22 +748,20 @@ kernel must be restarted in order to fully unload the old version in favor of
 the new one. 
 When Davos automatically does so and re-runs the code above, having now converted the dataset to a CSV file means the old version does not need to be reinstalled (line 14). 
 
-\stoppedhere
-
-Next, line 17 uses the \texttt{davos.configure()} function to disable
+Next, line 21 uses the \texttt{davos.configure()} function to disable
 the \texttt{auto\_rerun} option and simultaneously enable two other
 options: \texttt{suppress\_stdout} and \texttt{noninteractive}. With
-these options enabled, lines 18--19 \texttt{smuggle}
+these options enabled, lines 22--23 \texttt{smuggle}
 \texttt{TensorFlow}~\cite{AbadEtal15}, a powerful end-to-end platform
 for building and working with machine learning models, and
 \texttt{UMAP}~\cite{McInEtal18}, a package that implements a family
-of related manifold learning techniques. The onion comment in line 19
+of related manifold learning techniques. The onion comment in line 23
 also specifies that \texttt{UMAP} should be installed with the
 optional requirements needed for its ``plot'' and ``parametric\_umap''
 features. Together, these two packages depend on 36 other unique
-packages, most of which have dependencies of their own. And if many of
+packages, most of which have dependencies of their own. If many of
 these are not already installed in the user's environment, lines
-18--19 could take several minutes to run.  Enabling the
+22--23 could take several minutes to run.  Enabling the
 \texttt{noninteractive} option ensures that the installation will
 continue automatically without user input during that time.  Enabling
 \texttt{suppress\_stdout} also suppresses console outputs while installing
@@ -772,54 +770,69 @@ these packages and their many dependencies to prevent other potentially importan
 \includegraphics[width=0.9\textwidth]{figs/example5}
 \end{center}
 
-After re-enabling these two options (line 20), we next \texttt{smuggle}
+After re-enabling these two options (line 24), we next \texttt{smuggle}
 specific versions of three plotting packages:
 \texttt{Matplotlib}~\cite{Hunt07}, \texttt{seaborn}~\cite{Wask21}, and
-\texttt{Quail}~\cite{HeusEtal17} (lines 22--24). Because the first two
+\texttt{Quail}~\cite{HeusEtal17} (lines 26--28). Because the first two
 are requirements of \texttt{UMAP}'s optional ``plot'' feature, they
-will have already been installed by line 19, though possibly as
+will have already been installed (if necessary) by line 23, though possibly as
 different versions than those specified in the onion comments on lines
-22 and 23. If the installed and specified versions are the same, these
+26 and 28. If the installed and specified versions are the same, these
 \texttt{smuggle} statements will function like standard \texttt{import}
-statements to load the packages into the notebook namespace. If they
+statements to load the packages into the notebook's namespace. If they
 differ, Davos will download the requested versions in place
-of the installed versions before doing so.
+of the installed versions, ensuring that they are used both in the notebook itself and by \texttt{UMAP} internally.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example6}
 \end{center}
-Line 24 uses an onion comment to specify that \texttt{Quail} should be
-installed directly from a specific GitHub commit (\texttt{6c847a4}).
-This ability to load packages directly from GitHub repositories can
-enable developers to more easily use forked or modified versions of other
-packages in their notebooks, even if those versions have not been
-officially released.
+The onion comment in line 28 specifies that \texttt{Quail} should be
+installed from a fork of its GitHub repository (\texttt{myfork}), in its state as of a specific commit (\texttt{6c847a4}).
+This ability to load packages directly from remote (or local) Git repositories can
+enable developers to more easily use forked or customized versions of other
+packages in their code, even if those versions have not been
+officially released. Targeting specific VCS references (e.g., commits, tags, etc.) can also provide even finer-grained control over smuggled package versions than is possible with traditional version specifiers.
 
-In lines 26--29, we demonstrate another aspect of Davos's
-functionality that supports more advanced installation scenarios.  The
-\texttt{ipywidgets}~\cite{FredEtal15} package provides an API for
-creating various JavaScript widgets with Python code, and the \texttt{widgetsnbextension} package provides
-the machinery needed by the notebook frontend to display them.
+In lines 30--37, we demonstrate another aspect of Davos's functionality that supports more advanced installation scenarios.
+%The \texttt{ipywidgets}~\cite{FredEtal15} package (also known as Jupyter Widgets) provides a Python API for creating various JavaScript widgets within a notebook, and the \texttt{widgetsnbextension} package provides the JavaScript machinery needed by the the notebook frontend to display them.
+The \texttt{ipywidgets}~\cite{FredEtal15} package (also known as Jupyter Widgets) provides a Python API for creating interactive JavaScript widgets within a notebook. 
+It depends on the \texttt{widgetsnbextension} package, which provides the JavaScript machinery needed by the notebook frontend to display these widgets.
+%A complication is that, while \texttt{ipywidgets} must be installed in a location that is accessible from the IPython kernel (i.e., the Python runtime of the notebook itself), \texttt{widgetsnbextension} must be made accessible to the Jupyter notebook server, which is a separate Python runtime. 
+%A complication is that, while \texttt{ipywidgets} must be installed in an environment accessible from the IPython kernel (i.e., importable into the notebook itself), \texttt{widgetsnbextension} must be installed in the environment that houses the Jupyter notebook server.
+A complication is that \texttt{ipywidgets} must be installed in a location that is accessible from the IPython kernel (i.e., the Python runtime within the notebook itself), while \texttt{widgetsnbextension} must be installed in the environment that houses the Jupyter notebook server (a separate Python runtime that serves and manages the notebook frontend client). 
+In many basic setups, the IPython kernel and notebook server exist in the same environment. 
+However, a common ``advanced'' approach entails running the notebook server from a base environment, with additional environments each providing their own separate, interchangeable IPython kernels.  
+
+Lines 30--37 account for both of these possibilities programmatically:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example7}
 \end{center}
-A complication is that \texttt{ipywidgets} must be installed in the
-same environment as the IPython kernel, whereas
-\texttt{widgetsnbextension} must be installed in the environment that
-houses the Jupyter notebook server. In many basic setups, these two
-environments are the same.  However, a common ``advanced'' approach
-entails running the notebook server from a base environment, with
-additional environments each providing their own separate,
-interchangeable IPython kernels.  To accommodate this multi-environment
-scenario, in lines 26 and 28, we use the \texttt{pip\_executable} option to control which environments each
-package should be installed to.  Once these two packages are installed
-and imported, line 31 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
-display progress bars to provide status updates for running code. In
+First, in line 30, we set the \texttt{davos.project} attribtue to \texttt{None} to temporarily 
+%disable Davos's project isolation system and
+allow installing smuggled packages outside of the notebook's project directory. 
+As noted in Section \ref{subsec:projects}, this is typically discouraged, as doing so can risk interfering with the user's Python environment if existing package versions are overwritten.
+In this particular case, however, a combination of factors make this relatively safe and inconsequential.
+First, the package we need to install directly into the notebook server environment (\texttt{widgetsnbextension}) is smuggled without an accompanying onion comment (line 34), meaning that Davos will not replace any version the user may already have installed.
+Second, the package has no dependencies of its own, so if Davos does install it, no other packages could potentially be installed or updated as a side effect.
+Third, the package itself provides no functionality outside of rendering Jupyter widgets, so its presence would not alter any other code's expected behavior.
+
+Next, in lines 31--33, we change the \texttt{pip} executable Davos uses to install smuggled packages (see Sec.~\ref{subsec:config}), storing the default executable's path in a variable before doing so. 
+When Davos's project system is disabled, using a \texttt{pip} executable from a particular Python environment will cause smuggled packages to be installed into (and subsequently loaded from) that environment. 
+The default \texttt{pip\_executable} will install packages into the environment used to run the IPython kernel. 
+Here, the new value assigned to \texttt{davos.pip\_executable} in line 33 is the output of running ``\texttt{command -v pip}'' as a \texttt{!}-prefixed IPython system shell command in line 32 (``\texttt{command -v}'' outputs the path to an executable, similar to ``\texttt{which}'' but more portable). 
+Since IPython system shell command are always executed in the notebook server environment, this command's output will be the path to that environment's \texttt{pip} executable---which may or may not be different from the kernel environment's.
+
+After smuggling the \texttt{widgetsnbextension} package in line 34, we use the \texttt{davos.use\_default\_project()} function in line 35 to revert to installing package into the notebook's project directory, restore the default value of \texttt{davos.pip\_executable} in line 36, and \texttt{smuggle} the specified version of \texttt{ipywidgets} in line 37.
+With these two packages now installed
+and imported, line 39 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
+displays progress bars to provide status updates for running code. In
 Jupyter notebooks, the \texttt{tqdm.notebook} module can be imported
 to enable more aesthetically pleasing progress bars that are displayed via
 \texttt{ipywidgets}, if that package is installed and
 importable. Therefore, to take advantage of this feature, it was
 important to \texttt{smuggle} \texttt{tqdm} after ensuring the
 \texttt{ipywidgets} package was available.
+
+\stoppedhere
 
 Next, we load in the reformatted dataset (line 33) and pre-trained
 model (line 35) that we wish to use in our analysis.  In our
@@ -858,7 +871,7 @@ newer versions of \texttt{pandas} and \texttt{scikit-learn}, but still
 \textit{analyze} and manipulate the data and model output using the
 latest approaches and implementations.
 
-\todo{mention notebook reproducibility, cell order, multiple package versions re: reviewer's comment; note importance of running lines 14--19 \& 38--40 in single cell; say another option is to alias one version, e.g., \texttt{smuggle pandas as pd\_old}}
+\todo{mention notebook reproducibility, cell order, multiple package versions re: reviewer's comment; note importance of running lines 14--19 \& 38--40 in single cell}
 
 
 \section{Impact}

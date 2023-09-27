@@ -122,7 +122,6 @@ jobs:
           # install geckodriver
           driver_path=$(python -c '
 
-          import shutil
           from pathlib import Path
 
           import geckodriver_autoinstaller

@@ -135,7 +135,7 @@ JS_FUNCTIONS = DotDict({
              *     Value sent to the notebook kernel's stdin socket if the 
              *     given button is clicked and sendResult is true. Used to 
              *     forward user input information to Python. JS types are 
-             *     converted ty Python types, within reason (Boolean -> bool, 
+             *     converted to Python types, within reason (Boolean -> bool, 
              *     Object -> dict, Array -> list, null -> None, 
              *     undefined -> '', etc.). If omitted, the return value of 
              *     onClick will be used instead.

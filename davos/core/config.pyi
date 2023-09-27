@@ -36,6 +36,7 @@ class DavosConfig(metaclass=SingletonConfig):
     _environment: _Environment
     _ipy_showsyntaxerror_orig: _IpyShowSyntaxErrorPre7 | _IpyShowSyntaxErrorPost7 | None
     _ipython_shell: IpythonShell | None
+    _jupyter_interface: Literal['notebook', 'lab']
     _noninteractive: bool
     _pip_executable: str
     _project: AbstractProject | ConcreteProject | None
@@ -102,4 +103,5 @@ class DavosConfig(metaclass=SingletonConfig):
     def _find_default_pip_executable(self) -> str: ...
 
 def _block_greedy_ipython_completer() -> None: ...
+def _get_jupyter_interface() -> Literal['notebook', 'lab']: ...
 def _get_stdlib_modules() -> frozenset[str]: ...

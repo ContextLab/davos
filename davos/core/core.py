@@ -30,6 +30,7 @@ import functools
 import importlib
 import itertools
 import sys
+import warnings
 from contextlib import contextmanager, redirect_stdout
 from io import StringIO
 from pathlib import Path
@@ -50,7 +51,7 @@ from davos.core.exceptions import (
     OnionParserError,
     ParserNotImplementedError,
     SmugglerError,
-    TheNightIsDarkAndFullOfTErrors
+    TheNightIsDarkAndFullOfErrors
 )
 from davos.core.parsers import pip_parser
 from davos.core.regexps import (
@@ -967,8 +968,8 @@ def use_project(smuggle_func):
             # invalidate sys.meta_path finder caches so the global
             # working set is regenerated based on the updated sys.path.
             # Note: after pretty extensive spot checking, I haven't
-            # managed found a case where this is actually since
-            # migrating to importlib.metadata instead of pkg_resources,
+            # managed to find a case where this is actually necessary
+            # since migrating from pkg_resources to importlib.metadata,
             # but the docs recommend it and the overhead is extremely
             # minor, so probably worth including in case the user or
             # notebook environment has implemented some unusual custom
@@ -1041,7 +1042,7 @@ def smuggle(
     pkg_name = name.split('.')[0]
 
     if pkg_name == 'davos':
-        raise TheNightIsDarkAndFullOfTErrors("Don't do that.")
+        raise TheNightIsDarkAndFullOfErrors("Don't do that.")
 
     onion = Onion(pkg_name, installer=installer,
                   args_str=args_str, **installer_kwargs)
@@ -1102,6 +1103,7 @@ def smuggle(
         failed_reloads = []
         for dep_name in prev_imported_pkgs:
             dep_modules_old = {}
+            top_level_names_old = []
             for mod_name in tuple(sys.modules.keys()):
                 # remove submodules of previously imported packages so
                 # new versions get imported when main package is
@@ -1113,6 +1115,23 @@ def smuggle(
                 # run, which crashes it... (-_-* )
                 if mod_name.startswith(f'{dep_name}.'):
                     dep_modules_old[mod_name] = sys.modules.pop(mod_name)
+                    # when reloading package below, importlib.reload
+                    # doesn't seem to automatically follow and
+                    # recursively reload submodules/subpackages loaded
+                    # into the top-level module via relative import
+                    # (e.g., `from . import submodule`) based on their
+                    # *new* locations, if different from their old
+                    # locations. So if a previously smuggled package
+                    # came from the user's main Python environment, and
+                    # the just-smuggled version is now in a project
+                    # directory, the old subpackage/submodule object
+                    # will be re-used in the new top-level module's
+                    # namespace unless we explicitly remove them here
+                    # and force their loaders' paths to be recomputed
+                    submod_name = mod_name[len(dep_name) + 1:]
+                    if submod_name in sys.modules[dep_name].__dict__:
+                        top_level_names_old.append(submod_name)
+                        del sys.modules[dep_name].__dict__[submod_name]
 
             # get (but don't pop) top-level package to that it can be
             # reloaded (must exist in sys.modules)
@@ -1122,7 +1141,9 @@ def smuggle(
             except (ImportError, RuntimeError):
                 # if we aren't able to reload the module, put the old
                 # version's submodules we removed back in sys.modules
-                # for now and prepare to show a warning post-execution.
+                # for now, add their names back to the top-level
+                # module's __dict__, and prepare to show a warning
+                # post-execution.
                 # This way:
                 #   1. the user still has a working module until they
                 #      restart the runtime
@@ -1130,6 +1151,10 @@ def smuggle(
                 #      we try to reload/import other modules that
                 #      import it
                 sys.modules.update(dep_modules_old)
+                for submod_name in top_level_names_old:
+                    sys.modules[dep_name].__dict__[submod_name] = (
+                        dep_modules_old[f'{dep_name}.{submod_name}']
+                    )
                 failed_reloads.append(dep_name)
 
         if any(failed_reloads):
@@ -1158,6 +1183,30 @@ def smuggle(
                 raise SmugglerError(msg)
             else:
                 prompt_restart_rerun_buttons(failed_reloads)
+                # if the function above returns, the user has chosen to
+                # continue running the notebook rather than restarting
+                # to properly reload the package. Issue a warning to let
+                # them know to proceed with caution
+                if len(failed_reloads) == 1:
+                    failed_reloads_str = failed_reloads[0]
+                    verb = 'was'
+                    failed_ver_string = f'{failed_reloads_str}.__version__'
+                else:
+                    verb = 'were'
+                    failed_ver_string = "These packages' '__version__' attributes"
+                    if len(failed_reloads) == 2:
+                        failed_reloads_str = " and ".join(failed_reloads)
+                    else:
+                        failed_reloads_str = (
+                            f"{', '.join(failed_reloads[:-1])}, and "
+                            f"{failed_reloads[-1]}"
+                        )
+
+                msg = (
+                    f"{failed_reloads_str} {verb} partially reloaded. "
+                    f"{failed_ver_string} may be misleading."
+                )
+                warnings.warn(msg, RuntimeWarning, stacklevel=3)
 
         if (
                 config._project is None and

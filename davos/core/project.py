@@ -52,6 +52,7 @@ import sys
 import warnings
 from os.path import expandvars
 from pathlib import Path
+from subprocess import CalledProcessError
 from urllib.request import urlopen
 from urllib.parse import parse_qs, unquote, urlencode, urljoin, urlparse
 
@@ -256,12 +257,12 @@ class Project(metaclass=ProjectChecker):
         if not yes:
             if config.noninteractive:
                 raise DavosProjectError(
-                    "To remove a project when noninteractive mode is "
-                    "enabled, you must explicitly pass 'yes=True'."
+                    "To remove a project when noninteractive mode is enabled, "
+                    "you must explicitly pass 'yes=True'."
                 )
             prompt = f"Remove project {self.name!r} and all installed packages?"
             confirmed = prompt_input(prompt, default='n')
-            if not confirmed:
+            if not confirmed and not config.suppress_stdout:
                 print(f"{self.name} not removed")
                 return
         shutil.rmtree(self.project_dir)
@@ -645,8 +646,18 @@ def get_notebook_path():
     kernel_filepath = ipykernel.connect.get_connection_file()
     kernel_id = kernel_filepath.split('/kernel-')[-1].split('.json')[0]
 
-    running_nbservers_stdout = run_shell_command('jupyter notebook list',
-                                                 live_stdout=False)
+    nbserver_list_cmd = f'jupyter {config._jupyter_interface} list'
+    try:
+        running_nbservers_stdout = run_shell_command(nbserver_list_cmd,
+                                                     live_stdout=False)
+    except CalledProcessError as e:
+        # raise RuntimeError so it's caught by `use_default_project` and
+        # the fallback project is used
+        raise RuntimeError(
+            "Shell command to get running Jupyter servers "
+            f"({nbserver_list_cmd}) failed"
+        ) from e
+
     for line in running_nbservers_stdout.splitlines():
         # should only need to exclude first line ("Currently running
         # servers:"), but handle safely in case output format changes in
@@ -773,6 +784,12 @@ def prune_projects(yes=False):
        the interpreter is shut down -- they're only checked for and
        dealt with here as a fallback in case one somehow sneaks through.
     """
+    if config.noninteractive and not yes:
+        raise DavosProjectError(
+            "To remove projects when noninteractive mode is enabled, you must "
+            "explicitly pass 'yes=True'."
+        )
+
     # dict of projects to remove -- keys: "safe"-formatted project
     # directory names; values: corresponding notebook filepaths
     to_remove = {}
@@ -848,7 +865,7 @@ def prune_projects(yes=False):
             clear_output(wait=False)
         # print final status for all projects processed
         print(template.format(*statuses))
-    else:
+    elif not config.suppress_stdout:
         print("No unused projects found.")
 
 

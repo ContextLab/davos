@@ -300,7 +300,7 @@ needed.
 Functionally, importing Davos in an IPython notebook enables
 an additional Python keyword: ``\texttt{smuggle}'' (see
 Sec.~\ref{subsec:implementation} for details on how this works).
-The \texttt{smuggle} keyword-like object can be used as a drop-in
+The \texttt{smuggle} keyword can be used as a drop-in
 replacement for Python's built-in \texttt{import} keyword to load
 packages, modules, and other objects into the notebook's namespace.
 However, whereas \texttt{import} will fail if the requested package is
@@ -313,7 +313,7 @@ into the notebook for immediate use.
 Importantly, packages installed by Davos are made available for use in the
 notebook without affecting the user's Python environment or existing packages.
 By default, \texttt{smuggle} statements will install missing packages (and any
-missing dependencies of those packages) into a notebook-specific virtual
+missing dependencies of those packages) into a notebook-specific, virtual
 environment-like directory called a ``project'' (see
 Sec.~\ref{subsec:projects}). In turn, \texttt{smuggle} statements executed in a
 particular notebook will preferentially load packages from that notebook's
@@ -395,17 +395,17 @@ Davos will ensure that \texttt{<dir>} is included in the module search path (i.e
 \subsubsection{Projects}\label{subsec:projects}
 
 Standard approaches to installing packages from within a notebook can alter the local Python environment in potentially unexpected and undesired ways.
-For example, running a notebook that installs its dependencies via system shell commands (prefixed with ``\texttt{!}'') or IPython magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled or replaced with alternate versions.
+For example, running a notebook that installs its dependencies via system shell commands (prefixed with ``\texttt{!}'') or IPython magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be replaced with alternate versions.
 This can lead to incompatibilities between installed packages, affect the behavior of the user's other scripts or notebooks, or even interfere with system applications.
 
-To prevent Davos-enhanced notebooks from having unwanted side effects on the user's environment, any packages installed via \texttt{smuggle} statements are automatically isolated using custom virtual environment-like systems called ``projects.''
+To prevent Davos-enhanced notebooks from having unwanted side effects on the user's environment, any packages installed via \texttt{smuggle} statements are automatically isolated using a custom, virtual environment-like system called ``projects.''
 Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) but with a few noteworthy differences that make them generally lighter-weight and simpler to use.
 Like a standard virtual environment, a Davos project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular Python project, workflow, or task.
 However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and they function to \textit{extend} the user's existing Python environment rather than replace it.
 
 When Davos is imported into a notebook, a project directory for that notebook is automatically created (if it does not exist already).
 When \texttt{smuggle} statements within that notebook are executed, any packages (or specific versions of packages) that are not already available in the user's Python environment are installed into the notebook's project directory (along with any missing dependencies of those packages).
-During each \texttt{smuggle} statement's execution, Davos also temporarily prepends the notebook's project directory to the module search path so that these project-installed packages are visible when searching for smuggled packages locally, and prioritized over those in the runtime environment.
+During each \texttt{smuggle} statement's execution, Davos also temporarily prepends the notebook's project directory to the module search path so that these project-installed packages are visible when searching for smuggled packages locally, and prioritized over those in the user's main environment.
 
 Thus, rather than constructing fully separate Python environments from scratch, Davos projects work by supplementing the user's runtime environment with any additional packages (or specific package versions) needed to satisfy the dependencies of their corresponding notebooks.
 In some cases, this might include every package smuggled into a notebook (e.g., if the notebook is run inside a freshly created, empty virtual environment).
@@ -707,7 +707,7 @@ already released when the code was written:
 \end{center}
 It is worth noting, however, that beyond illustrative purposes, the benefit of specifying only a maximum version for \texttt{joblib} rather than an exact version is relatively minor.
 The main advantage to relaxing a version constraint in an onion comment (when a package's behavior does not differ meaningfully between versions) is that doing so increases the likelihood that a satisfactory version will already be available in the user's Python environment, and therefore Davos will not need to install a new copy in the notebook's project directory.
-For large packages, this can be a worthwhile consideration; however \texttt{joblib} is very lightweight---less than 0.5 MB pre-built, with no other dependencies.
+For large packages, this can be a worthwhile consideration; however \texttt{joblib} is very lightweight---less than 0.5 MB pre-built, with no required dependencies.
 Thus a more conservative approach that guarantees an exact version is used would also be reasonable in this case.
 
 Line 11 then enables
@@ -1008,22 +1008,6 @@ other languages (e.g., in a mixed Python and R notebook), cannot be
 \texttt{smuggle}d by Davos. A notebook that utilizes or depends on non-Python
 software would therefore need to use existing non-Davos approaches to managing
 those requirements.
-
-While Davos enables developers to conveniently specify all project
-dependencies, there are some edge cases and limitations that are worth
-considering. Many Python packages include (in their setup options) additional
-dependencies that often carry their own version specifications. Although Davos
-will check that the correct version of the requested top-level package is
-installed and imported into the workspace, the version numbers of any
-\textit{dependencies} of the requested package are not checked. In principle,
-this could lead to unexpected behavior, for example if a given package's
-dependencies (or dependencies of those dependencies, etc.) were left
-under-specified. A developer could mitigate this by explicitly smuggling exact
-version numbers of every project dependency (e.g., obtained via pip freeze).
-However, for projects where the versions of dependencies of smuggled packages
-also need to be precisely controlled, a lockfile or a \texttt{requirements.txt}
-file produced by \texttt{pip freeze} (i.e., explicitly specifying \textit{all} packages'
-version numbers) may provide a more comprehensive alternative to Davos.
 
 Our Project infrastructure (Sec.~\ref{subsec:projects}) provides a ``safe'' way
 of managing project dependencies without interfering with the user's Python

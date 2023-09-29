@@ -550,7 +550,7 @@ Some of these functions serve primarily as conveniences, while others provide ad
   Also note that this function will not delete notebook-agnostic projects (i.e., manually created projects whose names are not notebook filepaths), as they are not linked to specific notebooks whose existence determines whether or not they are still needed.
   These (and any) projects may be deleted individually by calling their \texttt{Project} objects' \texttt{.remove()} method.
 
-\item \texttt{require\_python(version\_spec, warn=False, extra\_msg=None, prereleases=None)}: Through \texttt{smuggle} statements and onion comments, Davos can automatically ensure that all Python packages needed to run a notebook are installed, and that the same versions of those packages are used no matter when or by whom the notebook is run.
+\item \texttt{require\_python(version\_spec, warn=False, extra\_msg=None, pre\-re\-leases=\\None)}: Through \texttt{smuggle} statements and onion comments, Davos can automatically ensure that all Python packages needed to run a notebook are installed, and that the same versions of those packages are used no matter when or by whom the notebook is run.
   However, because Davos operates at runtime, one thing it cannot do automatically is install and switch to a specific version of Python itself.
   Distributing shared code along with a precise Python version for running it requires a heavier-weight solution, such as a Conda environment or Docker container (see Fig.~\ref{fig:code-sharing}).
   Yet a Davos-enhanced notebook may still \texttt{smuggle} certain packages that depend on users having a particular Python version or range of versions (e.g., even just within the standard library, the \texttt{dataclass} module was first added in Python 3.7 \cite{Smit17} and at least 19 modules are slated for removal in Python 3.13 \cite{HeimCann19}).
@@ -676,7 +676,7 @@ of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
 ensures that these objects will be loaded successfully and analyzed using the
 same set of package versions no matter when or by whom the notebook is run.
 
-After installing and importing Davos (lines 1--2), we first use the \texttt{davos.require\_python()} function to constrain the Python version used to run the notebook (see Sec.~\ref{subsec:toplevel}).
+After installing and importing Davos (lines 1--2), we first use the \texttt{davos.require\_\-python()} function to constrain the Python version used to run the notebook (see Sec.~\ref{subsec:toplevel}).
 As described above, the example code in Figure \ref{fig:illustrative-example} loads two different versions of the \texttt{pandas} library: first, an older version needed to access a dataset saved in an outmoded format, then a newer one to use throughout the remainder of the notebook.
 We therefore want to make sure upfront (in line 6) that the notebook's Python version falls within the range of versions that both of these two versions of \texttt{pandas} support.
 %Line 6 therefore ensures upfront that the notebook's Python version falls within the overlap between the ranges of Python versions that these two versions of \texttt{pandas} support.
@@ -825,7 +825,7 @@ The default \texttt{pip\_executable} will install packages into the environment 
 Here, the new value assigned to \texttt{davos.pip\_executable} in line 33 is the output of running ``\texttt{command -v pip}'' as a \texttt{!}-prefixed IPython system shell command in line 32 (``\texttt{command -v}'' outputs the path to an executable, similar to ``\texttt{which}'' but more portable). 
 Since IPython system shell command are always executed in the notebook server environment, this command's output will be the path to that environment's \texttt{pip} executable---which may or may not be different from the kernel environment's.
 
-After smuggling the \texttt{widgetsnbextension} package in line 34, we use the \texttt{davos.use\_default\_project()} function in line 35 to revert to installing package into the notebook's project directory, restore the default value of \texttt{davos.pip\_executable} in line 36, and \texttt{smuggle} the specified version of \texttt{ipywidgets} in line 37.
+After smuggling the \texttt{widgetsnbextension} package in line 34, we use the \texttt{davos.use\_\-default\_\-project()} function in line 35 to revert to installing package into the notebook's project directory, restore the default value of \texttt{davos.pip\_executable} in line 36, and \texttt{smuggle} the specified version of \texttt{ipywidgets} in line 37.
 With these two packages now installed
 and imported, line 39 smuggles \texttt{tqdm}~\cite{daCoEtal22}, which
 displays progress bars to provide status updates for running code. In
@@ -858,7 +858,7 @@ different \texttt{scikit-learn} versions.  For example, suppose that
 the \texttt{Pipeline} object was created using \texttt{scikit-learn}
 v0.21.3.  In that version of \texttt{scikit-learn}, the
 \texttt{LatentDirichletAllocation} class was defined in
-\texttt{sklearn.decomposition.online\_lda}.  However, in version
+\texttt{sklearn.de\-comp\-o\-si\-tion.online\_lda}.  However, in version
 0.22.0, that module was renamed to \texttt{\_online\_lda}, and in
 version 0.22.1, it was again renamed to \texttt{\_lda}.
 

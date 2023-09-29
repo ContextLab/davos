@@ -1012,7 +1012,35 @@ other languages (e.g., in a mixed Python and R notebook), cannot be
 software would therefore need to use existing non-Davos approaches to managing
 those requirements.
 
-\textcolor{red}{\textbf{TODO: add note about default/fallback project for non-traditional notebook interfaces}}
+While Davos enables developers to conveniently specify all project
+dependencies, there are some edge cases and limitations that are worth
+considering. Many Python packages include (in their setup options) additional
+dependencies that often carry their own version specifications. Although Davos
+will check that the correct version of the requested top-level package is
+installed and imported into the workspace, the version numbers of any
+\textit{dependencies} of the requested package are not checked. In principle,
+this could lead to unexpected behavior, for example if a given package's
+dependencies (or dependencies of those dependencies, etc.) were left
+under-specified. A developer could mitigate this by explicitly smuggling exact
+version numbers of every project dependency (e.g., obtained via pip freeze).
+However, for projects where the versions of dependencies of smuggled packages
+also need to be precisely controlled, a lockfile or a \texttt{requirements.txt}
+file produced by \texttt{pip freeze} (i.e., explicitly specifying \textit{all} packages'
+version numbers) may provide a more comprehensive alternative to Davos.
+
+Our Project infrastructure (Sec.~\ref{subsec:projects}) provides a ``safe'' way
+of managing project dependencies without interfering with the user's Python
+environment. However, our implementation of this functionality cannot
+anticipate every possible development environment. As of this writing, we
+support many common notebook environments, including classic Jupyter Notebooks,
+Google Colaboratory, Kaggle Notebooks, Visual Studio Code, among others.
+However, some environments (e.g., Visual Studio Code) implement their own
+mechanisms for rendering and running notebook code. In cases where our Project
+infrastructure is not equipped to handle a particular development or runtime
+environment, Davos will fall back to installing packages in a ``default''
+environment that is shared across all notebooks.  This enables Davos to protect against
+modifying the runtime environment, but it also means that packages may be installed
+or overwritten across notebooks that use different versions of those packages.
 
 \section{Conclusions}
 

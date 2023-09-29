@@ -122,9 +122,13 @@ difficult or impossible~\citep{PimeEtal19}.
 
 \begin{figure}[tp]
 \centering
-\includegraphics[width=\textwidth]{figs/shareable_code}
+\includegraphics[width=0.65\textwidth]{figs/shareable_code_2d}
 \caption{\small \textbf{Systems for sharing code within the Python
-  ecosystem.}  From left to right: plain-text \textbf{Python
+  ecosystem.}  The $x$-axis denotes the ``burden'' placed on users to
+  install and configure the given system (systems placed further to the right, that fall within the redder shading, impose a higher setup cost on the user).  The $y$-axis denotes the
+  degree to which the system guarantees that the code will run
+  similarly for different users (systems placed higher up, that fall within the bluer shading, support stronger guarantees).
+  From left to right, bottom to top: plain-text \textbf{Python
   scripts} (\texttt{.py} files) provide the most basic ``system''
   for sharing raw code.  Scripts may reference external packages, but
   those packages must be manually installed on other users' systems.
@@ -282,7 +286,7 @@ function into the top-level \texttt{davos.implementations} namespace,
 allowing \texttt{davos.core} modules to access the proper
 implementations for the current notebook environment in a single,
 consistent location. An additional benefit of this design is that it
-allows both maintainers and users to easily extend Davos to
+allows maintainers and users to extend Davos to
 support new, updated, or custom notebook variants by adding new
 \texttt{davos.implementations} modules that define their own versions
 of each helper function, modified from existing implementations as
@@ -296,7 +300,7 @@ needed.
 Functionally, importing Davos in an IPython notebook enables
 an additional Python keyword: ``\texttt{smuggle}'' (see
 Sec.~\ref{subsec:implementation} for details on how this works).
-The \texttt{smuggle} keyword can be used as a drop-in
+The \texttt{smuggle} keyword-like object can be used as a drop-in
 replacement for Python's built-in \texttt{import} keyword to load
 packages, modules, and other objects into the notebook's namespace.
 However, whereas \texttt{import} will fail if the requested package is
@@ -309,7 +313,7 @@ into the notebook for immediate use.
 Importantly, packages installed by Davos are made available for use in the
 notebook without affecting the user's Python environment or existing packages.
 By default, \texttt{smuggle} statements will install missing packages (and any
-missing dependencies of those packages) into a notebook-specific, virtual
+missing dependencies of those packages) into a notebook-specific virtual
 environment-like directory called a ``project'' (see
 Sec.~\ref{subsec:projects}). In turn, \texttt{smuggle} statements executed in a
 particular notebook will preferentially load packages from that notebook's
@@ -391,26 +395,26 @@ Davos will ensure that \texttt{<dir>} is included in the module search path (i.e
 \subsubsection{Projects}\label{subsec:projects}
 
 Standard approaches to installing packages from within a notebook can alter the local Python environment in potentially unexpected and undesired ways.
-For example, running a notebook that installs its dependencies via system shell commands (prefixed with ``\texttt{!}'') or IPython magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled and replaced with alternate versions.
+For example, running a notebook that installs its dependencies via system shell commands (prefixed with ``\texttt{!}'') or IPython magic commands (prefixed with ``\texttt{\%}'') may cause other existing packages in the user's environment to be uninstalled or replaced with alternate versions.
 This can lead to incompatibilities between installed packages, affect the behavior of the user's other scripts or notebooks, or even interfere with system applications.
 
-To prevent Davos-enhanced notebooks from having unwanted side effects on the user's environment, any packages installed via \texttt{smuggle} statements are automatically isolated using a custom, virtual environment-like system called ``projects.''
+To prevent Davos-enhanced notebooks from having unwanted side effects on the user's environment, any packages installed via \texttt{smuggle} statements are automatically isolated using custom virtual environment-like systems called ``projects.''
 Davos projects are similar to standard Python virtual environments (e.g., created with the standard library's \texttt{venv} module or a third-party tool like \texttt{virtualenv}~\cite{BickEtal07}) but with a few noteworthy differences that make them generally lighter-weight and simpler to use.
 Like a standard virtual environment, a Davos project consists of a directory (within a hidden \texttt{.davos} folder in the user's home directory) that houses third-party packages needed for a particular Python project, workflow, or task.
-However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and function to \textit{extend} the user's existing Python environment rather than replace it.
+However, unlike standard virtual environments, Davos projects do not need to be manually created, activated, or deactivated, and they function to \textit{extend} the user's existing Python environment rather than replace it.
 
 When Davos is imported into a notebook, a project directory for that notebook is automatically created (if it does not exist already).
-When \texttt{smuggle} statements within that notebook are then executed, any packages (or specific versions of packages) that are not already available in the user's Python environment are installed into the notebook's project directory (along with any missing dependencies of those packages).
-During each \texttt{smuggle} statement's execution, Davos also temporarily prepends the notebook's project directory to the module search path so that these project-installed packages are visible when searching for smuggled packages locally, and prioritized over those in the user's main environment.
+When \texttt{smuggle} statements within that notebook are executed, any packages (or specific versions of packages) that are not already available in the user's Python environment are installed into the notebook's project directory (along with any missing dependencies of those packages).
+During each \texttt{smuggle} statement's execution, Davos also temporarily prepends the notebook's project directory to the module search path so that these project-installed packages are visible when searching for smuggled packages locally, and prioritized over those in the runtime environment.
 
-Thus, rather than constructing fully separate Python environments from scratch, Davos projects work by supplementing the user's existing environment with any additional packages (or specific package versions) needed to satisfy the dependencies of their corresponding notebooks.
+Thus, rather than constructing fully separate Python environments from scratch, Davos projects work by supplementing the user's runtime environment with any additional packages (or specific package versions) needed to satisfy the dependencies of their corresponding notebooks.
 In some cases, this might include every package smuggled into a notebook (e.g., if the notebook is run inside a freshly created, empty virtual environment).
 In other cases, the user's environment may already provide all required packages, and the notebook's project directory will go unused (in which case it will be deleted automatically when the notebook kernel is shut down).
-But regardless of the extent to which the existing environment is augmented, Davos's project system ensures that all smuggled packages are installed locally and loaded successfully at runtime, while the contents of the user's Python environment are never altered.
+Regardless of the extent to which the existing environment is augmented, Davos's project system ensures that all smuggled packages are installed locally and loaded successfully at runtime, while the contents of the user's Python environment are never altered.
 
-Additionally, because \texttt{smuggle} statements in a given notebook are evaluated every time it is run, this system also ensures that the notebook's requirements will remain satisfied even if the user's Python environment changes.
+Additionally, because \texttt{smuggle} statements in a given notebook are evaluated every time the notebook is run, this design ensures that the notebook's requirements will remain satisfied even if the user's Python environment changes.
 For example, suppose a user has \texttt{NumPy}~\cite{HarrEtal20} v1.24.3 installed in their current Python environment and runs a Davos-enhanced notebook that smuggles \texttt{NumPy} with ``\texttt{numpy==1.24.3}'' specified in an onion comment (see Sec.~\ref{subsec:onion}).
-Since the user's existing version of the package satisfies this requirement, Davos will happily load it into the notebook.
+Since the user's existing version of the package satisfies this requirement, Davos will load it into the notebook.
 But if the user later upgrades their environment's \texttt{NumPy} version to v1.25.0 (perhaps as a result of installing a different package that depends on it) and subsequently re-runs this notebook, the local version will longer satisfy this requirement, so Davos will install \texttt{NumPy} v1.24.3 into the notebook's project directory and load that version instead.
 From then on, any further changes to the user's \texttt{Numpy} installation would have no effect on Davos's behavior in this particular notebook, as a satisfactory version now exists in its project directory.
 (If the version specified in the onion comment were changed, Davos would update the version installed in the project directory accordingly.)
@@ -420,9 +424,9 @@ However, if desired, adding \texttt{pip}'s \texttt{--ignore-installed} flag to a
 By default, each Davos-enhanced notebook will create and use its own notebook-specific project named for the absolute path to the notebook file.
 However, before smuggling its required packages, a notebook may be set to instead use an arbitrarily named, notebook-agnostic project by assigning any (non-empty) string to \texttt{davos.project} (see Sec.~\ref{subsec:config}).
 This provides a convenient way for multiple related notebooks that share a common set of requirements to use the same Davos project, by setting \texttt{davos.project} to the same string in each one.
-It is also possible (though typically not recommended) to disable Davos's project system entirely and install smuggled packages directly into the user's Python environment by setting \texttt{davos.project} to \texttt{None}.
+It is also possible (though typically not recommended) to disable Davos's project system and instead install smuggled packages directly into the user's Python environment by setting \texttt{davos.project} to \texttt{None}.
 
-When accessed (unless its value has been set to \texttt{None}), \texttt{davos.project} will return a \texttt{Project} object that represents the project used by the current notebook (strings assigned to \texttt{davos.project} are converted to \texttt{Project}s internally). This object supports methods for interacting with the current project, including locating its directory on the file system, listing all installed packages' names and versions, changing the project's name, and deleting its contents altogether.
+When accessed (unless its value has been set to \texttt{None}), \texttt{davos.project} will evaluate to a \texttt{Project} object that represents the project used by the current notebook (strings assigned to \texttt{davos.project} are converted to \texttt{Project}s internally). This object supports methods for interacting with the current project, including locating its directory within the file system, listing all installed packages' names and versions, changing the project's name, and deleting its contents.
 \texttt{Project} instances can also be created and managed programmatically, and Davos provides additional utilities for viewing and working with all existing projects (see Secs.~\ref{subsec:config} and \ref{subsec:toplevel}).
 
 
@@ -505,12 +509,12 @@ In addition to these writeable options, the top-level \texttt{davos} module also
 \item \texttt{.all\_projects}: This attribute contains a list of all Davos projects that exist on the user's local system (see Sec.~\ref{subsec:projects} for more information about Davos projects).
   Each item in this list is either a \texttt{Project} or \texttt{AbstractProject} instance.
   \texttt{AbstractProject}s represent notebook-specific projects whose associated notebooks no longer exist.
-  They support all the same functionality as \texttt{Project} objects (including methods for inspecting, renaming, and deleting them) and serve primarily to help users identify and clean up extraneous projects left behind after deleting Davos-enhanced notebooks (e.g., see Sec.~\ref{subsec:toplevel}).
+  They support the same functionality as \texttt{Project} objects (including methods for inspecting, renaming, and deleting them) and serve primarily to help users identify and clean up extraneous projects left behind after deleting Davos-enhanced notebooks (e.g., see Sec.~\ref{subsec:toplevel}).
 
 \item \texttt{.environment}: This attribute's value is a string denoting the set of environment-dependent ``helper functions'' used by Davos in the current notebook.
   As described in Section \ref{sec:architecture}, Davos internally chooses between interchangeable implementations of certain core features based on various properties of the notebook's frontend and IPython kernel.
   As of this writing, three unique combinations of helper functions are required to support existing notebook environments, ergo this attribute has three possible values: \texttt{"IPython<7.0"}, \texttt{"IPython>=7.0"}, or \texttt{"Colaboratory"}.
-  However, this attribute could take on additional values in the future, as new notebook interfaces are created and IPython's internals are updated, and additional versions of helper functions are added to Davos to support them.
+  However, this attribute could take on additional values in the future as new notebook interfaces are created and IPython's internals are updated, and as additional versions of helper functions are added to Davos to support them.
 
 \item \texttt{.ipython\_shell}: This attribute contains the global IPython \texttt{InteractiveShell} instance underlying the notebook kernel session.
 
@@ -520,7 +524,7 @@ In addition to these writeable options, the top-level \texttt{davos} module also
 
 \end{itemize}
 
-\noindent The current values of all \texttt{davos} attributes may be viewed at once within a notebook by displaying the \texttt{davos.config} object.
+\noindent The current values of all \texttt{davos} attributes may be viewed at once within a notebook by printing the \texttt{davos.config} object.
 
 
 \subsubsection{Other top-level Davos functions}\label{subsec:toplevel}
@@ -542,7 +546,7 @@ Some of these functions serve primarily as conveniences, while others provide ad
   By default, this function will interactively display a list of all unused projects and allow the user to choose whether or not to delete each one.
   Alternatively, passing \texttt{yes=True} will immediately remove all unused projects without prompting for confirmation.
   Note that if Davos's non-interactive mode is enabled (see Sec.~\ref{subsec:config}), \texttt{yes=True} must be explicitly passed, otherwise the function will raise an exception.
-  This serves as a safeguard against accidentally deleting projects since non-interactive mode disables all user input and confirmation.
+  This serves as a safeguard against accidentally deleting projects, since non-interactive mode disables all user input and confirmation.
   Also note that this function will not delete notebook-agnostic projects (i.e., manually created projects whose names are not notebook filepaths), as they are not linked to specific notebooks whose existence determines whether or not they are still needed.
   These (and any) projects may be deleted individually by calling their \texttt{Project} objects' \texttt{.remove()} method.
 
@@ -631,7 +635,7 @@ executed.
 
 %The example code throughout Section \ref{subsec:onion} illustrates how Davos is most typically used:
 %By including a series of \texttt{smuggle} statements and onion comments with version specifiers or other options in an IPython notebook, researchers can share their code and its dependencies in a single file that can be easily run without any additional tools or setup, creates and manages its own isolated environment, automatically installs its required packages at runtime, and ensures that the package versions with which it is run do not change unexpectedly.
-The example code throughout Section \ref{subsec:onion} illustrates how Davos is most typically used: a series of smuggle statements and onion comments with version specifiers or other options collectively describes and automatically constructs a reproducible environment for running the code that follows it.
+The example code throughout Section \ref{subsec:onion} illustrates a typical use case that we envision for Davos: a series of smuggle statements and onion comments with version specifiers or other options collectively describes and automatically constructs a reproducible environment for running the code that follows it.
 When added to the top of a Jupyter notebook, this allows researchers to bundle their code and its dependencies into a single file that can be easily shared and run without any additional tools or setup, automatically installs its required packages at runtime, isolates them from the user's main Python environment, and ensures their versions do not change unexpectedly over time.
 In this section, we have contrived a more complex scenario to highlight some of Davos's more advanced features, and illustrate how they may be used to handle certain challenges that can arise when writing, running, and sharing reproducible scientific code.
 
@@ -703,7 +707,7 @@ already released when the code was written:
 \end{center}
 It is worth noting, however, that beyond illustrative purposes, the benefit of specifying only a maximum version for \texttt{joblib} rather than an exact version is relatively minor.
 The main advantage to relaxing a version constraint in an onion comment (when a package's behavior does not differ meaningfully between versions) is that doing so increases the likelihood that a satisfactory version will already be available in the user's Python environment, and therefore Davos will not need to install a new copy in the notebook's project directory.
-For large packages, this can be a worthwhile consideration; however \texttt{joblib} is very lightweight---less than 0.5 MB pre-built, with no required dependencies.
+For large packages, this can be a worthwhile consideration; however \texttt{joblib} is very lightweight---less than 0.5 MB pre-built, with no other dependencies.
 Thus a more conservative approach that guarantees an exact version is used would also be reasonable in this case.
 
 Line 11 then enables
@@ -723,7 +727,7 @@ If the user already has \texttt{NumPy} installed in their Python environment whe
 The newly smuggled version would then be used both in the notebook itself and by \texttt{joblib} internally.
 % (Note that outside the context of an illustrative example, one could avoid a kernel restart here altogether simply by smuggling \texttt{NumPy} before \texttt{joblib}.)
 
-The primary reason for enabling the \texttt{auto\_rerun} option, however, is to manage the installation of \texttt{pandas} in the next set of lines:
+The primary reason for enabling the \texttt{auto\_rerun} option, however, is to manage the installation of \texttt{pandas} in the next lines:
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example4}
 \end{center}

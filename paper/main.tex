@@ -818,8 +818,8 @@ Third, the package itself provides no functionality outside of rendering Jupyter
 Next, in lines 31--33, we change the \texttt{pip} executable Davos uses to install smuggled packages (see Sec.~\ref{subsec:config}), storing the default executable's path in a variable before doing so. 
 When Davos's project system is disabled, using a \texttt{pip} executable from a particular Python environment will cause smuggled packages to be installed into (and subsequently loaded from) that environment. 
 The default \texttt{pip\_executable} will install packages into the environment used to run the IPython kernel. 
-Here, the new value assigned to \texttt{davos.pip\_executable} in line 33 is the output of running ``\texttt{command -v pip}'' as a \texttt{!}-prefixed IPython system shell command in line 32 (``\texttt{command -v}'' outputs the path to an executable, similar to ``\texttt{which}'' but more portable). 
-Since IPython system shell command are always executed in the notebook server environment, this command's output will be the path to that environment's \texttt{pip} executable---which may or may not be different from the kernel environment's.
+Here, the new value assigned to \texttt{davos.pip\_executable} in line 33 is the output of running ``\texttt{command -v pip}'' as a \mbox{\texttt{!}-prefixed} IPython system shell command in line 32 (``\texttt{command -v}'' outputs the path to an executable, similar to ``\texttt{which}'' but more portable). 
+IPython system shell command are always executed in the notebook server's environment---which may or may not be different from the kernel's environment---so this command's output will be the path to the server environment's \texttt{pip} executable.
 
 After smuggling the \texttt{widgetsnbextension} package in line 34, we use the \texttt{davos.use\_default\_project()} function in line 35 to revert to installing package into the notebook's project directory, restore the default value of \texttt{davos.pip\_executable} in line 36, and \texttt{smuggle} the specified version of \texttt{ipywidgets} in line 37.
 With these two packages now installed
@@ -829,18 +829,15 @@ Jupyter notebooks, the \texttt{tqdm.notebook} module can be imported
 to enable more aesthetically pleasing progress bars that are displayed via
 \texttt{ipywidgets}, if that package is installed and
 importable. Therefore, to take advantage of this feature, it was
-important to \texttt{smuggle} \texttt{tqdm} after ensuring the
-\texttt{ipywidgets} package was available.
-
-\stoppedhere
+important to first ensure ensure that both \texttt{ipywidgets} and \texttt{widgetsnbextension} were available.
 
 Next, we load in the reformatted dataset (line 33) and pre-trained
 model (line 35) that we wish to use in our analysis.  In our
 hypothetical example, we can suppose that the model was provided as a
 \texttt{scikit-learn} \texttt{Pipeline} object that passes data
 through two pretrained models in succession.  First, a trained \texttt{CountVectorizer}
-instance converts text data to an array of word counts.  Second, the
-word counts are passed to a topic model~\cite{BleiEtal03} using a
+instance converts text data to an array of word counts.  The
+word counts are then passed to a topic model~\cite{BleiEtal03} using a
 pretrained \texttt{LatentDirichletAllocation} instance.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example8}
@@ -854,7 +851,7 @@ different \texttt{scikit-learn} versions.  For example, suppose that
 the \texttt{Pipeline} object was created using \texttt{scikit-learn}
 v0.21.3.  In that version of \texttt{scikit-learn}, the
 \texttt{LatentDirichletAllocation} class was defined in
-\texttt{sklearn.decomposition.online\_lda}.  However, in version
+the \texttt{sklearn.decomposition.online\_lda} module.  However, in version
 0.22.0, that module was renamed to \texttt{\_online\_lda}, and in
 version 0.22.1, it was again renamed to \texttt{\_lda}.
 

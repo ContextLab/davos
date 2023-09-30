@@ -214,7 +214,7 @@ or resource-intensive to install and use, creating potential barriers
 to both contributing to and taking advantage of open science
 resources.
 
-We designed Davos to occupy a ``sweet spot'' within this spectrum.
+We designed Davos to occupy a ``sweet spot'' within this space.
 Davos is a notebook-installable package that adds functionality to the
 default notebook experience. Like standard Jupyter notebooks,
 Davos-enhanced notebooks allow researchers to include text, executable
@@ -509,7 +509,7 @@ In addition to these writeable options, the top-level \texttt{davos} module also
 
 \item \texttt{.all\_projects}: This attribute contains a list of all Davos projects that exist on the user's local system (see Sec.~\ref{subsec:projects} for more information about Davos projects).
   Each item in this list is either a \texttt{Project} or \texttt{AbstractProject} instance.
-  \texttt{AbstractProject}s represent notebook-specific projects whose associated notebooks no longer exist.
+  \texttt{Abstract\-Project}s represent notebook-specific projects whose associated notebooks no longer exist.
   They support the same functionality as \texttt{Project} objects (including methods for inspecting, renaming, and deleting them) and serve primarily to help users identify and clean up extraneous projects left behind after deleting Davos-enhanced notebooks (e.g., see Sec.~\ref{subsec:toplevel}).
 
 \item \texttt{.environment}: This attribute's value is a string denoting the set of environment-dependent ``helper functions'' used by Davos in the current notebook.
@@ -775,7 +775,7 @@ these packages and their many dependencies to prevent other potentially importan
 \includegraphics[width=0.9\textwidth]{figs/example5}
 \end{center}
 
-After re-enabling these two options (line 24), we next \texttt{smuggle}
+After reverting these two options (line 24) to their default values, we next \texttt{smuggle}
 specific versions of three plotting packages:
 \texttt{Matplotlib}~\cite{Hunt07}, \texttt{seaborn}~\cite{Wask21}, and
 \texttt{Quail}~\cite{HeusEtal17} (lines 26--28). Because the first two
@@ -817,7 +817,7 @@ allow installing smuggled packages outside of the notebook's project directory.
 As noted in Section \ref{subsec:projects}, this is typically discouraged, as doing so can risk interfering with the user's Python environment if existing package versions are overwritten.
 In this particular case, however, a combination of factors make this relatively safe and inconsequential.
 First, the package we need to install directly into the notebook server environment (\texttt{widgetsnbextension}) is smuggled without an accompanying onion comment (line 34), meaning that Davos will not replace any version the user may already have installed.
-Second, the package has no dependencies of its own, so if Davos does install it, no other packages could potentially be installed or updated as a side effect.
+Second, the package has no dependencies of its own, so if Davos does install it, no other packages will be installed or updated as a side effect.
 Third, the package itself provides no functionality outside of rendering Jupyter widgets, so its presence would not alter any other code's expected behavior.
 
 Next, in lines 31--33, we change the \texttt{pip} executable Davos uses to install smuggled packages (see Sec.~\ref{subsec:config}), storing the default executable's path in a variable before doing so.

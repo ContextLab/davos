@@ -878,6 +878,14 @@ latest approaches and implementations.
 
 \section{Impact}
 
+We designed Davos for use in research settings, where code for tasks such as processing and analyzing data or generating figures and tables is frequently shared among teams of collaborators during the research process, as well as with the broader scientific community and general public upon a project's completion.
+In such situations, ensuring that shared code yields consistent, reproducible outputs across users and over time can be critically important, while the tools used to achieve this goal can often be complex to set up and challenging to successfully use.
+In many cases, Davos can serve as a drop-in replacement for existing tools that are more challenging to set up and use, such as virtual environments, containers, and virtual machines.
+For researchers, this can lower barriers to collaborating with peers and contributing to publicly available open science resources.
+By eliminating most of the setup costs of reconstructing the original researchers' computing environment, Davos also lowers barriers to entry for members of the scientific community and the public who seek to run shared code.
+
+Among existing tools for sharing code within the Python ecosystem, Davos is most comparable to virtual environments, as it helps ensure reproducibility by
+
 Like virtual environments, containers, and virtual machines, the
 Davos package (when used in conjunction with Jupyter
 notebooks) provides a light\-weight mechanism for sharing code and

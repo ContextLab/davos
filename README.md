@@ -51,51 +51,77 @@ The `davos` library provides Python with an additional keyword: **`smuggle`**.
 
 ## Why would I want an alternative to `import`?
 
-In many cases, `smuggle` and `import` do the same thing&mdash;*if you're running code in the same environment you
-developed it in*.  But what if you want to share a [Jupyter notebook](https://jupyter.org/) containing your code with
-someone else?  If the user (i.e., the "someone else" in this example) doesn't have all of the packages your notebook
-imports, Python will raise an exception and the code won't run.  It's not a huge deal, of course, but it's inconvenient
-(e.g., the user might need to `pip`-install the missing packages, restart their kernel, re-run the code up to the point
-it crashed, etc.&mdash;possibly going through this cycle multiple times until the thing finally runs).  
+In many cases, `smuggle` and `import` do the same thing&mdash;*if you're
+running code in the same environment you developed it in*. But what if you want
+to share a [Jupyter notebook](https://jupyter.org/) containing your code with
+someone else? If the user (i.e., the "someone else" in this example) doesn't
+have all of the packages your notebook imports, Python will raise an exception
+and the code won't run. It's not a huge deal, of course, but it's inconvenient
+(e.g., the user might need to `pip`-install the missing packages, restart their
+kernel, re-run the code up to the point it crashed, etc.&mdash;possibly going
+through this cycle multiple times until the thing finally runs).
 
-A second (and more subtle) issue arises when the developer (i.e., the person who *wrote* the code) used or assumed
-different versions of the imported packages than what the user has installed in their environment.  So maybe the
-original author was developing and testing their code using `pandas` 1.3.5, but the user hasn't upgraded their `pandas`
-installation since 0.25.0.  Python will happily "`import pandas`" in both cases, but any changes across those versions
-might change what the developer's code actually does in the user's (different) environment&mdash;or cause it to fail
-altogether.
+A second (and more subtle) issue arises when the developer (i.e., the person
+who *wrote* the code) used or assumed different versions of the imported
+packages than what the user has installed in their environment. So maybe the
+original author was developing and testing their code using `pandas` 1.3.5, but
+the user hasn't upgraded their `pandas` installation since 0.25.0. Python will
+happily "`import pandas`" in both cases, but any changes across those versions
+might change what the developer's code actually does in the user's (different)
+environment&mdash;or cause it to fail altogether.
 
-The problem `davos` tries to solve is similar to the idea motivating virtual environments, containers, and virtual
-machines: we want a way of replicating the original developer's environment on the user's machine, to a sufficiently
-good approximation that we can be "reasonably confident" that the code will continue to behave as expected.
+The problem `davos` tries to solve is similar to the idea motivating virtual
+environments, containers, and virtual machines: we want a way of replicating
+the original developer's environment on the user's machine, to a sufficiently
+good approximation that we can be "reasonably confident" that the code will
+continue to behave as expected.
 
-When you `smuggle` packages instead of importing them, it guarantees (for whatever environment the code is running in)
-that the packages are importable, even if they hadn't been installed previously.  Under the hood, `davos` figures out
-whether the package is available, and if not, it uses `pip` to download and install anything that's missing (including
-missing dependencies).  From that point, after having automatically handled those sorts of dependency issues, `smuggle`
-behaves just like `import`.
+When you `smuggle` packages instead of importing them, it guarantees (for
+whatever environment the code is running in) that the packages are importable,
+even if they hadn't been installed previously. Under the hood, `davos` figures
+out whether the package is available, and if not, it uses `pip` to download and
+install anything that's missing (including missing dependencies). From that
+point, after having automatically handled those sorts of dependency issues,
+`smuggle` behaves just like `import`.
 
-The second powerful feature of `davos` comes from another construct, called "[_onion comments_](#the-onion-comment)."
-These are like standard Python comments, but they appear on the same line(s) as `smuggle` statements, and they are
-formatted in a particular way.  Onion comments provide a way of precisely controlling how, when, and where packages are
-installed, how (or if) the system checks for existing installations, and so on.  A key feature is the ability to specify
-exactly which version(s) of each package are imported into the current workspace.  When used in this way, `davos`
-enables authors to guarantee that the same versions of the packages they developed their code with will also be imported
-into the user's workspace at the appropriate times.
+The second powerful feature of `davos` comes from another construct, called
+"[_onion comments_](#the-onion-comment)." These are like standard Python
+comments, but they appear on the same line(s) as `smuggle` statements, and they
+are formatted in a particular way. Onion comments provide a way of precisely
+controlling how, when, and where packages are installed, how (or if) the system
+checks for existing installations, and so on. A key feature is the ability to
+specify exactly which version(s) of each package are imported into the current
+workspace. When used in this way, `davos` enables authors to guarantee that the
+same versions of the packages they developed their code with will also be
+imported into the user's workspace at the appropriate times.
 
 ## Why not use virtual environments, containers, and/or virtual machines instead?
 
-Psst-- we'll let you in on a little secret: importing `davos` *automatically* creates a virtual environment for your notebook.  However,
-setting up a virtual environment is usually left to the user, `davos` handles the pesky details for you, without you needing to think about them.
-Any packages you `smuggle` via `davos` that aren't available in the notebook's original runtime environment are installed into a new virtual environment.  This ensures that `davos` will not change the runtime environment (e.g., by installing new packages, changing existing package versions, etc.).
+Psst-- we'll let you in on a little secret: importing `davos` *automatically*
+creates a virtual environment for your notebook. However, whereas setting up a
+virtual environment is usually left to the user, `davos` handles the pesky
+details for you, without you needing to think about them. Any packages you
+`smuggle` via `davos` that aren't available in the notebook's original runtime
+environment are installed into a new virtual environment. This ensures that
+`davos` will not change the runtime environment (e.g., by installing new
+packages, changing existing package versions, etc.).
 
-By default, each notebook's virtual environment is stored in a hidden ".davos" folder inside the current user's home directory.  The default
-environment name is computed to uniquely identify each notebook, according to its filename and path.  However, a notebook's virtual environment may
-be customized by setting `davos.project` to any string that can be used as a valid folder name in the user's operating system.  This is useful for multi-notebook projects that share dependencies (without needing to duplicate each package installation for each notebook).
+By default, each notebook's virtual environment is stored in a hidden ".davos"
+folder inside the current user's home directory. The default environment name
+is computed to uniquely identify each notebook, according to its filename and
+path. However, a notebook's virtual environment may be customized by setting
+`davos.project` to any string that can be used as a valid folder name in the
+user's operating system. This is useful for multi-notebook projects that share
+dependencies (without needing to duplicate each package installation for each
+notebook).
 
-If you prefer, you can also disable `davos`'s virtual environment infrastructure by setting `davos.project` to `None`.  Doing so will cause
-any packages installed by `davos` to affect the notebook's runtime environment.  This is generally not recommended, as it can lead to unintended
-consequences for other code that shares the runtime environment.  That said, `davos` also works great when used inside of (standard) virtual environments, containers, and virtual machines.
+If you prefer, you can also disable `davos`'s virtual environment
+infrastructure by setting `davos.project` to `None`. Doing so will cause any
+packages installed by `davos` to affect the notebook's runtime environment.
+This is generally not recommended, as it can lead to unintended consequences
+for other code that shares the runtime environment. That said, `davos` also
+works great when used inside of (standard) virtual environments, containers,
+and virtual machines.
 
 There are a few additional specific advantages to `davos` that go beyond more typical virtual environments, containers, and/or virtual machines:
   - `davos` is very lightweight&mdash;importing `davos` into a notebook-based environment unlocks all of its
@@ -119,17 +145,19 @@ import davos
 This will enable the `smuggle` keyword in your notebook environment.  Then you can do things like:
 
 ```python
-# pip-install numpy v1.20.2, if needed
-smuggle numpy as np    # pip: numpy==1.20.2
+# pip-install numpy v1.23.1, if needed
+smuggle numpy as np    # pip: numpy==1.23.1
 
 # the smuggled package is fully imported and usable
 arr = np.arange(15).reshape(3, 5)
 
 # and the onion comment guarantees the desired version!
-assert np.__version__ == '1.20.2'
+assert np.__version__ == '1.23.1'
 ```
 
-Interested?  Curious? Intrigued?  Check out the table of contents for more details!  You may also want to check out our [paper](paper/main.pdf) for more formal descriptions and explanations.
+Interested? Curious? Intrigued? Check out the table of contents for more
+details! You may also want to check out our [paper](paper/main.pdf) for more
+formal descriptions and explanations.
 
 ## Table of contents
 - [Table of contents](#table-of-contents)
@@ -179,9 +207,9 @@ pip install git+https://github.com/ContextLab/davos.git
 
 
 ### Installing in Colaboratory
-To use `davos` in [Google Colab](https://colab.research.google.com/), add a cell at the top of your notebook with an
-percentage sign (`%`) followed by one of the commands above (e.g., `%pip install davos`). Run the cell to install
-`davos` on the runtime virtual machine.
+To install `davos` in [Google Colab](https://colab.research.google.com/), add a new cell to the top of your notebook with an
+percentage sign (`%`) followed by one of the commands above (e.g., `%pip install davos`). You'll likely also want to `import davos`,
+which enables the `smuggle` syntax.  Run the cell to install `davos` on the runtime virtual machine.
 
 **Note**: restarting the Colab runtime does not affect installed packages. However, if the runtime is "factory reset"
 or disconnected due to reaching its idle timeout limit, you'll need to rerun the cell to reinstall `davos` on the fresh
@@ -232,19 +260,19 @@ smuggled package. To do this, simply provide a
 [version specifier](https://www.python.org/dev/peps/pep-0440/#version-specifiers) in an
 [onion comment](#the-onion-comment) next to the `smuggle` statement:
 ```python
-smuggle numpy as np              # pip: numpy==1.20.2
-from pandas smuggle DataFrame    # pip: pandas>=0.23,<1.0
+smuggle numpy as np              # pip: numpy==1.23.1
+from pandas smuggle DataFrame    # pip: pandas>=1.0,<2.0
 ```
 In this example, the first line will load [`numpy`](https://numpy.org/) into the local namespace under the alias "`np`",
 just as "`import numpy as np`" would. First, `davos` will check whether `numpy` is installed locally, and if so, whether
-the installed version _exactly_ matches `1.20.2`. If `numpy` is not installed, or the installed version is anything
-other than `1.20.2`, `davos` will use the specified _installer program_, [`pip`](https://pip.pypa.io/en/stable/), to
-install `numpy==1.20.2` before loading the package.
+the installed version _exactly_ matches `1.23.1`. If `numpy` is not installed, or the installed version is anything
+other than `1.23.1`, `davos` will use the specified _installer program_, [`pip`](https://pip.pypa.io/en/stable/), to
+install `numpy==1.23.1` before loading the package.
 
 Similarly, the second line will load the "`DataFrame`" object from the [`pandas`](https://pandas.pydata.org/) library,
-analogously to "`from pandas import DataFrame`". A local `pandas` version of `0.24.1` would be used, but a local version
-of `1.0.2` would cause `davos` to replace it with a valid `pandas` version, as if you had manually run `pip install
-pandas>=0.23,<1.0`.
+analogously to "`from pandas import DataFrame`". A local `pandas` version of `1.2.1` would be used, but a local version
+of `2.1.1` would cause `davos` to replace it with a valid `pandas` version, as if you had manually run `pip install
+pandas>=1.0,<2.0`.
 
 In both cases, the imported versions will fit the constraints specified in their [onion comments](#the-onion-comment),
 and the next time `numpy` or `pandas` is smuggled with the same constraints, valid local installations will be found.
@@ -252,7 +280,7 @@ and the next time `numpy` or `pandas` is smuggled with the same constraints, val
 You can also force the state of a smuggled packages to match a specific VCS ref (branch, revision, tag, release, etc.).
 For example:
 ```python
-smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@564c1d4
+smuggle hypertools as hyp    # pip: git+https://github.com/ContextLab/hypertools.git@98a3d80
 ```
 will load [`hypertools`](https://hypertools.readthedocs.io/en/latest/) (aliased as "`hyp`"), as the package existed
 [on GitHub](https://github.com/ContextLab/hypertools), at commit
@@ -264,8 +292,8 @@ will load [`hypertools`](https://hypertools.readthedocs.io/en/latest/) (aliased 
 And with [a few exceptions](#notes-c-extensions), smuggling a specific package version will work _even if the package
 has already been imported_!
 
-**Note**: `davos` v0.1 supports [IPython](https://ipython.readthedocs.io/en/stable/) environments  (e.g.,
-[Jupyter](https://jupyter.org/) and [Colaboratory](https://colab.research.google.com/) notebooks) only. v0.2 will add
+**Note**: `davos` v0.2.x supports [IPython](https://ipython.readthedocs.io/en/stable/) environments  (e.g.,
+[Jupyter](https://jupyter.org/) and [Colaboratory](https://colab.research.google.com/) notebooks) only. v0.3.x will add
 support for "regular" (i.e., non-interactive) Python scripts.
 
 
@@ -463,11 +491,11 @@ Less formally, **an onion comment simply consists of two parts, separated by a c
 Thus, you can essentially think of writing an onion comment as taking the full shell command you would run to install
 the package, and replacing "_install_" with "_:_". For instance, the command:
 ```sh
-pip install -I --no-cache-dir numpy==1.20.2 -vvv --timeout 30
+pip install -I --no-cache-dir numpy==1.23.1 -vvv --timeout 30
 ```
 is easily translated into an onion comment as:
 ```python
-smuggle numpy    # pip: -I --no-cache-dir numpy==1.20.2 -vvv --timeout 30
+smuggle numpy    # pip: -I --no-cache-dir numpy==1.23.1 -vvv --timeout 30
 ```
 
 In practice, onion comments are identified as matches for the
@@ -656,11 +684,11 @@ line of code containing a `smuggle` statement (and, optionally, an onion comment
 and replaces it with an analogous call to the _`smuggle()` function_. Thus, even though the code visible to the user may
 contain `smuggle` statements, e.g.:
 ```python
-smuggle numpy as np    # pip: numpy>1.16,<=1.20 -vv
+smuggle numpy as np    # pip: numpy>1.16,<=1.24 -vv
 ```
 the code that is actually executed by the Python interpreter will not:
 ```python
-smuggle(name="numpy", as_="np", installer="pip", args_str="""numpy>1.16,<=1.20 -vv""", installer_kwargs={'editable': False, 'spec': 'numpy>1.16,<=1.20', 'verbosity': 2})
+smuggle(name="numpy", as_="np", installer="pip", args_str="""numpy>1.16,<=1.24 -vv""", installer_kwargs={'editable': False, 'spec': 'numpy>1.16,<=1.24', 'verbosity': 2})
 ```
 
 The `davos` parser can be deactivated at any time, and doing so triggers the opposite actions of activating it:

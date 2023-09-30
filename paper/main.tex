@@ -37,7 +37,7 @@
   ranging from virtual environments, to containers, to virtual
   machines.  Each of these existing solutions requires installing or
   setting up a system for running the desired code, increasing the
-  complexity and time cost of sharing or engaging with reproducible
+  complexity and time cost of both sharing and engaging with reproducible
   science. Here, we propose a lighter-weight solution: the
   Davos package.  When used in combination with a
   notebook-based Python project, Davos provides a mechanism
@@ -82,7 +82,7 @@ C5 & Code versioning system used & git \\
 C6 & Software code languages, tools, and services used & Python, JavaScript, PyPI/pip, IPython, Jupyter, ipykernel, PyZMQ.\newline Additional tools used for tests: pytest, Selenium, Requests, mypy, GitHub Actions \\
 \hline
 C7 & Compilation requirements, operating environments, and
-     dependencies & Dependencies:~Python $\geq 3.6$, packaging, setuptools.\newline Supported OSes: MacOS, Linux, Unix-like.\newline Supported IPython environments: Jupyter Notebooks, JupyterLab, Google Colaboratory, Binder, IDE-based notebook editors, IPython shell. \\
+     dependencies & Dependencies:~Python $\geq 3.6$, packaging, setuptools.\newline Supported OSes: MacOS, Linux, Unix-like.\newline Supported IPython environments: Jupyter Notebooks, JupyterLab, Google Colaboratory, Binder, Kaggle, IDE-based notebook editors, IPython shell. \\
 \hline
 C8 & Link to developer documentation/manual & \url{https://github.com/ContextLab/davos\#readme} \\
 \hline
@@ -581,7 +581,7 @@ custom IPython input transformer.
 
 IPython preprocesses all executed code as plain text before it is sent
 to the Python compiler, in order to handle special constructs like
-\texttt{!}-prefixed shell commands and \texttt{\%}-prefixed ``magic'' commands. Davos uses
+\mbox{\texttt{!}-prefixed} shell commands and \mbox{\texttt{\%}-pre}\-fixed ``magic'' commands. Davos uses
 this same process to invisibly transform \texttt{smuggle} statements into
 syntactically valid Python code. The Davos parser uses a
 regular expression to match lines of code containing \texttt{smuggle}
@@ -836,37 +836,37 @@ to enable more aesthetically pleasing progress bars that are displayed via
 importable. Therefore, to take advantage of this feature, it was
 important to first ensure ensure that both \texttt{ipywidgets} and \texttt{widgetsnbextension} were available.
 
-Next, we load in the reformatted dataset (line 33) and pre-trained
-model (line 35) that we wish to use in our analysis.  In our
+Next, we load in the reformatted dataset (line 41) and pre-trained
+model (line 43) that we wish to use in our analysis. In our
 hypothetical example, we can suppose that the model was provided as a
 \texttt{scikit-learn} \texttt{Pipeline} object that passes data
-through two pretrained models in succession.  First, a trained \texttt{CountVectorizer}
+through two pre-trained models in succession. First, a trained \texttt{CountVectorizer}
 instance converts text data to an array of word counts.  The
 word counts are then passed to a topic model~\cite{BleiEtal03} using a
-pretrained \texttt{LatentDirichletAllocation} instance.
+pre-trained \texttt{LatentDirichletAllocation} instance.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example8}
 \end{center}
 Let us suppose that the \texttt{Pipeline} object had been saved by its
 original creator using the \texttt{joblib} package, as
-\texttt{scikit-learn}'s documentation recommends \cite{skle22}.  Because
+\texttt{scikit-learn}'s documentation recommends \cite{skle22}. Because
 \texttt{joblib} uses the \texttt{pickle} protocol internally, the
 ability to save and load pre-trained models is not guaranteed across
-different \texttt{scikit-learn} versions.  For example, suppose that
+different \texttt{scikit-learn} versions. For example, suppose that
 the \texttt{Pipeline} object was created using \texttt{scikit-learn}
-v0.21.3.  In that version of \texttt{scikit-learn}, the
+v0.21.3. In that version (and previous versions) of \texttt{scikit-learn}, the
 \texttt{LatentDirichletAllocation} class was defined in
-the \texttt{sklearn.de\-comp\-o\-si\-tion.online\_lda} module.  However, in version
-0.22.0, that module was renamed to \texttt{\_online\_lda}, and in
-version 0.22.1, it was again renamed to \texttt{\_lda}.
+the \texttt{sklearn.de\-comp\-o\-si\-tion.online\_lda} module. However, in version
+0.22.0, that module was renamed to ``\texttt{\_online\_lda}'' and in
+version 0.22.1, it was again renamed to ``\texttt{\_lda}.''
 
-In order to correctly load the model that includes the pre-trained
-\texttt{LatentDirichlet\-Allocation} instance, in line 34, we first
+In order to successfully load the model that includes the pre-trained
+\texttt{Latent\-Dirichlet\-Allocation} instance, in line 42, we first
 \texttt{smuggle} a version of \texttt{scikit-learn} prior to v0.22.0 (i.e.,
-before the first time the relevant module's name was changed).  Once
+before the first time the relevant module's name was changed). Once
 the model is loaded and reconstructed in memory from a compatible
-package version (line 35), we upgrade to a newer version of
-\texttt{scikit-learn} in line 36.  Taken together, the code in
+package version (line 43), we upgrade to a newer version of
+\texttt{scikit-learn} in line 44. Taken together, the code in
 Figure~\ref{fig:illustrative-example} shows how Davos can
 enable users to load in data and models that are incompatible with
 newer versions of \texttt{pandas} and \texttt{scikit-learn}, but still
@@ -923,7 +923,7 @@ their dependencies automatically.
 Since its initial release, Davos has found use in a variety of applications. In
 addition to managing computing environments for multiple prior and ongoing
 research studies~\citep{MannEtal23a, OwenMann23, ZimaEtal23}, Davos is being
-used by both students and instructors in programming and methods courses such
+used by both students and instructors in programming and research methods courses such
 as Storytelling with Data~\cite{Mann21a} (an open course on data science,
 visualization, and communication), Laboratory in Psychological
 Science~\cite{Mann22} (an open course on experimental and statistical methods

@@ -124,10 +124,10 @@ difficult or impossible~\citep{PimeEtal19}.
 \centering
 \includegraphics[width=0.65\textwidth]{figs/shareable_code_2d}
 \caption{\small \textbf{Systems for sharing code within the Python
-  ecosystem.}  The $x$-axis denotes the ``burden'' placed on users to
+  ecosystem.} The $x$-axis denotes the ``burden'' placed on users to
   install and configure the given system (systems placed further to the right, that fall within the redder shading, impose a higher setup cost on the user).  The $y$-axis denotes the
   degree to which the system guarantees that the code will run
-  similarly for different users (systems placed higher up, that fall within the bluer shading, support stronger guarantees).
+  similarly for different users (systems placed higher up, that fall within the bluer shading, offer stronger guarantees).
   From left to right, bottom to top: plain-text \textbf{Python
   scripts} (\texttt{.py} files) provide the most basic ``system''
   for sharing raw code.  Scripts may reference external packages, but
@@ -136,38 +136,37 @@ difficult or impossible~\citep{PimeEtal19}.
   those packages were installed must also be performed manually.
   \textbf{Jupyter notebooks} (\texttt{.ipynb} files) comprise embedded
   text, executable code, and media (including rendered figures, code
-  output, etc.).  When the \textbf{Davos package} is imported
+  output, etc.). When the \textbf{Davos package} is imported
   into a Jupyter notebook, the notebook's functionality is extended to
   automatically install any required external packages (at their
-  correct versions, when specified).  \textbf{Virtual environments}
-  allow users to install an isolated copy of Python and all required
-  dependencies. This typically entails distributing a configuration
-  file (e.g., a \texttt{pyproject.toml}~\cite{CannEtal16} or
-  \texttt{environment.yml} file) that specifies all project
-  dependencies (including version numbers of external packages)
-  alongside the primary code base. Users can then install a
-  third-party tool~\cite[e.g.,][]{Anac12, Eust19} to read the file and
-  build the environment.  \textbf{Containers} provide a means of
+  correct versions, when specified) into an isolated directory kept separate
+  from the user's existing set of packages. \textbf{Virtual environments}
+  similarly allow users to install required packages into an isolated
+  directory, and \textbf{shareable Python environments} extend this to include
+  a specific version of Python itself. However, both of these systems require
+  users to create, populate, and manage environments manually. This
+  typically entails distributing a configuration file (e.g., a
+  \texttt{requirements.txt}, \texttt{pyproject.toml}~\cite{CannEtal16}, or
+  \texttt{environment.yml} file) that specifies all project dependencies
+  (including version numbers) alongside the primary code base. Users can then
+  install a third-party tool~\cite[e.g.,][]{BickEtal07, Eust19, Anac12} to read
+  the file and build the environment. \textbf{Containers} provide a means of
   defining an isolated environment that includes a complete operating
   system (independent of the user's operating system), in addition to
   (optionally) specifying a virtual environment or other
   configurations needed to provide the necessary computing
-  environment.  Containers are typically defined using specification
-  files (e.g., a plain-text \texttt{Dockerfile}) that instruct the
+  environment. Containers are typically defined using
+  specification files (e.g., a plain-text \texttt{Dockerfile}~\cite{Merk14}) that instruct the
   virtualization engine regarding how to build the containerized
-  environment.  \textbf{Virtual machines} provide a complete
+  environment. \textbf{Virtual machines} provide a complete
   hardware-level simulation of the computing environment.  In addition
   to simulating specific hardware, virtual machines (typically
   specified using binary image files) must also define operating
-  system-level properties of the computing environment.  Systems to
-  the left of the blue vertical line entail sharing individual files,
-  with no additional installation or configuration needed to run the
-  target code.  Systems to the right of the red vertical line support
-  precise control over dependencies and versioning.  Notebooks
-  enhanced using the Davos package are easily shareable and
-  require minimal setup costs, while also facilitating high
-  reproducibility by enabling precise control over project
-  dependencies.}
+  system-level properties of the computing environment.  $\Delta_1$
+  represents the increased reproducibility Davos provides over standard
+  Jupyter notebooks for no greater setup cost. $\Delta_2$ represents
+  Davos's lower setup cost compared to standard virtual environments
+  despite more stringently ensuring reproducibility.}
 \label{fig:code-sharing}
 \end{figure}
 

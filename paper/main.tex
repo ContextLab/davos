@@ -197,28 +197,30 @@ Containers~\cite[e.g.,][]{Merk14, KurtEtal17} provide a similar
 ``isolated'' experience. Although containerized environments do not
 specify hardware-level operations, they are typically packaged with a
 complete operating system, in addition to a complete copy of Python
-and any relevant package dependencies. Virtual
-environments~\cite[e.g.,][]{Anac12, Eust19} also provide a computing
+and any relevant package dependencies. Shareable Python
+environments~\cite[e.g.,][]{Anac12} also provide a computing
 environment that is largely separated from the user's main
 environment. They incorporate a copy of Python and the target
-software's dependencies, but virtual environments do not specify or
-reproduce an operating system for the runtime environment. Each of
-these systems (virtual machines, containers, and virtual environments)
+software's dependencies, but do not specify or
+reproduce an operating system for the runtime environment.
+Virtual environments~\cite[e.g.,][]{BickEtal07, Eust19} work similarly, but
+reuse an existing copy of Python rather than bundling their own.
+Each of these systems (virtual machines, containers, Python environments, and virtual environments)
 guarantees (to differing degrees---at the hardware level, operating
-system level, and Python environment level, respectively) that the
+system level, Python environment level, and package environment level, respectively) that the
 relevant code will run similarly for different users. However, each of
 these systems also relies on additional software that can be complex
 or resource-intensive to install and use, creating potential barriers
 to both contributing to and taking advantage of open science
 resources.
 
-We designed Davos to occupy a ``sweet spot'' between these extremes.
+We designed Davos to occupy a ``sweet spot'' within this spectrum.
 Davos is a notebook-installable package that adds functionality to the
 default notebook experience. Like standard Jupyter notebooks,
 Davos-enhanced notebooks allow researchers to include text, executable
 code, and media within a single file. No further setup or installation is
-required from the user, beyond what is needed to run standard Jupyter
-notebooks. And like virtual environments, Davos provides a convenient
+required from the user, beyond what is needed to run a standard Jupyter
+notebook. And like virtual environments, Davos provides a convenient
 mechanism for fully specifying (and installing, as needed) a complete set of
 Python dependencies, including specific package versions, which are contained
 and isolated from the rest of the user's system.

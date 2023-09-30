@@ -867,16 +867,16 @@ latest approaches and implementations.
 
 \section{Impact}
 
-We designed \texttt{Davos} for use in research settings, where code for numerous different tasks---from processing data, to running statistical analyses, to generating figures and tables for publication---is frequently shared among collaborators while working on a project, and eventually with the broader scientific community and general public upon a its completion.
-In these contexts, ensuring that shared code yields consistent, reproducible outputs across users and over time is crucially important, yet the tools available to researchers for doing so can be complex to set up and challenging to properly use.
+We designed \texttt{Davos} for use in research settings, where code for numerous different tasks---from processing data, to running statistical analyses, to generating figures and tables for publication---is frequently shared between collaborators while working on a project, and eventually with the broader scientific community and general public upon its completion.
+In these contexts, ensuring that shared code yields consistent, reproducible outputs across users and over time is critical, yet the tools available to researchers for doing so can be complex to set up and challenging to properly use.
 This has the dual effect of discouraging scientists from sharing their code in a reproducible way (or at all), and making it significantly harder (or impossible) for others to successfully reproduce their results, adopt or extend their methods, and contribute to or build upon their work.
 Ultimately, the need to install and master additional tools in order to share and run reproducible code can impede progress both on the individual level and on the broader scientific level.
 
-While the \texttt{Davos} package by no means offers a universal solution to this problem, it can, in many cases, provide an effective yet more accessible alternative to existing systems for sharing reproducible Python code, such as virtual environments, containers, and virtual machines (see Fig.~\ref{fig:code-sharing}).
+While the \texttt{Davos} package by no means offers a universal solution to this problem, it can, in many cases, provide an effective yet more accessible alternative to existing systems for sharing reproducible Python code, such as virtual environments, containers, and virtual machines (Fig.~\ref{fig:code-sharing}).
 For researchers, this can lower barriers to collaborating with peers and contributing to publicly available open science resources.
-And by eliminating most of the setup costs of reconstructing the original researchers' computing environment, \texttt{Davos} also lowers barriers to entry for members of the scientific community and the public who seek to run shared code.
+And by eliminating most of the setup costs of reconstructing the original researchers' computing environment(s), \texttt{Davos} also lowers barriers to entry for members of the scientific community and the public who seek to run shared code.
 
-Among common systems for sharing reproducible Python code (see Fig.~\ref{fig:code-sharing}), \texttt{Davos} is most comparable to virtual environments as it similarly provides a lightweight mechanism for specifying and sharing a complete set of packages (and specific package versions) required by a particular project, and installing those packages into an isolated directory on the user's file system.
+Among common systems for sharing reproducible Python code (see Fig.~\ref{fig:code-sharing}), \texttt{Davos} is most comparable to virtual environments in that it provides a lightweight mechanism for specifying and sharing a complete set of packages (and specific package versions) required by a particular project, and installing those packages into an isolated directory on the user's file system.
 However, when used in conjunction with Jupyter notebooks, \texttt{Davos} offers a number of advantages over standard virtual environments that make it both easier to use and more effective at ensuring reproducibility of shared code.
 
 First, \texttt{smuggle} statements and onion comments enable researchers to specify their notebooks' dependencies directly within the code that requires them (see Secs.~\ref{subsec:smuggle} and  \ref{subsec:onion}).
@@ -894,13 +894,13 @@ Because \texttt{smuggle} statements and onion comments are evaluated every time 
 
 Third, running a shared notebook that uses \texttt{Davos} to manage its dependencies often requires less (but never more) space on the user's system than running an identical notebook inside a virtual environment.
 While typical virtual environment directories will contain \textit{all} requirements listed in their configuration files, \texttt{Davos}'s isolated project directories (by default; see Sec.~\ref{subsec:projects}) contain only those not already available in the user's existing Python environment.
-This is another feature made possible by \texttt{Davos}'s runtime-based dependency management scheme.
-\texttt{Davos} can safely draw from packages in from the user's main environment to satisfy a notebook's dependencies, when possible, because if those packages were to be updated or removed at any point such that they no longer met the notebook's requirements, appropriate versions could (and would) be installed into the project directory the next time the notebook was executed.
+This is another feature made possible by \texttt{Davos}'s runtime-based dependency management system.
+\texttt{Davos} can safely draw from packages in the user's main environment to satisfy a notebook's dependencies, when possible, because if those packages were to be updated or removed at any point such that they no longer met the notebook's requirements, appropriate versions would be installed into the project directory the next time the notebook was executed.
 
 Finally, neither virtual environments nor \texttt{Davos}-enhanced notebooks can bundle specific versions of Python with which to run shared code.
 However, \texttt{Davos}'s \texttt{require\_\-python()} function provides a simple mechanism for indicating a required or constrained Python version and alerting the user at runtime (by raising an exception) if their Python version is incompatible.
-In terms of \texttt{Davos}'s ability to ensure that shared code can be executed reproducibly by other users, this falls short of the capabilities of more complex tools that can provide complete copies of Python (see Fig.~\ref{fig:code-sharing}) and should be preferred over \texttt{Davos} in cases where this is necessary.
-However, the functionality it provides over what is possible with a standard virtual environment is removing the \textit{expectation} that running a particular notebook will reproduce an expected outcome in situations where this is either impossible or not guaranteed.
+In terms of \texttt{Davos}'s ability to ensure that shared code can be executed reproducibly by other users, this falls short of the capabilities of more complex tools that can provide complete copies of Python (Fig.~\ref{fig:code-sharing}).
+However, the functionality \texttt{Davos} provides over what is possible with a standard virtual environment is to remove the \textit{expectation} that running a particular notebook will reproduce an expected outcome in situations where this is either impossible or not guaranteed.
 With this understanding, a user may choose to install a compatible Python version through some other means or elect to still run the code, but will not be surprised by a potential failure to execute successfully or output an expected result.
 
 Beyond research applications, \texttt{Davos} is also useful in
@@ -963,7 +963,7 @@ keyword-like objects (e.g., based around common typos). We also note
 that this implementation approach means \texttt{Davos}'s functionality
 is currently restricted to IPython notebook environments. However,
 there have been early-stage discussions of providing this sort of
-syntactic customizability as a core feature of the Python language,
+syntactic customizability as a core feature of the Python language itself,
 including a draft proposal~\cite{Shan20}. In addition to enabling
 \texttt{Davos} to be extended for use outside of notebooks, this could
 lead to exciting new tools that, like \texttt{Davos}, extend the
@@ -1019,7 +1019,7 @@ The \texttt{Davos} package supports reproducible research by providing
 a novel, lightweight system for sharing notebook-based code. It
 expands on Python's ``batteries included'' philosophy to enable running shared
 notebooks with no setup required, and defines a simple, self-documenting format for
-specifying dependencies in the spirit of ``literate programming'' paradigm Jupyter notebooks promote.
+specifying dependencies in the spirit of the ``literate programming'' paradigm Jupyter notebooks promote.
 But perhaps the most exciting uses of the \texttt{Davos} package are those
 that we have \textit{not} yet considered or imagined. We hope that the
 research and scientific Python communities will find \texttt{Davos} to provide a convenient

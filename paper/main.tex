@@ -920,7 +920,7 @@ and students may use the Davos package to ensure their
 notebooks will run correctly on others' machines. When combined with
 online notebook-based platforms like Google Colaboratory,
 Davos provides a convenient way to manage dependencies within
-a notebook, without requiring any software (beyond a web browser) to
+a notebook without requiring any software (beyond a web browser) to
 be installed on the students' or instructors' systems. For the same
 reasons, Davos also provides an elegant means of sharing
 ready-to-run notebook-based demonstrations or tutorials that install
@@ -984,30 +984,26 @@ Python language in useful and more secure ways.
 
 While Davos enables developers to conveniently specify all project
 dependencies, there are some edge cases and limitations that are worth
-considering. First, reproducibility is not solely about dependency management.
-In addition to ensuring that project dependencies are satisfied, the user
-running a given notebook must also execute the code in the indicated order. For
-example, the cells in a notebook may be manually run out of order. If different
-cells in a Davos-enhanced notebook made use of different versions of the same
-package, this could result in \textit{more} confusion or \textit{greater}
-replication failure rates relative to standard Jupyter notebooks. Therefore an
-important consideration when using Davos is that it is perhaps even more
-important to execute notebook cells in order than would be the case in the
-standard (non-Davos) setup. One approach to mitigating this risk for notebooks
-that use several versions of the same library would be to include
-\texttt{smuggle} statements in the same cell(s) where the library was called. A
-second approach would be for developers who wish to use Davos to include notes
-regarding which cells must be executed in sequence. This is already a common
-practice for notebooks that include system calls to install required packages
-and dependencies, and the same approach would work well for Davos-enhanced
-notebooks as well.
+considering.
+First, prior studies on reproducibility of Jupyter notebooks (e.g., \cite{PimeEtal19}) identified a key challenge in the fact that, unlike Python scripts, notebook cells may be manually executed in a non-linear order, which may differ from the order in which they were executed by the notebook's original author.
+This can result in various ``hidden state'' problems, such as variables referencing different objects than the currently running cell expects them to, given its point in the notebook's execution order.
+In theory, using Davos to \texttt{smuggle} different versions of the same package across different notebook cells could exacerbate this issue if a user executed those cells out of their intended order.
+Therefore an important consideration when using Davos is that it is perhaps even more important to execute notebook cells in order than would be the case in the standard (non-Davos) setup.
+However, a few ``best practices'' may be adopted to help mitigate this risk.
+First, when sharing a Davos-enhanced notebook in a state that is intended to be reproducible, code cells should appear in their intended execution order, such that users can successfully run them top to bottom.
+In a scenario where this is impossible, the intended order should be clearly indicated in code comments and/or markdown cells.
+This is already a common practice for notebooks that include system calls to install required packages and dependencies, and the same approach would work well in Davos-enhanced notebooks.
+Second, while Davos makes it possible to \texttt{smuggle} multiple versions of a package within the same notebook, users should prefer to split code that requires different versions of the same package into different notebooks.
+In addition to mitigating the issue described above, this will also allow Davos to store a single intended version of the package in each notebook's project directory, rather than reinstalling the package each time a different version is smuggled.
+Finally, in situations where it \textit{is} necessary or preferable to temporarily \texttt{smuggle} a different version of a particular package than is used throughout the rest of the notebook (e.g., Fig.~\ref{fig:illustrative-example}), the code to \texttt{smuggle} that temporary version, perform all necessary operations, and (re-)\texttt{smuggle} the ``default'' version should be contained within a single notebook cell, such that (absent any errors in its execution) the same version is always installed and imported before and after the cell is run.
+For example, in Figure~\ref{fig:illustrative-example}, lines 14--19 should be run within a single cell, and lines 42--44 should be run in a single cell.
 
 A second limitation of Davos relates to how packages are installed and managed.
 As of this writing, Davos can install packages using \texttt{pip}, but not
 other standard Python package management systems such as \texttt{conda}.
 Therefore packages that are not installable via \texttt{pip} are currently
 unsupported by Davos. We anticipate adding support for other package management
-systems, including \texttt{conda}, in a future release.
+systems, including \texttt{conda} \cite{Anac12}, in a future release.
 
 A third limitation of Davos is that it cannot be used to manage projects that
 depend on non-Python software. For example, system software or libraries from
@@ -1016,19 +1012,17 @@ other languages (e.g., in a mixed Python and R notebook), cannot be
 software would therefore need to use existing non-Davos approaches to managing
 those requirements.
 
-Our Project infrastructure (Sec.~\ref{subsec:projects}) provides a ``safe'' way
+Davos's ``projects'' system (Sec.~\ref{subsec:projects}) provides a safe way
 of managing project dependencies without interfering with the user's Python
-environment. However, our implementation of this functionality cannot
-anticipate every possible development environment. As of this writing, we
-support many common notebook environments, including classic Jupyter Notebooks,
-Google Colaboratory, Kaggle Notebooks, Visual Studio Code, among others.
-However, some environments (e.g., Visual Studio Code) implement their own
-mechanisms for rendering and running notebook code. In cases where our Project
-infrastructure is not equipped to handle a particular development or runtime
-environment, Davos will fall back to installing packages in a ``default''
-environment that is shared across all notebooks.  This enables Davos to protect against
-modifying the runtime environment, but it also means that packages may be installed
-or overwritten across notebooks that use different versions of those packages.
+environment. By default, each Davos-enhanced notebook creates and uses its own
+notebook-specific project directory, which is named based on the notebook's absolute
+path. However, programmatically determining the path to the currently running
+notebook may not be possible in some environments.
+For example, Davos queries the Jupyter Server API to determine the notebook's name, but some non-browser applications may implement mechanisms for communicating with the IPython kernel without starting a Jupyter server.
+As of this writing, Davos fully supports most common notebook environments, including classic Jupyter Notebooks,
+JupyterLab, Google Colaboratory, Binder, Kaggle Notebooks, JetBrains IDEs (PyCharm, DataSpell, etc.), and Visual Studio Code, among others.
+However, in cases where Davos fails to determine the current notebook's path, it will issue a warning and fall back to using a generic project named ``davos-fallback.'' This project is shared across all such occurrences and exists to ensure that even if some component of Davos's project system fails, smuggling packages will still not affect the user's main Python environment. If this occurs, the user can also manually set Davos to use the ``normal'' default project for the current by setting \texttt{davos.project} to its absolute or relative path.
+
 
 \section{Conclusions}
 

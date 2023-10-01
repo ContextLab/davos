@@ -974,25 +974,27 @@ Python language in useful and more secure ways.
 While \texttt{Davos} enables developers to conveniently specify all project
 dependencies, there are some edge cases and limitations that are worth
 considering.
-First, prior studies on reproducibility of Jupyter notebooks~\cite[e.g.,][]{PimeEtal19}) identified a key challenge in the fact that, unlike Python scripts, notebook cells may be manually executed in a non-linear order, which may differ from the order in which they were executed by the notebook's original author.
-This can result in various ``hidden state'' problems, such as variables referencing different objects than the currently running cell expects them to, given its point in the notebook's execution order.
-In theory, using \texttt{Davos} to \texttt{smuggle} different versions of the same package across different notebook cells could exacerbate this issue if a user executed those cells out of their intended order.
-Therefore an important consideration when using \texttt{Davos} is that it is perhaps even more important to execute notebook cells in order than would be the case in the standard (non-\texttt{Davos}) setup.
-However, a few ``best practices'' may be adopted to help mitigate this risk.
-First, when sharing a \texttt{Davos}-enhanced notebook in a state that is intended to be reproducible, code cells should appear in their intended execution order, such that users can successfully run them top to bottom.
-In a scenario where this is impossible, the intended order should be clearly indicated in code comments and/or markdown cells.
-This is already a common practice for notebooks that include system calls to install required packages and dependencies, and the same approach would work well in \texttt{Davos}-enhanced notebooks.
-Second, while \texttt{Davos} makes it possible to \texttt{smuggle} multiple versions of a package within the same notebook, users should prefer to split code that requires different versions of the same package into different notebooks.
-In addition to mitigating the issue described above, this will also allow \texttt{Davos} to store a single intended version of the package in each notebook's project directory, rather than reinstalling the package each time a different version is smuggled.
-Finally, in situations where it \textit{is} necessary or preferable to temporarily \texttt{smuggle} a different version of a particular package than is used throughout the rest of the notebook (e.g., Fig.~\ref{fig:illustrative-example}), the code to \texttt{smuggle} that temporary version, perform all necessary operations, and (re-)\texttt{smuggle} the ``default'' version should be contained within a single notebook cell, such that (absent any errors in its execution) the same version is always installed and imported before and after the cell is run.
-For example, in Figure~\ref{fig:illustrative-example}, lines 14--19 should be run within a single cell, and lines 42--44 should be run in a single cell.
+First, prior studies on reproducibility of Jupyter notebooks~\cite[e.g.,][]{PimeEtal19} identified a key challenge in the fact that, unlike Python scripts, notebook cells may be manually executed in a non-linear order, and therefore potentially in a different order than they were executed by the notebook's original author.
+This can result in situations where, for example, a cell's execution fails because its code calls a function that has not yet been defined, or accesses a variable that refers to a different object than is expected at that point in the notebook.
+In theory, using \texttt{Davos} to \texttt{smuggle} multiple versions of the same package in different cells of a notebook could exacerbate this issue if a user executed those cells out of their intended order, such that their currently imported version of a core dependency was different from what a particular cell expected or required.
+Therefore, an important consideration when using \texttt{Davos} to facilitate complex, multi-package-version runtimes in this way is that executing notebook cells in order is perhaps even more important than it would be in a standard (i.e., non-\texttt{Davos}-enhanced) notebook.
+While (as noted in Sections~\ref{sec:illustrative-example} and~\ref{sec:illustrative-example}) we consider this an ``advanced feature'' of Davos rather than typical usage, we propose a relatively simple set of ``best practices'' that substantially mitigate the risk of creating ambiguous states within a notebook.
+First, any \texttt{Davos}-enhanced notebook (or simply any notebook) that is intended to be run by more than one individual should be organized with its code cells in their intended execution order from top to bottom.
+If an edge case arises in which this is not possible, the intended order should be clearly indicated in code comments and/or markdown cells.
+Second, when smuggling multiple different versions of a package within a notebook, one version of the package may be designated the ``main'' version, and any others designated as ``alternate'' versions.
+The main version should be the primary version used throughout the notebook, while alternates are those temporarily required for a specific task or functionality.
+For example, in Figure~\ref{fig:illustrative-example}, \texttt{pandas} v1.3.5 and \texttt{scikit-learn} v1.1.3 are the main versions of their respective packages as they are used throughout the remainder of the code once they are loaded.
+Meanwhile \texttt{pandas<0.25.0} and \texttt{scikit-learn<0.22.0} are alternate versions because they are temporarily smuggled for the specific purpose of loading an outmoded dataset and model and then immediately replaced with main versions after their use is complete.
+Any time an alternate package version needed, the \texttt{smuggle} statement used to install and load it, the operations it is required to perform, and a second \texttt{smuggle} to (re-)install and load the main package version should be placed within a single cell.
+This ensures that (barring other unrelated errors in the cell's execution) the main version will always be installed and imported when any given notebook cell is run.
+In other words, in Figure~\ref{fig:illustrative-example}, lines 14--19 should be run within a single cell, and lines 42--44 should be run in a single cell.
 
 A second limitation of \texttt{Davos} relates to how packages are installed and managed.
 As of this writing, \texttt{Davos} can install packages using \texttt{pip}, but not
-other standard Python package management systems such as \texttt{conda}.
+other standard Python package management systems such as \texttt{conda}~\cite{Anac12}.
 Therefore packages that are not installable via \texttt{pip} are currently
 unsupported by \texttt{Davos}. We anticipate adding support for other package management
-systems, including \texttt{conda}~\cite{Anac12}, in a future release.
+systems, including \texttt{conda}, in a future release.
 
 A third limitation of \texttt{Davos} is that it cannot be used to manage projects that
 depend on non-Python software. For example, system software or libraries from

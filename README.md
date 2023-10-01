@@ -49,6 +49,37 @@ The `davos` library provides Python with an additional keyword: **`smuggle`**.
 1. You can `smuggle` a package _without installing it first_
 2. You can `smuggle` a _specific version_ of a package
 
+Taken together, these two enhancements to `import` provide a powerful system for developing and sharing reproducible code that works across different users and environments.
+
+## Table of contents
+- [Table of contents](#table-of-contents)
+- [Introduction (↑)](#introduction)
+  - [Why would I want an alternative to `import`?](#why-would-i-want-an-alternative-to-import)
+  - [Why not use virtual environments, containers, and/or virtual machines instead?](#why-not-use-virtual-environments-containers-andor-virtual-machines-instead)
+- [Installation](#installation)
+  - [Latest Stable PyPI Release](#latest-stable-pypi-release)
+  - [Latest GitHub Update](#latest-github-update)
+  - [Installing in Colaboratory](#installing-in-colaboratory)
+- [Overview](#overview)
+  - [Smuggling Missing Packages](#smuggling-missing-packages)
+  - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
+  - [Use Cases](#use-cases)
+    - [Simplify sharing reproducible code & Python environments](#simplify-sharing-reproducible-code--python-environments)
+    - [Guarantee your code always uses the latest version, release, or revision](#guarantee-your-code-always-uses-the-latest-version-release-or-revision)
+    - [Compare behavior across package versions](#compare-behavior-across-package-versions)
+- [Usage](#usage)
+  - [The `smuggle` Statement](#the-smuggle-statement)
+    - [Syntax](#smuggle-statement-syntax)
+    - [Rules](#smuggle-statement-rules)
+  - [The Onion Comment](#the-onion-comment)
+    - [Syntax](#onion-comment-syntax)
+    - [Rules](#onion-comment-rules)
+  - [The `davos` Config](#the-davos-config)
+    - [Reference](#config-reference)
+    - [Top-level Functions](#top-level-functions)
+- [How It Works: The `davos` Parser](#how-it-works-the-davos-parser)
+- [Additional Notes](#additional-notes)
+
 ## Why would I want an alternative to `import`?
 
 In many cases, `smuggle` and `import` do the same thing&mdash;*if you're
@@ -123,16 +154,15 @@ for other code that shares the runtime environment. That said, `davos` also
 works great when used inside of (standard) virtual environments, containers,
 and virtual machines.
 
-There are a few additional specific advantages to `davos` that go beyond more typical virtual environments, containers, and/or virtual machines:
-  - `davos` is very lightweight&mdash;importing `davos` into a notebook-based environment unlocks all of its
-    functionality without needed to install, set up, and learn how to use additional stuff.  There is none of the
-    typical overhead of setting up a new virtual environment (or container, virtual machine, etc.), installing
-    third-party tools, writing and sharing configuration files, and so on.  All of your code *and its dependencies* may
-    be contained in a single notebook file.
-  - using onion comments, `davos` can enable multiple versions of the same package to be used or specified in different
-    parts of the same notebook.  Want to use some deprecated or removed function in `scikit-learn` in one cell, but then
-    use one of the latest features in another?  You can!  Just add onion comments specifying which versions of the
-    package you want to `smuggle` in which cells of your notebook.
+There are a few additional specific advantages to `davos` that go beyond more
+typical virtual environments, containers, and/or virtual machines. The main
+advantage is that `davos` is very lightweight: importing `davos` into a
+notebook-based environment unlocks all of its functionality without needed to
+install, set up, and learn how to use additional stuff. There is none of the
+typical overhead of setting up a new virtual environment (or container, virtual
+machine, etc.), installing third-party tools, writing and sharing configuration
+files, and so on. All of your code *and its dependencies* may be contained in a
+single notebook file.
 
 ## Okay... so how do I use this thing?
 
@@ -158,33 +188,6 @@ assert np.__version__ == '1.23.1'
 Interested? Curious? Intrigued? Check out the table of contents for more
 details! You may also want to check out our [paper](paper/main.pdf) for more
 formal descriptions and explanations.
-
-## Table of contents
-- [Table of contents](#table-of-contents)
-- [Installation](#installation)
-  - [Latest Stable PyPI Release](#latest-stable-pypi-release)
-  - [Latest GitHub Update](#latest-github-update)
-  - [Installing in Colaboratory](#installing-in-colaboratory)
-- [Overview](#overview)
-  - [Smuggling Missing Packages](#smuggling-missing-packages)
-  - [Smuggling Specific Package Versions](#smuggling-specific-package-versions)
-  - [Use Cases](#use-cases)
-    - [Simplify sharing reproducible code & Python environments](#simplify-sharing-reproducible-code--python-environments)
-    - [Guarantee your code always uses the latest version, release, or revision](#guarantee-your-code-always-uses-the-latest-version-release-or-revision)
-    - [Compare behavior across package versions](#compare-behavior-across-package-versions)
-- [Usage](#usage)
-  - [The `smuggle` Statement](#the-smuggle-statement)
-    - [Syntax](#smuggle-statement-syntax)
-    - [Rules](#smuggle-statement-rules)
-  - [The Onion Comment](#the-onion-comment)
-    - [Syntax](#onion-comment-syntax)
-    - [Rules](#onion-comment-rules)
-  - [The `davos` Config](#the-davos-config)
-    - [Reference](#config-reference)
-    - [Top-level Functions](#top-level-functions)
-- [How It Works: The `davos` Parser](#how-it-works-the-davos-parser)
-- [Additional Notes](#additional-notes)
-
 
 ## Installation
 ### Latest Stable PyPI Release

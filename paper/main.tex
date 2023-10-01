@@ -413,9 +413,9 @@ In some cases, this might include every package smuggled into a notebook (e.g., 
 In other cases, the user's environment may already provide all required packages, and the notebook's project directory will go unused (in which case it will be deleted automatically when the notebook kernel is shut down).
 Regardless of the extent to which the existing environment is augmented, \texttt{Davos}'s project system ensures that all smuggled packages are installed locally and loaded successfully at runtime, while the contents of the user's Python environment are never altered.
 
-Additionally, because \texttt{smuggle} statements in a given notebook are evaluated every time the notebook is run, this design ensures that the notebook's requirements will remain satisfied even if the user's Python environment changes.
+Because \texttt{smuggle} statements in a given notebook are evaluated every time the notebook is run, this ensures that the notebook's requirements will remain satisfied even if the user's Python environment changes.
 For example, suppose a user has \texttt{NumPy}~\cite{HarrEtal20} v1.24.3 installed in their current Python environment and runs a \texttt{Davos}-enhanced notebook that smuggles \texttt{NumPy} with ``\texttt{numpy==1.24.3}'' specified in an onion comment (see Sec.~\ref{subsec:onion}).
-Since the user's existing version of the package satisfies this requirement, \texttt{Davos} will load it into the notebook.
+Since the user's existing version of the package satisfies this requirement, \texttt{Davos} will load it into the notebook's runtime environment.
 But if the user later upgrades their environment's \texttt{NumPy} version to v1.25.0 (perhaps as a result of installing a different package that depends on it) and subsequently re-runs this notebook, the local version will longer satisfy this requirement, so \texttt{Davos} will install \texttt{NumPy} v1.24.3 into the notebook's project directory and load that version instead.
 From then on, any further changes to the user's \texttt{Numpy} installation would have no effect on \texttt{Davos}'s behavior in this particular notebook, as a satisfactory version now exists in its project directory.
 (If the version specified in the onion comment were changed, \texttt{Davos} would update the version installed in the project directory accordingly.)
@@ -548,7 +548,7 @@ Some of these functions serve primarily as conveniences, while others provide ad
   Alternatively, passing \texttt{yes=True} will immediately remove all unused projects without prompting for confirmation.
   Note that if \texttt{Davos}'s non-interactive mode is enabled (see Sec.~\ref{subsec:config}), \texttt{yes=True} must be explicitly passed, otherwise the function will raise an exception.
   This serves as a safeguard against accidentally deleting projects, since non-interactive mode disables all user input and confirmation.
-  Also note that this function will not delete notebook-agnostic projects (i.e., manually created projects whose names are not notebook filepaths), as they are not linked to specific notebooks whose existence determines whether or not they are still needed.
+  Also note that this function will not delete notebook-agnostic projects (i.e., manually created projects whose names are not notebook file paths), as they are not linked to specific notebooks whose existence determines whether or not they are still needed.
   These (and any) projects may be deleted individually by calling their \texttt{Project} objects' \texttt{.remove()} method.
 
 \item \texttt{require\_python(version\_spec, warn=False, extra\_msg=None, pre\-re\-leases=\\None)}: Through \texttt{smuggle} statements and onion comments, \texttt{Davos} can automatically ensure that all Python packages needed to run a notebook are installed, and that the same versions of those packages are used no matter when or by whom the notebook is run.
@@ -674,7 +674,7 @@ of a Jupyter notebook, the code in Figure~\ref{fig:illustrative-example}
 ensures that these objects will be loaded successfully and analyzed using the
 same set of package versions no matter when or by whom the notebook is run.
 
-After installing and importing \texttt{Davos} (lines 1--2), we first use the \texttt{davos.require\_\-python()} function to constrain the Python version used to run the notebook (see Sec.~\ref{subsec:toplevel}).
+After installing and importing \texttt{Davos} (lines 1--2), we first use the \texttt{davos.re\-qui\-re\_\-py\-thon()} function to constrain the Python version used to run the notebook (see Sec.~\ref{subsec:toplevel}).
 As described above, the example code in Figure~\ref{fig:illustrative-example} loads two different versions of the \texttt{pandas} library: first, an older version needed to access a dataset saved in an outmoded format, then a newer one to use throughout the remainder of the notebook.
 We therefore want to make sure upfront (in line 6) that the notebook's Python version falls within the range of versions that both of these two versions of \texttt{pandas} support.
 If it does not, the function in line 6 will raise an error that includes a message to this effect (lines 4--5).
@@ -834,7 +834,7 @@ hypothetical example, we can suppose that the model was provided as a
 through two pre-trained models in succession. First, a trained \texttt{CountVectorizer}
 instance converts text data to an array of word counts. The
 word counts are then passed to a topic model~\cite{BleiEtal03} using a
-pre-trained \texttt{LatentDirichletAllocation} instance.
+pre-trained \texttt{Latent\-Dir\-ich\-let\-Allocation} instance.
 \begin{center}
 \includegraphics[width=0.9\textwidth]{figs/example8}
 \end{center}
@@ -852,7 +852,7 @@ the \texttt{sklearn.de\-comp\-o\-si\-tion.online\_lda} module. However, in versi
 version 0.22.1, it was again renamed to ``\texttt{\_lda}.''
 
 In order to successfully load the model that includes the pre-trained
-\texttt{Latent\-Dirichlet\-Allocation} instance, in line 42, we first
+\texttt{Latent\-Dir\-ich\-let\-Allocation} instance, in line 42, we first
 \texttt{smuggle} a version of \texttt{scikit-learn} prior to v0.22.0 (i.e.,
 before the first time the relevant module's name was changed). Once
 the model is loaded and reconstructed in memory from a compatible
@@ -865,7 +865,7 @@ newer versions of \texttt{pandas} and \texttt{scikit-learn}, but still
 latest approaches and implementations.
 
 
-\section{Impact}
+\section{Impact}\label{sec:impact}
 
 We designed \texttt{Davos} for use in research settings, where code for numerous different tasks---from processing data, to running statistical analyses, to generating figures and tables for publication---is frequently shared between collaborators while working on a project, and eventually with the broader scientific community and general public upon its completion.
 In these contexts, ensuring that shared code yields consistent, reproducible outputs across users and over time is critical, yet the tools available to researchers for doing so can be complex to set up and challenging to properly use.
@@ -974,20 +974,20 @@ Python language in useful and more secure ways.
 While \texttt{Davos} enables developers to conveniently specify all project
 dependencies, there are some edge cases and limitations that are worth
 considering.
-First, prior studies on reproducibility of Jupyter notebooks~\cite[e.g.,][]{PimeEtal19} identified a key challenge in the fact that, unlike Python scripts, notebook cells may be manually executed in a non-linear order, and therefore potentially in a different order than they were executed by the notebook's original author.
+First, prior studies on reproducibility of Jupyter notebooks~\cite[e.g.,][]{PimeEtal19} identified a key challenge in the fact that, unlike Python scripts, notebook cells may be manually executed in an arbitrary order, and therefore potentially in a different order than they were executed by the notebook's original author.
 This can result in situations where, for example, a cell's execution fails because its code calls a function that has not yet been defined, or accesses a variable that refers to a different object than is expected at that point in the notebook.
 In theory, using \texttt{Davos} to \texttt{smuggle} multiple versions of the same package in different cells of a notebook could exacerbate this issue if a user executed those cells out of their intended order, such that their currently imported version of a core dependency was different from what a particular cell expected or required.
 Therefore, an important consideration when using \texttt{Davos} to facilitate complex, multi-package-version runtimes in this way is that executing notebook cells in order is perhaps even more important than it would be in a standard (i.e., non-\texttt{Davos}-enhanced) notebook.
-While (as noted in Sections~\ref{sec:illustrative-example} and~\ref{sec:illustrative-example}) we consider this an ``advanced feature'' of Davos rather than typical usage, we propose a relatively simple set of ``best practices'' that substantially mitigate the risk of creating ambiguous states within a notebook.
+While (as noted in Sections~\ref{sec:illustrative-example} and~\ref{sec:impact}) we consider this an ``advanced feature'' of Davos rather than typical usage, we propose a relatively simple set of ``best practices'' that substantially mitigate the risk of creating ambiguous states within a notebook.
 First, any \texttt{Davos}-enhanced notebook (or simply any notebook) that is intended to be run by more than one individual should be organized with its code cells in their intended execution order from top to bottom.
 If an edge case arises in which this is not possible, the intended order should be clearly indicated in code comments and/or markdown cells.
 Second, when smuggling multiple different versions of a package within a notebook, one version of the package may be designated the ``main'' version, and any others designated as ``alternate'' versions.
 The main version should be the primary version used throughout the notebook, while alternates are those temporarily required for a specific task or functionality.
 For example, in Figure~\ref{fig:illustrative-example}, \texttt{pandas} v1.3.5 and \texttt{scikit-learn} v1.1.3 are the main versions of their respective packages as they are used throughout the remainder of the code once they are loaded.
 Meanwhile \texttt{pandas<0.25.0} and \texttt{scikit-learn<0.22.0} are alternate versions because they are temporarily smuggled for the specific purpose of loading an outmoded dataset and model and then immediately replaced with main versions after their use is complete.
-Any time an alternate package version needed, the \texttt{smuggle} statement used to install and load it, the operations it is required to perform, and a second \texttt{smuggle} to (re-)install and load the main package version should be placed within a single cell.
+Any time an alternate package version is needed, the \texttt{smuggle} statement used to install and load it, the operations it is required to perform, and a second \texttt{smuggle} to (re-)install and load the main package version should all be contained within a single notebook cell.
 This ensures that (barring other unrelated errors in the cell's execution) the main version will always be installed and imported when any given notebook cell is run.
-In other words, in Figure~\ref{fig:illustrative-example}, lines 14--19 should be run within a single cell, and lines 42--44 should be run in a single cell.
+In other words, in Figure~\ref{fig:illustrative-example}, lines 14--19 should be run within a single cell, and lines 42--44 should also be run in a single cell.
 
 A second limitation of \texttt{Davos} relates to how packages are installed and managed.
 As of this writing, \texttt{Davos} can install packages using \texttt{pip}, but not

@@ -65,7 +65,8 @@
 \section*{Current code version}
 
 \begin{table}[H]
-\begin{tabular}{|l|p{6.5cm}|p{6.5cm}|}
+  \footnotesize
+\begin{tabular}{|l|p{6cm}|p{8cm}|}
 \hline
 \textbf{Nr.} & \textbf{Code metadata description} & \textbf{Metadata value} \\
 \hline
@@ -73,7 +74,7 @@ C1 & Current code version &  v0.2.3 \\
 \hline
 C2 & Permanent link to code/repository used for this code version & \url{https://doi.org/10.5281/zenodo.8233890} \\
 \hline
-C3 & Code Ocean compute capsule & \\
+C3 & Code Ocean compute capsule & N/A\\
 \hline
 C4 & Legal Code License & MIT \\
 \hline
@@ -994,7 +995,17 @@ As of this writing, \texttt{Davos} can install packages using \texttt{pip}, but 
 other standard Python package management systems such as \texttt{conda}~\cite{Anac12}.
 Therefore packages that are not installable via \texttt{pip} are currently
 unsupported by \texttt{Davos}. We anticipate adding support for other package management
-systems, including \texttt{conda}, in a future release.
+systems, including \texttt{conda}, in a future release.  Because \texttt{Davos} relies on
+\texttt{pip} to install packages, it is also subject to the same limitations as
+\texttt{pip} itself. For example, \texttt{pip}-installing a package that depends on
+a previously \texttt{smuggle}d package may result in the previously smuggled package
+being upgraded or downgraded to a different version. Whereas lockfiles, or lockfile-based
+systems like \texttt{Poetry}~\citep{poetry}, place stronger guarantees that each package will
+have a stable version, we have opted for a more flexible (but, consequently, less
+deterministic) implementation for \texttt{Davos}.  This enables us to support
+more advanced use cases, such as those described in Section~\ref{sec:illustrative-example},
+but at the cost of managing potential conflicts between \texttt{smuggle}d
+packages.
 
 A third limitation of \texttt{Davos} is that it cannot be used to manage projects that
 depend on non-Python software. For example, system software or libraries from

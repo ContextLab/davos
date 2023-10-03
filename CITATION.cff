@@ -10,7 +10,7 @@ authors:
     affiliation: "Dartmouth College"
     orcid: "https://orcid.org/0000-0001-7613-4732"
 cff-version: 1.2.0
-date-released: "2022-11-23"
+date-released: "2023-10-01"
 keywords:
   - Reproducibility
   - "Open science"
@@ -36,19 +36,19 @@ preferred-citation:
       affiliation: "Dartmouth College"
       orcid: "https://orcid.org/0000-0001-7613-4732"
       website: "https://www.context-lab.com"
-  date-published: "2022-11-23"
+  date-published: "2023-10-01"
   doi: 10.48550/arXiv.2211.15445
   journal: arXiv
   keywords:
     - "Other Computer Science (cs.OH)"
     - "FOS: Computer and information sciences"
-  month: 11
-  title: "$\\texttt{davos}$: a Python package \"smuggler\" for constructing lightweight reproducible notebooks"
+  month: 10
+  title: "$\\texttt{Davos}$: a Python package \"smuggler\" for constructing lightweight reproducible notebooks"
   type: article
   url: "https://arxiv.org/abs/2211.15445"
-  year: "2022"
+  year: "2023"
 repository-code: "https://github.com/ContextLab/davos"
 repository-artifact: "https://pypi.org/project/davos/"
 title: davos
 type: software
-version: v0.1.1
+version: v0.2.3

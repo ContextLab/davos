@@ -142,29 +142,29 @@ extended to automatically install any required external packages (at their
 correct versions, when specified) into an isolated directory kept separate from
 the user's existing set of packages. \textbf{Virtual environments} (along with
 dependency specification files) similarly allow users to install required
-packages into an isolated directory, and \textbf{shareable Python environments}
-extend this to include a specific version of Python itself. However, both of
-these systems require users to create, populate, and manage environments
-manually. This typically entails distributing a configuration file (e.g., a
-\texttt{requirements.txt}, \texttt{pyproject.toml}~\cite{CannEtal16}, or
-\texttt{environment.yml} file) that specifies all project dependencies
-(including version numbers) alongside the primary code base. Users can then
-install a third-party tool~\cite[e.g.,][]{BickEtal07, Eust19, Anac12} to read
-the file and build the environment. \textbf{Containers} provide a means of
-defining an isolated environment that includes a complete operating system
-(independent of the user's operating system), in addition to (optionally)
-specifying a virtual environment or other configurations needed to provide the
-necessary computing environment. Containers are typically defined using
-specification files (e.g., a plain-text \texttt{Dockerfile}~\cite{Merk14}) that
-instruct the virtualization engine regarding how to build the containerized
-environment. \textbf{Virtual machines} provide a complete hardware-level
-simulation of the computing environment. In addition to simulating specific
-hardware, virtual machines (typically specified using binary image files) must
-also define operating system-level properties of the computing environment.
-$\Delta_1$ represents the increased reproducibility \texttt{Davos} provides
-over standard Jupyter notebooks for no greater setup cost. $\Delta_2$
-represents \texttt{Davos}'s lower setup cost compared to standard virtual
-environments.}
+packages into an isolated directory, and \textbf{Python environments} (again,
+along with dependency specification files) extend this to include a specific
+version of Python itself. However, both of these systems require users to
+create, populate, and manage environments manually. This typically entails
+distributing a configuration file (e.g., a \texttt{requirements.txt},
+\texttt{pyproject.toml}~\cite{CannEtal16}, or \texttt{environment.yml} file)
+that specifies all project dependencies (including version numbers) alongside
+the primary code base. Users can then install a third-party
+tool~\cite[e.g.,][]{BickEtal07, Eust19, Anac12} to read the file and build the
+environment. \textbf{Containers} provide a means of defining an isolated
+environment that includes a complete operating system (independent of the
+user's operating system), in addition to (optionally) specifying a virtual
+environment or other configurations needed to provide the necessary computing
+environment. Containers are typically defined using specification files (e.g.,
+a plain-text \texttt{Dockerfile}~\cite{Merk14}) that instruct the
+virtualization engine regarding how to build the containerized environment.
+\textbf{Virtual machines} provide a complete hardware-level simulation of the
+computing environment. In addition to simulating specific hardware, virtual
+machines (typically specified using binary image files) must also define
+operating system-level properties of the computing environment. $\Delta_1$
+represents the increased reproducibility \texttt{Davos} provides over standard
+Jupyter notebooks for no greater setup cost. $\Delta_2$ represents
+\texttt{Davos}'s lower setup cost compared to standard virtual environments.}
 \label{fig:code-sharing} \end{figure}
 
 Computational researchers and other programmers have de\-vel\-oped a

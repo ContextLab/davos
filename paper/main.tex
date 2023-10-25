@@ -217,11 +217,11 @@ default notebook experience. Like standard Jupyter notebooks,
 \texttt{Davos}-enhanced notebooks allow researchers to include text, executable
 code, and media within a single file. No further setup or installation is
 required from the user, beyond what is needed to run a standard Jupyter
-notebook. And like virtual environments (when bundled with dependency
-specification files), \texttt{Davos} provides a convenient mechanism for fully
-specifying (and installing, as needed) a complete set of Python dependencies,
-including specific package versions, which are contained and isolated from the
-rest of the user's system.
+notebook. And like virtual environments or Python environments (when these
+tools are bundled with dependency specification files), \texttt{Davos} provides
+a convenient mechanism for fully specifying (and installing, as needed) a
+complete set of Python dependencies, including specific package versions, which
+are contained and isolated from the rest of the user's system.
 
 
 \section{Software description}
@@ -870,11 +870,11 @@ In these contexts, ensuring that shared code yields consistent, reproducible out
 This has the dual effect of discouraging scientists from sharing their code in a reproducible way (or at all), and making it significantly harder (or impossible) for others to successfully reproduce their results, adopt or extend their methods, and contribute to or build upon their work.
 Ultimately, the need to install and master additional tools in order to share and run reproducible code can impede progress both on the individual level and on the broader scientific level.
 
-While the \texttt{Davos} package by no means offers a universal solution to this problem, it can, in many cases, provide an effective yet more accessible alternative to existing systems for sharing reproducible Python code, such as virtual environments (bundled with separate dependency specification files), containers, and virtual machines (Fig.~\ref{fig:code-sharing}).
+While the \texttt{Davos} package by no means offers a universal solution to this problem, it can, in many cases, provide an effective yet more accessible alternative to existing systems for sharing reproducible Python code, such as specification files for building virtual environments, Python environments, containers, and virtual machines (Fig.~\ref{fig:code-sharing}).
 For researchers, this can lower barriers to collaborating with peers and contributing to publicly available open science resources.
 And by eliminating most of the setup costs of reconstructing the original researchers' computing environment(s), \texttt{Davos} also lowers barriers to entry for members of the scientific community and the public who seek to run shared code.
 
-Among common systems for sharing reproducible Python code (see Fig.~\ref{fig:code-sharing}), \texttt{Davos} is most comparable to virtual environments (bundled with separate dependency specification files) in that it provides a lightweight mechanism for specifying and sharing a complete set of packages (and specific package versions) required by a particular project, and installing those packages into an isolated directory on the user's file system.
+Among common systems for sharing reproducible Python code (see Fig.~\ref{fig:code-sharing}), \texttt{Davos} is most comparable to specification files for building virtual environments in that it provides a lightweight mechanism for specifying and sharing a complete set of packages (and specific package versions) required by a particular project, and installing those packages into an isolated directory on the user's file system.
 However, when used in conjunction with Jupyter notebooks, \texttt{Davos} offers a number of advantages over standard virtual environments that make it both easier to use and more effective at ensuring reproducibility of shared code.
 
 First, \texttt{smuggle} statements and onion comments enable researchers to specify their notebooks' dependencies directly within the code that requires them (see Secs.~\ref{subsec:smuggle} and~\ref{subsec:onion}).

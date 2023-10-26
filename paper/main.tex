@@ -164,8 +164,9 @@ machines (typically specified using binary image files) must also define
 operating system-level properties of the computing environment. $\Delta_1$
 represents the increased reproducibility \texttt{Davos} provides over standard
 Jupyter notebooks for no greater setup cost. $\Delta_2$ represents
-\texttt{Davos}'s lower setup cost compared to standard virtual environments.}
-\label{fig:code-sharing} \end{figure}
+\texttt{Davos}'s lower setup cost compared to standard virtual environments
+despite more stringently ensuring reproducibility.} \label{fig:code-sharing}
+\end{figure}
 
 Computational researchers and other programmers have de\-vel\-oped a
 broad set of approaches and tools to facilitate code sharing and
@@ -217,9 +218,9 @@ default notebook experience. Like standard Jupyter notebooks,
 \texttt{Davos}-enhanced notebooks allow researchers to include text, executable
 code, and media within a single file. No further setup or installation is
 required from the user, beyond what is needed to run a standard Jupyter
-notebook. And like virtual environments or Python environments (when these
-tools are bundled with dependency specification files), \texttt{Davos} provides
-a convenient mechanism for fully specifying (and installing, as needed) a
+notebook. And like separate dependency specification files used to build
+virtual environments or Python environments, \texttt{Davos} provides a
+convenient mechanism for fully specifying (and installing, as needed) a
 complete set of Python dependencies, including specific package versions, which
 are contained and isolated from the rest of the user's system.
 

@@ -1,7 +1,7 @@
 \documentclass[preprint,12pt,a4paper]{elsarticle}
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL old.tex    Thu Oct 26 14:34:06 2023
-%DIF ADD main.tex   Thu Oct 26 19:50:42 2023
+%DIF ADD main.tex   Thu Oct 26 22:03:50 2023
 \usepackage{amssymb}
 \usepackage{lineno}
 \usepackage{float}
@@ -187,14 +187,21 @@ installed must also be performed manually. \textbf{Jupyter notebooks}
 package} is imported into a Jupyter notebook, the notebook's functionality is
 extended to automatically install any required external packages (at their
 correct versions, when specified) into an isolated directory kept separate from
-the user's existing set of packages. \textbf{Virtual environments} \DIFaddbeginFL \DIFaddFL{(along with
-dependency specification files) }\DIFaddendFL similarly allow users to install required
-packages into an isolated directory, and \DIFdelbeginFL \textbf{\DIFdelFL{shareable Python environments}} %DIFAUXCMD
-\DIFdelendFL \DIFaddbeginFL \textbf{\DIFaddFL{Python environments}} \DIFaddFL{(again,
-along with dependency specification files) }\DIFaddendFL extend this to include a specific
-version of Python itself. However, both of these systems require users to
-create, populate, and manage environments manually. This typically entails
-distributing a configuration file (e.g., a \texttt{requirements.txt},
+the user's existing set of packages. \textbf{Virtual environments} similarly
+allow users to \DIFdelbeginFL \DIFdelFL{install required }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{isolate installed }\DIFaddendFL packages \DIFdelbeginFL \DIFdelFL{into an isolated
+  }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{in a specific }\DIFaddendFL directory, and \DIFdelbeginFL \textbf{\DIFdelFL{shareable Python environments}} %DIFAUXCMD
+\DIFdelendFL \DIFaddbeginFL \DIFaddFL{can be
+populated with packages from a shared dependency specification
+file~\mbox{%DIFAUXCMD
+\citep[e.g., a requirements.txt or pyproject.toml; ][]{CannEtal16}}\hskip0pt%DIFAUXCMD
+.
+}\textbf{\DIFaddFL{Python environments}} \DIFaddFL{(again, shared in the form of a dependency
+specification file; e.g., an environment.yml) }\DIFaddendFL extend this \DIFaddbeginFL \DIFaddFL{idea }\DIFaddendFL to \DIFdelbeginFL \DIFdelFL{include
+  }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{allow
+automatically installing }\DIFaddendFL a specific version of Python itself. However, both of
+\DIFdelbeginFL \DIFdelFL{these systems }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{virtual environments and Python environments }\DIFaddendFL require users to create, populate,
+and manage environments manually. This typically entails distributing a
+configuration file (e.g., a \texttt{requirements.txt},
 \texttt{pyproject.toml}~\cite{CannEtal16}, or \texttt{environment.yml} file)
 that specifies all project dependencies (including version numbers) alongside
 the primary code base. Users can then install a third-party
@@ -244,7 +251,7 @@ hardware-level operations, they are typically packaged with a complete
 operating system, in addition to a complete copy of Python and any relevant
 package dependencies. Shareable Python environments~\cite[e.g.,][]{Anac12} also
 provide a computing environment that is largely separated from the user's main
-environment. They incorporate a copy of Python and the target software's
+environment. They incorporate \DIFaddbegin \DIFadd{(i.e., automatically install) }\DIFaddend a copy of Python and the target software's
 dependencies, but do not specify or reproduce an operating system for the
 runtime environment. Virtual environments~\cite[e.g.,][]{BickEtal07, Eust19}
 work similarly, but reuse an existing copy of Python rather than bundling their

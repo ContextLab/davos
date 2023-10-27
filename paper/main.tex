@@ -140,13 +140,16 @@ installed must also be performed manually. \textbf{Jupyter notebooks}
 package} is imported into a Jupyter notebook, the notebook's functionality is
 extended to automatically install any required external packages (at their
 correct versions, when specified) into an isolated directory kept separate from
-the user's existing set of packages. \textbf{Virtual environments} (along with
-dependency specification files) similarly allow users to install required
-packages into an isolated directory, and \textbf{Python environments} (again,
-along with dependency specification files) extend this to include a specific
-version of Python itself. However, both of these systems require users to
-create, populate, and manage environments manually. This typically entails
-distributing a configuration file (e.g., a \texttt{requirements.txt},
+the user's existing set of packages. \textbf{Virtual environments} similarly
+allow users to isolate installed packages in a specific directory, and can be
+populated with packages from a shared dependency specification
+file~\citep[e.g., a requirements.txt or pyproject.toml; ][]{CannEtal16}.
+\textbf{Python environments} (again, shared in the form of a dependency
+specification file; e.g., an environment.yml) extend this idea to allow
+automatically installing a specific version of Python itself. However, both of
+virtual environments and Python environments require users to create, populate,
+and manage environments manually. This typically entails distributing a
+configuration file (e.g., a \texttt{requirements.txt},
 \texttt{pyproject.toml}~\cite{CannEtal16}, or \texttt{environment.yml} file)
 that specifies all project dependencies (including version numbers) alongside
 the primary code base. Users can then install a third-party
@@ -196,7 +199,7 @@ hardware-level operations, they are typically packaged with a complete
 operating system, in addition to a complete copy of Python and any relevant
 package dependencies. Shareable Python environments~\cite[e.g.,][]{Anac12} also
 provide a computing environment that is largely separated from the user's main
-environment. They incorporate a copy of Python and the target software's
+environment. They incorporate (i.e., automatically install) a copy of Python and the target software's
 dependencies, but do not specify or reproduce an operating system for the
 runtime environment. Virtual environments~\cite[e.g.,][]{BickEtal07, Eust19}
 work similarly, but reuse an existing copy of Python rather than bundling their

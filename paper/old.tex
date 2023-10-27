@@ -121,54 +121,54 @@ and inconsistencies. Further, when dependency versions are left
 unspecified, replicating the original computing environment becomes
 difficult or impossible~\citep{PimeEtal19}.
 
-\begin{figure}[tp] \centering
-\includegraphics[width=0.6\textwidth]{figs/shareable_code_2d} \caption{\small
-\textbf{Systems for ensuring code reproducibility within the Python ecosystem.}
-The $x$-axis denotes the ``burden'' placed on users to install and configure
-the given system (systems placed further to the right, that fall within the
-redder shading, impose a higher setup cost on the user). The $y$-axis denotes
-the degree to which the system guarantees that the code will run similarly for
-different users (systems placed higher up, that fall within the bluer shading,
-offer stronger guarantees). From left to right, bottom to top: plain-text
-\textbf{Python scripts} (\texttt{.py} files) provide the most basic ``system''
-for sharing raw code. Scripts may reference external packages, but those
-packages must be manually installed on other users' systems. Further, any
-checking needed to verify that the correct versions of those packages were
-installed must also be performed manually. \textbf{Jupyter notebooks}
-(\texttt{.ipynb} files) comprise embedded text, executable code, and media
-(including rendered figures, code output, etc.). When the \textbf{Davos
-package} is imported into a Jupyter notebook, the notebook's functionality is
-extended to automatically install any required external packages (at their
-correct versions, when specified) into an isolated directory kept separate from
-the user's existing set of packages. \textbf{Virtual environments} similarly
-allow users to isolate installed packages in a specific directory, and can be
-populated with packages from a shared dependency specification
-file (e.g., a \texttt{requirements.txt} or \texttt{pyproject.toml~\cite{CannEtal16})}.
-\textbf{Python environments} (again, shared in the form of a dependency
-specification file; e.g., an \texttt{environment.yml}) extend this idea to allow
-installing a specific version of Python itself. However, both
-virtual environments and Python environments require users to create, populate,
-and manage environments manually. This typically entails distributing a
-configuration file (e.g., a \texttt{requirements.txt},
-\texttt{pyproject.toml}~\cite{CannEtal16}, or \texttt{environment.yml} file)
-that specifies all project dependencies (including version numbers) alongside
-the primary code base. Users can then install a third-party
-tool~\cite[e.g.,][]{BickEtal07, Eust19, Anac12} to read the file and build the
-environment. \textbf{Containers} provide a means of defining an isolated
-environment that includes a complete operating system (independent of the
-user's operating system), in addition to (optionally) specifying a virtual
-environment or other configurations needed to provide the necessary computing
-environment. Containers are typically defined using specification files (e.g.,
-a plain-text \texttt{Dockerfile}~\cite{Merk14}) that instruct the
-virtualization engine regarding how to build the containerized environment.
-\textbf{Virtual machines} provide a complete hardware-level simulation of the
-computing environment. In addition to simulating specific hardware, virtual
-machines (typically specified using binary image files) must also define
-operating system-level properties of the computing environment. $\Delta_1$
-represents the increased reproducibility \texttt{Davos} provides over standard
-Jupyter notebooks for no greater setup cost. $\Delta_2$ represents
-\texttt{Davos}'s lower setup cost compared to standard virtual environments
-despite more stringently ensuring reproducibility.} \label{fig:code-sharing}
+\begin{figure}[tp]
+\centering
+\includegraphics[width=0.65\textwidth]{figs/shareable_code_2d}
+\caption{\small \textbf{Systems for sharing code within the Python
+  ecosystem.} The $x$-axis denotes the ``burden'' placed on users to
+  install and configure the given system (systems placed further to the right, that fall within the redder shading, impose a higher setup cost on the user). The $y$-axis denotes the
+  degree to which the system guarantees that the code will run
+  similarly for different users (systems placed higher up, that fall within the bluer shading, offer stronger guarantees).
+  From left to right, bottom to top: plain-text \textbf{Python
+  scripts} (\texttt{.py} files) provide the most basic ``system''
+  for sharing raw code. Scripts may reference external packages, but
+  those packages must be manually installed on other users' systems.
+  Further, any checking needed to verify that the correct versions of
+  those packages were installed must also be performed manually.
+  \textbf{Jupyter notebooks} (\texttt{.ipynb} files) comprise embedded
+  text, executable code, and media (including rendered figures, code
+  output, etc.). When the \textbf{Davos package} is imported
+  into a Jupyter notebook, the notebook's functionality is extended to
+  automatically install any required external packages (at their
+  correct versions, when specified) into an isolated directory kept separate
+  from the user's existing set of packages. \textbf{Virtual environments}
+  similarly allow users to install required packages into an isolated
+  directory, and \textbf{shareable Python environments} extend this to include
+  a specific version of Python itself. However, both of these systems require
+  users to create, populate, and manage environments manually. This
+  typically entails distributing a configuration file (e.g., a
+  \texttt{requirements.txt}, \texttt{pyproject.toml}~\cite{CannEtal16}, or
+  \texttt{environment.yml} file) that specifies all project dependencies
+  (including version numbers) alongside the primary code base. Users can then
+  install a third-party tool~\cite[e.g.,][]{BickEtal07, Eust19, Anac12} to read
+  the file and build the environment. \textbf{Containers} provide a means of
+  defining an isolated environment that includes a complete operating
+  system (independent of the user's operating system), in addition to
+  (optionally) specifying a virtual environment or other
+  configurations needed to provide the necessary computing
+  environment. Containers are typically defined using
+  specification files (e.g., a plain-text \texttt{Dockerfile}~\cite{Merk14}) that instruct the
+  virtualization engine regarding how to build the containerized
+  environment. \textbf{Virtual machines} provide a complete
+  hardware-level simulation of the computing environment. In addition
+  to simulating specific hardware, virtual machines (typically
+  specified using binary image files) must also define operating
+  system-level properties of the computing environment. $\Delta_1$
+  represents the increased reproducibility \texttt{Davos} provides over standard
+  Jupyter notebooks for no greater setup cost. $\Delta_2$ represents
+  \texttt{Davos}'s lower setup cost compared to standard virtual environments
+  despite more stringently ensuring reproducibility.}
+\label{fig:code-sharing}
 \end{figure}
 
 Computational researchers and other programmers have de\-vel\-oped a
@@ -189,31 +189,31 @@ environment in which the code is executed. Therefore the functionality
 of code shared using these systems cannot be guaranteed across
 different users or setups.
 
-At another extreme, virtual machines~\cite{Gold74, AltiEtal05, Rose99} provide
-a hardware-level simulation of the desired system. Virtual machines are
-typically isolated, such that installing or running software on a virtual
-machine does not impact the user's primary operating system or computing
-environment. Containers~\cite[e.g.,][]{Merk14, KurtEtal17} provide a similar
-``isolated'' experience. Although containerized environments do not specify
-hardware-level operations, they are typically packaged with a complete
-operating system, in addition to a complete copy of Python and any relevant
-package dependencies. Shareable Python environments~\cite[e.g.,][]{Anac12} also
-provide a computing environment that is largely separated from the user's main
-environment. They incorporate (i.e., automatically install) a copy of Python and the target software's
-dependencies, but do not specify or reproduce an operating system for the
-runtime environment. Virtual environments~\cite[e.g.,][]{BickEtal07, Eust19}
-work similarly, but reuse an existing copy of Python rather than bundling their
-own. Each of these systems (virtual machines, containers, Python environments,
-and virtual environments) guarantees (to differing degrees---at the hardware
-level, operating system level, Python environment level, and package
-environment level, respectively) that the relevant code will run similarly for
-different users. However, each of these systems either relies on additional
-software that can be complex or resource-intensive to install and use, or
-requires additional setup, creating potential barriers to both contributing to
-and taking advantage of open science resources. For example, what is typically
-``shared'' with the end user in these cases is a set of instructions or
-configuration files for \textit{building} the desired computing environment,
-rather than the environment itself.
+At another extreme, virtual machines~\cite{Gold74, AltiEtal05, Rose99}
+provide a hardware-level simulation of the desired system. Virtual
+machines are typically isolated, such that installing or running
+software on a virtual machine does not impact the user's primary
+operating system or computing environment.
+Containers~\cite[e.g.,][]{Merk14, KurtEtal17} provide a similar
+``isolated'' experience. Although containerized environments do not
+specify hardware-level operations, they are typically packaged with a
+complete operating system, in addition to a complete copy of Python
+and any relevant package dependencies. Shareable Python
+environments~\cite[e.g.,][]{Anac12} also provide a computing
+environment that is largely separated from the user's main
+environment. They incorporate a copy of Python and the target
+software's dependencies, but do not specify or
+reproduce an operating system for the runtime environment.
+Virtual environments~\cite[e.g.,][]{BickEtal07, Eust19} work similarly, but
+reuse an existing copy of Python rather than bundling their own.
+Each of these systems (virtual machines, containers, Python environments, and virtual environments)
+guarantees (to differing degrees---at the hardware level, operating
+system level, Python environment level, and package environment level, respectively) that the
+relevant code will run similarly for different users. However, each of
+these systems also relies on additional software that can be complex
+or resource-intensive to install and use, creating potential barriers
+to both contributing to and taking advantage of open science
+resources.
 
 We designed \texttt{Davos} to occupy a ``sweet spot'' within this space.
 \texttt{Davos} is a notebook-installable package that adds functionality to the
@@ -221,11 +221,10 @@ default notebook experience. Like standard Jupyter notebooks,
 \texttt{Davos}-enhanced notebooks allow researchers to include text, executable
 code, and media within a single file. No further setup or installation is
 required from the user, beyond what is needed to run a standard Jupyter
-notebook. And like separate dependency specification files that list packages
-for populating virtual environments or Python environments, \texttt{Davos}
-provides a convenient mechanism for fully specifying (and installing, as
-needed) a complete set of Python dependencies, including specific package
-versions, which are contained and isolated from the rest of the user's system.
+notebook. And like virtual environments, \texttt{Davos} provides a convenient
+mechanism for fully specifying (and installing, as needed) a complete set of
+Python dependencies, including specific package versions, which are contained
+and isolated from the rest of the user's system.
 
 
 \section{Software description}
@@ -874,11 +873,11 @@ In these contexts, ensuring that shared code yields consistent, reproducible out
 This has the dual effect of discouraging scientists from sharing their code in a reproducible way (or at all), and making it significantly harder (or impossible) for others to successfully reproduce their results, adopt or extend their methods, and contribute to or build upon their work.
 Ultimately, the need to install and master additional tools in order to share and run reproducible code can impede progress both on the individual level and on the broader scientific level.
 
-While the \texttt{Davos} package by no means offers a universal solution to this problem, it can, in many cases, provide an effective yet more accessible alternative to existing systems for sharing reproducible Python code, such as instructions and specification files for building and populating virtual environments, Python environments, containers, and virtual machines (Fig.~\ref{fig:code-sharing}).
+While the \texttt{Davos} package by no means offers a universal solution to this problem, it can, in many cases, provide an effective yet more accessible alternative to existing systems for sharing reproducible Python code, such as virtual environments, containers, and virtual machines (Fig.~\ref{fig:code-sharing}).
 For researchers, this can lower barriers to collaborating with peers and contributing to publicly available open science resources.
 And by eliminating most of the setup costs of reconstructing the original researchers' computing environment(s), \texttt{Davos} also lowers barriers to entry for members of the scientific community and the public who seek to run shared code.
 
-Among common systems for sharing reproducible Python code (see Fig.~\ref{fig:code-sharing}), \texttt{Davos} is most comparable to instructions and specification files for building and populating virtual environments in that it provides a lightweight mechanism for specifying and sharing a complete set of packages (and specific package versions) required by a particular project, and installing those packages into an isolated directory on the user's file system.
+Among common systems for sharing reproducible Python code (see Fig.~\ref{fig:code-sharing}), \texttt{Davos} is most comparable to virtual environments in that it provides a lightweight mechanism for specifying and sharing a complete set of packages (and specific package versions) required by a particular project, and installing those packages into an isolated directory on the user's file system.
 However, when used in conjunction with Jupyter notebooks, \texttt{Davos} offers a number of advantages over standard virtual environments that make it both easier to use and more effective at ensuring reproducibility of shared code.
 
 First, \texttt{smuggle} statements and onion comments enable researchers to specify their notebooks' dependencies directly within the code that requires them (see Secs.~\ref{subsec:smuggle} and~\ref{subsec:onion}).
@@ -899,9 +898,8 @@ While typical virtual environment directories will contain \textit{all} requirem
 This is another feature made possible by \texttt{Davos}'s runtime-based dependency management system.
 \texttt{Davos} can safely draw from packages in the user's main environment to satisfy a notebook's dependencies, when possible, because if those packages were to be updated or removed at any point such that they no longer met the notebook's requirements, appropriate versions would be installed into the project directory the next time the notebook was executed.
 
-Finally, neither specification files used to install packages into virtual environments nor \texttt{smuggle} statements and onion comments included \texttt{Davos}-enhanced notebooks can be used to automatically install a specific version of Python with which to run shared code. 
-However, \texttt{Davos}'s \texttt{require\_\-python()} function provides a simple mechanism for indicating a required or constrained Python version and alerting the user at runtime (by raising an exception) if their Python version is incompatible. 
-We note that a similar a similar constraint can be imposed by setting the ``\texttt{requires-python}'' attribute in a \texttt{pyproject.toml} file, though creating a virtual environment from a \texttt{pyproject.toml} would require installing an additional third-party tool (such as~\cite{Eust19}).
+Finally, neither virtual environments nor \texttt{Davos}-enhanced notebooks can bundle specific versions of Python with which to run shared code.
+However, \texttt{Davos}'s \texttt{require\_\-python()} function provides a simple mechanism for indicating a required or constrained Python version and alerting the user at runtime (by raising an exception) if their Python version is incompatible.
 In terms of \texttt{Davos}'s ability to ensure that shared code can be executed reproducibly by other users, this falls short of the capabilities of more complex tools that can provide complete copies of Python (Fig.~\ref{fig:code-sharing}).
 However, the functionality \texttt{Davos} provides over what is possible with a standard virtual environment is to remove the \textit{expectation} that running a particular notebook will reproduce an expected outcome in situations where this is either impossible or not guaranteed.
 With this understanding, a user may choose to install a compatible Python version through some other means or elect to still run the code, but will not be surprised by a potential failure to execute successfully or output an expected result.
